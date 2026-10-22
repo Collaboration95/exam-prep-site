@@ -1,0 +1,408 @@
+{
+ "key": "02-cloud-reference-architecture-august-2",
+ "title": "Cloud Reference Architecture",
+ "pages": 36,
+ "minutes": 30,
+ "overview": "Use reference architectures to connect business requirements to cloud components. Compare cloud-native and cloud-enabled designs, migration routes, IaC, image security and hybrid or multi-cloud placement. The worked e-commerce, gaming and recovery designs show why each component is needed.",
+ "big_ideas": [
+  "Cloud-native apps are designed for multi-tenancy, elastic scaling and easy integration; cloud-enabled apps are traditional apps moved to the cloud.",
+  "Microservices on orchestrated containers are one common cloud-native design; serverless and other styles can also apply cloud principles.",
+  "Lift and shift minimises initial change; partial or complete refactoring can improve cloud fit when the gains justify cost and time.",
+  "Infrastructure as Code makes environments repeatable, versioned, documented and rebuildable; declarative IaC states the desired end state.",
+  "Secure container images are minimal, official, patched, non-root, signed, distroless, immutable and standards-compliant.",
+  "Hybrid and multi-cloud are different: hybrid mixes cloud types, multi-cloud mixes providers; containers on Kubernetes make workloads movable.",
+  "A reference architecture is a reusable template for a domain; start from vendor catalogues, adapt to the use case."
+ ],
+ "sections": [
+  {
+   "id": "architect-roles",
+   "title": "Architect roles and where cloud architects fit",
+   "slides": [
+    2,
+    7
+   ],
+   "summary": "Who designs what in an organisation, and the cloud architect's place among them.",
+   "notes": [
+    "**Architects work at different altitudes.** Enterprise architects set technical strategy and direction across the organisation; solution architects turn requirements into a reusable solution design with business analysts and product owners; application architects own the design of one or more specific applications.",
+    "**Others specialise by concern**: data architects design and manage data architecture, information architects focus on users' experience of the data, infrastructure architects design servers, network, storage and facilities, and security architects own computer and network security.",
+    "**The cloud architect** owns the cloud strategy and initiatives: migration plans for existing apps, design of new cloud-native applications, oversight of cloud management, and governance policies. This is the role you play in the exam.",
+    "**Why a reference architecture helps**: it gives these roles a shared modern template of layers and components to align on."
+   ],
+   "terms": [
+    {
+     "term": "Enterprise architect",
+     "def": "Sets technical strategy and direction across the organisation."
+    },
+    {
+     "term": "Solution architect",
+     "def": "Converts requirements into a reusable solution design."
+    },
+    {
+     "term": "Cloud architect",
+     "def": "Owns cloud strategy, migration plans, cloud-native design and governance."
+    }
+   ],
+   "check": [
+    {
+     "q": "A company is about to move 40 applications to the cloud and asks whether its existing solution architects can simply take this on. What gap would a cloud architect fill?",
+     "a": "A solution architect designs a solution for a given set of requirements; the cloud architect owns the cloud strategy across them: migration plans for existing apps, the design of new cloud-native apps, oversight of cloud management and governance policies. Without that role, 40 separate solution designs would each make their own cloud choices. A small estate could combine the roles, but the strategy and governance work still has to be owned by someone."
+    },
+    {
+     "q": "Users complain that a reporting portal's data is correct but hard to find and interpret, while the DBA says the schema is well normalised. Which architect role should look at this, and why not the other?",
+     "a": "The information architect, who focuses on how users experience and interact with data. The data architect designs and manages data structures, and the schema is already sound, so the problem is presentation and navigation rather than storage."
+    }
+   ]
+  },
+  {
+   "id": "native-vs-enabled",
+   "title": "Cloud-native vs cloud-enabled",
+   "slides": [
+    8,
+    11
+   ],
+   "summary": "What makes an application cloud-native, why organisations go that way, and why they usually start with lift and shift.",
+   "notes": [
+    "**Cloud-native is designed for cloud properties; cloud-enabled is moved to cloud infrastructure.** The lecture emphasises elastic, easily integrated applications using orchestrated containers and microservices. These are common mechanisms, rather than requirements that exclude serverless or a well-designed monolith.",
+    "**Why go native**: use IaaS and PaaS to exploit elasticity in a fail-safe way; do greenfield microservices for IoT, mobile, SaaS integration and online business models; consume third-party APIs (maps, social login); scale resources up automatically under load or failure.",
+    "**Fit is a spectrum**: how well an application fits the cloud depends on how much it relies on elasticity, statelessness and automation, which decides whether to migrate as is or redesign.",
+    "**Lift and shift often starts adoption** because it changes little and moves infrastructure spending toward a usage-based operating model. Predictable unit prices do not guarantee predictable total spend: usage and resource sizing still matter."
+   ],
+   "terms": [
+    {
+     "term": "Cloud-native",
+     "def": "Designed for cloud properties such as elasticity, resilience, automation and easy integration."
+    },
+    {
+     "term": "Cloud-enabled",
+     "def": "Traditional app moved to the cloud largely unchanged."
+    },
+    {
+     "term": "Lift and shift",
+     "def": "Move an application to IaaS with minimal change."
+    }
+   ],
+   "check": [
+    {
+     "q": "An enterprise with 200 on-premises VMs and a board deadline wants to start its cloud adoption with lift and shift to IaaS. Is that a sound first step, and what should it not assume?",
+     "a": "Yes, as a first step: it changes little and moves infrastructure spend to a usage-based operating model quickly. It should not assume lower or predictable total spend, because predictable unit prices still depend on sizing and usage, and a lifted app gains little elasticity. Plan which applications to redesign later."
+    },
+    {
+     "q": "Two new projects arrive: an IoT telemetry service with unpredictable device growth, and an internal timesheet tool used by 50 staff. Which should be cloud-native and which can simply be cloud-enabled?",
+     "a": "The IoT service should be cloud-native: greenfield, heavily dependent on elasticity and needing automatic scaling under load or failure. The timesheet tool has small, steady load, so moving it as is (cloud-enabled) is enough. Native design is only worth its cost where elasticity, statelessness and automation actually pay off."
+    },
+    {
+     "q": "A teammate says 'it isn't cloud-native unless it runs on Kubernetes with microservices.' Do you agree?",
+     "a": "No. Orchestrated containers and microservices are common ways to build cloud-native apps, but the defining idea is design for cloud properties such as elasticity, automation and easy integration. A serverless app or a well-designed monolith that scales and recovers automatically can also qualify."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Cloud-enabled vs cloud-native",
+     "columns": [
+      "",
+      "Cloud-enabled",
+      "Cloud-native"
+     ],
+     "rows": [
+      [
+       "Origin",
+       "Originally developed for a traditional data centre, then moved to the cloud",
+       "Developed with cloud principles in mind: multi-tenancy, elastic scaling, easy integration and administration"
+      ],
+      [
+       "Built as",
+       "The existing application, moved",
+       "Often orchestrated containers and microservices; functions or other styles can also fit"
+      ],
+      [
+       "Typical route",
+       "Lift and shift to IaaS in the first wave (variable resources, hourly opex)",
+       "Greenfield design using IaaS and PaaS to exploit elasticity in a failsafe manner"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "building-blocks",
+   "title": "Cloud-native building blocks and ecosystem",
+   "slides": [
+    12,
+    17
+   ],
+   "summary": "The dimensions of choice in a cloud-native design and the ecosystem of components that make containers run in production.",
+   "notes": [
+    "**Cloud-native is a menu of choices across six dimensions**: architecture (monolith, microservice, serverless, event, stream), elasticity (scale functions, modules, containers or VMs; NoSQL/NewSQL), big data stores (NoSQL, NewSQL, files, object, in-memory, cache), integration and communication (sockets vs HTTP; API vs event vs stream), Dev/Data/Sec/Ops automation, and edge interfaces. The architect's job is to pick per requirement.",
+    "**Greenfield technologies keep widening the menu**: big-data analytics, stream processing, data lakes and meshes, machine learning, NLP, deep learning, robotics, IoT and edge.",
+    "**A container ecosystem needs more than a runtime.** Runtime executes containers, orchestration (Kubernetes) manages deployment, scaling and lifecycle, a service mesh handles service-to-service traffic (load balancing, encryption, retries), CI/CD automates build, test and deploy, observability monitors health, and serverless runs code without managing servers.",
+    "**Supporting components**: API gateways route and secure external traffic into microservices; security tools scan and control access; configuration management keeps settings consistent; persistent storage serves stateful workloads; networking connects containers; event streaming and messaging (e.g. Kafka) enables asynchronous communication; chaos engineering tests resilience by injecting failures.",
+    "**Tech stacks are layered**: from hardware (CPU, memory, NICs) through virtualisation and OS to Kubernetes, with security (keys, encryption), observability and a service mesh cutting across, and the container application on top."
+   ],
+   "terms": [
+    {
+     "term": "Service mesh",
+     "def": "Layer managing microservice-to-microservice communication (load balancing, encryption, retries)."
+    },
+    {
+     "term": "Container orchestration",
+     "def": "Automates deployment, scaling and lifecycle of containers (Kubernetes)."
+    },
+    {
+     "term": "API gateway",
+     "def": "Single secure entry point routing external traffic to microservices."
+    },
+    {
+     "term": "Chaos engineering",
+     "def": "Deliberately injecting failures to test resilience."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team has containers running under a container runtime on three VMs and says they are ready for production. What is missing?",
+     "a": "A runtime only executes containers. Production also needs orchestration for deployment, scaling and failure recovery, networking, CI/CD, observability, configuration management, security controls and an API gateway for external traffic. Add persistent storage and messaging if the services need them. Without orchestration, a crashed container or failed VM needs manual recovery."
+    },
+    {
+     "q": "A platform has 6 services behind an API gateway. The team wants a service mesh as well. Would you add it now?",
+     "a": "Probably not yet. The gateway already handles external north-south traffic; a mesh manages internal east-west traffic (load balancing, encryption, retries), which pays off when many services need uniform inter-service policy. With 6 services, library-level retries and TLS may be enough. Revisit when the service count or the need for mutual TLS and traffic policy grows."
+    },
+    {
+     "q": "Orders must reach billing, shipping and analytics, and billing is sometimes down for maintenance. Synchronous HTTP API calls or event streaming and messaging?",
+     "a": "Event streaming or messaging: the order service publishes once, each consumer processes at its own pace, and billing catches up after maintenance instead of failing the order. The cost is eventual consistency and an extra platform to operate. Keep a synchronous API where the caller needs an immediate answer, such as a price check."
+    }
+   ]
+  },
+  {
+   "id": "migration-iac-images",
+   "title": "Migration choices, Infrastructure as Code and image security",
+   "slides": [
+    18,
+    24
+   ],
+   "summary": "How to choose a migration approach, why infrastructure should be code, and how to build secure container images.",
+   "notes": [
+    "**Choose how much to change.** Lift and shift is usually quickest but may retain inefficiencies. Partial refactoring targets selected problems. Complete refactoring can improve performance and operating cost, but those gains must justify higher implementation cost, time and risk.",
+    "**Infrastructure as Code (IaC)** manages servers, networks and storage through machine-readable definition files instead of manual or interactive configuration. Application code builds the software; infrastructure code (Terraform, CloudFormation, Ansible) builds the environment it runs in.",
+    "**Why IaC**: speed and consistency (consistent dev, test and prod templates with deliberate environment differences), version control and collaboration through Git and pull requests, live documentation, potential cost savings through less human error and easy teardown, and disaster recovery by rebuilding infrastructure, alongside restored data and dependencies.",
+    "**Infrastructure is wider than servers**: orchestration platforms, switches, load balancers, databases, object stores, caches, queues, event streams, monitoring, data pipelines. The IaC life cycle is write the code, commit it, apply it automatically, test it. **Declarative** IaC states the desired end state and tooling decides how to reach it.",
+    "**Secure container images**: minimalist base (small attack surface), official or verified sources, regularly patched, run as non-root, signed (e.g. Docker Content Trust), distroless (no shell or package manager), immutable releases (replace rather than patch; restrict runtime writes where practical), and compliant with standards such as NIST, CIS or ISO."
+   ],
+   "terms": [
+    {
+     "term": "IaC",
+     "def": "Managing infrastructure through versioned, machine-readable code."
+    },
+    {
+     "term": "Declarative IaC",
+     "def": "Describe the desired end state; tooling works out the steps."
+    },
+    {
+     "term": "Distroless image",
+     "def": "Image with only runtime dependencies, no shell or package manager."
+    },
+    {
+     "term": "Immutable image",
+     "def": "Fixed deployment artifact replaced by a new version rather than patched in place; a read-only runtime filesystem is a separate hardening setting."
+    }
+   ],
+   "check": [
+    {
+     "q": "A legacy app costs a lot to run on lifted VMs because it can't scale down at night. Would you do a complete refactor, a partial refactor or stay lifted?",
+     "a": "A partial refactor is the usual first answer: target the component that blocks scale-down, such as extracting the stateless web tier so it can autoscale. A complete refactor is justified only if measured long-term gains outweigh its higher cost, time and risk. Staying lifted is fine if the night-time waste is smaller than the refactoring cost."
+    },
+    {
+     "q": "After a regional outage, the team rebuilds its whole network and cluster from IaC in another region in 20 minutes, but the app still won't start. What was most likely missing from the DR plan?",
+     "a": "IaC recreates infrastructure, not state. The data, secrets and configuration the app needs were probably not restored or replicated to the recovery region. The DR plan needs data backups or replication and a way to restore secrets and config alongside the IaC, and it needs to be tested end to end."
+    },
+    {
+     "q": "Engineers fix production servers by hand during incidents, and test now behaves differently from production. How does IaC address this, and what discipline does it require?",
+     "a": "Defining environments in versioned, reviewed code with deliberate parameter differences gives consistent dev, test and prod and removes untracked manual changes. The discipline is that every change, including incident fixes, goes through the code and the pipeline. Otherwise drift returns, and the next apply may overwrite the hand fix."
+    },
+    {
+     "q": "A scan finds a shell and package manager in a production image that runs as root and is patched in place. Which image practices does this break, and what would you change?",
+     "a": "It breaks minimal or distroless base, non-root execution and immutable releases. Rebuild from a verified minimal or distroless base, run as a non-root user, sign the image, and replace containers with a new patched image instead of patching them in place. This shrinks the attack surface and limits what an attacker can do after a compromise. The cost is harder interactive debugging."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Lift and shift vs refactoring",
+     "columns": [
+      "",
+      "Lift and shift",
+      "Partial refactor",
+      "Complete refactor"
+     ],
+     "rows": [
+      [
+       "Work / cost",
+       "**Minimal work**",
+       "Only parts of the app modified",
+       "Much higher cost; most of the app must change"
+      ],
+      [
+       "Time to deploy",
+       "**Faster**",
+       "Faster than complete refactoring",
+       "Slower"
+      ],
+      [
+       "Cloud features used",
+       "Typically none of the native features",
+       "Only some features",
+       "Optimised for the cloud"
+      ],
+      [
+       "Running cost / performance",
+       "May cost more to operate",
+       "May cost more to operate",
+       "Potential gains; validate against workload and total cost"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hybrid-multicloud",
+   "title": "Hybrid, multi-cloud and reference architectures",
+   "slides": [
+    25,
+    28
+   ],
+   "summary": "How private, hybrid and multi-cloud designs differ and how reference architectures guide design.",
+   "notes": [
+    "**Separate infrastructure ownership from network isolation.** Private cloud serves one organisation. A public-cloud VPC isolates a network on provider infrastructure. Hybrid connects private and public environments; multi-cloud uses multiple providers. Vendor on-premises stacks and cross-cloud tools support these choices.",
+    "**Hybrid vs multi-cloud**: hybrid combines cloud types for placement (sensitive on-prem, elastic public); multi-cloud combines providers to avoid lock-in or use best-of-breed. Both add integration and management complexity.",
+    "**Multi-cloud 1.0 vs 2.0**: 1.0 uses a cloud broker to spread different workloads across clouds, each app staying in one cloud. 2.0 containerises workloads on Kubernetes so they can be moved or recreated across clouds. Images alone do not move data, IAM policies, networks or proprietary managed-service dependencies.",
+    "**A reference architecture is a template solution for a domain.** Vendor catalogues (AWS Architecture Center, Microsoft, Google, IBM) are starting points; neutral ones are NIST 500-292 (actors in cloud), CCRA (building blocks of cloud services) and IBM's multicloud management architecture."
+   ],
+   "terms": [
+    {
+     "term": "Reference architecture",
+     "def": "Reusable template solution for an architecture in a given domain."
+    },
+    {
+     "term": "Cloud broker",
+     "def": "Intermediary distributing workloads across multiple clouds."
+    },
+    {
+     "term": "NIST 500-292",
+     "def": "NIST cloud reference architecture describing the actors in cloud computing."
+    }
+   ],
+   "check": [
+    {
+     "q": "A firm containerised every app and runs them on Kubernetes in two clouds, and now says it can 'move any workload between clouds in an hour'. What has it overlooked?",
+     "a": "Containers and Kubernetes definitions standardise packaging and orchestration (multi-cloud 2.0), but data, IAM policies, networking and dependencies on proprietary managed services do not move with the image. A workload using one provider's managed database still needs its data migrated and its integration rewritten. The claim holds only for stateless apps with portable dependencies."
+    },
+    {
+     "q": "A company uses a broker to place its HR system on one cloud and its analytics on another, and each app stays in its own cloud. Which multi-cloud generation is this, and what does it fail to give?",
+     "a": "Multi-cloud 1.0: workloads are spread across clouds, but each app is tied to one provider. It does not give workload portability; moving an app means migrating it. Multi-cloud 2.0 containerises workloads so they can be recreated elsewhere, at the cost of running Kubernetes consistently in each cloud."
+    },
+    {
+     "q": "You must design a cloud platform for a new government agency. Should you start from a vendor's reference architecture or a neutral one such as NIST 500-292?",
+     "a": "Use a neutral one to frame the actors and building blocks, then a vendor's reference architecture once the provider is chosen. NIST 500-292 or CCRA keeps the design vendor-neutral and helps the agency compare options. Vendor reference architectures are concrete starting points with proven component combinations, but they lean toward that vendor's services."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Placement and isolation answer different questions",
+     "columns": [
+      "Choice",
+      "What it separates",
+      "Design implication"
+     ],
+     "rows": [
+      [
+       "Private cloud",
+       "One organisation’s infrastructure",
+       "Operate it yourself or contract its operation"
+      ],
+      [
+       "VPC",
+       "Logical network in public cloud",
+       "Configure access; infrastructure remains provider-hosted"
+      ],
+      [
+       "Hybrid",
+       "Private and public environments",
+       "Integrate connectivity, identity and data flows"
+      ],
+      [
+       "Multi-cloud",
+       "Different providers",
+       "Plan for API, data and operations differences"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "example-architectures",
+   "title": "Worked reference architectures and the case for Kubernetes",
+   "slides": [
+    29,
+    36
+   ],
+   "summary": "Four use-case architectures (e-commerce, gaming, big data, disaster recovery) and why cloud native keeps spreading.",
+   "notes": [
+    "**Match the architecture to the workload.** The lecture studies e-commerce, online gaming, big data processing and disaster recovery, and the skill is explaining why each component exists, not memorising products.",
+    "**E-commerce** can be a full capability stack (DNS, load balancing and auto scaling, cache, relational and object storage, CDN with web firewall, analytics, app back end) or a serverless version: a front end behind an API gateway routing to separate Product, Payment, Inventory and Cart services as functions, each with its own data store.",
+    "**Online gaming** has spiky, unpredictable load: auto-scaled web and app servers across two Availability Zones behind a load balancer, an in-memory cache for sessions and leaderboards, a replicated database, object storage plus CDN for game assets, and push notifications.",
+    "**Disaster recovery** in the example: a primary database replicates synchronously to a standby in another AZ for availability, while snapshots are copied automatically to a second region where a function restores a new instance. Synchronous standby covers AZ failure; cross-region snapshots cover regional disaster.",
+    "**Why cloud native and Kubernetes**: native development is tied to business goals and heavy ops automation frees developers from operations drudgery. Kubernetes is the open-source container platform, microservices platform and portability layer, and every major cloud offers it managed."
+   ],
+   "terms": [
+    {
+     "term": "Availability Zone",
+     "def": "Isolated data-centre location within a region used for fault tolerance."
+    },
+    {
+     "term": "Kubernetes",
+     "def": "Open-source system for running and managing containers; a cloud portability layer."
+    },
+    {
+     "term": "CDN",
+     "def": "Network of edge caches delivering content close to users."
+    }
+   ],
+   "check": [
+    {
+     "q": "An online game's player count jumps 10 times during weekend events, and a zone outage last month took it offline. What two design features address these problems, and what does each cost?",
+     "a": "Auto-scaled web and app tiers absorb the event spikes, and spreading them across two Availability Zones behind a load balancer keeps the game up if one zone fails. Autoscaling needs stateless servers, with sessions moved to an in-memory cache. Two zones add cross-zone replication and traffic cost."
+    },
+    {
+     "q": "The DR design uses a synchronous standby in a second AZ and snapshots copied to another region. A manager asks why both are needed. Explain, including what each one loses.",
+     "a": "The synchronous standby covers zone failure with almost no data loss and fast failover, but it does nothing if the whole region fails. Cross-region snapshots cover a regional disaster, but they recover only to the last copied snapshot and need time to restore a new instance. Choose snapshot frequency against acceptable data loss and restore capacity against acceptable downtime."
+    },
+    {
+     "q": "An e-commerce team must choose between a classic stack (load-balanced, auto-scaled app servers with a shared relational database) and a serverless design with Product, Payment, Inventory and Cart functions behind an API gateway, each with its own store. Traffic is low most of the year with sharp sale peaks. Which fits, and what do you give up?",
+     "a": "Serverless fits: functions scale with the sale peaks and cost little in quiet months, and separate stores let each service scale and change independently. You give up simple cross-service transactions and joins, since inventory and payment consistency now needs coordination, and you accept function limits and cold starts. A steady, high base load would favour the classic stack."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A company runs a 10-year-old monolith on premises. The data-centre contract ends in 6 months, and the checkout module struggles at month-end peaks. Recommend a migration approach, and say what would justify a complete refactor.",
+   "a": "Lift and shift to IaaS first to meet the 6-month deadline with minimal change, then partially refactor the checkout module, for example by extracting it as a stateless, autoscaled service. Leave the rest of the monolith alone until measured benefits justify more work. A complete refactor is justified only if long-term performance and operating-cost gains outweigh its higher cost, time and risk. Note that the lifted monolith may cost more to run than expected until it is optimised."
+  },
+  {
+   "q": "A platform team manages dev, test and prod by hand, and an outage last quarter took 3 days to recover. Justify Infrastructure as Code, explain how you would keep the environments consistent but deliberately different, and say what IaC will not solve.",
+   "a": "Use shared, versioned IaC modules with explicit per-environment parameters (sizes, replica counts) and separate state. Changes go through Git review and are applied automatically, which reduces drift and documents the environment. A rebuild then takes minutes instead of days. IaC will not restore data, secrets or application configuration, so DR also needs backups or replication and a tested recovery runbook."
+  },
+  {
+   "q": "A regulated insurer must keep policyholder data on premises, wants elastic capacity for quote calculations, and its CTO also wants a second public cloud 'to avoid lock-in'. Design the strategy and judge the second cloud.",
+   "a": "Hybrid: keep policyholder data in the private environment and run stateless quote calculation on public cloud, sending only the data it needs over a secured link. Add a second public cloud only for a concrete reason, such as a lock-in risk or a best-of-breed service. Containerising workloads on Kubernetes makes them portable (multi-cloud 2.0), but data, identity and managed-service dependencies still tie them to a provider. Every added environment increases integration, skills and management cost."
+  },
+  {
+   "q": "A startup runs 12 containerised microservices and has had two outages: one from a bad manual deployment and one from a retry storm between services. What components would you add to make the platform production-ready, and which outage does each address?",
+   "a": "Add CI/CD with automated tests and rollback to address the bad manual deployment, plus orchestration that does rolling updates and health-checks containers. For the retry storm, add observability to see call chains, and either a service mesh or consistent client libraries for retry limits, timeouts and circuit breaking. At 12 services a mesh is defensible but adds operating cost. Also add an API gateway, secure images and config management, and test resilience with failure injection."
+  },
+  {
+   "q": "Design the architecture for an online game with spiky weekend traffic, global players downloading large assets, real-time leaderboards, and a target of surviving a full region outage. Explain each component's purpose.",
+   "a": "Auto-scaled web and app tiers across two AZs behind a load balancer handle the spikes and zone failure. An in-memory cache holds sessions and leaderboards so servers stay stateless and reads are fast. Object storage and a CDN serve large assets close to players. A replicated database with a synchronous standby covers zone failure. For a region outage, copy snapshots to a second region and restore them with automation, accepting data loss back to the last snapshot and a restore delay."
+  }
+ ]
+}

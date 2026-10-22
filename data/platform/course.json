@@ -1,0 +1,621 @@
+{
+ "id": "platform",
+ "title": "Platform Engineering",
+ "days": [
+  {
+   "n": 1,
+   "date": "Mon 21 Sep",
+   "title": "Platforms and reusable assets",
+   "intro": "What a platform is and why teams build internal developer platforms, then the reusable assets a platform offers. Most of the weight is **Domain-Driven Design**: bounded contexts, ubiquitous language, aggregates and domain events, which the instructor flagged for the written exam.",
+   "topics": [
+    {
+     "key": "01-introduction-to-platforms-v2-2",
+     "title": "Introduction to Platforms",
+     "overview": "A platform provides shared services and interfaces on which applications and complementary products are built. This topic connects the internal developer platform (IDP), its architecture and adoption journey to platform thinking: enabling interactions between producers and consumers. Practise explaining both the developer experience and the engineering work behind a platform business.",
+     "sections": [
+      {
+       "id": "what-is-a-platform",
+       "title": "What is a software platform?",
+       "slides": [
+        3,
+        6
+       ]
+      },
+      {
+       "id": "characteristics-benefits",
+       "title": "Characteristics and benefits of a platform",
+       "slides": [
+        7,
+        13
+       ]
+      },
+      {
+       "id": "platform-framework-library",
+       "title": "Platform vs framework vs library",
+       "slides": [
+        14,
+        15
+       ]
+      },
+      {
+       "id": "platform-engineering-discipline",
+       "title": "Platform engineering and its place beside DevOps and SRE",
+       "slides": [
+        16,
+        18
+       ]
+      },
+      {
+       "id": "key-terminology",
+       "title": "Platform engineering vocabulary",
+       "slides": [
+        19,
+        21
+       ]
+      },
+      {
+       "id": "five-plane-reference",
+       "title": "IDP reference architecture: the planes",
+       "slides": [
+        22,
+        31
+       ]
+      },
+      {
+       "id": "adoption-and-journey",
+       "title": "Adoption, trends and the platform journey",
+       "slides": [
+        32,
+        39
+       ]
+      },
+      {
+       "id": "platform-thinking",
+       "title": "Platform thinking: the network business model",
+       "slides": [
+        40,
+        46
+       ]
+      },
+      {
+       "id": "ecosystems-and-engineering",
+       "title": "Business ecosystems and the engineering perspective",
+       "slides": [
+        47,
+        52
+       ]
+      }
+     ]
+    },
+    {
+     "key": "02-reusable-assets-and-frameworks-v2-1",
+     "title": "Reusable Assets and Frameworks",
+     "overview": "Platforms offer reusable services, frameworks and shared libraries. Domain-Driven Design (DDD) helps find cohesive service boundaries through bounded contexts and ubiquitous language, then shapes their internals with aggregates and domain events. The Scrum and Maid2Order cases apply these ideas; the final sections explain framework design and the coupling risks of shared libraries.",
+     "sections": [
+      {
+       "id": "reusable-assets",
+       "title": "Reusable assets in a platform",
+       "slides": [
+        2,
+        5
+       ]
+      },
+      {
+       "id": "services-and-ddd-basics",
+       "title": "Identifying reusable services with DDD",
+       "slides": [
+        6,
+        14
+       ]
+      },
+      {
+       "id": "strategic-tactical-design",
+       "title": "DDD strategic and tactical design",
+       "slides": [
+        15,
+        16
+       ]
+      },
+      {
+       "id": "bounded-contexts-ubiquitous-language",
+       "title": "Bounded contexts and ubiquitous language in depth",
+       "slides": [
+        17,
+        23
+       ]
+      },
+      {
+       "id": "bc-case-study-and-ul",
+       "title": "Case study: splitting a model and developing the UL",
+       "slides": [
+        24,
+        27
+       ]
+      },
+      {
+       "id": "maid2order-workshop",
+       "title": "Workshop: Maid2Order entities, BCs and ULs",
+       "slides": [
+        28,
+        35
+       ]
+      },
+      {
+       "id": "reusable-frameworks",
+       "title": "Reusable frameworks for platforms",
+       "slides": [
+        36,
+        43
+       ]
+      },
+      {
+       "id": "framework-design",
+       "title": "Designing frameworks well",
+       "slides": [
+        44,
+        52
+       ]
+      },
+      {
+       "id": "shared-libraries",
+       "title": "Shared libraries: use and pitfalls",
+       "slides": [
+        53,
+        61
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Optional DDD quiz (Canvas)",
+     "url": "https://canvas.nus.edu.sg/courses/100555/quizzes/91556",
+     "note": "Instructor said understanding this quiz could help in the written exam: bounded contexts, ubiquitous language, aggregates, domain events."
+    },
+    {
+     "title": "DDD quiz guidance (instructor post)",
+     "path": "01-study/course-overview/DDD Quiz - Written Exam Guidance.pdf",
+     "note": "Why the DDD quiz matters for the exam."
+    },
+    {
+     "title": "Job search: bounded contexts",
+     "path": "01-study/diagrams/01-job-search-bounded-contexts.png",
+     "note": "Worked DDD example."
+    },
+    {
+     "title": "Job search: aggregates",
+     "path": "01-study/diagrams/02-job-search-aggregates.png",
+     "note": "Worked DDD example."
+    },
+    {
+     "title": "Job search: JobCreated domain event",
+     "path": "01-study/diagrams/03-job-created-domain-event.png",
+     "note": "Worked DDD example."
+    },
+    {
+     "title": "Workshop solution: reusable assets (p35)",
+     "path": "02-homework-and-practice/solutions/02 Reusable Assets and Frameworks-P35_v2.1.pdf",
+     "note": "Model answer for the Day 1 workshop."
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "date": "Thu 24 Sep",
+   "title": "API design and services",
+   "intro": "How services expose and share capability. API design covers REST, resources and HTTP methods, maturity, versioning and security. Reusable services then applies DDD to integration: context mapping between bounded contexts, aggregates as transaction boundaries, domain events, and the API gateway in front.",
+   "topics": [
+    {
+     "key": "03-api-design-v2-2",
+     "title": "API Design",
+     "overview": "This topic covers how to design, version, secure and operate APIs well. It starts with treating APIs as products and the design principles behind them, then covers REST constraints, resource and HTTP method best practices, the Richardson Maturity Model and GraphQL as an alternative. It moves on to versioning, OAuth-based security, resilience and testing, and distributed transactions across microservices. For the exam, expect to design or critique an API for a scenario and justify style, versioning and security choices.",
+     "sections": [
+      {
+       "id": "product-mindset-principles",
+       "title": "API as a product and design principles",
+       "slides": [
+        2,
+        7
+       ]
+      },
+      {
+       "id": "styles-and-rest-constraints",
+       "title": "API styles and the REST constraints",
+       "slides": [
+        8,
+        19
+       ]
+      },
+      {
+       "id": "resource-design-http",
+       "title": "Resource naming, HTTP methods and idempotency",
+       "slides": [
+        20,
+        26
+       ]
+      },
+      {
+       "id": "feedback-status-codes",
+       "title": "Meaningful responses and status codes",
+       "slides": [
+        27,
+        28
+       ]
+      },
+      {
+       "id": "richardson-maturity",
+       "title": "Richardson Maturity Model",
+       "slides": [
+        29,
+        37
+       ]
+      },
+      {
+       "id": "graphql-and-docs",
+       "title": "GraphQL vs REST and API documentation standards",
+       "slides": [
+        38,
+        45
+       ]
+      },
+      {
+       "id": "versioning-security-basics",
+       "title": "API versioning and security basics",
+       "slides": [
+        46,
+        49
+       ]
+      },
+      {
+       "id": "operations-resilience",
+       "title": "Errors, logging, retries, pagination and monitoring",
+       "slides": [
+        54,
+        61
+       ]
+      },
+      {
+       "id": "performance-testing-maturity",
+       "title": "Performance, testing and API architecture maturity",
+       "slides": [
+        62,
+        72
+       ]
+      },
+      {
+       "id": "security-patterns-cors",
+       "title": "OAuth vs JWT vs SAML, CORS and payload inspection",
+       "slides": [
+        73,
+        76
+       ]
+      },
+      {
+       "id": "gateway-orchestration-transactions",
+       "title": "API gateway, orchestration and distributed transactions",
+       "slides": [
+        77,
+        84
+       ]
+      }
+     ]
+    },
+    {
+     "key": "04-reusable-services-and-api-gateway-v2-",
+     "title": "Reusable Services and API Gateway",
+     "overview": "Reusable services need explicit boundaries and deliberate integration. Context mappings describe relationships between bounded contexts; aggregates protect local invariants; domain events carry changes to other aggregates or services. This topic applies those ideas to car rental, compares orchestration with choreography, then explains gateway discovery and client SDKs.",
+     "sections": [
+      {
+       "id": "microservice-traits",
+       "title": "Characteristics of microservices",
+       "slides": [
+        4,
+        15
+       ]
+      },
+      {
+       "id": "context-mapping",
+       "title": "Decoupling services with context mappings",
+       "slides": [
+        17,
+        24
+       ]
+      },
+      {
+       "id": "integration-types",
+       "title": "Integration styles between contexts",
+       "slides": [
+        25,
+        31
+       ]
+      },
+      {
+       "id": "aggregates",
+       "title": "Aggregates",
+       "slides": [
+        33,
+        45
+       ]
+      },
+      {
+       "id": "domain-events",
+       "title": "Domain events",
+       "slides": [
+        47,
+        52
+       ]
+      },
+      {
+       "id": "de-example-workshop",
+       "title": "Car rental example and workshop",
+       "slides": [
+        53,
+        59
+       ]
+      },
+      {
+       "id": "orchestration-choreography",
+       "title": "Orchestration vs choreography",
+       "slides": [
+        61,
+        63
+       ]
+      },
+      {
+       "id": "api-gateway",
+       "title": "Service discovery and API gateway",
+       "slides": [
+        65,
+        73
+       ]
+      },
+      {
+       "id": "sdks",
+       "title": "Client SDKs and summary",
+       "slides": [
+        75,
+        79
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Workshop solution: reusable services and API gateway",
+     "path": "02-homework-and-practice/solutions/04b Reusable Services and API Gateway - Workshop Solution_v2.1.pdf",
+     "note": "Model answer for workshop 4."
+    },
+    {
+     "title": "Instructor's Day 2 sketches",
+     "path": "01-study/class-notes/260924 Boon Kui's Sketches for Day 2.pptx",
+     "note": "Whiteboard sketches from class."
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "date": "Fri 25 Sep",
+   "title": "Platform management and data",
+   "intro": "Running the platform: service discovery, deployment strategies (rolling, blue-green, canary), circuit breakers, tracing, sagas, metrics and logs. The short case study applies them to a breaking database change. Data management then covers replication, sharding, caching, CAP and choosing a data model.",
+   "topics": [
+    {
+     "key": "05-platform-management-v2-1",
+     "title": "Platform Management",
+     "overview": "Platform management keeps interactions scalable, available and safe to change. This topic covers discovery, deployment strategies, circuit breakers, rate limits, tracing, sagas, metrics and centralised logs. Practise choosing a tool from the failure it prevents and explaining the assumptions behind its guarantees.",
+     "sections": [
+      {
+       "id": "platform-toolbox",
+       "title": "Why engineers care: the platform toolbox",
+       "slides": [
+        2,
+        7
+       ]
+      },
+      {
+       "id": "service-discovery",
+       "title": "Service discovery",
+       "slides": [
+        8,
+        22
+       ]
+      },
+      {
+       "id": "deployment-strategies",
+       "title": "Deployment strategies",
+       "slides": [
+        23,
+        31
+       ]
+      },
+      {
+       "id": "deployment-case",
+       "title": "Deployment case: splitting the Payment table",
+       "slides": [
+        32,
+        34
+       ]
+      },
+      {
+       "id": "circuit-breaker",
+       "title": "Circuit breaker",
+       "slides": [
+        35,
+        43
+       ]
+      },
+      {
+       "id": "rate-limiting",
+       "title": "Rate limiting",
+       "slides": [
+        44,
+        49
+       ]
+      },
+      {
+       "id": "distributed-tracing",
+       "title": "Distributed tracing",
+       "slides": [
+        50,
+        55
+       ]
+      },
+      {
+       "id": "sagas",
+       "title": "Distributed transactions and the Saga pattern",
+       "slides": [
+        56,
+        64
+       ]
+      },
+      {
+       "id": "metrics",
+       "title": "Metrics",
+       "slides": [
+        65,
+        71
+       ]
+      },
+      {
+       "id": "logging-summary",
+       "title": "Logging, monitoring and summary",
+       "slides": [
+        72,
+        80
+       ]
+      }
+     ]
+    },
+    {
+     "key": "05c-platform-engineering-deployment-case",
+     "title": "Deployment Case Study: Splitting the Payment Table",
+     "overview": "This case splits Payment into ChequePayment and ApplePayPayment without a single disruptive cutover. Follow the lecture’s four stages: add tables, release code that reads both layouts, backfill historical data, then switch reads. The key reasoning is data compatibility: reducing live exposure with a canary does not itself preserve every rollback path.",
+     "sections": [
+      {
+       "id": "case-problem",
+       "title": "Scenario and constraints",
+       "slides": [
+        2,
+        3
+       ]
+      },
+      {
+       "id": "case-steps-1-2",
+       "title": "Steps 1 and 2: new tables, then V1.1 canary",
+       "slides": [
+        4,
+        6
+       ]
+      },
+      {
+       "id": "case-steps-3-4",
+       "title": "Steps 3 and 4: migrate, then V1.2 becomes 2.0",
+       "slides": [
+        7,
+        8
+       ]
+      }
+     ]
+    },
+    {
+     "key": "06-data-management-v2-1",
+     "title": "Data Management",
+     "overview": "Choose datastores from the workload: required queries, write volume, consistency, availability, latency and schema evolution. This topic compares replication, sharding and caching, explains CAP during network partitions, then surveys key-value, document, wide-column, search, graph and SQL-over-files models. Treat named products as lecture examples rather than guarantees of every deployment.",
+     "sections": [
+      {
+       "id": "datastore-needs",
+       "title": "What we need from a datastore and where RDBMS stands",
+       "slides": [
+        2,
+        8
+       ]
+      },
+      {
+       "id": "scaling-databases",
+       "title": "Scaling databases: replication, sharding, caching",
+       "slides": [
+        9,
+        13
+       ]
+      },
+      {
+       "id": "cap",
+       "title": "CAP: consistency vs availability",
+       "slides": [
+        14,
+        20
+       ]
+      },
+      {
+       "id": "why-nosql",
+       "title": "Why NoSQL and polyglot data models",
+       "slides": [
+        21,
+        25
+       ]
+      },
+      {
+       "id": "key-value",
+       "title": "Key-value stores",
+       "slides": [
+        26,
+        30
+       ]
+      },
+      {
+       "id": "document",
+       "title": "Document stores",
+       "slides": [
+        31,
+        37
+       ]
+      },
+      {
+       "id": "column-family",
+       "title": "Column family (wide column) stores",
+       "slides": [
+        38,
+        43
+       ]
+      },
+      {
+       "id": "search-engines",
+       "title": "Search engines",
+       "slides": [
+        44,
+        48
+       ]
+      },
+      {
+       "id": "graph-and-files",
+       "title": "Graph stores, SQL over files, and choosing",
+       "slides": [
+        49,
+        56
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Discussion: zero-downtime deployment with schema changes",
+     "path": "02-homework-and-practice/discussions/discussion questions.pdf",
+     "note": "Plan a near-zero-downtime schema change and check that rollback preserves access to newly accepted payments."
+    },
+    {
+     "title": "Workshop 5: logging and monitoring",
+     "path": "02-homework-and-practice/workshops/05b Platform Management LoggingMonitoringWorkshop_v2.1.pdf",
+     "note": "Hands-on lab. Know what each tool does; skip the steps."
+    },
+    {
+     "title": "Workshop 6: data management",
+     "path": "02-homework-and-practice/workshops/06b DataManagementWorkshop_v2.2.pdf",
+     "note": "Hands-on data lab. Skim for concepts."
+    }
+   ]
+  }
+ ],
+ "extras": []
+}

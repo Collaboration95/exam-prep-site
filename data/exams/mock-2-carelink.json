@@ -1,0 +1,2972 @@
+{
+ "key": "mock-2-carelink",
+ "kind": "mock",
+ "short": "Mock 2",
+ "title": "Mock paper 2: CareLink (SWE5001 format)",
+ "module": "Original mock in the SWE5001 Architecting Scalable Systems format",
+ "domain": "Remote patient monitoring and teleconsultation",
+ "blurb": "Wearable vitals streams, alert latency, hospital systems on premises, GenAI note summaries, storage capacity planning.",
+ "intro": [
+  "An original paper in the structure, length and marks of the SWE5001 sample (Section A 25, Section B 13, Section C 12). Open the [case study](case#top) in a second tab and answer before opening any model answer."
+ ],
+ "sections": [
+  {
+   "id": "A",
+   "title": "Section A",
+   "focus": "Architecting + Platform",
+   "questions": [
+    {
+     "n": 1,
+     "marks": 25,
+     "intro": [
+      "Refer to the case study in Appendix A and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "body": [
+        "CareLink's value to the hospital cluster depends on nurses seeing a patient's deterioration promptly."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 2,
+         "pattern": "diagnose",
+         "topics": [
+          "platform/05-platform-management-v2-1#rate-limiting",
+          "platform/03-api-design-v2-2#operations-resilience",
+          "architecting/05-design-highly-available-architecture-#distributed-failures"
+         ],
+         "body": [
+          "In user-acceptance testing, the nurses' vitals dashboard showed gaps of 20–60 seconds for some patients, although the wearables had recorded every reading. The phone app uploads readings in HTTP batches every 30 seconds and buffers them while offline ([Section 4](case#s4)). The gateway logs show bursts of HTTP 429 responses for the same phones at the start of each gap. Give the most likely cause and one countermeasure."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** the API gateway's per-client rate limit (a token bucket sized for one batch every 30 s) is rejecting phones that **flush a backlog**. After a phone has been offline, it sends many buffered batches at once, exceeds the bucket and gets 429. The app gives up or drops those batches after a few retries, so the readings never arrive and the dashboard shows gaps.",
+           "**Countermeasure:** treat 429 as ‘slow down’, not ‘discard’. The app keeps the readings, retries with exponential backoff and jitter, honours `Retry-After`, and merges the backlog into larger compressed batches. On the platform side, set the ingestion limits per device to allow a catch-up burst (a bigger bucket, or a separate catch-up endpoint), or move ingestion to a streaming connection with acknowledgements."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: the rate limiter rejects catch-up bursts from buffered phones, and the client drops rejected data."
+           },
+           {
+            "m": 1,
+            "t": "Countermeasure: client backoff with jitter and retain-until-acknowledged, and/or rate-limit policy tuned for catch-up bursts or streaming ingestion with acks."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 2,
+         "pattern": "defend",
+         "topics": [
+          "platform/06-data-management-v2-1#column-family",
+          "cloud-native/04-cloud-persistence-september-2026#choosing-a-store",
+          "platform/06-data-management-v2-1#datastore-needs"
+         ],
+         "body": [
+          "A developer proposes storing the vital-sign readings in the same relational database as patient records, ‘to keep everything in one place’. You recommend a time-series or wide-column store partitioned by patient and day instead. Give two reasons."
+         ],
+         "answer": {
+          "text": [
+           "1. **Write pattern and volume:** 12,000 patients × one reading every 5 s is about 2,400 appends per second, all day, growing to 4,800. A wide-column or time-series store is built for high-rate, append-only writes, spread across nodes by partition key (patient, day). A single relational primary would need sharding work and would compete with transactional patient updates.",
+           "2. **Query pattern and retention:** almost every read is ‘patient P between t1 and t2’. With the readings clustered by patient and time inside each partition, that is a sequential slice, fast enough for 2-year queries in under 3 s. Time-based retention (TTL), downsampling and tiering also come built in. The cost: no joins with patient data and weaker ad hoc queries, so reporting needs a separate path."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Write throughput and append-only scaling (with the case's numbers)."
+           },
+           {
+            "m": 1,
+            "t": "Time-range reads by patient, retention, TTL and downsampling, or isolation from the transactional DB."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "body": [
+        "With reference to the domain model in [Section 7](case#s7), analyse the following issues. For each, identify the most likely cause, propose a countermeasure by revising the domain model, and suggest its major drawback(s), if any."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 5,
+         "pattern": "fix-cost",
+         "topics": [
+          "architecting/08-ensure-maintainable-architecture-v3-1#defer-binding",
+          "architecting/08-ensure-maintainable-architecture-v3-1#code-tactics",
+          "platform/02-reusable-assets-and-frameworks-v2-1#framework-design"
+         ],
+         "body": [
+          "Clinicians want to add blood glucose and respiratory rate. The team estimates that each new vital sign needs code changes and redeployment in four services, and that adding an alert threshold for blood pressure needs another release of AlertManager."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** vital types are hard-coded in the model. Each vital is a subclass (HeartRateReading, SpO2Reading, BloodPressureReading) with its own association to Patient, and each alert rule is a type-specific subclass (HeartRateRule, SpO2Rule) bound to one reading class. A new vital means a new class, a new association and new rule types across Monitoring, Alert, NurseConsole and the dashboards. Binding happens at compile time.",
+           "**Countermeasure:** generalise and defer the binding to run time. Replace the subclasses with one **Observation** (patientRef, typeCode, value, unit, takenAt) and an **ObservationType** reference entity (code, unit, valid range, display name), managed as data. Replace the rule subclasses with a single **AlertRule** (typeCode, operator, threshold, duration, severity) evaluated generically. Patient has one association to Observation. Adding glucose is then a new ObservationType row and new AlertRule rows.",
+           "**Drawbacks:** weaker compile-time typing and validation: multi-value vitals such as blood pressure need components or a structured value, and a wrong unit is caught later. Queries and indexes become more generic. Clinical governance of the type and rule configuration is needed, since a bad rule is now a data change, not a reviewed release."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: type-specific subclasses and rule subclasses hard-wired across services (compile-time binding)."
+           },
+           {
+            "m": 1,
+            "t": "Explains the ripple: new class, associations and rules in several services, so coordinated releases."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: a generic Observation plus ObservationType reference data and a parameterised AlertRule, configured at run time."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: weaker typing, complex multi-value vitals, governance of configuration."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 4,
+         "pattern": "fix-cost",
+         "topics": [
+          "platform/04-reusable-services-and-api-gateway-v2-#aggregates",
+          "platform/04-reusable-services-and-api-gateway-v2-#domain-events",
+          "platform/04-reusable-services-and-api-gateway-v2-#integration-types"
+         ],
+         "body": [
+          "Nurses sometimes see the same alert twice on their console, and after a failover of the console service an alert that had already been acknowledged re-appeared as new."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** the alert exists twice. AlertManager owns Alert, and NurseConsole keeps a ConsoleAlert *copy* with its own number and status, linked by a ‘copies’ association. Acknowledgement updates only the copy. Copies are created per delivery, so a redelivered message creates a second ConsoleAlert. After failover the console rebuilds from AlertManager, where the alert was never acknowledged.",
+           "**Countermeasure:** one **Alert aggregate** in AlertManager with a business identity (patientId + ruleId + breach window) and a lifecycle Raised → Acknowledged → Resolved, with acknowledgedBy and acknowledgedAt. Acknowledge is a command to AlertManager. NurseConsole keeps only a read model keyed by alertId, updated from AlertRaised and AlertAcknowledged events with **idempotent** upserts, so a duplicate event changes nothing.",
+           "**Drawback:** acknowledging now depends on AlertManager being available (queue the command, or show it as pending). The console view lags by the event delay. Idempotency keys and the lifecycle add design and test effort."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: duplicated alert state (ConsoleAlert copy) with no shared identity; acknowledgement stored only in the copy."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: a single Alert aggregate with business key and lifecycle; the console as an idempotent read model fed by events; acknowledge as a command."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: dependency on AlertManager for acknowledge, event lag, complexity."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "platform/03-api-design-v2-2#resource-design-http",
+        "platform/03-api-design-v2-2#operations-resilience",
+        "platform/03-api-design-v2-2#performance-testing-maturity",
+        "cloud-native/11-cloud-security-september-2026#data-security"
+       ],
+       "body": [
+        "The first version of the clinical API is shown below. Nurses and doctors open a patient's vitals for any window in the last two years.",
+        {
+         "table": {
+          "columns": [
+           "URI",
+           "Service",
+           "Inputs",
+           "Outputs",
+           "Explanation",
+           "HTTP Action"
+          ],
+          "rows": [
+           [
+            "`/api/getVitals?nric={nric}&from={t1}&to={t2}`",
+            "MonitoringManager",
+            "patient NRIC, from, to",
+            "every reading in the range (up to ~12 million rows), patient name and address",
+            "Get vitals history",
+            "GET"
+           ],
+           [
+            "`/api/vitals/delete`",
+            "MonitoringManager",
+            "NRIC, list of reading ids",
+            "“deleted”",
+            "Remove erroneous readings",
+            "POST"
+           ],
+           [
+            "`/api/alerts/ack/{alertId}`",
+            "AlertManager",
+            "nurse name",
+            "“OK”",
+            "Acknowledge an alert",
+            "GET"
+           ]
+          ]
+         }
+        },
+        {
+         "ol": [
+          "Identify the design problems in these interfaces with respect to REST and RMM Level 2, and the security problems.",
+          "Propose how the history API should meet ‘< 3 s for 90%’ for any window up to two years.",
+          "Reconstruct the table with corrected interfaces."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         "**1. Problems.** Action-named URIs (getVitals, delete, ack) rather than resources. GET changes state (ack), which is unsafe: link prefetchers and retries could acknowledge alerts. POST is used to delete. String responses carry no status codes. Security: the **NRIC in the query string** is logged by proxies and gateways and cached by browsers. The response returns name and address that a vitals chart doesn't need (data minimisation). The acting nurse's identity is a free-text input rather than taken from the authenticated token, so the audit can be spoofed. Clinical data should be corrected by marking a reading as erroneous, with an audit trail, not deleted.",
+         "**2. History performance:** never return 12 million rows. Make the resolution depend on the window: raw readings for short windows, and pre-computed 1-minute, 1-hour or 1-day aggregates for longer ones (precomputation). Use cursor pagination with a page-size cap, and compression. Store the data partitioned by patient and day so a window is a sequential read. Responses for closed past windows never change, so serve them with long cache lifetimes and ETags.",
+         "**3. Corrected interfaces:**",
+         {
+          "table": {
+           "columns": [
+            "URI",
+            "Service",
+            "Inputs",
+            "Outputs",
+            "Explanation",
+            "HTTP"
+           ],
+           "rows": [
+            [
+             "`/v1/patients/{patient-id}/observations?type=&from=&to=&resolution=&cursor=`",
+             "MonitoringManager",
+             "Opaque patient id (no NRIC); filters; clinician token with care-relationship scope",
+             "200: one page of readings or aggregates + `next` cursor; ETag",
+             "Vitals history",
+             "GET"
+            ],
+            [
+             "`/v1/patients/{patient-id}/observations/{obs-id}`",
+             "MonitoringManager",
+             "Body `{status: \"entered-in-error\", reason}`; clinician from token",
+             "200 with updated status; audit entry",
+             "Mark a reading as erroneous",
+             "PATCH"
+            ],
+            [
+             "`/v1/alerts/{alert-id}/acknowledgement`",
+             "AlertManager",
+             "Nurse identity from token; optional note",
+             "201 Created; 409 if already acknowledged",
+             "Acknowledge an alert",
+             "POST (or PUT, idempotent)"
+            ]
+           ]
+          }
+         }
+        ],
+        "points": [
+         {
+          "m": 2,
+          "t": "REST/RMM problems: action URIs, unsafe GET, POST for delete, no status codes. Security: NRIC in URL, oversharing, identity not from the token, delete vs audit."
+         },
+         {
+          "m": 2,
+          "t": "Performance plan: resolution-dependent aggregates, pagination, partitioned storage, caching or ETags for immutable windows."
+         },
+         {
+          "m": 2,
+          "t": "Corrected table with resource URIs, verbs, opaque ids, token-derived identity and proper responses."
+         }
+        ]
+       }
+      },
+      {
+       "label": "d",
+       "marks": 2,
+       "pattern": "agree",
+       "topics": [
+        "cloud-native/07-microservices-design-september-2026#inter-process-communication",
+        "platform/04-reusable-services-and-api-gateway-v2-#integration-types",
+        "architecting/05-design-highly-available-architecture-#availability-tactics"
+       ],
+       "body": [
+        "A team member argues that because alerts must reach the nurse within 10 seconds, all services on the alert path should call each other synchronously, ‘so nothing gets stuck in a queue’. Do you agree? Justify your answer."
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** A synchronous chain from ingestion to rule evaluation to alert to console couples the services' availability: the path is only as available as the product of its parts, and one slow service blocks the others. A short outage then *loses* alerts instead of delaying them. Asynchronous, durable messaging is what keeps alerts safe: an event stream or queue persists each breach until it is processed, and millisecond-level latencies easily fit the 10-second budget. Keep synchronous calls only where a user waits for an answer, and monitor end-to-end latency and consumer lag against the 10 s / 99% target."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: synchronous chains multiply failure and latency; durable async does not ‘lose’ messages."
+         },
+         {
+          "m": 1,
+          "t": "Ties to the NFR: async latency fits 10 s; measure end-to-end latency and lag."
+         }
+        ]
+       }
+      },
+      {
+       "label": "e",
+       "marks": 4,
+       "pattern": "agree",
+       "topics": [
+        "platform/05-platform-management-v2-1#metrics",
+        "architecting/05-design-highly-available-architecture-#availability-basics",
+        "architecting/08-ensure-maintainable-architecture-v3-1#analyzability"
+       ],
+       "body": [
+        "A team member proposes publishing the **number of alerts raised per day** as the key metric showing that the monitoring service is reliable. Do you agree? If not, what would show reliability?"
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** The daily alert count depends mostly on how sick the patients are and how the thresholds are set. It rises during a flu wave and falls when rules are relaxed. A service that silently misses half the breaches could show a ‘healthy’ count.",
+         "**Reliability** is whether the service keeps doing the right thing over time. Measure: **missed-alert rate**, from synthetic or injected breaches and audits of breaches without alerts; **end-to-end alert latency** (p99 against 10 s); **duplicate and false-alert rates**; ingestion completeness (readings received vs expected per device); and service availability, MTBF and MTTR of the alert path. Add consumer lag and dead-letter counts as leading indicators.",
+         "Keep the alert count as an operational workload measure for staffing, not as evidence of reliability."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict with reason: the count reflects patient condition or configuration, not correct operation."
+         },
+         {
+          "m": 1,
+          "t": "Shows the failure mode it hides (missed alerts)."
+         },
+         {
+          "m": 2,
+          "t": "Proper measures: missed-alert rate or synthetic probes, p99 latency vs 10 s, duplicates and false alerts, completeness, availability, MTTR."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Section B",
+   "focus": "Cloud native",
+   "questions": [
+    {
+     "n": 2,
+     "marks": 13,
+     "intro": [
+      "With reference to the case study in Appendix A, answer the following questions. The hospital's EMR and pharmacy systems will stay on premises; the rest of CareLink is to be cloud native, and Phase 2 adds GenAI-drafted consultation notes."
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 10,
+       "pattern": "design",
+       "topics": [
+        "cloud-native/02-cloud-reference-architecture-august-2#hybrid-multicloud",
+        "cloud-native/03-cloud-migration-august-2026#rearchitect-to-encapsulate",
+        "cloud-native/09-integrating-generative-ai-tools-into-#llm-rag-agents",
+        "cloud-native/07-microservices-design-september-2026#inter-process-communication",
+        "cloud-native/05a-kubernetes-september-2026#cloud-native-on-k8s",
+        "cloud-native/11-cloud-security-september-2026#shared-responsibility-csa"
+       ],
+       "body": [
+        "The pilot architecture is shown below.",
+        {
+         "figure": "mvp"
+        },
+        "Transform it into a **hybrid** cloud native reference architecture for Phases 1 and 2. *Hint: consider microservices, stream processing, serverless functions, scheduled jobs and integration with the on-premises systems.*"
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "body": [
+          "Draw the reference architecture with its essential components and interactions. Which components are essential because the EMR and pharmacy systems remain on premises?"
+         ]
+        },
+        {
+         "label": "ii",
+         "body": [
+          "How will readings flow from wearables to the nurse's console, and how will the internal services communicate? Label this in your diagram and justify the patterns."
+         ]
+        },
+        {
+         "label": "iii",
+         "body": [
+          "Identify **one** service that must remember state and propose a suitable state-management mechanism."
+         ]
+        },
+        {
+         "label": "iv",
+         "body": [
+          "Describe the Kubernetes deployment plan for the cloud part."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         {
+          "figure": "ans-ref"
+         },
+         "**i. Components.** Patient apps and wearables reach a streaming ingestion endpoint. Clinician web apps go through CDN + WAF and the API gateway, which uses the hospital identity provider via OIDC. Services: Patient, Consult (with a managed video service), Prescription, Ingestion, Alert engine, Nurse console BFF and Notification. An event stream carries vitals and alerts. A time-series store holds the vitals; Patient and Alert data sit in relational stores. Functions handle push and SMS; a scheduled job reconciles with the EMR nightly. Phase 2 adds a note-summariser service using RAG over clinical guidelines in a vector store, behind an AI gateway that redacts identifiers before calling an in-region model endpoint. **On-premises essentials:** private connectivity (VPN or dedicated link) with redundant paths; an **EMR facade** that *encapsulates* the legacy system behind a stable API, with change data capture to keep cloud copies current; identity federation with the hospital directory; and data-residency controls keeping everything in-country, with key management the hospital controls.",
+         "**ii. Flow.** Wearable → phone over BLE. The phone streams batches over MQTT or HTTPS, acknowledged per batch so nothing is dropped. Ingestion publishes VitalsReceived to the stream, partitioned by patient. The Alert engine consumes it, evaluates the rules and publishes AlertRaised. The Nurse console BFF consumes that and **pushes** to the nurse's screen over WebSocket. Notification also consumes it to page the on-call nurse. Internally: events and choreography for the data flow; synchronous REST/gRPC only for user queries (history, patient details); a queue with retries for paging commands.",
+         "**iii. State.** The **Alert engine** must remember recent readings per patient to evaluate rules like ‘SpO2 < 92% for 60 s’. Use stateful stream processing: keyed state per patient in an embedded state store, checkpointed to durable storage, and partitions reassigned on failure so another instance restores the state and resumes from the last checkpoint. The pods themselves stay replaceable.",
+         "**iv. Kubernetes.** A managed cluster in the in-country region across three zones, with namespaces for ingestion, clinical, AI and platform. Deployments with at least 3 replicas and an HPA on consumer lag (ingestion, alert engine) or requests per second (APIs). The alert engine runs as a StatefulSet if it keeps local state stores. The GPU node pool is separate, and only if the model is self-hosted. Network policies isolate the clinical namespaces, secrets come from the KMS, and PodDisruptionBudgets apply. GitOps handles delivery, with canary releases for the alert engine guarded by synthetic-breach tests."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "Diagram: ingestion, stream, alert engine, BFF with push, services per context, stores, functions or jobs, Phase 2 RAG and AI gateway."
+         },
+         {
+          "m": 1,
+          "t": "Hybrid essentials: private redundant connectivity, EMR facade (encapsulate) or CDC, identity federation, data residency or keys."
+         },
+         {
+          "m": 2,
+          "t": "Flow: acknowledged streaming ingestion → events → push to console; sync only for queries; justified."
+         },
+         {
+          "m": 2,
+          "t": "Stateful component with a fitting mechanism (keyed, checkpointed stream state, or a session store), with how it recovers."
+         },
+         {
+          "m": 2,
+          "t": "Coherent k8s plan: region and zones, namespaces, HPA on lag, StatefulSet where needed, isolation, rollout."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "pattern": "a-or-b",
+       "topics": [
+        "cloud-native/09-integrating-generative-ai-tools-into-#models-and-stack",
+        "cloud-native/09-integrating-generative-ai-tools-into-#llm-rag-agents",
+        "cloud-native/11-cloud-security-september-2026#data-security"
+       ],
+       "body": [
+        "For the Phase 2 *Draft Consultation Note* use case, would you call an externally hosted large language model API, or self-host an open model inside your Kubernetes cluster? What are the implications for the rest of the platform?"
+       ],
+       "answer": {
+        "text": [
+         "**It depends on residency; with in-country guarantees, use a hosted endpoint.** Transcripts are health data that must stay in-country ([Section 5](case#s5)). Pick a provider's model endpoint in the in-country region, with contractual no-retention and private connectivity. That avoids running GPUs for a modest load (150 doctors) and gives better models. If no provider can guarantee in-country processing, self-host an open model, accepting the GPU cost, the operational effort and probably lower quality.",
+         "**Implications:** an AI gateway that redacts identifiers, enforces quotas and the cost cap, and logs prompts and outputs for audit. A RAG pipeline (guidelines in an in-region vector store) so drafts are grounded. Prompt and model versioning with an evaluation set before upgrades. Graceful degradation: the note is a draft, so if the model is slow or unavailable the doctor writes it manually and nothing blocks the consultation. A human review step before the note reaches the EMR."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Decision driven by data residency or PDPA and load or cost, with the condition that would flip it."
+         },
+         {
+          "m": 1,
+          "t": "Trade-off: control and residency vs cost, GPU operations and model quality."
+         },
+         {
+          "m": 1,
+          "t": "Knock-on effects: AI gateway with redaction and audit, RAG store, evaluation and versioning, fallback, human review."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "title": "Section C",
+   "focus": "Architecting",
+   "questions": [
+    {
+     "n": 3,
+     "marks": 12,
+     "intro": [
+      "Refer to the logical architecture in [Section 6](case#s6), the domain model in [Section 7](case#s7) and the packaging model in [Section 8](case#s8), and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "architecting/03-architect-the-solution-architecture-m#logical-deployment-verify",
+        "architecting/03-architect-the-solution-architecture-m#logical-functional",
+        "architecting/04-design-secure-architecture-v4-7#access-control-segregation",
+        "cloud-native/10-appendix-cloud-patterns-and-practices#data-patterns"
+       ],
+       "body": [
+        "Evaluate the incomplete and potentially erroneous logical packaging cum deployment model for the *Raise Alert* use case (Figure 3). Identify **two** undesirable architectural decisions, propose corrective actions, and justify how each decision leads to your correction."
+       ],
+       "answer": {
+        "text": [
+         "Any two, each as decision → consequence → correction:",
+         "1. **Alert Evaluation Control (RuleEvaluator) runs only on the patient's phone.** A phone with a flat battery, killed app or no signal raises no alert at all. Rule changes need app releases, and an outdated phone evaluates outdated thresholds. **Correction:** evaluate rules server-side in the Alert service, on the ingested stream. The phone may show local warnings to the patient, but it is not the authority.",
+         "2. **Alert is manifested by both Alert Manager Data Access and Nurse Console Data Access.** Two owners of the same entity is the duplicated-state problem behind double alerts and lost acknowledgements. **Correction:** Alert belongs only to Alert Manager Data Access. The nurse console holds a read model fed by events.",
+         "3. **Nurse Console Data Access is deployed to the ward workstation.** Patient alerts would be stored on a shared ward PC: data at rest outside the controlled zone, no central audit, and alerts lost if the PC fails. **Correction:** keep data access in the internal zone. The workstation runs only the console presentation, which receives pushes from the BFF.",
+         "4. **AlertBoard (Nurse Console Control) uses VitalReading from Monitoring's data directly.** That couples it to Monitoring's schema and bypasses its access rules. **Correction:** go through Monitoring's API, or a read model of recent vitals."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "First decision: problem, consequence (missed alerts, ownership, data exposure) and corrected placement or packaging."
+         },
+         {
+          "m": 3,
+          "t": "Second decision: problem, consequence and correction, justified by the case NFRs or security."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "pattern": "design",
+       "topics": [
+        "architecting/07-perform-capacity-planning-for-archite#disk",
+        "architecting/07-perform-capacity-planning-for-archite#trend",
+        "architecting/06-design-for-performance-in-architectur#caching",
+        "cloud-native/04-cloud-persistence-september-2026#cloud-storage-options"
+       ],
+       "body": [
+        "Each reading record (heart rate, SpO2, temperature and motion, with keys and timestamp) takes **64 bytes**. Use the figures in [Section 4](case#s4): readings every 5 s from 12,000 concurrent patients today, growing linearly to 24,000 by the end of year 2; two years online; replication factor 3; index overhead 30%. Estimate the online storage needed at the end of year 2. Propose a storage plan that keeps queries under 3 s and controls cost, and identify two side effects to monitor."
+       ],
+       "answer": {
+        "text": [
+         "**Estimate:** per patient 86,400 / 5 = 17,280 records/day × 64 B ≈ 1.1 MB/day. Today: 12,000 × 1.1 MB ≈ **13.3 GB/day** raw. Linear growth to 24,000 gives an average of 18,000 patients over two years: 13.3 × 1.5 ≈ 19.9 GB/day × 730 days ≈ **14.5 TB raw**. × 1.3 for indexes ≈ 18.9 TB. × 3 replicas ≈ **57 TB**. Add 20–30% headroom for compaction and growth: about **70–75 TB** if everything stays raw and online.",
+         "**Plan:**",
+         {
+          "ol": [
+           "**Hot tier:** the last 30 days raw, partitioned by patient and day, on fast storage: about 0.6 TB raw at 24,000 patients ≈ 2.3 TB with indexes and replicas.",
+           "**Downsample older data:** keep 1-minute aggregates (min, max, mean per vital, about 96 B per minute vs 12 × 64 B raw), roughly 8× smaller, for months 2–24. Keep raw data around flagged events (± 30 min around every alert) for clinical review.",
+           "**Archive raw** to compressed object storage (about 5×) with lifecycle rules, for audit and re-processing, outside the 3 s query path.",
+           "**Query routing:** the API picks the resolution from the window size (see Q1c), so long windows read aggregates only. Pre-compute the rollups with a scheduled or streaming job."
+          ]
+         },
+         "**Side effects to monitor:** (1) loss of short events in downsampled data, so audit that alert windows are kept raw; (2) lag or failures in the rollup jobs, leaving stale or missing aggregates, so track job lag and completeness; (3) slower reads for archived raw data, so set clinician expectations and measure p90 per tier; (4) retention and erasure obligations across tiers and backups, so verify deletion is complete."
+        ],
+        "points": [
+         {
+          "m": 2,
+          "t": "Correct arithmetic chain: records/day, bytes, growth average, indexes, replicas, headroom (≈ 57 TB before headroom)."
+         },
+         {
+          "m": 2,
+          "t": "Plan: hot, downsampled and archive tiers, partitioning, precomputed rollups, query routing by resolution."
+         },
+         {
+          "m": 2,
+          "t": "Two relevant side effects with what to monitor."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "case": {
+  "label": "Appendix A",
+  "title": "CareLink",
+  "subtitle": "Case study for Mock paper 2 (fictitious)",
+  "intro": [
+   "Figures 2 and 3 were drafted by other team members and may contain mistakes."
+  ],
+  "sections": [
+   {
+    "id": "top",
+    "title": "Background",
+    "blocks": [
+     "Hospitals in the region discharge patients earlier than before, and many chronic patients would rather be monitored at home than readmitted. A regional hospital cluster has commissioned **CareLink**, a remote patient-monitoring platform. Patients wear a clip-on sensor that measures heart rate, blood oxygen (SpO2), temperature and motion; the patient's phone relays the readings. Nurses at a central monitoring hub watch dashboards and respond to alerts, and doctors run video teleconsultations.",
+     "The cluster's Electronic Medical Record (EMR) system and pharmacy dispensing system are 15 years old, run on premises in the hospital data centre and will not move in the next three years.",
+     "You are the Lead Solution Architect. Phase 1 covers monitoring, alerting and teleconsultation. Phase 2 adds deterioration risk scoring and GenAI-drafted consultation notes."
+    ]
+   },
+   {
+    "id": "s1",
+    "n": "1",
+    "title": "Phase 1 of the Platform",
+    "blocks": [
+     "Actors:",
+     {
+      "ol": [
+       "**Patient:** enrolled by a clinic; uses the CareLink app and wears a sensor.",
+       "**Caregiver:** a family member the patient allows to see their status.",
+       "**Nurse:** monitors assigned patients from the monitoring hub and acknowledges alerts.",
+       "**Doctor:** reviews history, runs teleconsultations and issues e-prescriptions.",
+       "**Pharmacist:** dispenses e-prescriptions through the hospital pharmacy system.",
+       "**Clinic Admin / Platform Admin:** enrol patients, assign nurses and manage users.",
+       "**Sensor:** the wearable device, paired to the patient's phone over Bluetooth Low Energy.",
+       "**EMR, Pharmacy System:** on-premises hospital systems. **National Digital Identity:** OpenID Connect provider for patients and staff."
+      ]
+     },
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Enrol Patient",
+         "The Clinic Admin enrols a patient, links the EMR record and assigns a nurse team."
+        ],
+        [
+         "Pair Sensor",
+         "The Patient pairs a sensor with the app."
+        ],
+        [
+         "Stream Vitals",
+         "The sensor samples every 5 seconds; the app uploads readings in batches every 30 seconds and buffers them while offline."
+        ],
+        [
+         "Raise Alert",
+         "When a reading breaches a rule (e.g. SpO2 below 92% for 60 seconds) the platform raises an alert to the assigned nurse."
+        ],
+        [
+         "Acknowledge Alert",
+         "The Nurse acknowledges the alert and records the action taken."
+        ],
+        [
+         "View Vitals",
+         "Nurses and Doctors view a patient's vitals chart for any window in the last two years; Patients and Caregivers view the last 7 days."
+        ],
+        [
+         "Book / Conduct Teleconsultation",
+         "The Patient books a slot; the Doctor and Patient meet by video."
+        ],
+        [
+         "Issue e-Prescription",
+         "The Doctor issues a prescription that is sent to the hospital pharmacy system."
+        ],
+        [
+         "Sync with EMR",
+         "Encounter summaries and alerts are written to the EMR; allergies and medications are read from it."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s2",
+    "n": "2",
+    "title": "Phase 2 of the Platform",
+    "blocks": [
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Score Deterioration Risk",
+         "A model scores each patient's risk of deterioration every 15 minutes from recent vitals and EMR history."
+        ],
+        [
+         "Draft Consultation Note",
+         "After a teleconsultation the platform drafts a structured note from the transcript and the hospital's clinical guidelines; the Doctor edits and signs it before it is filed to the EMR."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s3",
+    "n": "3",
+    "title": "Extensibility of the Platform",
+    "blocks": [
+     "New vital signs (e.g. blood glucose, respiratory rate) and new sensor models must be addable without code changes in multiple services."
+    ]
+   },
+   {
+    "id": "s4",
+    "n": "4",
+    "title": "Performance, Scalability and Capacity",
+    "blocks": [
+     {
+      "ul": [
+       "**20,000** enrolled patients; up to **12,000** wearing sensors concurrently today, growing linearly to **24,000** by the end of year 2.",
+       "Readings every **5 s**; uploads in batches every **30 s**; phones buffer up to **2 hours** offline.",
+       "A rule breach must appear on the assigned nurse's console within **10 s** for **99%** of breaches.",
+       "**300** concurrent nurses, **150** doctors, up to **400** concurrent video consultations.",
+       "Vitals history for any window within the last **2 years** in under **3 s** for 90% of requests.",
+       "Monitoring and alerting **99.9%** available; booking and history **99.5%**."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s5",
+    "n": "5",
+    "title": "Security and Compliance",
+    "blocks": [
+     {
+      "ul": [
+       "All health data must be stored and processed **in-country**; the hospital controls the encryption keys.",
+       "Access only by clinicians with a care relationship to the patient; every access is audited.",
+       "National identity numbers must not appear in URLs or logs.",
+       "Clinical records are corrected, never deleted; corrections are audited."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s6",
+    "n": "6",
+    "title": "Initial Architecture",
+    "blocks": [
+     {
+      "h": "6.1 Logical Architecture Overview",
+      "id": "s6-1"
+     },
+     {
+      "figure": "overview"
+     },
+     {
+      "h": "6.2 Deployment Options",
+      "id": "s6-2"
+     },
+     "CareLink services are to be cloud native in an in-country cloud region. The EMR and pharmacy system remain in the hospital data centre."
+    ]
+   },
+   {
+    "id": "s7",
+    "n": "7",
+    "title": "Domain Model for Phase 1",
+    "blocks": [
+     "A software architect has produced the following domain model.",
+     {
+      "figure": "domain"
+     }
+    ]
+   },
+   {
+    "id": "s8",
+    "n": "8",
+    "title": "Logical Packaging cum Deployment Model",
+    "blocks": [
+     "An **incomplete** and **potentially erroneous** packaging and deployment model for the *Raise Alert* use case.",
+     {
+      "figure": "packaging"
+     }
+    ]
+   }
+  ]
+ },
+ "figures": {
+  "overview": {
+   "title": "Figure 1: Logical Architecture Overview",
+   "caption": "Patients and clinicians on the Internet, CareLink in the cloud's internal zone, legacy systems in the hospital data centre.",
+   "size": [
+    1000,
+    540
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 245,
+     "h": 330
+    },
+    {
+     "id": "hosp",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Hospital Data Centre",
+     "tone": 1,
+     "x": 15,
+     "y": 362,
+     "w": 245,
+     "h": 165
+    },
+    {
+     "id": "dmz",
+     "kind": "zone",
+     "stereo": "zone",
+     "label": "DMZ",
+     "tone": 2,
+     "x": 280,
+     "y": 12,
+     "w": 185,
+     "h": 515
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Cloud Internal Zone (in-country)",
+     "tone": 0,
+     "x": 485,
+     "y": 12,
+     "w": 500,
+     "h": 515
+    },
+    {
+     "id": "svc",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Service Tier",
+     "tone": 0,
+     "x": 500,
+     "y": 66,
+     "w": 470,
+     "h": 220
+    },
+    {
+     "id": "sto",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Storage Tier",
+     "tone": 1,
+     "x": 500,
+     "y": 306,
+     "w": 225,
+     "h": 205,
+     "sub": "patient · vitals · alerts\n(Data Access per service)"
+    },
+    {
+     "id": "itg",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Integration Tier",
+     "tone": 5,
+     "x": 745,
+     "y": 306,
+     "w": 225,
+     "h": 205,
+     "sub": "EMR · pharmacy · SMS/push\nadapters"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 40,
+     "y": 66,
+     "w": 95,
+     "h": 150,
+     "label": "Patient",
+     "sub": "app"
+    },
+    {
+     "id": "sensor",
+     "kind": "iot",
+     "x": 150,
+     "y": 70,
+     "w": 95,
+     "h": 60,
+     "label": "Sensor"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 32,
+     "y": 240,
+     "w": 210,
+     "h": 80,
+     "label": "Web Browser",
+     "sub": "nurse hub · doctor · admin"
+    },
+    {
+     "id": "emr",
+     "kind": "external",
+     "x": 32,
+     "y": 415,
+     "w": 100,
+     "h": 90,
+     "label": "EMR"
+    },
+    {
+     "id": "phx",
+     "kind": "external",
+     "x": 145,
+     "y": 415,
+     "w": 100,
+     "h": 90,
+     "label": "Pharmacy",
+     "sub": "system"
+    },
+    {
+     "id": "wp",
+     "kind": "service",
+     "tone": 4,
+     "x": 295,
+     "y": 230,
+     "w": 155,
+     "h": 76,
+     "label": "Web\nPresentation"
+    },
+    {
+     "id": "api",
+     "kind": "gateway",
+     "x": 295,
+     "y": 90,
+     "w": 155,
+     "h": 76,
+     "label": "API Gateway",
+     "sub": "+ ingestion"
+    },
+    {
+     "id": "vpn",
+     "kind": "security",
+     "x": 295,
+     "y": 420,
+     "w": 155,
+     "h": 76,
+     "label": "VPN / private\nlink"
+    },
+    {
+     "id": "c1",
+     "kind": "component",
+     "x": 515,
+     "y": 122,
+     "w": 140,
+     "h": 56,
+     "label": "Patient\nManager"
+    },
+    {
+     "id": "c2",
+     "kind": "component",
+     "x": 670,
+     "y": 122,
+     "w": 140,
+     "h": 56,
+     "label": "Monitoring\nManager"
+    },
+    {
+     "id": "c3",
+     "kind": "component",
+     "x": 825,
+     "y": 122,
+     "w": 130,
+     "h": 56,
+     "label": "Alert\nManager"
+    },
+    {
+     "id": "c4",
+     "kind": "component",
+     "x": 515,
+     "y": 200,
+     "w": 140,
+     "h": 56,
+     "label": "Nurse\nConsole"
+    },
+    {
+     "id": "c5",
+     "kind": "component",
+     "x": 670,
+     "y": 200,
+     "w": 140,
+     "h": 56,
+     "label": "Consult\nManager"
+    },
+    {
+     "id": "c6",
+     "kind": "component",
+     "x": 825,
+     "y": 200,
+     "w": 130,
+     "h": 56,
+     "label": "Prescription"
+    }
+   ],
+   "edges": [
+    {
+     "from": "sensor",
+     "to": "app",
+     "style": "flow",
+     "label": "BLE",
+     "labelDy": -12
+    },
+    {
+     "from": "app",
+     "to": "api",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.85
+     ],
+     "toAt": [
+      0,
+      0.6
+     ]
+    },
+    {
+     "from": "web",
+     "to": "wp",
+     "style": "flow"
+    },
+    {
+     "from": "api",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "wp",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.85
+     ]
+    },
+    {
+     "from": "emr",
+     "to": "vpn",
+     "style": "flow",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       82,
+       402
+      ],
+      [
+       270,
+       402
+      ]
+     ],
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "phx",
+     "to": "vpn",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.7
+     ],
+     "toAt": [
+      0,
+      0.7
+     ]
+    },
+    {
+     "from": "vpn",
+     "to": "itg",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       475,
+       458
+      ],
+      [
+       475,
+       519
+      ],
+      [
+       858,
+       519
+      ]
+     ],
+     "toAt": [
+      0.55,
+      1
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "sto",
+     "style": "flow",
+     "fromAt": [
+      0.24,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "itg",
+     "style": "flow",
+     "fromAt": [
+      0.76,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    }
+   ]
+  },
+  "domain": {
+   "title": "Figure 2: Domain Model for Phase 1",
+   "caption": "Entities by owning service, with key attributes and multiplicities. «abstract» marks a superclass.",
+   "size": [
+    1040,
+    690
+   ],
+   "groups": [
+    {
+     "id": "pm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "PatientManager",
+     "tone": 0,
+     "x": 20,
+     "y": 30,
+     "w": 300,
+     "h": 300
+    },
+    {
+     "id": "mm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "MonitoringManager",
+     "tone": 1,
+     "x": 350,
+     "y": 30,
+     "w": 670,
+     "h": 250
+    },
+    {
+     "id": "am",
+     "kind": "package",
+     "stereo": "service",
+     "label": "AlertManager",
+     "tone": 5,
+     "x": 350,
+     "y": 300,
+     "w": 420,
+     "h": 260
+    },
+    {
+     "id": "nc",
+     "kind": "package",
+     "stereo": "service",
+     "label": "NurseConsole",
+     "tone": 4,
+     "x": 790,
+     "y": 300,
+     "w": 230,
+     "h": 275
+    },
+    {
+     "id": "cm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "ConsultManager",
+     "tone": 2,
+     "x": 20,
+     "y": 360,
+     "w": 300,
+     "h": 300
+    }
+   ],
+   "nodes": [
+    {
+     "id": "Patient",
+     "kind": "class",
+     "tone": 0,
+     "x": 40,
+     "y": 90,
+     "w": 160,
+     "label": "Patient",
+     "attrs": [
+      "patientId",
+      "name",
+      "nric"
+     ]
+    },
+    {
+     "id": "Caregiver",
+     "kind": "class",
+     "tone": 0,
+     "x": 40,
+     "y": 230,
+     "w": 125,
+     "label": "Caregiver",
+     "attrs": [
+      "name",
+      "phone"
+     ]
+    },
+    {
+     "id": "Sensor",
+     "kind": "class",
+     "tone": 0,
+     "x": 180,
+     "y": 230,
+     "w": 125,
+     "label": "Sensor",
+     "attrs": [
+      "serialNo",
+      "model"
+     ]
+    },
+    {
+     "id": "VitalReading",
+     "kind": "class",
+     "stereo": "abstract",
+     "tone": 1,
+     "x": 600,
+     "y": 85,
+     "w": 170,
+     "label": "VitalReading",
+     "attrs": [
+      "takenAt"
+     ]
+    },
+    {
+     "id": "HR",
+     "kind": "class",
+     "tone": 1,
+     "x": 370,
+     "y": 190,
+     "w": 190,
+     "label": "HeartRateReading",
+     "attrs": [
+      "bpm"
+     ]
+    },
+    {
+     "id": "SpO2",
+     "kind": "class",
+     "tone": 1,
+     "x": 590,
+     "y": 190,
+     "w": 170,
+     "label": "SpO2Reading",
+     "attrs": [
+      "percent"
+     ]
+    },
+    {
+     "id": "BP",
+     "kind": "class",
+     "tone": 1,
+     "x": 790,
+     "y": 190,
+     "w": 215,
+     "label": "BloodPressureReading",
+     "attrs": [
+      "systolic",
+      "diastolic"
+     ]
+    },
+    {
+     "id": "HRRule",
+     "kind": "class",
+     "tone": 5,
+     "x": 380,
+     "y": 360,
+     "w": 170,
+     "label": "HeartRateRule",
+     "attrs": [
+      "minBpm",
+      "maxBpm"
+     ]
+    },
+    {
+     "id": "SpO2Rule",
+     "kind": "class",
+     "tone": 5,
+     "x": 590,
+     "y": 360,
+     "w": 160,
+     "label": "SpO2Rule",
+     "attrs": [
+      "minPercent",
+      "seconds"
+     ]
+    },
+    {
+     "id": "Alert",
+     "kind": "class",
+     "tone": 5,
+     "x": 480,
+     "y": 460,
+     "w": 160,
+     "label": "Alert",
+     "attrs": [
+      "alertId",
+      "raisedAt",
+      "status"
+     ]
+    },
+    {
+     "id": "Nurse",
+     "kind": "class",
+     "tone": 4,
+     "x": 815,
+     "y": 360,
+     "w": 150,
+     "label": "Nurse",
+     "attrs": [
+      "nurseId",
+      "ward"
+     ]
+    },
+    {
+     "id": "ConsoleAlert",
+     "kind": "class",
+     "tone": 4,
+     "x": 810,
+     "y": 465,
+     "w": 190,
+     "label": "ConsoleAlert",
+     "attrs": [
+      "alertNo",
+      "status",
+      "ackBy"
+     ]
+    },
+    {
+     "id": "Doctor",
+     "kind": "class",
+     "tone": 2,
+     "x": 40,
+     "y": 420,
+     "w": 120,
+     "label": "Doctor",
+     "attrs": [
+      "mcr"
+     ]
+    },
+    {
+     "id": "Prescription",
+     "kind": "class",
+     "tone": 2,
+     "x": 180,
+     "y": 420,
+     "w": 125,
+     "label": "Prescription",
+     "attrs": [
+      "items"
+     ]
+    },
+    {
+     "id": "Consultation",
+     "kind": "class",
+     "tone": 2,
+     "x": 40,
+     "y": 540,
+     "w": 160,
+     "label": "Consultation",
+     "attrs": [
+      "slot",
+      "videoRoom"
+     ]
+    }
+   ],
+   "edges": [
+    {
+     "from": "Patient",
+     "to": "Caregiver",
+     "style": "assoc",
+     "fromAt": [
+      0.35,
+      1
+     ],
+     "toAt": [
+      0.45,
+      0
+     ],
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "Patient",
+     "to": "Sensor",
+     "style": "assoc",
+     "fromAt": [
+      0.8,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "m1": "1",
+     "m2": "0..1"
+    },
+    {
+     "from": "HR",
+     "to": "VitalReading",
+     "style": "gen",
+     "toAt": [
+      0.2,
+      1
+     ]
+    },
+    {
+     "from": "SpO2",
+     "to": "VitalReading",
+     "style": "gen",
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "BP",
+     "to": "VitalReading",
+     "style": "gen",
+     "toAt": [
+      0.8,
+      1
+     ]
+    },
+    {
+     "from": "Patient",
+     "to": "HR",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.8
+     ],
+     "toAt": [
+      0,
+      0.5
+     ],
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "Patient",
+     "to": "SpO2",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.45
+     ],
+     "via": [
+      [
+       335,
+       131
+      ],
+      [
+       335,
+       178
+      ],
+      [
+       641,
+       178
+      ]
+     ],
+     "toAt": [
+      0.3,
+      0
+     ],
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "Patient",
+     "to": "BP",
+     "style": "assoc",
+     "fromAt": [
+      0.9,
+      0
+     ],
+     "via": [
+      [
+       184,
+       16
+      ],
+      [
+       897,
+       16
+      ]
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "HRRule",
+     "to": "HR",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "toAt": [
+      0.45,
+      1
+     ],
+     "label": "evaluates",
+     "labelDx": 36
+    },
+    {
+     "from": "SpO2Rule",
+     "to": "SpO2",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "label": "evaluates",
+     "labelDx": 36
+    },
+    {
+     "from": "HRRule",
+     "to": "Alert",
+     "style": "assoc",
+     "fromAt": [
+      0.6,
+      1
+     ],
+     "toAt": [
+      0.25,
+      0
+     ],
+     "label": "raises",
+     "labelDx": -24,
+     "m2": "0..*"
+    },
+    {
+     "from": "SpO2Rule",
+     "to": "Alert",
+     "style": "assoc",
+     "fromAt": [
+      0.3,
+      1
+     ],
+     "toAt": [
+      0.8,
+      0
+     ],
+     "label": "raises",
+     "labelDx": 26,
+     "m2": "0..*"
+    },
+    {
+     "from": "Alert",
+     "to": "Patient",
+     "style": "assoc",
+     "fromAt": [
+      0,
+      0.4
+     ],
+     "via": [
+      [
+       342,
+       497
+      ],
+      [
+       342,
+       196
+      ]
+     ],
+     "toAt": [
+      1,
+      0.95
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "ConsoleAlert",
+     "to": "Alert",
+     "style": "assoc",
+     "fromAt": [
+      0,
+      0.45
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "copies",
+     "labelDy": -10,
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "Nurse",
+     "to": "ConsoleAlert",
+     "style": "assoc",
+     "m1": "1",
+     "m2": "0..*",
+     "label": "acknowledges",
+     "labelDx": -45
+    },
+    {
+     "from": "Consultation",
+     "to": "Doctor",
+     "style": "assoc",
+     "fromAt": [
+      0.3,
+      0
+     ],
+     "toAt": [
+      0.4,
+      1
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "Consultation",
+     "to": "Prescription",
+     "style": "assoc",
+     "fromAt": [
+      0.85,
+      0
+     ],
+     "toAt": [
+      0.4,
+      1
+     ],
+     "m1": "1",
+     "m2": "0..1"
+    },
+    {
+     "from": "Consultation",
+     "to": "Patient",
+     "style": "assoc",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "via": [
+      [
+       12,
+       581
+      ],
+      [
+       12,
+       136
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    }
+   ]
+  },
+  "packaging": {
+   "title": "Figure 3: Logical Packaging cum Deployment Model (Raise Alert)",
+   "caption": "Subsystems «manifest» the boundary, control and entity elements and are «deploy»ed to nodes. Incomplete and potentially erroneous.",
+   "size": [
+    1060,
+    640
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 205,
+     "h": 392
+    },
+    {
+     "id": "phone",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Patient Phone",
+     "x": 35,
+     "y": 70,
+     "w": 160,
+     "h": 200
+    },
+    {
+     "id": "ward",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Hospital Ward",
+     "tone": 1,
+     "x": 15,
+     "y": 424,
+     "w": 205,
+     "h": 200
+    },
+    {
+     "id": "ws",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Nurse\nWorkstation",
+     "x": 35,
+     "y": 482,
+     "w": 160,
+     "h": 126
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Cloud Internal Zone",
+     "tone": 0,
+     "x": 845,
+     "y": 12,
+     "w": 200,
+     "h": 612
+    },
+    {
+     "id": "msn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Monitoring\nService",
+     "x": 862,
+     "y": 70,
+     "w": 165,
+     "h": 200
+    },
+    {
+     "id": "asn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Alert\nService",
+     "x": 862,
+     "y": 330,
+     "w": 165,
+     "h": 230
+    },
+    {
+     "id": "pap",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Patient App Presentation",
+     "tone": 3,
+     "x": 240,
+     "y": 12,
+     "w": 170,
+     "h": 64
+    },
+    {
+     "id": "aec",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Alert Evaluation Control",
+     "tone": 5,
+     "x": 425,
+     "y": 12,
+     "w": 170,
+     "h": 64
+    },
+    {
+     "id": "ncc",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Nurse Console Control",
+     "tone": 4,
+     "x": 610,
+     "y": 12,
+     "w": 175,
+     "h": 64
+    },
+    {
+     "id": "mda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Monitoring Data Access",
+     "tone": 1,
+     "x": 240,
+     "y": 450,
+     "w": 190,
+     "h": 64
+    },
+    {
+     "id": "ada",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Alert Manager Data Access",
+     "tone": 5,
+     "x": 445,
+     "y": 450,
+     "w": 190,
+     "h": 64
+    },
+    {
+     "id": "nda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Nurse Console Data Access",
+     "tone": 4,
+     "x": 650,
+     "y": 450,
+     "w": 185,
+     "h": 64
+    }
+   ],
+   "nodes": [
+    {
+     "id": "sensor",
+     "kind": "iot",
+     "x": 45,
+     "y": 300,
+     "w": 140,
+     "h": 70,
+     "label": "Sensor"
+    },
+    {
+     "id": "screen",
+     "kind": "class",
+     "stereo": "boundary",
+     "tone": 4,
+     "x": 245,
+     "y": 150,
+     "w": 150,
+     "label": "VitalsScreen"
+    },
+    {
+     "id": "eval",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 420,
+     "y": 150,
+     "w": 160,
+     "label": "RuleEvaluator"
+    },
+    {
+     "id": "board",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 610,
+     "y": 150,
+     "w": 160,
+     "label": "AlertBoard"
+    },
+    {
+     "id": "vital",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 260,
+     "y": 300,
+     "w": 150,
+     "label": "VitalReading"
+    },
+    {
+     "id": "alert",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 560,
+     "y": 300,
+     "w": 120,
+     "label": "Alert"
+    }
+   ],
+   "edges": [
+    {
+     "from": "sensor",
+     "to": "phone",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "toAt": [
+      0.45,
+      1
+     ],
+     "label": "BLE",
+     "labelDx": 20
+    },
+    {
+     "from": "pap",
+     "to": "phone",
+     "style": "dep",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "toAt": [
+      1,
+      0.12
+     ],
+     "label": "deploy",
+     "labelDy": -10
+    },
+    {
+     "from": "aec",
+     "to": "phone",
+     "style": "dep",
+     "fromAt": [
+      0.07,
+      1
+     ],
+     "via": [
+      [
+       437,
+       112
+      ]
+     ],
+     "toAt": [
+      1,
+      0.21
+     ],
+     "label": "deploy",
+     "labelAt": 0.88
+    },
+    {
+     "from": "ncc",
+     "to": "msn",
+     "style": "dep",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.3
+     ],
+     "label": "deploy"
+    },
+    {
+     "from": "ada",
+     "to": "asn",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       540,
+       545
+      ],
+      [
+       850,
+       545
+      ]
+     ],
+     "toAt": [
+      0,
+      0.93
+     ],
+     "label": "deploy",
+     "labelAt": 0.8
+    },
+    {
+     "from": "nda",
+     "to": "ws",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       742,
+       600
+      ],
+      [
+       195,
+       600
+      ]
+     ],
+     "toAt": [
+      1,
+      0.94
+     ],
+     "label": "deploy",
+     "labelAt": 0.5
+    },
+    {
+     "from": "pap",
+     "to": "screen",
+     "style": "dep",
+     "fromAt": [
+      0.48,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30
+    },
+    {
+     "from": "aec",
+     "to": "eval",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30,
+     "labelAt": 0.65
+    },
+    {
+     "from": "ncc",
+     "to": "board",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30
+    },
+    {
+     "from": "screen",
+     "to": "eval",
+     "style": "assoc"
+    },
+    {
+     "from": "eval",
+     "to": "vital",
+     "style": "assoc",
+     "fromAt": [
+      0.25,
+      1
+     ]
+    },
+    {
+     "from": "eval",
+     "to": "alert",
+     "style": "assoc",
+     "fromAt": [
+      0.75,
+      1
+     ],
+     "toAt": [
+      0.3,
+      0
+     ]
+    },
+    {
+     "from": "board",
+     "to": "alert",
+     "style": "assoc",
+     "fromAt": [
+      0.4,
+      1
+     ],
+     "toAt": [
+      0.7,
+      0
+     ]
+    },
+    {
+     "from": "board",
+     "to": "vital",
+     "style": "assoc",
+     "fromAt": [
+      0.05,
+      1
+     ],
+     "toAt": [
+      0.85,
+      0
+     ]
+    },
+    {
+     "from": "mda",
+     "to": "vital",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32
+    },
+    {
+     "from": "ada",
+     "to": "alert",
+     "style": "dep",
+     "fromAt": [
+      0.7,
+      0
+     ],
+     "toAt": [
+      0.35,
+      1
+     ],
+     "label": "manifest",
+     "labelDx": -34
+    },
+    {
+     "from": "nda",
+     "to": "alert",
+     "style": "dep",
+     "fromAt": [
+      0.3,
+      0
+     ],
+     "toAt": [
+      0.75,
+      1
+     ],
+     "label": "manifest",
+     "labelDx": 34
+    }
+   ]
+  },
+  "mvp": {
+   "title": "Pilot architecture",
+   "caption": "One server, one database; the EMR exchanges a nightly file.",
+   "size": [
+    880,
+    320
+   ],
+   "legend": false,
+   "groups": [
+    {
+     "id": "vm",
+     "kind": "tier",
+     "tone": 0,
+     "x": 225,
+     "y": 25,
+     "w": 470,
+     "h": 280,
+     "label": "Cloud VM"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "sensor",
+     "kind": "iot",
+     "x": 20,
+     "y": 30,
+     "w": 110,
+     "h": 56,
+     "label": "Sensor"
+    },
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 105,
+     "w": 100,
+     "h": 120,
+     "label": "Patient app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 245,
+     "w": 130,
+     "h": 60,
+     "label": "Nurse console"
+    },
+    {
+     "id": "mono",
+     "kind": "component",
+     "x": 262,
+     "y": 110,
+     "w": 200,
+     "h": 86,
+     "label": "CareLink server",
+     "sub": "(monolith)"
+    },
+    {
+     "id": "db",
+     "kind": "db",
+     "x": 530,
+     "y": 105,
+     "w": 130,
+     "h": 96,
+     "label": "Single\ndatabase"
+    },
+    {
+     "id": "emr",
+     "kind": "external",
+     "x": 725,
+     "y": 128,
+     "w": 140,
+     "h": 60,
+     "label": "Hospital EMR"
+    }
+   ],
+   "edges": [
+    {
+     "from": "sensor",
+     "to": "app",
+     "style": "flow"
+    },
+    {
+     "from": "app",
+     "to": "mono",
+     "style": "sync",
+     "label": "HTTP batches",
+     "labelDy": -12
+    },
+    {
+     "from": "web",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "mono",
+     "to": "db",
+     "style": "sync"
+    },
+    {
+     "from": "emr",
+     "to": "mono",
+     "style": "async",
+     "label": "nightly file",
+     "labelDy": 12,
+     "labelAt": 0.5,
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       795,
+       255
+      ],
+      [
+       362,
+       255
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    }
+   ]
+  },
+  "ans-ref": {
+   "title": "Model answer: hybrid reference architecture",
+   "caption": "Acknowledged streaming ingestion, a stateful alert engine, push to nurses, an EMR facade over private connectivity, and an AI gateway in front of an in-region model for Phase 2.",
+   "size": [
+    1080,
+    760
+   ],
+   "groups": [
+    {
+     "id": "edge",
+     "kind": "zone",
+     "label": "Edge (DMZ)",
+     "tone": 2,
+     "x": 168,
+     "y": 20,
+     "w": 164,
+     "h": 720
+    },
+    {
+     "id": "cloud",
+     "kind": "cloud",
+     "label": "In-country cloud region (IaC)",
+     "tone": 0,
+     "x": 350,
+     "y": 20,
+     "w": 715,
+     "h": 720
+    },
+    {
+     "id": "k8s",
+     "kind": "cluster",
+     "label": "Managed Kubernetes · 3 zones",
+     "tone": 0,
+     "x": 365,
+     "y": 52,
+     "w": 460,
+     "h": 498
+    },
+    {
+     "id": "hosp",
+     "kind": "zone",
+     "label": "Hospital DC",
+     "tone": 1,
+     "x": 12,
+     "y": 470,
+     "w": 146,
+     "h": 200
+    }
+   ],
+   "nodes": [
+    {
+     "id": "sensor",
+     "kind": "iot",
+     "x": 22,
+     "y": 30,
+     "w": 120,
+     "h": 52,
+     "label": "Sensor"
+    },
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 32,
+     "y": 100,
+     "w": 100,
+     "h": 125,
+     "label": "Patient app",
+     "sub": "2 h buffer"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 18,
+     "y": 250,
+     "w": 130,
+     "h": 76,
+     "label": "Clinician web"
+    },
+    {
+     "id": "idp",
+     "kind": "external",
+     "x": 18,
+     "y": 350,
+     "w": 130,
+     "h": 58,
+     "label": "Identity",
+     "sub": "OIDC"
+    },
+    {
+     "id": "emr",
+     "kind": "external",
+     "x": 25,
+     "y": 520,
+     "w": 120,
+     "h": 52,
+     "label": "EMR"
+    },
+    {
+     "id": "phx",
+     "kind": "external",
+     "x": 25,
+     "y": 600,
+     "w": 120,
+     "h": 52,
+     "label": "Pharmacy"
+    },
+    {
+     "id": "ing",
+     "kind": "gateway",
+     "x": 183,
+     "y": 100,
+     "w": 134,
+     "h": 70,
+     "label": "Ingestion",
+     "sub": "acked batches"
+    },
+    {
+     "id": "waf",
+     "kind": "security",
+     "x": 183,
+     "y": 195,
+     "w": 134,
+     "h": 52,
+     "label": "CDN + WAF"
+    },
+    {
+     "id": "gw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 270,
+     "w": 134,
+     "h": 70,
+     "label": "API gateway",
+     "sub": "OIDC, audit"
+    },
+    {
+     "id": "video",
+     "kind": "service",
+     "tone": 2,
+     "x": 183,
+     "y": 380,
+     "w": 134,
+     "h": 60,
+     "label": "Video",
+     "sub": "managed"
+    },
+    {
+     "id": "vpn",
+     "kind": "security",
+     "x": 183,
+     "y": 545,
+     "w": 134,
+     "h": 70,
+     "label": "Private link",
+     "sub": "redundant"
+    },
+    {
+     "id": "patient",
+     "kind": "service",
+     "x": 380,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Patient"
+    },
+    {
+     "id": "consult",
+     "kind": "service",
+     "x": 530,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Consult"
+    },
+    {
+     "id": "facade",
+     "kind": "service",
+     "x": 680,
+     "y": 100,
+     "w": 130,
+     "h": 62,
+     "label": "EMR facade",
+     "sub": "encapsulate"
+    },
+    {
+     "id": "ingest",
+     "kind": "service",
+     "x": 380,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Ingestion svc"
+    },
+    {
+     "id": "rx",
+     "kind": "service",
+     "x": 530,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Prescription"
+    },
+    {
+     "id": "sync",
+     "kind": "job",
+     "x": 680,
+     "y": 185,
+     "w": 130,
+     "h": 62,
+     "label": "EMR reconcile",
+     "sub": "nightly"
+    },
+    {
+     "id": "stream",
+     "kind": "stream",
+     "x": 380,
+     "y": 278,
+     "w": 430,
+     "h": 64,
+     "label": "Event stream",
+     "sub": "VitalsReceived · AlertRaised · partitioned by patient",
+     "accent": true
+    },
+    {
+     "id": "engine",
+     "kind": "service",
+     "x": 380,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Alert engine",
+     "sub": "stateful",
+     "accent": true
+    },
+    {
+     "id": "bff",
+     "kind": "service",
+     "x": 530,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Console BFF",
+     "sub": "WebSocket push"
+    },
+    {
+     "id": "notify",
+     "kind": "service",
+     "x": 680,
+     "y": 375,
+     "w": 130,
+     "h": 62,
+     "label": "Notification"
+    },
+    {
+     "id": "summ",
+     "kind": "ai",
+     "x": 380,
+     "y": 465,
+     "w": 135,
+     "h": 62,
+     "label": "Note drafting",
+     "sub": "Phase 2, RAG"
+    },
+    {
+     "id": "aigw",
+     "kind": "gateway",
+     "x": 530,
+     "y": 465,
+     "w": 135,
+     "h": 62,
+     "label": "AI gateway",
+     "sub": "redact, quota"
+    },
+    {
+     "id": "q",
+     "kind": "queue",
+     "x": 680,
+     "y": 465,
+     "w": 130,
+     "h": 56,
+     "label": "Paging\nqueue"
+    },
+    {
+     "id": "pushfn",
+     "kind": "function",
+     "x": 680,
+     "y": 575,
+     "w": 130,
+     "h": 56,
+     "label": "Push / SMS",
+     "sub": "function"
+    },
+    {
+     "id": "llm",
+     "kind": "external",
+     "x": 380,
+     "y": 575,
+     "w": 285,
+     "h": 56,
+     "label": "In-region model endpoint",
+     "sub": "no retention, private link"
+    },
+    {
+     "id": "pdb",
+     "kind": "db",
+     "x": 845,
+     "y": 56,
+     "w": 200,
+     "h": 70,
+     "label": "Patient DB",
+     "sub": "encrypted"
+    },
+    {
+     "id": "ts",
+     "kind": "db",
+     "x": 845,
+     "y": 175,
+     "w": 200,
+     "h": 80,
+     "label": "Vitals store",
+     "sub": "time-series, by patient+day",
+     "accent": true
+    },
+    {
+     "id": "adb",
+     "kind": "db",
+     "x": 845,
+     "y": 375,
+     "w": 200,
+     "h": 70,
+     "label": "Alert DB"
+    },
+    {
+     "id": "vec",
+     "kind": "db",
+     "x": 845,
+     "y": 465,
+     "w": 200,
+     "h": 70,
+     "label": "Vector store",
+     "sub": "guidelines"
+    },
+    {
+     "id": "obj",
+     "kind": "store",
+     "x": 845,
+     "y": 565,
+     "w": 200,
+     "h": 66,
+     "label": "Object archive",
+     "sub": "raw vitals, transcripts"
+    },
+    {
+     "id": "plat",
+     "kind": "box",
+     "tone": 2,
+     "x": 365,
+     "y": 660,
+     "w": 680,
+     "h": 62,
+     "label": "Shared platform services",
+     "sub": "IaC + GitOps · hospital-held keys (KMS) · audit log · logs, metrics, traces"
+    }
+   ],
+   "edges": [
+    {
+     "from": "sensor",
+     "to": "app",
+     "style": "flow",
+     "label": "BLE",
+     "labelDx": 20
+    },
+    {
+     "from": "app",
+     "to": "ing",
+     "style": "event",
+     "fromAt": [
+      1,
+      0.4
+     ],
+     "toAt": [
+      0,
+      0.4
+     ]
+    },
+    {
+     "from": "web",
+     "to": "waf",
+     "style": "sync"
+    },
+    {
+     "from": "waf",
+     "to": "gw",
+     "style": "sync"
+    },
+    {
+     "from": "gw",
+     "to": "idp",
+     "style": "sync",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "toAt": [
+      1,
+      0.3
+     ]
+    },
+    {
+     "from": "ing",
+     "to": "ingest",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.6
+     ],
+     "via": [
+      [
+       345,
+       142
+      ],
+      [
+       345,
+       216
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "gw",
+     "to": "k8s",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "app",
+     "to": "video",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.95
+     ],
+     "via": [
+      [
+       160,
+       219
+      ],
+      [
+       160,
+       410
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "emr",
+     "to": "vpn",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "phx",
+     "to": "vpn",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.75
+     ]
+    },
+    {
+     "from": "vpn",
+     "to": "facade",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       340,
+       580
+      ],
+      [
+       340,
+       645
+      ],
+      [
+       836,
+       645
+      ],
+      [
+       836,
+       131
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    },
+    {
+     "from": "ingest",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.16,
+      0
+     ]
+    },
+    {
+     "from": "ingest",
+     "to": "ts",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       447,
+       172
+      ],
+      [
+       835,
+       172
+      ]
+     ],
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "patient",
+     "to": "pdb",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       447,
+       80
+      ],
+      [
+       835,
+       80
+      ]
+     ],
+     "toAt": [
+      0,
+      0.35
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "engine",
+     "style": "event",
+     "fromAt": [
+      0.16,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "engine",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.85,
+      0
+     ],
+     "toAt": [
+      0.4,
+      1
+     ],
+     "label": "AlertRaised",
+     "labelDx": 6
+    },
+    {
+     "from": "stream",
+     "to": "bff",
+     "style": "event",
+     "fromAt": [
+      0.55,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "notify",
+     "style": "event",
+     "fromAt": [
+      0.85,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "notify",
+     "to": "adb",
+     "style": "sync"
+    },
+    {
+     "from": "notify",
+     "to": "q",
+     "style": "async"
+    },
+    {
+     "from": "q",
+     "to": "pushfn",
+     "style": "async"
+    },
+    {
+     "from": "summ",
+     "to": "aigw",
+     "style": "sync"
+    },
+    {
+     "from": "aigw",
+     "to": "llm",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.7,
+      0
+     ]
+    },
+    {
+     "from": "summ",
+     "to": "vec",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       447,
+       545
+      ],
+      [
+       835,
+       545
+      ]
+     ],
+     "toAt": [
+      0,
+      0.85
+     ]
+    }
+   ]
+  }
+ }
+}

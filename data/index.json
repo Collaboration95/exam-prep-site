@@ -1,0 +1,79 @@
+{
+ "site": "NUS exam prep",
+ "schema": "See AGENTS.md in the repo.",
+ "courses": [
+  {
+   "id": "cloud-native",
+   "title": "Cloud Native Solution Design",
+   "outline": "cloud-native/course.json",
+   "questions": "cloud-native/questions.json",
+   "questionCount": 418,
+   "topics": [
+    "cloud-native/01-cloud-overview-august-2026.json",
+    "cloud-native/02-cloud-reference-architecture-august-2.json",
+    "cloud-native/02a-infrastructure-as-code-vendor-specif.json",
+    "cloud-native/03-cloud-migration-august-2026.json",
+    "cloud-native/mtech-ft-cnsd-day-1.json",
+    "cloud-native/04-cloud-persistence-september-2026.json",
+    "cloud-native/05-architecting-a-cloud-native-applicati.json",
+    "cloud-native/05a-kubernetes-september-2026.json",
+    "cloud-native/05b-vendor-managed-services-september-20.json",
+    "cloud-native/06-application-architecture-styles-septe.json",
+    "cloud-native/07-microservices-design-september-2026.json",
+    "cloud-native/mtech-ft-cnsd-day-3.json",
+    "cloud-native/08-serverless-computing-september-2026.json",
+    "cloud-native/09-integrating-generative-ai-tools-into-.json",
+    "cloud-native/11-cloud-security-september-2026.json",
+    "cloud-native/10-appendix-cloud-patterns-and-practices.json",
+    "cloud-native/gartner-cloud-migration-strategy.json"
+   ]
+  },
+  {
+   "id": "platform",
+   "title": "Platform Engineering",
+   "outline": "platform/course.json",
+   "questions": "platform/questions.json",
+   "questionCount": 246,
+   "topics": [
+    "platform/01-introduction-to-platforms-v2-2.json",
+    "platform/02-reusable-assets-and-frameworks-v2-1.json",
+    "platform/03-api-design-v2-2.json",
+    "platform/04-reusable-services-and-api-gateway-v2-.json",
+    "platform/05-platform-management-v2-1.json",
+    "platform/05c-platform-engineering-deployment-case.json",
+    "platform/06-data-management-v2-1.json"
+   ]
+  },
+  {
+   "id": "architecting",
+   "title": "Architecting Software Solutions",
+   "outline": "architecting/course.json",
+   "questions": "architecting/questions.json",
+   "questionCount": 297,
+   "topics": [
+    "architecting/01-introduction-to-solution-architecture.json",
+    "architecting/02-architect-the-solution-architecture-a.json",
+    "architecting/03-architect-the-solution-architecture-m.json",
+    "architecting/04-design-secure-architecture-v4-7.json",
+    "architecting/05-design-highly-available-architecture-.json",
+    "architecting/06-design-for-performance-in-architectur.json",
+    "architecting/07-perform-capacity-planning-for-archite.json",
+    "architecting/08-ensure-maintainable-architecture-v3-1.json"
+   ]
+  }
+ ],
+ "exams": {
+  "title": "Exams",
+  "analysis": "exams/analysis.json",
+  "papers": [
+   "exams/swe5001-sample.json"
+  ],
+  "mocks": [
+   "exams/mock-1-parcelpath.json",
+   "exams/mock-2-carelink.json",
+   "exams/mock-3-chargegrid.json",
+   "exams/mock-4-hawkerhub.json",
+   "exams/mock-5-claimsure.json"
+  ]
+ }
+}

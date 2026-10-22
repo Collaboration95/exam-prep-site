@@ -1,0 +1,453 @@
+{
+ "key": "01-cloud-overview-august-2026",
+ "title": "Overview of Cloud Computing",
+ "pages": 38,
+ "minutes": 25,
+ "overview": "Learn what cloud computing is, why organisations adopt it, and how service models divide operational responsibility. Compare deployment models and the cloud-hosted, optimised and native approaches. Use these distinctions to justify a workload-specific strategy rather than assuming cloud always saves money.",
+ "big_ideas": [
+  "Cloud provides on-demand network access to pooled, configurable resources that can be rapidly provisioned and metered.",
+  "Five NIST essential characteristics: on-demand self-service, broad network access, resource pooling, rapid elasticity, measured service.",
+  "Economies of scale can lower provider unit costs; customer savings still depend on workload and design.",
+  "IaaS = you manage OS and up; PaaS = you manage app and data; SaaS = you manage only settings and your data.",
+  "Deployment models: public, private, hybrid, multi-cloud, VPC, proprietary; hybrid mixes cloud types, multi-cloud mixes providers.",
+  "Cloud-hosted minimises initial change; cloud-native exploits elasticity and automation, with portability depending on the services chosen.",
+  "Cloud is not automatically cheaper, more secure or less secure; virtualisation alone is not a private cloud.",
+  "A cloud strategy needs business involvement, an exit strategy and sensible first workloads, not just an executive mandate."
+ ],
+ "sections": [
+  {
+   "id": "cloud-pillars",
+   "title": "Cloud characteristics and economies of scale",
+   "slides": [
+    5,
+    7
+   ],
+   "summary": "The technologies and philosophy behind cloud, the NIST definition with its five essential characteristics, and the economics that make providers efficient.",
+   "notes": [
+    "**Cloud is a service model for resources.** Internet access, SOA, virtualisation and distributed computing enable on-demand access to a shared pool that can be rapidly provisioned and released. Private clouds can be operated by the organisation itself.",
+    "**Five NIST characteristics:** on-demand self-service, broad network access, resource pooling, rapid elasticity and measured service. Measured service means usage is monitored and reported; pay-per-use is a common pricing model. Virtualisation alone does not establish all five characteristics.",
+    "**Economies of scale can lower unit cost:** standardised workloads, repeatable infrastructure, bulk hardware and streamlined software. Lower provider costs do not guarantee a lower customer bill."
+   ],
+   "terms": [
+    {
+     "term": "SOA",
+     "def": "Service-Oriented Architecture: systems built from network-callable services; one cloud pillar."
+    },
+    {
+     "term": "Rapid elasticity",
+     "def": "Resources scale out or in quickly to match demand."
+    },
+    {
+     "term": "Resource pooling",
+     "def": "Provider resources shared across many tenants, with location hidden from the customer."
+    },
+    {
+     "term": "Measured service",
+     "def": "Resource usage is monitored, controlled and reported, supporting transparency and usage-based charging."
+    },
+    {
+     "term": "Economy of scale",
+     "def": "Unit cost falls as the provider runs a huge, standardised infrastructure."
+    }
+   ],
+   "check": [
+    {
+     "q": "A virtualised server farm is provisioned by ticket and billed annually. What can you conclude about its NIST characteristics?",
+     "a": "Ticket approval prevents on-demand self-service. Check whether resources scale rapidly and whether usage is metered: annual billing alone does not prove that elasticity or measured service is absent."
+    },
+    {
+     "q": "A CFO argues: 'Providers have economies of scale, so moving our steady 24/7 batch servers to the cloud must cut our bill.' Do you agree?",
+     "a": "Not as stated. Economies of scale (standardised workloads, bulk hardware, stripped-down software) lower the **provider's** unit cost, but a steady 24/7 load gains little from elasticity or paying only when needed. Compare total cost and operational needs for this workload; the case is stronger if load is spiky or the team wants to stop running hardware."
+    },
+    {
+     "q": "An internal platform lets departments create VMs from a portal in minutes and sends each department a monthly usage report, but it can only be reached from managed office desktops. Which NIST characteristic is in doubt, and which ones can't you judge yet?",
+     "a": "Self-service and measured service look satisfied; **broad network access** is in doubt, because it expects access over the network through standard mechanisms from varied clients. Being internal-only is not the problem, since private clouds are valid. Resource pooling and rapid elasticity are still unknown until you know whether capacity is shared and can grow and shrink quickly."
+    }
+   ]
+  },
+  {
+   "id": "definitions",
+   "title": "Definitions of cloud computing",
+   "slides": [
+    9,
+    11
+   ],
+   "summary": "Definitions emphasise on-demand, scalable services delivered over a network. NIST provides a common test that also applies to private clouds.",
+   "notes": [
+    "**The recurring themes are on-demand, networked, shared and scalable resources.** Definitions differ in emphasis; external providers and pay-per-use pricing are common arrangements rather than requirements of every private cloud.",
+    "**Where they differ in emphasis**: IBM stresses elastic, metered, self-service; Gartner stresses massive scalability for multiple external customers (multi-tenancy); IEEE stresses data living on servers and cached on many client devices; NIST gives the most-cited, precise definition.",
+    "**In exam answers**, anchor on NIST and use the common thread: on-demand, elastic, shared, networked, metered."
+   ],
+   "terms": [
+    {
+     "term": "NIST",
+     "def": "US standards body whose definition and five characteristics are the reference for cloud."
+    },
+    {
+     "term": "As a service",
+     "def": "Capability consumed on demand from a provider instead of owned."
+    }
+   ],
+   "check": [
+    {
+     "q": "A hosting firm rents fixed physical servers on 12-month contracts, reachable over the internet, and markets them as 'cloud'. Using the common thread of the cloud definitions, is the label justified?",
+     "a": "No. Internet access gives only network access; the definitions share on-demand provisioning from a shared pool that is rapidly provisioned and released with minimal provider interaction. Fixed servers on long contracts are neither elastic nor on demand. The label would hold if customers could self-provision and release capacity in minutes and pay for what they use."
+    },
+    {
+     "q": "A teammate says an internal private cloud is 'not real cloud' because one industry definition describes cloud as a service delivered to many external customers. How do you respond?",
+     "a": "Disagree. Gartner's wording emphasises multi-tenant delivery to external customers, but NIST, the anchor definition, is about characteristics, not who operates it. A private cloud for one organisation is cloud if it offers self-service, network access, pooled resources (shared across departments), rapid elasticity and measured service."
+    }
+   ]
+  },
+  {
+   "id": "motivations",
+   "title": "Why adopt cloud: benefits, barriers, trend",
+   "slides": [
+    13,
+    18
+   ],
+   "summary": "The business and technical reasons for adopting cloud, the obstacles enterprises face, and how cloud became mainstream.",
+   "notes": [
+    "**Potential benefits:** faster provisioning and experimentation, lower upfront investment and elasticity instead of owning peak capacity. Automation and managed services can improve efficiency and resilience when configured well. Compare total cost and operational needs rather than assuming every workload saves money.",
+    "**Why it is harder for enterprises**: regulatory, governance, security, privacy, migration, integration and co-existence with legacy. Startups go cloud-first with a clean slate and focus on products; enterprises use cloud as a strategic enabler and focus on migration, integration and co-existence.",
+    "**Cloud is now mainstream**: most digital disruption uses cloud in some form and large enterprises such as DBS Bank are moving rapidly, so the question has shifted from whether to how."
+   ],
+   "terms": [
+    {
+     "term": "CapEx",
+     "def": "Up-front capital spending on assets such as servers."
+    },
+    {
+     "term": "OpEx",
+     "def": "Ongoing operating expense, such as pay-per-use cloud bills."
+    },
+    {
+     "term": "Peak provisioning",
+     "def": "Buying capacity for the highest expected load, which sits idle otherwise; cloud avoids it."
+    },
+    {
+     "term": "Co-existence",
+     "def": "Running legacy on-premises systems alongside cloud ones during and after migration."
+    }
+   ],
+   "check": [
+    {
+     "q": "A startup expects anywhere between 1,000 and 200,000 users in its first year. Why does pay-as-you-go matter more to it than to a firm with flat, predictable load?",
+     "a": "With uncertain demand, buying for peak means either a large upfront investment or running out of capacity; elasticity and usage-based spend let cost follow actual users and make experiments cheap. A firm with flat load can size owned capacity accurately, so its gain from converting CapEx to OpEx is smaller and has to be shown with a total-cost comparison."
+    },
+    {
+     "q": "A bank and a fintech startup both want to launch a new payments feature on the cloud. Why will the bank's first-year plan look different?",
+     "a": "The bank carries regulatory, governance, security and privacy obligations and legacy systems that must be migrated, integrated and co-exist with the new feature, so its plan centres on migration and integration. The startup starts cloud-first on a clean slate and can spend its effort on the product. The bank's advantage is existing customers and data, which is why integration is worth the cost."
+    }
+   ]
+  },
+  {
+   "id": "service-models",
+   "title": "Service models: IaaS, PaaS, SaaS",
+   "slides": [
+    20,
+    25
+   ],
+   "summary": "What a cloud service is, the three service models, and how responsibility shifts from customer to provider.",
+   "notes": [
+    "**Service models differ in who manages which layer.** Mnemonic: IaaS = host, PaaS = build, SaaS = consume. Each step up hands more of the stack to the provider and gives the customer less control and less operational work.",
+    "**IaaS vs PaaS**: IaaS rents compute, storage and network (usually virtual machines); you control the OS, middleware and apps. PaaS gives a ready solution stack for building and deploying in the cloud; you control only your deployed app and the provider's supported languages and tools apply. Choose IaaS when you need OS-level control, PaaS when you want to ship code without running servers.",
+    "**PaaS vs SaaS**: in PaaS you write and own the application; in SaaS (evolved from COTS packages like SAP plus the ASP hosting model) you rent a finished application through a browser and change only predefined settings.",
+    "**Shared responsibility (ISO 27018)** across nine layers (data, applications, runtime, middleware, OS, virtualisation, servers, storage, networking): on-premises the customer manages all nine; IaaS hands virtualisation downwards to the provider; PaaS adds runtime, middleware and OS; SaaS covers nearly everything, while data classification, access decisions and accountability remain customer duties; the provider operates the data service."
+   ],
+   "terms": [
+    {
+     "term": "IaaS",
+     "def": "Rented compute, storage, network; you manage OS and above (e.g. AWS EC2)."
+    },
+    {
+     "term": "PaaS",
+     "def": "Provider runs infrastructure and OS/runtime; you deploy code (e.g. Google App Engine)."
+    },
+    {
+     "term": "SaaS",
+     "def": "Complete application used via browser (e.g. Office 365)."
+    },
+    {
+     "term": "COTS",
+     "def": "Commercial Off-The-Shelf packaged software."
+    },
+    {
+     "term": "ASP",
+     "def": "Application Service Provider: earlier hosted-software model, ancestor of SaaS."
+    },
+    {
+     "term": "Shared responsibility",
+     "def": "Split of management duties between customer and provider, shifting toward the provider from IaaS to SaaS."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team must apply a specific OS kernel patch and install custom middleware. Which service model fits, and what extra work comes with it?",
+     "a": "IaaS, because it is the only model where the customer controls the OS and middleware. The cost is that the team now patches the OS, runs the middleware and configures scaling itself. If the kernel requirement went away, PaaS would remove that work, but in return you accept the provider's supported languages and runtimes."
+    },
+    {
+     "q": "An HR department needs leave management. A standard product covers 90% of its workflow, but there is one unusual approval rule. SaaS or an app built on PaaS?",
+     "a": "SaaS if the rule can be expressed through the product's predefined settings, since it gives the least operational work. Build on PaaS only if the rule is essential and cannot be configured: you then write and own the application but avoid running servers. The deciding factor is whether the customisation is worth owning code for."
+    },
+    {
+     "q": "Customer data leaks from a SaaS CRM because an employee shared a report with a public link. The team blames the provider. Who is accountable?",
+     "a": "The customer. Even in SaaS, where the provider operates nearly every layer, data classification, access decisions and accountability stay with the customer. The answer would differ if the leak came from a breach of the provider's own infrastructure or application, which are its layers."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Who manages what (ISO 27018): customer vs public cloud provider",
+     "columns": [
+      "Layer",
+      "On-prem",
+      "IaaS",
+      "PaaS",
+      "SaaS"
+     ],
+     "rows": [
+      [
+       "Data accountability",
+       "You",
+       "You",
+       "You",
+       "You"
+      ],
+      [
+       "Applications",
+       "You",
+       "You",
+       "You",
+       "**Provider**"
+      ],
+      [
+       "Runtime",
+       "You",
+       "You",
+       "**Provider**",
+       "**Provider**"
+      ],
+      [
+       "Middleware",
+       "You",
+       "You",
+       "**Provider**",
+       "**Provider**"
+      ],
+      [
+       "OS",
+       "You",
+       "You",
+       "**Provider**",
+       "**Provider**"
+      ],
+      [
+       "Virtualisation",
+       "You",
+       "**Provider**",
+       "**Provider**",
+       "**Provider**"
+      ],
+      [
+       "Servers, storage, network",
+       "You",
+       "**Provider**",
+       "**Provider**",
+       "**Provider**"
+      ]
+     ],
+     "caption": "Simplified operational split. Providers still have data-protection duties; customers retain classification and access responsibilities."
+    }
+   ]
+  },
+  {
+   "id": "deployment-models",
+   "title": "Deployment models",
+   "slides": [
+    27,
+    29
+   ],
+   "summary": "Who owns and operates the cloud and who shares it: public, private, hybrid, multi-cloud, VPC and proprietary.",
+   "notes": [
+    "**Deployment models answer who owns, operates and shares the cloud.** Public: provider-owned, open to anyone, multi-tenant with logical data separation. Private: operated solely for one organisation, on-premises or off, run by it or a third party.",
+    "**Hybrid vs multi-cloud**: hybrid interconnects two or more cloud types (e.g. private plus public) that stay distinct; multi-cloud uses multiple providers, usually several public clouds. The difference is mixing types versus mixing vendors.",
+    "**VPC vs private and proprietary**: a VPC is carved out of a provider's infrastructure, keeping public-cloud scalability and pricing while adding isolation and controlled access. A proprietary cloud is a packaged hardware plus software stack, provider-owned or sold for on-premises use.",
+    "**Choose against constraints:** public cloud for shared managed capacity; private cloud for organisation-exclusive infrastructure; hybrid when systems must span private and public environments. A VPC provides logical network isolation within a public cloud; it does not make the infrastructure on-premises or automatically compliant."
+   ],
+   "terms": [
+    {
+     "term": "Multi-tenancy",
+     "def": "Many customers share the same infrastructure with logical data separation."
+    },
+    {
+     "term": "VPC",
+     "def": "Virtual Private Cloud: isolated, access-controlled section of a provider's cloud."
+    },
+    {
+     "term": "Hybrid cloud",
+     "def": "Interconnected mix of cloud types, e.g. private plus public."
+    },
+    {
+     "term": "Multi-cloud",
+     "def": "Use of several cloud providers."
+    }
+   ],
+   "check": [
+    {
+     "q": "A company runs its core system in its own data centre and its analytics on two public providers. A teammate calls this 'multi-cloud'. Is that the full description?",
+     "a": "Only half. Two public providers is multi-cloud (mixing vendors), and connecting them to the on-premises private environment is hybrid (mixing cloud types). Naming both matters because hybrid raises integration and co-existence concerns between environments, while multi-cloud raises cross-vendor skills and operations concerns."
+    },
+    {
+     "q": "A team proposes a VPC to meet the rule 'customer data must not leave our premises'. Does it?",
+     "a": "No. A VPC gives logical network isolation and controlled access inside the provider's infrastructure, so the data still sits on the provider's premises. The rule calls for a private cloud, or a hybrid design that keeps that data on premises. A VPC fits when the requirement is isolation with public-cloud scalability and pricing, not data location."
+    },
+    {
+     "q": "A vendor offers a pre-integrated rack of hardware and cloud software to install in your data centre. Which deployment model is this, and how does it compare with building your own private cloud?",
+     "a": "A proprietary cloud: a complete hardware plus software stack, owned by the provider or sold for on-premises use. It is faster to stand up than assembling your own private cloud from parts, but you depend on that vendor's stack for upgrades and features, so you trade build effort for lock-in."
+    }
+   ],
+   "visuals": []
+  },
+  {
+   "id": "vendor-offerings",
+   "title": "Major providers",
+   "slides": [
+    30,
+    34
+   ],
+   "summary": "The leading providers all offer a broad catalogue spanning the same categories.",
+   "notes": [
+    "**The big three (AWS, Azure, GCP) offer overlapping capability categories** across compute, networking, storage and databases, big data, identity and security, machine learning, and management and developer tooling.",
+    "**Think in capability categories, not product names**: an architecture answer should map each need (compute, data, network, security, operations) to the relevant provider service and justify the choice.",
+    "**Same service models underlie the categories**: IaaS for control, PaaS for productivity, FaaS/serverless for event-driven code; later topics (reference architectures, serverless) build on choosing among them."
+   ],
+   "terms": [
+    {
+     "term": "AWS",
+     "def": "Amazon Web Services, a cloud provider offering infrastructure and managed application services."
+    },
+    {
+     "term": "Azure",
+     "def": "Microsoft's cloud platform."
+    },
+    {
+     "term": "GCP",
+     "def": "Google Cloud Platform."
+    }
+   ],
+   "check": [
+    {
+     "q": "An exam answer for a web app's architecture says only 'use EC2, S3, RDS and CloudFront'. Why would it lose marks, and how should it be rewritten?",
+     "a": "It lists product names without the need each one meets or why it was chosen. Rewrite it in capability terms (compute for the app tier, object storage for static assets, a managed relational database, a CDN at the edge) and justify each choice from the requirements. The major providers have overlapping categories, so the reasoning carries the marks, not the product name."
+    },
+    {
+     "q": "Two providers both cover compute, storage, databases, identity, ML and management tooling. Your client wants to pick one by comparing catalogue size. What should decide it instead?",
+     "a": "Because the categories overlap, catalogue size says little. Decide from the workload's requirements and the cloud strategy, and finish the strategy before signing vendor contracts, which Gartner lists as a common mistake. Keep an exit strategy, and favour containers and open standards where switching cost matters."
+    }
+   ]
+  },
+  {
+   "id": "strategy",
+   "title": "Development options, myths and strategy mistakes",
+   "slides": [
+    35,
+    37
+   ],
+   "summary": "How applications can be placed on the cloud, plus Gartner's myths and strategy mistakes that warn against naive adoption.",
+   "notes": [
+    "**Application placement is a spectrum.** Cloud-hosted moves an existing app with little change. Cloud-optimised adapts selected components. Cloud-native designs for elasticity, resilience and automation, often requiring more redesign and skills. The lecture comparison associates deeper use of proprietary services with reduced backward portability.",
+    "**Benefits and lock-in depend on choices.** Managed proprietary APIs may increase switching cost; containers and open standards can preserve portability. Cloud-native designs can also run in private and hybrid clouds.",
+    "**Gartner's 10 myths** are the popular overclaims: cloud always saves money; you must be on cloud to be good; use it for everything; 'the CEO said so' is a strategy; you need one provider; it is less secure; it is not for mission-critical; cloud = data centre; migration automatically yields all benefits; virtualisation = private cloud.",
+    "**Gartner's top strategy mistakes** (2025): confusing strategy with an implementation plan or excluding business; no exit strategy; assuming all benefits without prioritising; expecting multicloud to save money or improve DR; cloud-first read as cloud-only; starting with critical complex workloads like ERP; treating an executive mandate as strategy; too broad a scope; signing vendor contracts before the strategy is done; outsourcing the strategy."
+   ],
+   "terms": [
+    {
+     "term": "Cloud-hosted",
+     "def": "Lift and shift: existing app runs on cloud infrastructure with minimal change."
+    },
+    {
+     "term": "Cloud-optimised",
+     "def": "Existing app modified to use some cloud services directly."
+    },
+    {
+     "term": "Cloud-native",
+     "def": "Application designed for cloud properties such as elasticity, resilience and automation; portability depends on its dependencies."
+    },
+    {
+     "term": "Exit strategy",
+     "def": "Plan for leaving or switching provider."
+    },
+    {
+     "term": "Greenfield",
+     "def": "New system built from scratch with no legacy constraints."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team has 3 months to leave a data centre whose lease is ending. The application has stable load and no planned changes. Cloud-hosted or cloud-native?",
+     "a": "Cloud-hosted: minimal change is the only way to meet the deadline, and stable load gains little from elasticity. The team gives up the resilience, autoscaling and automation gains of a redesign, but it can make selected components cloud-optimised later, once the deadline is met."
+    },
+    {
+     "q": "The CEO announces: 'We are cloud-first. Every system moves next year, starting with our ERP.' Critique this as a strategy.",
+     "a": "It makes several of Gartner's mistakes at once: an executive mandate treated as a strategy, cloud-first read as cloud-only, and starting with a critical, complex workload like ERP. A better plan involves the business, prioritises benefits, chooses suitable early workloads, and includes an exit strategy."
+    },
+    {
+     "q": "A security officer says: 'Cloud is less secure, so mission-critical systems must stay on premises.' Do you agree?",
+     "a": "Not as a blanket rule: 'less secure' and 'not for mission-critical' are both listed cloud myths. Security depends on design and on the responsibility split; the provider secures its layers, and the customer must still secure its own configuration, identities and data. A specific regulatory or data-location constraint, not the myth, is the valid reason to keep a system on premises."
+    },
+    {
+     "q": "A team builds heavily on one provider's proprietary queue and database APIs to go cloud-native quickly. What risk are they taking, and how could they limit it?",
+     "a": "Deep use of proprietary services raises switching cost and reduces portability. They can limit this with containers and open standards where they matter, isolate provider-specific calls behind their own interfaces, and keep an exit strategy. The trade-off is that avoiding managed proprietary services gives up some of the speed that made cloud-native attractive."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Levels of cloud adaptation",
+     "steps": [
+      {
+       "label": "Cloud-hosted",
+       "sub": "more suitable for migration",
+       "detail": "Run in the cloud; low effort; infrastructure modernization. Leverages cloud attributes only indirectly, limited additional benefits; nearly complete backward portability."
+      },
+      {
+       "label": "Cloud-optimised",
+       "sub": "uses cloud attributes directly",
+       "detail": "Grow in the cloud; moderate extension effort; application modernization. Leverages cloud attributes directly, moderate benefits; reduced backward portability."
+      },
+      {
+       "label": "Cloud-native",
+       "sub": "more suitable for greenfield",
+       "accent": true,
+       "detail": "Design for elasticity, resilience and automation. Greater redesign and new skills may be needed; proprietary dependencies reduce portability, while open standards can help preserve it."
+      }
+     ],
+     "caption": "Alternative levels of change, not mandatory migration stages."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A retailer runs a 6-week seasonal web shop. Evening traffic is 20 times the daytime level, the team is two developers, and there is no ops staff. Recommend a service model and a deployment model, and say what would make you choose IaaS instead.",
+   "a": "PaaS on a public cloud, with SaaS for commodity parts such as payments or email: the provider runs the OS and runtime, and elasticity absorbs the evening peaks without the retailer owning peak capacity. Spend follows the 6-week season instead of a year-round investment. Choose IaaS only if the shop needs OS-level control or middleware the platform doesn't support, and accept that the two developers would then patch and scale servers themselves."
+  },
+  {
+   "q": "A regulated bank must keep customer records in its own data centre but wants elastic capacity for a new customer-facing app. Recommend a deployment model, and explain why a VPC alone is not enough.",
+   "a": "Hybrid cloud: keep customer records in the on-premises private environment and run the elastic front end on public cloud, connected through controlled integration. A VPC gives logical isolation inside the provider's infrastructure but does not keep data on the bank's premises. The costs are governance, integration and co-existence work across two environments, plus the latency of calls back to on-premises data."
+  },
+  {
+   "q": "An enterprise wants its first cloud project to be moving its 15-year-old, heavily customised ERP. Advise on whether it should go first, and compare IaaS, PaaS and SaaS for it when it does move.",
+   "a": "Advise against making it first: Gartner warns against starting with critical, complex, large workloads like ERP, so build skills on simpler workloads first. When it moves, IaaS (cloud-hosted lift and shift) keeps the customisation and needs the least change but keeps all the OS and middleware work. PaaS needs re-platforming. SaaS removes most of the operations but forces the business onto predefined settings, which may mean dropping years of customisation."
+  },
+  {
+   "q": "A proposal says: 'Move to the cloud to save money, and use two providers so disaster recovery is automatic.' Evaluate both claims and say what evidence you would want.",
+   "a": "Both are listed myths or mistakes: cloud is not always cheaper, and multi-cloud does not by itself save money or improve DR; it adds cross-provider skills and operations. Ask for a workload-by-workload cost comparison, a prioritised list of benefits, and a tested DR design with recovery targets. Multi-cloud may still be justified for specific reasons, but it should come with an exit strategy rather than an assumed benefit."
+  },
+  {
+   "q": "An IT department rebrands its virtualisation cluster as 'our private cloud'. Developers can create VMs from a portal in minutes, but capacity is fixed at 200 VMs, adding hosts takes a 6-week purchase, and there is no usage reporting. Assess the claim against NIST and recommend what would close the gaps.",
+   "a": "Partly justified: the portal gives on-demand self-service, and a shared cluster suggests resource pooling. It fails rapid elasticity, because the 200-VM cap and 6-week purchase stop capacity from growing quickly, and it fails measured service, because nothing is metered. Virtualisation alone is not a private cloud. To close the gaps, add per-team usage metering and either keep spare capacity or burst to public cloud (a hybrid model) so capacity can grow on demand."
+  }
+ ]
+}

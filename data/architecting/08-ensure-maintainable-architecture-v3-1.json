@@ -1,0 +1,534 @@
+{
+ "key": "08-ensure-maintainable-architecture-v3-1",
+ "title": "Ensuring Maintainable Architecture",
+ "pages": 41,
+ "minutes": 22,
+ "overview": "Maintainability is the ease with which software can be corrected, enhanced, adapted or have its performance improved, and it usually dominates lifecycle cost. The deck splits it into changeability (modifiability) and analyzability, then covers how architecture style, code-level tactics, defer-binding techniques, logging and monitoring, and automated safeguards such as fitness functions make change cheap and safe. For the exam, expect to pick tactics for a change scenario and compare how monolith, microservices and event-driven styles support change.",
+ "big_ideas": [
+  "The lecture cites maintenance costs of **80–90% of lifecycle cost** to motivate designing for change; treat this as a cited estimate rather than a universal percentage.",
+  "The lecture focuses on **modifiability and analyzability**, supported by reliable-change practices; the earlier ISO 25010:2011 model also names modularity, reusability and testability.",
+  "Four modifiability tactics: **split modules, increase cohesion, reduce coupling, defer binding**.",
+  "Cost of change vs cost of development trade off: code change (high/low), configuration (medium/medium), customizable by implementers (medium/high), customizable by end user (low/high).",
+  "Events let a new consumer use an existing event without changing its producer, provided the event has the needed information. Versioned schemas support evolution but still require compatibility discipline.",
+  "Code-level tactics: contain change, extensible interfaces, design techniques that ease change, variation points, standard extension points.",
+  "Analyzability needs automated error detection, good logging (agent, storage, dashboard, correlation id) and monitoring (JMX/SNMP).",
+  "Reliable change: version control, automated tests, CI, rollback, infrastructure as code, hypothesis-driven testing and **fitness functions** guarding architecture rules."
+ ],
+ "sections": [
+  {
+   "id": "definition",
+   "title": "What maintainability is and why it matters",
+   "slides": [
+    2,
+    6
+   ],
+   "summary": "The IEEE definition, the lifecycle-cost argument and the practical benefits of maintainable software.",
+   "notes": [
+    "**Definition (IEEE 610.12-90):** the ease with which a system or component can be modified to correct faults, improve performance or other attributes, or adapt to a changed environment.",
+    "**Lifecycle cost matters.** The lecture cites an 80–90% maintenance share as motivation for reducing future change effort. The architectural decision is where likely changes justify investment, rather than assuming that percentage applies to every project.",
+    "**What maintainable software lets you do quickly and easily:** fix a bug without introducing a new one; add features without altering existing ones; improve usability and performance; make a fix that prevents future bugs; support new environments, operating systems or tools; and onboard new developers."
+   ],
+   "terms": [
+    {
+     "term": "Maintainability",
+     "def": "Ease of correcting faults, improving attributes or adapting to a changed environment."
+    }
+   ],
+   "check": [
+    {
+     "q": "Two designs for a loyalty system: A ships in 2 months with the reward rules hard-coded; B takes 3 months with the rules isolated behind an interface and held in configuration. Marketing expects to change the rules monthly for 5 years. Which do you choose?",
+     "a": "B. With about 60 rule changes expected, the extra month is repaid by cheaper, safer changes, and most lifecycle cost falls in maintenance (the lecture cites 80-90%). A would need a code change, test and release for every rule tweak. If the system were a short-lived campaign, A would be the better choice."
+    },
+    {
+     "q": "A team says it will 'make the code maintainable later, once we have users'. Do you agree?",
+     "a": "Only partly. Detailed refactoring can wait, but boundaries, interfaces and variation points are architectural and cost far more to add once code depends on their absence. Put them where change is likely now, and defer the rest. How much to invest depends on the expected changes and the system's lifetime."
+    }
+   ]
+  },
+  {
+   "id": "change",
+   "title": "Sources of change and how to incorporate it",
+   "slides": [
+    7,
+    9
+   ],
+   "summary": "Change is ubiquitous; the choice is who can make it and what it costs to build and to apply.",
+   "notes": [
+    "**Change is inevitable and ubiquitous** (Software Architecture in Practice). Sources: functional, platform, integration and growth. Likelihood of change is higher with deferred functionality, requirement gaps, vague requirements and open-ended requirements.",
+    "**Four ways to incorporate change, trading build cost against change cost:** Code change (developer; change cost high, development cost low; any change possible). Configuration change (developer/operations; medium, medium; cost depends on how modifiable the architecture is). Customizable by implementation team (medium change, high development cost; mostly B2B, each tenant has a dedicated implementation team). Customizable by end user (low change cost, high development cost; difficult, but best value when done right).",
+    "**Rule:** the more you invest up front in making change possible without code, the cheaper each later change, so invest where change is likely.",
+    "**This topic focuses on modifiability and analyzability**, then practices for reliable change. Reliable change is a supporting practice, not a replacement name for the ISO model’s maintainability sub-characteristics."
+   ],
+   "terms": [
+    {
+     "term": "Modifiability",
+     "def": "Ease of changing the system; also called changeability."
+    },
+    {
+     "term": "Variation likelihood",
+     "def": "Deferred, gap, vague or open-ended requirements signal that change is coming."
+    }
+   ],
+   "check": [
+    {
+     "q": "For an insurance product, actuaries change pricing factors monthly, and the screen layout changes about once a year. Which way of incorporating change suits each?",
+     "a": "Pricing factors: configuration, or end-user customisation by the actuaries, because the change is frequent and each code change would be expensive. Layout: a code change is fine, because it is rare and the development cost of making it customisable would not pay back. Invest in cheap change where change is likely."
+    },
+    {
+     "q": "A requirements document says 'the system shall support other payment methods in future' and 'reporting: to be decided in phase 2'. What does this tell the architect?",
+     "a": "These are open-ended and deferred requirements, which signal a high likelihood of change. Put variation points there: a payment-method interface, and reporting fed from well-defined data. Spending the same effort on areas with stable requirements would be wasted."
+    },
+    {
+     "q": "A B2B SaaS product has five enterprise clients, each with a dedicated implementation team, and each wants its own approval rules. Which change mechanism fits?",
+     "a": "Customisable by the implementation team: build configurable rules or workflows that each client's team sets up. Development cost is high, but each change is medium-cost and needs no core code change. Full end-user customisation would cost even more to build and isn't needed when trained implementers do the changes."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Ways to incorporate change",
+     "columns": [
+      "",
+      "Code change",
+      "Configuration change",
+      "Customizable (implementation team)",
+      "Customizable (end user)"
+     ],
+     "rows": [
+      [
+       "Who",
+       "Developer",
+       "Developer / operation",
+       "Implementation team",
+       "End user"
+      ],
+      [
+       "Cost of change",
+       "High",
+       "Medium",
+       "Medium",
+       "**Low**"
+      ],
+      [
+       "Cost of development",
+       "**Low**",
+       "Medium",
+       "High",
+       "High"
+      ],
+      [
+       "Remarks",
+       "Any kind of change is possible",
+       "Depends on how modifiable the architecture is",
+       "Built into original implementation; mostly B2B, dedicated team per tenant",
+       "Difficult, but best value when done correctly"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "architecture-styles",
+   "title": "Architecture styles and modifiability",
+   "slides": [
+    10,
+    19
+   ],
+   "summary": "The four tactics, and how monolith, microservices and event-driven styles apply split, cohesion and coupling.",
+   "notes": [
+    "**Modifiability tactics:** 1 Split modules, 2 Increase cohesion, 3 Reduce coupling, 4 Defer binding. The first three are examined at architecture level and code level.",
+    "**Monolith:** a single deployable. Unstructured it is tangled classes behind one UI; a layered monolith (presentation, business rules, persistence, database) separates concerns by technical layer; a modular monolith groups classes into modules and components, all still deployed as one unit (a quantum). Changes stay inside a layer or module only if boundaries are respected.",
+    "**Microservices** put capability-specific logic and data behind service APIs, allowing independent deployment when contracts remain compatible. Splitting services does not automatically enforce low coupling: shared data, synchronous call chains or coordinated API changes can still make change spread.",
+    "**Event-driven extension:** add an analytics consumer of an existing event without changing producers if its payload already meets the need. Broker topology routes events among processors; mediator topology coordinates workflow steps. Events still couple consumers to payload meaning and delivery behaviour.",
+    "**Schema registry:** stores versioned payload schemas, and messages identify the schema used (the lecture illustrates an id and version). Consumers use that definition to read the payload. A registry makes schema evolution manageable; incompatible field or meaning changes still require coordination and compatibility checks."
+   ],
+   "terms": [
+    {
+     "term": "Cohesion",
+     "def": "How closely a module's responsibilities belong together; increase it."
+    },
+    {
+     "term": "Coupling",
+     "def": "Dependence between modules; reduce it."
+    },
+    {
+     "term": "Schema registry",
+     "def": "Store of versioned message schemas used by producers and consumers."
+    },
+    {
+     "term": "Mediator",
+     "def": "Event-driven component that orchestrates a workflow across processes."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team wants to add a fraud-analytics consumer to the existing OrderPlaced events, but the event does not carry the customer's IP address, which the model needs. Is this still a change-free extension?",
+     "a": "No. A new consumer avoids producer changes only when the existing payload already meets its needs. Here the producer must add the field, ideally as an optional addition registered as a compatible new schema version, so existing consumers keep working. Events still couple consumers to the payload's content and meaning."
+    },
+    {
+     "q": "Five microservices read and write one shared customer table, and renaming a column needs a coordinated release of all five. What has gone wrong?",
+     "a": "Shared data has coupled the services, defeating independent deployment. Give the customer data a single owning service and have the others use its API or events. If that split is not worth it, a modular monolith may contain changes just as well at lower operational cost."
+    },
+    {
+     "q": "A producer renames the field 'amount' to 'total' and registers the change as version 2 in the schema registry. Are consumers safe?",
+     "a": "No. The registry stores versioned schemas and lets consumers find the one a message uses, but an incompatible change still breaks consumers that expect 'amount'. Add 'total' alongside 'amount', migrate the consumers, and only then remove the old field, following compatibility rules."
+    },
+    {
+     "q": "In a layered monolith, adding a 'gift card' feature touches the presentation, business and persistence layers. Would a modular monolith help?",
+     "a": "Yes, for this kind of change. A modular monolith groups code by business module, so a gift-card module contains its own UI, logic and data access, and the change stays inside it. It still deploys as one unit, so you don't get independent deployment; that would need services."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Architecture styles and change",
+     "columns": [
+      "Style",
+      "Structure",
+      "How change is supported"
+     ],
+     "rows": [
+      [
+       "Monolith",
+       "One deployable; layers or modules (quantum)",
+       "Change contained by layers, modules and components"
+      ],
+      [
+       "Microservices",
+       "Independent services, each with own data, behind API layer",
+       "Independent changes when data and API boundaries hold"
+      ],
+      [
+       "Event-driven",
+       "Event processors or mediator-orchestrated workflow",
+       "Add consumers when existing event content is sufficient"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "code-tactics",
+   "title": "Code-level maintainability tactics",
+   "slides": [
+    20,
+    26
+   ],
+   "summary": "Five design tactic groups contain changes and provide extension points; reliable-change practices are covered later.",
+   "notes": [
+    "**Contain change.** Encapsulation (keep change inside a component, e.g. a Discount Engine using the Strategy pattern); separation of concerns (clear distinct responsibilities); single point of definition (data types, algorithms, config, schemas defined once, so no need to synchronise changes).",
+    "**Create extensible interfaces:** object parameters can grow without a method-signature change; optional fields and flexible JSON/XML formats can support compatibility. Keep old fields and meanings usable, test existing consumers, and version incompatible changes with a clear support policy. A flexible format alone does not make a change safe.",
+    "**Apply design techniques that facilitate change.** Abstraction and layering (minimal impact of one part on others); generalisation (group similar scenarios into a general pattern handled by one component); inversion of control (components can be reconfigured).",
+    "**Build variation points.** Make elements replaceable; parameterise changeable properties in configuration; separate physical from logical processing (convert many physical formats into one logical structure); break processes into steps so change is confined to some steps.",
+    "**Use standard extension points** built into technologies: ODBC/JDBC for different databases, JSON/SOAP/REST for calling services, JCA as the standard Java adapter."
+   ],
+   "terms": [
+    {
+     "term": "Encapsulation",
+     "def": "Hiding details inside a component so callers are unaffected by change."
+    },
+    {
+     "term": "Single point of definition",
+     "def": "Define each type, algorithm or config once."
+    },
+    {
+     "term": "Inversion of control",
+     "def": "Components are wired or configured externally, allowing reconfiguration."
+    },
+    {
+     "term": "Variation point",
+     "def": "Deliberate place where behaviour can be swapped or configured."
+    }
+   ],
+   "check": [
+    {
+     "q": "A public API method has 7 parameters, and clients keep breaking whenever a parameter is added. What would you change?",
+     "a": "Pass a single request object, so new optional fields can be added without changing the method signature. Old clients must still be served correctly: keep existing fields and meanings, give new fields defaults, and test existing consumers. Version the API for changes that cannot be compatible."
+    },
+    {
+     "q": "A bank receives statements from 12 partners in CSV, XML and fixed-width formats, and parsing logic is spread across the system. What would you change?",
+     "a": "Separate physical from logical processing: convert each physical format into one standard logical structure at the edge, and use only that structure in the rest of the system. A new partner format then changes only a converter. The cost is one more mapping layer to maintain."
+    },
+    {
+     "q": "A discount rate of 0.15 is hard-coded in 9 places, and the last change missed one. Which tactic would have prevented this?",
+     "a": "Single point of definition: define the rate once, in configuration or a constant used everywhere, so a change never has to be synchronised across copies. Parameterising it in configuration also lets you change it without a code release."
+    },
+    {
+     "q": "A JSON API adds a mandatory field to every request. Is it backward compatible because the method signature is unchanged?",
+     "a": "No. Existing callers omit the new field and may fail validation. Add it as optional with suitable behaviour for old callers, or version the breaking contract and migrate consumers."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Contain changes at a format boundary",
+     "steps": [
+      {
+       "label": "Physical formats",
+       "sub": "several external representations",
+       "detail": "Different systems may send the same business information in different structures. A new format should not force changes throughout the application."
+      },
+      {
+       "label": "Adapters",
+       "sub": "translate at the boundary",
+       "detail": "Convert each external representation into one agreed internal logical structure. Add or change the relevant adapter when a physical format changes.",
+       "accent": true
+      },
+      {
+       "label": "Logical processing",
+       "sub": "one internal representation",
+       "detail": "The rest of the system uses the logical structure. A format-only change stays at the edge; a genuine change in business meaning still affects the model."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "defer-binding",
+   "title": "Defer binding: customisation and workflow engines",
+   "slides": [
+    27,
+    29
+   ],
+   "summary": "Push decisions to run time so users or implementers change behaviour without recompiling.",
+   "notes": [
+    "**Defer binding means making the application customisable at run time.** Making it fully user-customisable needs good UX expertise and domain understanding. The deck's example is Amplitude analytics, whose customisable cohort analyser lets users analyse retention across cohorts without writing data-munging logic.",
+    "**Workflow engine pattern:** an admin or implementer designs a workflow for a specific tenant or role; the workflow logic is persisted. At run time the engine deserialises the tenant or role's workflow and executes it, calling domain logic. Result: logic customisation without recompiling, e.g. a different approval workflow per client.",
+    "**Many engines provide a visual designer**, which lowers the skill needed to change behaviour. This is the 'customizable by implementation team' end of the change-cost table."
+   ],
+   "terms": [
+    {
+     "term": "Defer binding",
+     "def": "Postpone choosing behaviour until run time, by configuration or user customisation."
+    },
+    {
+     "term": "Workflow engine",
+     "def": "Component that executes persisted, designable workflows at run time."
+    }
+   ],
+   "check": [
+    {
+     "q": "Each of 30 corporate clients wants a different expense-approval chain, and the chains change a few times a year. How would you design it?",
+     "a": "Defer binding with a workflow engine: an implementer designs each client's workflow, it is stored per tenant, and at run time the engine loads and executes it, calling shared domain logic. Changes need no recompiling or redeployment. The cost is building or adopting the engine and limiting workflows to the steps it supports."
+    },
+    {
+     "q": "For a 3-month MVP, a team proposes fully end-user-customisable reports. Do you agree?",
+     "a": "Probably not. End-user customisation has the lowest change cost when done well, but the highest development cost, and it needs strong UX and domain understanding that an MVP rarely has. Ship a few fixed reports, learn which variations users actually want, and add customisation where that demand is clear."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Workflow engine at run time",
+     "steps": [
+      {
+       "label": "Admin designs workflow",
+       "sub": "per tenant or role",
+       "detail": "An admin or implementer designs a workflow for a specific tenant or role, often with a visual designer."
+      },
+      {
+       "label": "Workflow persisted",
+       "sub": "stored as data",
+       "detail": "The workflow logic is saved in workflow persistence, not compiled into the application."
+      },
+      {
+       "label": "User calls API",
+       "sub": "controller to engine",
+       "detail": "A user from a tenant or role calls the API controller, which passes the request to the workflow engine."
+      },
+      {
+       "label": "Engine executes",
+       "sub": "deserialise, run, call domain logic",
+       "detail": "The engine loads that tenant's workflow from persistence and executes it, invoking domain logic 1, 2...",
+       "accent": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "analyzability",
+   "title": "Analyzability: detecting and diagnosing problems",
+   "slides": [
+    30,
+    34
+   ],
+   "summary": "How to detect problems, find the root cause and monitor systems, including logging in microservices.",
+   "notes": [
+    "**Analyzability asks:** how do we detect problems, identify the root cause, and make and deploy the fix (the last step is like any other change).",
+    "**Tactics:** automated error detection and reporting (e.g. UNIX core dump, log file monitoring); good logging practice with enough information to support an investigation; allow system monitoring through standard protocols such as JMX (Java) and SNMP (devices).",
+    "**Logging in microservices has three components:** a logging agent, log storage, and a log dashboard with search.",
+    "**EFK stack on Kubernetes:** Fluentd is the agent collecting logs from the nodes, Elasticsearch is the storage, Kibana is the dashboard.",
+    "**Propagate a correlation id** so entries from one request can be matched across services. Central storage alone does not show which records belong together. Missing identifiers make reconstruction harder and less reliable."
+   ],
+   "terms": [
+    {
+     "term": "JMX / SNMP",
+     "def": "Standard protocols for monitoring and managing applications (Java) and network devices."
+    },
+    {
+     "term": "EFK",
+     "def": "Fluentd (agent), Elasticsearch (storage), Kibana (dashboard)."
+    },
+    {
+     "term": "Correlation id",
+     "def": "Identifier passed across services to trace one request in the logs."
+    }
+   ],
+   "check": [
+    {
+     "q": "A checkout error appears in the logs of four services, but nothing links the entries. What would you add?",
+     "a": "A correlation id created at the entry point and passed with every call and event, and written in each service's log entries. Then the entries for one request can be pulled together for root-cause analysis. Central log storage alone does not show which records belong together."
+    },
+    {
+     "q": "Container logs disappear when pods restart, and engineers SSH into nodes to grep for errors. What would you change?",
+     "a": "Add the three logging components: an agent on each node that ships logs, central log storage, and a dashboard with search (EFK is the lecture's example stack). Logs then survive restarts and can be searched across services. The cost is running and sizing the logging infrastructure itself."
+    },
+    {
+     "q": "A legacy application crashes every night and leaves nothing useful behind. Which analyzability tactics apply?",
+     "a": "Automated error detection and reporting (core dumps, log file monitoring that raises alerts), logging with enough context to investigate, and monitoring through standard protocols such as JMX or SNMP. Together these turn 'it crashed' into a diagnosable fault."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "EFK logging pipeline",
+     "steps": [
+      {
+       "label": "Fluentd",
+       "sub": "logging agent",
+       "detail": "Collects logs from the different nodes in the Kubernetes cluster."
+      },
+      {
+       "label": "Elasticsearch",
+       "sub": "log storage",
+       "detail": "Stores and indexes the collected logs for searching."
+      },
+      {
+       "label": "Kibana",
+       "sub": "dashboard and search",
+       "detail": "Presents and searches the logs; use a correlation id to trace one request across microservices.",
+       "accent": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "reliable-change",
+   "title": "Reliable change and fitness functions",
+   "slides": [
+    35,
+    37
+   ],
+   "summary": "Practices that make changes safe, and fitness functions that automatically guard architectural rules.",
+   "notes": [
+    "**Reliable change needs a reproducible process:** track changes in version control, automate tests and build/integration checks, support deployment rollback, manage environment configuration as code, and apply hypothesis-driven testing. Integrate secrets management without committing secret values. Automating release/deployment extends the delivery process beyond CI alone.",
+    "**Fitness function:** an automated check that an architectural characteristic still holds. In the deck's pipeline, after unit test, build and deploy, integration and end-to-end tests, a set of checks (code quality, resiliency, observability and performance testing, compliance standards, security code analysis, operability standards) must pass before promote.",
+    "**Example:** a unit test using a dependency-analysis tool (JDepend) asserts that persistence and web packages depend on util as allowed, so the build fails if any code breaks layer dependencies in a layered architecture."
+   ],
+   "terms": [
+    {
+     "term": "Fitness function",
+     "def": "Automated test of an architectural characteristic, run in the delivery pipeline."
+    },
+    {
+     "term": "Infrastructure as code",
+     "def": "Versioned definitions of infrastructure and environment configuration, integrated with separate secrets management."
+    }
+   ],
+   "check": [
+    {
+     "q": "The architecture rule says the web layer must not call the persistence layer directly. Code reviews keep missing violations. What would you add?",
+     "a": "A fitness function: an automated test using a dependency-analysis tool that fails the build when web code depends on persistence packages. It checks the rule on every build, which review cannot do reliably. It guards only the rules you actually encode, so add checks for other key characteristics as well."
+    },
+    {
+     "q": "A release breaks checkout, and reverting takes 3 hours because the database migrations cannot be undone. What should the release process have included?",
+     "a": "Rollback designed in: reversible or backward-compatible migrations, and the ability to redeploy the previous version quickly. Even tested changes fail in production, and fast reversal limits the damage. Version control, automated tests and environment configuration as code make that reversal reliable."
+    },
+    {
+     "q": "A release works in staging but fails in production, because the two environments were configured by hand and differ. A developer suggests committing the production passwords into the repository so everything is in one place. Respond.",
+     "a": "Manage environment configuration as code, so staging and production are built from the same versioned definitions. Do not commit secret values: integrate a secrets-management tool, and reference secrets from the configuration. Reproducible environments without leaked credentials make change reliable."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Fitness functions in the pipeline",
+     "steps": [
+      {
+       "label": "Unit test",
+       "detail": "Developer-level tests run first."
+      },
+      {
+       "label": "Build and deploy",
+       "detail": "Automated build and deployment to a test environment."
+      },
+      {
+       "label": "Integration and end-to-end",
+       "detail": "Verify components and complete flows together."
+      },
+      {
+       "label": "Fitness checks",
+       "sub": "quality, resiliency, security...",
+       "detail": "Code quality, resiliency, observability, performance, compliance, security code analysis and operability standards are checked automatically; passing leads to promote.",
+       "accent": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "code-quality-tools",
+   "title": "Code quality tools",
+   "slides": [
+    38,
+    41
+   ],
+   "summary": "Static analysis tools help track relative quality, but only if you understand the metrics.",
+   "notes": [
+    "**The lecture’s static-analysis examples** include FindBugs, Checkstyle, PMD and SonarQube for code issues and metrics, plus CodeCity for visualising code structure. Learn what a result reveals rather than memorising product names as proof of quality.",
+    "**Use with care:** understand what each metric means. They are useful for the relative quality progression of one code base over time, not for absolute comparison between systems.",
+    "**Connect the models:** this topic stresses analyzability, changeability, stability and testability. For an ISO 25010:2011 classification question, use modularity, reusability, analyzability, modifiability and testability from the foundations lecture."
+   ],
+   "terms": [
+    {
+     "term": "SonarQube",
+     "def": "Platform that analyses code quality and reports issues and metrics."
+    }
+   ],
+   "check": [
+    {
+     "q": "A quality dashboard improves after a release. Does that prove the architecture is easier to maintain?",
+     "a": "No. Check what changed in the metrics and whether they reflect relevant change or diagnostic effort. Combine trends with actual change scenarios and fitness checks; a score is evidence for its measured properties, not all maintainability."
+    },
+    {
+     "q": "A manager wants to rank three teams' systems by their static-analysis scores to decide bonuses. Do you agree?",
+     "a": "No. These metrics are useful for tracking one code base's relative progress over time, not for comparing different systems in absolute terms, since size, language and domain differ. Using them for bonuses also invites gaming. Compare each team against its own trend, alongside real change effort."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A product's discount and eligibility rules change every quarter, and three of its 20 enterprise clients need their own approval flow. The business wants changes shipped without redeployment. Recommend a design and its costs.",
+   "a": "Defer binding for the kinds of change that recur: hold rule parameters in configuration, which business users edit through an admin screen, behind a single point of definition. Use a workflow engine to run per-tenant approval flows designed by the implementation team. Encapsulate the domain actions the workflows call, and define the supported variation points. This lowers the cost of each change but raises development cost, and needs UX and domain work. Behaviour outside the variation points still needs a code change, so choose the variation points from the expected changes."
+  },
+  {
+   "q": "An online learning platform has a layered monolith, five teams and frequent collisions between releases. It plans to add analytics, recommendations and partner integrations over two years. Compare a modular monolith, microservices and an event-driven approach for modifiability, and recommend one.",
+   "a": "Modular monolith: business modules contain changes and avoid distributed costs, but everything still deploys as one unit, so release collisions remain. Microservices: independent deployment per capability if each owns its data and APIs evolve compatibly, but they add operational cost, and shared tables or call chains can still spread change. Event-driven: analytics and recommendations can subscribe to existing events (CourseCompleted, LessonViewed) without producer changes if the payloads carry what they need, with a schema registry and compatibility rules. Recommend modularising first, then extracting services where team collisions are worst, and publishing events for the new consumers."
+  },
+  {
+   "q": "A public REST API has about 200 external consumers you do not control. Over the next year you must add fields, rename one concept and change one response structure. Which code-level tactics keep the API evolvable?",
+   "a": "Use request and response objects with optional fields, so additions don't break signatures. Add the renamed concept alongside the old one and deprecate the old name with a support period. Put the structural change in a new API version, keeping the old one running during migration. Encapsulate the implementation behind the API, define the shared data types once, and use standard formats. Test existing consumer contracts, because flexible JSON syntax alone does not guarantee compatibility."
+  },
+  {
+   "q": "During an incident, a payment fails somewhere across six microservices. It takes four hours to find the cause because logs are local to each container and have no common identifier. Redesign for analyzability.",
+   "a": "Add automated error detection and alerting, so the failure is noticed rather than reported by users. Centralise logs with an agent, storage and searchable dashboard (for example EFK), so they survive container restarts. Propagate a correlation id from the entry point through every call and event, so one request's entries can be retrieved together. Log enough context, such as inputs, the dependency called and the error, and expose metrics through standard monitoring. The fix itself is then deployed like any other change, through the reliable-change pipeline."
+  },
+  {
+   "q": "A layered system's dependency rules are eroding, releases often break production, and rollbacks are manual. Design a pipeline that makes change reliable and stops further erosion.",
+   "a": "Keep everything in version control, including environment configuration as code, with secrets in a secrets manager. Run automated unit, integration and end-to-end tests on each change. Add fitness functions before promotion: a dependency test that fails on layer violations, plus performance, security, resiliency and observability checks. Automate deployment with a tested rollback path and reversible migrations, and use hypothesis-driven testing for risky changes. Fitness functions guard only what they encode, so add rules as the architecture evolves."
+  }
+ ]
+}

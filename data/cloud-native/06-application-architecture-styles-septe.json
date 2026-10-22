@@ -1,0 +1,667 @@
+{
+ "key": "06-application-architecture-styles-septe",
+ "title": "Application Architecture Styles (Archetypes)",
+ "pages": 48,
+ "minutes": 40,
+ "overview": "Choose architecture styles from quality attributes, data needs and team capacity. Compare frontend options, monoliths, microservices, hexagonal design, serverless, and Lambda/Kappa data processing. The modern archetypes add decisions about blast radius, placement, ownership, offline work and repeatable operations; combine them only where their benefits justify the cost.",
+ "big_ideas": [
+  "Every style is a trade-off: monoliths are simple and fast but hard to scale per component; distributed styles buy scalability and fault isolation at the cost of operational complexity.",
+  "Choose an architecture from drivers: domain, architecture characteristics, data, organisation and teams, and sync vs async communication.",
+  "Hexagonal architecture keeps the domain at the centre, reached only through ports and adapters, so it can be driven by users, tests or scripts and run on any infrastructure.",
+  "Lambda = batch + speed + serving layers (accurate but two pipelines); Kappa = one stream pipeline + serving (simpler, lower latency, harder reprocessing).",
+  "Event-driven is a principle applied across monoliths, microservices, serverless and data architectures for loose coupling and responsiveness.",
+  "AKF scale cube: x = replication (clones), y = functional decomposition (services/functions), z = data partitioning (sharding).",
+  "PWAs favour web reach and shared code; native integration can offer deeper platform capabilities. Verify offline, push and hardware needs on target devices.",
+  "Modern archetypes compose with classic ones; each answers a different question and has a stated 'do not use when'."
+ ],
+ "sections": [
+  {
+   "id": "context-full-stack",
+   "title": "Industry context and full stack layers",
+   "slides": [
+    4,
+    8
+   ],
+   "summary": "Where software engineering is heading and what a full stack cloud native application is made of, with its overwhelming choice of technologies.",
+   "notes": [
+    "**A cloud native application is a whole stack, and the platform is part of the design.** It runs from user experience and client, through API server and data/event store, down to the container or function platform and GitOps delivery; how code is packaged and deployed shapes scalability and delivery speed as much as the code does.",
+    "**Engineering leaders invest in five areas**: APIs and integration, automation (pipelines), experience and design, platforms and tools, and quality/testing/security (a 'digital immune system').",
+    "**The lecture presents forecasts about AI-assisted engineering.** Its 2028/2030 scenarios emphasise specification-driven workflows and smaller AI-augmented teams. Treat these as predictions, not settled facts; clear constraints, review and verification still matter.",
+    "**Choice overload is the problem the rest of the deck solves**: every layer has many languages, frameworks and protocols, so architects need a disciplined way to choose a style from requirements rather than from fashion."
+   ],
+   "terms": [
+    {
+     "term": "Full stack",
+     "def": "Everything from the user interface down through API server, data store and the platform it runs on."
+    },
+    {
+     "term": "CaaS / FaaS",
+     "def": "Containers-as-a-Service / Functions-as-a-Service: compute platforms that run the back end."
+    },
+    {
+     "term": "Digital immune system",
+     "def": "Practices and technologies for quality, testing and security that keep digital products resilient."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team's code is well structured, but releases take two weeks because deployments are manual and the app runs on hand-built VMs. A teammate says 'architecture is about the code, the platform is ops' business'. Do you agree?",
+     "a": "No. In a cloud native full stack, the platform is part of the design: packaging as containers or functions and delivering through Git-driven pipelines shapes scalability and delivery speed as much as the code does. Here the platform is the bottleneck. Moving to automated pipelines and a container or function platform would cut the two-week cycle more than refactoring code would."
+    },
+    {
+     "q": "A manager reads that AI-assisted engineering will soon make teams smaller and work 'specification-driven', and proposes cutting architecture reviews because 'the AI writes the code'. How do you respond?",
+     "a": "The lecture presents these as forecasts, not settled facts. Even if they come true, specifications and architectural constraints become the main input to AI-generated code, so clear quality attributes, review and verification matter more, not less. Cutting reviews removes the check on whether the generated code meets the constraints."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "layers",
+     "title": "Tech layers of a full stack application (slide 7)",
+     "layers": [
+      {
+       "label": "User",
+       "sub": "front end",
+       "detail": "Front end: user, front-end UX, mobile / web."
+      },
+      {
+       "label": "Front end UX",
+       "sub": "mobile / web",
+       "detail": "Front end UX delivered on mobile or web."
+      },
+      {
+       "label": "API server application",
+       "sub": "back end",
+       "accent": true,
+       "detail": "Back end: API server application."
+      },
+      {
+       "label": "Data store, event store",
+       "sub": "back end",
+       "detail": "Back end persistence and events."
+      },
+      {
+       "label": "CaaS / FaaS orchestration",
+       "sub": "cloud native platform engineering",
+       "detail": "Platform engineering layer that runs the services."
+      },
+      {
+       "label": "GitOps",
+       "sub": "cloud native platform engineering",
+       "detail": "Git-driven deployment of the platform."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "pwa-vs-native",
+   "title": "Progressive Web Apps vs native apps",
+   "slides": [
+    9,
+    12
+   ],
+   "summary": "Front-end delivery options: PWAs (broad reach, one codebase) versus native and cross-platform native apps (more capability), plus WebAssembly.",
+   "notes": [
+    "**Compare reach with required capability.** A PWA uses web distribution and can add installation, offline caching, push and background work where the browser supports them. Native or cross-platform native apps offer platform integration and app-store distribution, with extra platform-specific work.",
+    "**PWA vs cross-platform native**: choose a PWA for speed to market, low cost, broad reach, SEO and instant server-side updates (simple apps, e-commerce, news; Starbucks, Pinterest). Choose cross-platform native (React Native, Flutter) for feature-rich apps needing near-native performance, deep hardware access (camera, sensors) and app store presence (Instagram, UberEats).",
+    "**Check the target devices and browsers.** Installation, notifications, background work and hardware APIs vary. Offline operation requires deliberate caching, local data and synchronisation; a PWA label does not make every feature work offline.",
+    "**WebAssembly (Wasm)** is a portable instruction format executed by a sandboxed runtime in browsers or other hosts. It can support compute-heavy modules and edge runtimes; the host determines which capabilities it can access."
+   ],
+   "terms": [
+    {
+     "term": "PWA",
+     "def": "Progressive Web App: a website that behaves like an installable app (offline, push, home-screen icon)."
+    },
+    {
+     "term": "Service worker",
+     "def": "Browser background script that caches content so a PWA works offline."
+    },
+    {
+     "term": "WebAssembly (Wasm)",
+     "def": "Portable binary instruction format executed by compatible sandboxed runtimes in browsers, servers or edge environments."
+    },
+    {
+     "term": "Cross-platform native",
+     "def": "Shared application code targeting multiple native platforms, with framework-specific runtime and platform integrations."
+    }
+   ],
+   "check": [
+    {
+     "q": "A retailer wants a mobile shopping experience launched within 2 months, on a small budget, and found through search engines. PWA or native?",
+     "a": "A PWA: one web codebase, instant server-side updates, broad reach and search discoverability fit the deadline and budget. Check that the features it needs, such as push notifications and offline cart viewing, work on the target browsers. Native would only be justified if a required capability couldn't be delivered on the web."
+    },
+    {
+     "q": "Field inspectors must work for hours without signal, capture photos and read a Bluetooth sensor, and the app must be in the app stores. Native (or cross-platform native) or a PWA, and what does the choice mean for the backend?",
+     "a": "Cross-platform native: deep hardware access (Bluetooth, camera), long offline operation with local storage and app-store presence point there, and browser support for these features varies. On the backend, plan for synchronisation: APIs that accept batched, delayed uploads, conflict handling and idempotent writes, plus API versioning, because installed app versions update slowly."
+    },
+    {
+     "q": "A team says 'we built a PWA, so it works offline'. What would you check?",
+     "a": "That offline behaviour was designed: which screens and data are cached, how local writes are stored, and how they sync and resolve conflicts when the connection returns. A PWA can cache and work offline where the browser supports it, but the label doesn't make every feature offline-capable."
+    },
+    {
+     "q": "A web app needs to run a compute-heavy image filter in the browser, and the JavaScript version is too slow. What option does the lecture suggest, and what limits it?",
+     "a": "WebAssembly: a portable instruction format run by a sandboxed runtime, well suited to compute-heavy modules in browsers or at the edge. It is limited by its host, which decides what capabilities it can access, so it speeds up computation but doesn't give the hardware access a native app has."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "PWA vs native vs cross-platform native",
+     "columns": [
+      "",
+      "PWA",
+      "Native",
+      "Cross-platform native"
+     ],
+     "rows": [
+      [
+       "Codebase",
+       "Single codebase for any device",
+       "Platform-specific",
+       "Shared code with platform-specific integrations"
+      ],
+      [
+       "Distribution",
+       "Browser; no app store download",
+       "Installed via app store; icon on home screen",
+       "App store"
+      ],
+      [
+       "Experience",
+       "Offline/push features require implementation and platform support",
+       "Lives on the device",
+       "Near-native performance; tight hardware integration"
+      ],
+      [
+       "Examples",
+       "Angular, Ionic, ReactJS",
+       "Swift, Java, Kotlin",
+       "React Native, Flutter, Xamarin"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "architectural-thinking",
+   "title": "Choosing an architecture and architectural thinking",
+   "slides": [
+    13,
+    18
+   ],
+   "summary": "How an architect decides: factors to weigh, the shift from hand-off to collaboration, the four dimensions of architecture, characteristics and Attribute Driven Design.",
+   "notes": [
+    "**Pick an architecture from drivers, not preference**: the domain, the architecture characteristics that affect structure, data architecture, organisational factors and team/ops knowledge, domain-architecture isomorphism (the system's shape matches the problem's shape), and whether services communicate synchronously or asynchronously.",
+    "**Architecture has four dimensions**: characteristics (the qualities to achieve, e.g. scalability, availability, testability), decisions (long-term choices such as database type, number of services, how they communicate; they guide dev teams), style (overall shape, like a building plan) and logical components (functional blocks such as inventory or payment).",
+    "**Hand-off vs collaboration**: traditionally the architect fixed characteristics, style and components and threw them over a wall to developers. The modern view is continuous collaboration, with the architect leading and mentoring and feedback flowing from code back into the architecture.",
+    "**Attribute Driven Design (ADD)** is the method that ties it together: take drivers (purpose, primary functionality, quality attributes, constraints, concerns), apply design concepts (reference architectures, tactics, patterns, external components) and produce structures: module views, component-and-connector views and allocation views (deployment, work assignment)."
+   ],
+   "terms": [
+    {
+     "term": "Architecture characteristics",
+     "def": "The quality attributes (the '-ilities') the system must achieve."
+    },
+    {
+     "term": "Architectural style",
+     "def": "The overall shape of the system, e.g. layered, microservices, event-driven."
+    },
+    {
+     "term": "Attribute Driven Design (ADD)",
+     "def": "Method that turns drivers, especially quality attributes, into structures using tactics and patterns."
+    },
+    {
+     "term": "Domain/architecture isomorphism",
+     "def": "How well the architecture's structure matches the shape of the problem domain."
+    }
+   ],
+   "check": [
+    {
+     "q": "In a design review, someone lists 'use a replicated NoSQL store' under the system's characteristics. What is wrong with that, and how would you rewrite it?",
+     "a": "That is a decision, not a characteristic. Characteristics are qualities to achieve, such as availability above 99.9% or tolerance of a zone failure. Decisions are the long-term choices made to achieve them, such as the replicated store. Write the characteristic first, then record the decision with the characteristic it serves, so it can be revisited if the requirement changes."
+    },
+    {
+     "q": "An architect delivered a full design document 6 months ago, and the developers have since quietly worked around half of it. What went wrong, and what model would fix it?",
+     "a": "Hand-off architecture: the design was thrown over the wall and went stale as implementation realities appeared. Move to continuous collaboration, where the architect leads and mentors within the team and feedback from code changes the architecture. The cost is the architect's ongoing time, but the design stays true to the code."
+    },
+    {
+     "q": "A team must design a new system using Attribute Driven Design but starts by choosing a microservices pattern. What step have they skipped, and what should ADD produce?",
+     "a": "They skipped the drivers: purpose, primary functionality, quality attributes, constraints and concerns. In ADD, design concepts such as patterns, tactics and reference architectures are chosen to satisfy those drivers. The outputs are structures: module views, component-and-connector views and allocation views (deployment, work assignment)."
+    }
+   ]
+  },
+  {
+   "id": "monolith-vs-microservices",
+   "title": "Monolithic vs distributed; microservices",
+   "slides": [
+    19,
+    23
+   ],
+   "summary": "The core split between monolithic and distributed styles, a taxonomy of styles, and the pros and cons of monolith vs microservices using an e-commerce example.",
+   "notes": [
+    "**Deployment boundary is the core distinction.** A monolith deploys as one application and may have well-separated modules. Microservices deploy independently and own data through service boundaries. Distributed systems are broader than microservices and need not follow one database-per-service model.",
+    "**Monolith vs microservices:** a monolith gives simplicity and speed (no network hops, one thing to deploy) but scales only by cloning everything, any fault can crash the whole process, changes ripple, and technology is locked in. Microservices give per-service scaling, fault isolation, independent updates and technology diversity, but cost operational overhead and distributed-system problems (latency, data consistency).",
+    "**Style taxonomy:** monolithic examples include layered, batch pipeline, modular and microkernel; a big ball of mud is an anti-pattern. Distributed examples include event-driven, microservices, stream pipelines, AI services, serverless and space-based designs. Distribution can improve independent capacity and isolation but adds latency, partial failures and coordination.",
+    "**Worked example**: an online shop as a monolith bundles authorization, presentation, business logic, data access, integration and notification; as microservices it becomes Authorization, Order, Catalog, Cart (calls Catalog), Payment and Shipping services. Rule of thumb: small teams and simple apps favour a (modular) monolith; large, complex, fast-scaling apps justify microservices."
+   ],
+   "terms": [
+    {
+     "term": "Big ball of mud",
+     "def": "A monolith with no discernible structure (an anti-pattern)."
+    },
+    {
+     "term": "Microkernel",
+     "def": "Core system plus plug-in modules; listed as the IoT-style monolithic pattern."
+    },
+    {
+     "term": "Space-based architecture",
+     "def": "Distributed style using replicated in-memory data grids to avoid database bottlenecks."
+    },
+    {
+     "term": "Modular monolith",
+     "def": "A monolith organised into well-separated modules inside one deployable."
+    }
+   ],
+   "check": [
+    {
+     "q": "A startup with 4 developers is building an MVP whose features will change weekly. Monolith or microservices?",
+     "a": "A modular monolith: one thing to build, deploy and debug, no network hops, and the team can't absorb microservices' operational overhead. Keep the modules well separated so a part that later needs independent scaling can be extracted. Revisit when the team or load grows."
+    },
+    {
+     "q": "After moving to microservices, a crash in the recommendation service still makes the whole product page time out. Why didn't fault isolation help, and what would?",
+     "a": "Separate processes contain the crash, but the product page calls the recommendation service synchronously and waits, so the failure spreads through the call. Add timeouts, a circuit breaker and graceful degradation, such as showing the page without recommendations. Isolation is a property you have to design for; it doesn't come from deployment alone."
+    },
+    {
+     "q": "A team splitting a monolith asks what it gives up by moving to microservices. Give the two biggest costs for an e-commerce shop where Cart calls Catalog.",
+     "a": "Distributed-system problems: Cart's call to Catalog now adds network latency and can fail partially. Data consistency also becomes harder across separate stores, for example keeping prices in carts aligned with the catalogue. Operational overhead grows as well: more deployments, monitoring and tracing. These costs are justified when independent scaling, releases and fault isolation are needed."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Monolith vs microservices",
+     "columns": [
+      "",
+      "Monolith",
+      "Microservices"
+     ],
+     "rows": [
+      [
+       "Codebase",
+       "Single codebase, developed as one unit",
+       "Separate services, each with its own codebase and database"
+      ],
+      [
+       "Deployment",
+       "One application to deploy and version",
+       "Developed, deployed and scaled independently"
+      ],
+      [
+       "Scaling",
+       "Replicate the whole application on multiple servers",
+       "Scale individual services on demand"
+      ],
+      [
+       "Reliability",
+       "An issue in any module can bring down the whole process",
+       "Better fault isolation"
+      ],
+      [
+       "Complexity",
+       "Codebase gets harder to change as it grows",
+       "Harder to monitor and manage: operational overhead, network latency, data consistency"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hexagonal-serverless",
+   "title": "Hexagonal and serverless architectures",
+   "slides": [
+    24,
+    26
+   ],
+   "summary": "Two styles that move boundaries: hexagonal (ports and adapters around a pure domain) and serverless (event-triggered functions on provider-managed infrastructure).",
+   "notes": [
+    "**Hexagonal (ports and adapters)** protects the business domain: Application, Domain and Infrastructure are separated, dependencies point inward to the Domain, and everything outside (users, other systems, databases, tests, CI/CD) connects through adapters on ports. The payoff is that the app can be driven equally by users, programs, tests or batch scripts and tested in isolation from real devices and databases.",
+    "**Serverless** removes infrastructure management: event-triggered cloud functions (e.g. AWS Lambda) run on demand and the provider scales resources in real time, within configured and platform capacity limits. Pros: pay per compute time, automatic scaling, low ops. Cons: vendor lock-in, cold starts, less control, and building serverless structures can be labour-intensive.",
+    "**Hexagonal vs serverless**: hexagonal is about shielding the domain from infrastructure through interfaces; serverless is about outsourcing infrastructure. They combine well, e.g. a function whose core logic is a hexagon with adapters for triggers and stores. Serverless suits sporadic, event-driven load, not steady latency-critical work."
+   ],
+   "terms": [
+    {
+     "term": "Ports and adapters",
+     "def": "Ports are interfaces the domain defines; adapters plug real technologies (UI, DB, queues, tests) into them."
+    },
+    {
+     "term": "Cold start",
+     "def": "Extra latency when a serverless function is invoked with no warm instance ready."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team's order logic can only be tested against a real database and a running message broker, so tests take 20 minutes. How would hexagonal architecture change this?",
+     "a": "Put the order logic in a domain core that depends only on ports (interfaces), with adapters for the database and broker on the outside. Tests then drive the domain through a test adapter and replace the database and broker with fakes, so business logic is tested in seconds. Keep a smaller set of integration tests for the real adapters."
+    },
+    {
+     "q": "A payments API has steady traffic around the clock and a strict 50 ms latency target. A teammate proposes serverless functions. Do you agree?",
+     "a": "No. Cold starts threaten the latency target, and with constant usage the pay-per-use saving disappears. You also accept less control and lock-in. Long-running containers or VMs suit steady, latency-critical load. Serverless would fit sporadic, event-driven parts, such as sending receipts."
+    },
+    {
+     "q": "A team builds a function-based service and later wants to move part of it off that provider. How could combining hexagonal design with serverless have helped?",
+     "a": "If the function's business logic sat in a hexagonal core, with the trigger and data stores as adapters, only the adapters would need rewriting to move providers or to run in a container. Serverless outsources infrastructure; hexagonal shields the domain from it. Together they reduce the lock-in cost of serverless."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "hub",
+     "title": "Hexagonal: ports and adapters (slides 24-25)",
+     "center": {
+      "label": "Application core",
+      "detail": "Application, Domain and Infrastructure are explicitly separated; dependencies point toward the Domain.",
+      "accent": true
+     },
+     "items": [
+      {
+       "label": "Users and partners",
+       "detail": "Reach the core through ports and the API gateway; the app can equally be driven by programs, automated tests or batch scripts."
+      },
+      {
+       "label": "Data stores",
+       "detail": "External and internal data stores sit behind adapters."
+      },
+      {
+       "label": "Test, CI/CD extensions",
+       "detail": "Lets the core be developed and tested in isolation from its run-time devices and databases."
+      },
+      {
+       "label": "Infrastructure adapters",
+       "detail": "Platform and run time, infrastructure, tools and frameworks stay outside the core."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "data-event-ai-archetypes",
+   "title": "Lambda, Kappa, IoT, event-driven, multi-cluster, AI",
+   "slides": [
+    27,
+    33
+   ],
+   "summary": "Data-centric and cross-cutting archetypes: the two big-data processing styles, IoT layering, event-driven design, multi-cluster deployments, AI archetypes, and how all archetypes relate.",
+   "notes": [
+    "**Lambda vs Kappa is the big-data trade-off.** Lambda has a batch layer (historical data, recomputing results such as ML models), a speed layer (low-latency near-real-time) and a serving layer; it is accurate with the batch layer as source of truth but means two pipelines to maintain. Kappa uses one stream engine for real-time and reprocessing plus a serving layer: simpler and low latency, but stateful processing and complex reprocessing are harder.",
+    "**Event-driven is a principle, not just a style**: built around events (significant state changes), it gives loose coupling, independent horizontal scaling of consumers and real-time responsiveness, and can be applied on top of any other architecture.",
+    "**Deployment and domain archetypes**: IoT flows from smart things through networks/gateways to middleware (storage, analytics) and applications; multi-cluster/hybrid cloud spreads workloads across Kubernetes clusters for resilience, geo-distribution or compliance; AI splits into predictive AI (classification, clustering, regression, detection) and generative AI (LLMs, RAG), with different architectures.",
+    "**How they relate**: monoliths for small simple apps; microservices for large complex apps; serverless for event-driven or sporadic loads; Lambda/Kappa for data-centric work. They combine: microservices can be built from serverless functions, and data pipelines often run on serverless functions."
+   ],
+   "terms": [
+    {
+     "term": "Lambda architecture",
+     "def": "Batch + speed + serving layers combining accurate history and fast real-time results."
+    },
+    {
+     "term": "Kappa architecture",
+     "def": "Single stream-processing pipeline plus serving layer; reprocess by replaying the stream."
+    },
+    {
+     "term": "Event-driven architecture",
+     "def": "Components communicate by producing and reacting to events rather than direct calls."
+    },
+    {
+     "term": "Predictive vs generative AI",
+     "def": "Predictive analyses and forecasts from existing data; generative produces new content."
+    },
+    {
+     "term": "Multi-cluster",
+     "def": "Running workloads across several Kubernetes clusters, across clouds and on-premises."
+    }
+   ],
+   "check": [
+    {
+     "q": "A ride-hailing company needs surge prices updated within seconds and also retrains its pricing model on 3 years of trip history every night. Lambda or Kappa?",
+     "a": "Lambda: a speed layer streams trip events for near-real-time surge prices, a batch layer recomputes the model over full history, and a serving layer exposes both. The cost is maintaining two pipelines that must agree. Kappa would be simpler if retraining could be done by replaying the stream, but reprocessing years of history through one stream engine is harder."
+    },
+    {
+     "q": "A monolith needs to notify inventory, email and analytics when an order is placed, and each new consumer currently means editing the order code. Must the team move to microservices to fix this?",
+     "a": "No. Event-driven is a principle that can be applied on top of any style. The monolith can publish an 'order placed' event that consumers subscribe to, which gives loose coupling, lets consumers scale independently and adds new consumers without editing order code. The cost is eventual consistency and the need to monitor event flows."
+    },
+    {
+     "q": "A company runs one Kubernetes cluster in one region and must now serve EU customers whose data must stay in the EU. Which archetype helps, and what does it cost?",
+     "a": "Multi-cluster or hybrid deployment: an EU cluster keeps EU workloads and data in the EU, puts compute closer to those users and limits the impact of one cluster failing. The cost is operating several clusters consistently, routing users to the right cluster, and the reporting and data work across them."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Lambda vs Kappa",
+     "columns": [
+      "",
+      "Lambda",
+      "Kappa"
+     ],
+     "rows": [
+      [
+       "Layers",
+       "Batch, speed and serving",
+       "Only stream processing and serving"
+      ],
+      [
+       "Processing",
+       "Batch layer re-computes historical data; speed layer gives low-latency results",
+       "Single stream processing engine handles real-time data and continuous reprocessing"
+      ],
+      [
+       "Pros",
+       "Handles real-time and historical data; batch layer is the source of truth",
+       "Simple, unified pipeline; low latency"
+      ],
+      [
+       "Cons",
+       "Two separate pipelines to maintain; operational overhead",
+       "State management; hard to handle complex transformations or reprocessing"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scaling-evolution-summary",
+   "title": "Modern composables, scale cube and evolution",
+   "slides": [
+    34,
+    38
+   ],
+   "summary": "Why classic styles are not enough, the AKF scale cube, and the historical path from monoliths to packaged business capabilities.",
+   "notes": [
+    "**Classic styles only answer 'how do I decompose logic?'** Eight modern archetypes answer other questions: cell-based (blast radius), edge-native (where compute runs), micro-frontends (UI decomposition), multi-runtime/sidecar (where distributed capabilities live), data mesh/lakehouse (data ownership), local-first (offline), MACH/PBC (business composition), platform engineering (repeatable operation). They compose with, not replace, the classic styles.",
+    "**AKF scale cube** gives three independent ways to scale: x = replication (clones behind a load balancer, replicated databases), y = functional decomposition (split into services or functions), z = data partitioning (shard by key, data per service). Diagnose the bottleneck, then pick the axis.",
+    "**Architecture evolved toward composable business capabilities**: monolith, 2-tier, 3-tier (UX/logic/data), SOA, web-scale services, software-defined microservices with outer and inner APIs plus IoT, then packaged services with edge computing. Note 3-tier splits by technical layer while microservices split by business capability."
+   ],
+   "terms": [
+    {
+     "term": "AKF scale cube",
+     "def": "Three ways to scale: clone (x), split by function (y), split by data (z)."
+    },
+    {
+     "term": "Sharding",
+     "def": "Partitioning data across databases by a key (z-axis scaling)."
+    },
+    {
+     "term": "SOA",
+     "def": "Service-Oriented Architecture: coarse-grained shared services exposed via service APIs."
+    }
+   ],
+   "check": [
+    {
+     "q": "After adding app servers, the database becomes the bottleneck. Which scale-cube axis would you use next?",
+     "a": "First identify the data-tier limit. If it's reads, replicas or caching help (x axis on the data tier). If it's writes on independent records, shard by a suitable key (z axis). Splitting off a heavy workload into its own service and store (y axis) isolates it. None of these fixes a poorly designed slow query, so check that first."
+    },
+    {
+     "q": "A team describes its 3-tier app (web, logic, database) as 'already microservices because it has separate tiers'. What is the structural difference?",
+     "a": "3-tier splits by technical layer, so one business change still touches every tier and they deploy together. Microservices split vertically by business capability, and each service owns its logic and data and deploys independently. The 3-tier app can scale tiers separately but not capabilities."
+    },
+    {
+     "q": "A SaaS's checkout path is overloaded during sales, but the search and account features are not. Which scale-cube axis fits, and why not just add more clones?",
+     "a": "The y axis (functional decomposition): split checkout into its own service so it can scale on its own. Cloning the whole app (x axis) also scales search and accounts that don't need it, which wastes capacity, and it doesn't isolate checkout failures. The cost is a new service boundary and its data ownership."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "cards",
+     "title": "AKF scale cube (The Art of Scalability)",
+     "items": [
+      {
+       "label": "X axis",
+       "sub": "replication",
+       "detail": "E.g. load balancing several copies, MySQL master-slave cluster, NoSQL replication."
+      },
+      {
+       "label": "Y axis",
+       "sub": "functional decomposition",
+       "detail": "E.g. split business logic into functions, serverless functions, hybrid cloud solutions."
+      },
+      {
+       "label": "Z axis",
+       "sub": "data partitioning",
+       "detail": "E.g. parameter-based sharding, store data in micro service, spread data over several databases."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "modern-archetypes-1",
+   "title": "Appendix: cells, edge, micro-frontends, sidecars, data mesh",
+   "slides": [
+    40,
+    44
+   ],
+   "summary": "What, why, when and trade-offs for the first five modern composable archetypes.",
+   "notes": [
+    "**Cells bound a failure’s blast radius.** A router assigns users or tenants to independent full-stack cells, with no cross-cell runtime calls and cell-by-cell releases. Failure affects the assigned group, roughly 1/N only for equally sized cells. Costs include duplicated capacity, a critical router, difficult cross-cell reporting and the automation needed to operate many environments.",
+    "**Edge-native pushes compute and some state near users** (V8 isolates or Wasm, millisecond cold starts, eventually consistent edge storage, origin as system of record). Use it for tight latency or residency (auth, personalisation, A/B routing); avoid it for heavy compute or strong consistency, and expect limited runtimes, hard debugging and lock-in.",
+    "**Micro-frontends and BFF extend team independence to the UI**: teams own vertical slices (UI, API, data) composed at build, edge or run time, and each experience (web, mobile, kiosk) gets its own Backend-for-Frontend. Use when many teams share one UI or when replacing a legacy front end incrementally; not for a single front-end team (duplicated payloads, design consistency and shared state costs).",
+    "**Sidecar / multi-runtime moves cross-cutting capability out of libraries**: a sidecar (service mesh, Dapr) provides discovery, mTLS, retries, circuit breaking, telemetry uniformly across languages, making resilience and security platform decisions. It costs an extra hop, memory and a control plane, so it is rarely justified below about a dozen services in one language.",
+    "**Data mesh is the data-plane counterpart of microservices**: domain ownership, data as a product, self-serve platform and federated governance, with the central team becoming a platform provider. It needs governance maturity first. A lakehouse (open table formats giving ACID, schema evolution, time travel on object storage; bronze/silver/gold medallion refinement) can be its technical base and is not the same as Lambda's layers."
+   ],
+   "terms": [
+    {
+     "term": "Blast radius",
+     "def": "How much of the system or user base a single failure affects."
+    },
+    {
+     "term": "Backend-for-Frontend (BFF)",
+     "def": "A dedicated backend per client experience that aggregates and tailors downstream services."
+    },
+    {
+     "term": "Sidecar",
+     "def": "Helper container beside a service handling cross-cutting concerns like mTLS and retries."
+    },
+    {
+     "term": "Data mesh",
+     "def": "Decentralised data ownership where domains publish governed data products."
+    },
+    {
+     "term": "Medallion (bronze/silver/gold)",
+     "def": "Progressive refinement layers from raw to cleaned to business-ready data in a lakehouse."
+    }
+   ],
+   "check": [
+    {
+     "q": "A bad deploy to a multi-tenant SaaS took down all 4,000 customers at once. Which archetype limits this, and what does it cost?",
+     "a": "Cell-based architecture: a router assigns tenants to independent full-stack cells with no cross-cell calls, and releases roll out cell by cell, so a bad deploy hits one cell first. With 10 equal cells, roughly 400 customers would be affected. Costs: duplicated capacity, a router that becomes critical, harder cross-cell reporting, and the automation to run many environments."
+    },
+    {
+     "q": "A team of five Java services proposes adding a sidecar service mesh for retries and telemetry. Would you approve it?",
+     "a": "Probably not yet. A mesh adds an extra network hop, memory per pod and a control plane, and the lecture suggests it is rarely justified below about a dozen services in one language, where a shared library can give the same retries and telemetry. A requirement for uniform mTLS, or a move to several languages, would change the answer."
+    },
+    {
+     "q": "One front-end team builds a single web app and is considering micro-frontends to 'be modern'. What would you advise?",
+     "a": "Don't. Micro-frontends extend team independence to the UI, which pays off when many teams share one UI or a legacy front end is being replaced piece by piece. With one team you take on duplicated payloads, design-consistency work and shared-state problems with no independence gained. A separate backend for each experience (BFF) may still help if web and mobile need different APIs."
+    },
+    {
+     "q": "A company bought a lakehouse and declared it has 'a data mesh'. What is missing?",
+     "a": "A lakehouse is a storage and processing base (open table formats with ACID, schema evolution and time travel on object storage). Data mesh is an operating model: domain teams own their data as products with contracts and quality, on a self-serve platform under federated governance. Without domain ownership and governance maturity, it is still a central data platform."
+    },
+    {
+     "q": "A product team wants to run personalisation and A/B routing at the edge, and also move order checkout there for speed. Which part fits edge-native, and which doesn't?",
+     "a": "Personalisation and A/B routing fit: they are light, latency-sensitive and can tolerate eventually consistent edge storage. Checkout needs strong consistency with the origin system of record, so keep it at the origin. Edge also brings limited runtimes, harder debugging and lock-in, so keep edge logic small."
+    }
+   ]
+  },
+  {
+   "id": "modern-archetypes-2",
+   "title": "Appendix: local-first, MACH, platform engineering, selection",
+   "slides": [
+    45,
+    48
+   ],
+   "summary": "The last three modern archetypes and a guide matching each archetype to its driving concern and anti-use-case.",
+   "notes": [
+    "**Local-first completes suitable reads and writes on a local replica, then synchronises.** CRDTs or operational transformation merge supported concurrent edits. This suits collaboration and unreliable networks, but merging cannot by itself protect global invariants such as one seat sold once. It can complement a PWA rather than replace all PWA designs.",
+    "**MACH and PBC compose the business**: MACH = Microservices, API-first, Cloud-native SaaS, Headless (one capability serves many channels); a Packaged Business Capability bundles the data and services of one capability (cart, pricing, tax) assembled from vendors and in-house parts. Integration becomes the architecture, so it needs a capability map with owners or it becomes distributed procurement.",
+    "**Platform engineering decides which archetypes are affordable**: an internal developer platform run as a product (golden paths, self-service, templates, GitOps on Kubernetes), measured by adoption and DORA metrics. Use when cognitive load limits delivery; the failure mode is the platform team becoming a gatekeeper.",
+    "**Selection guide (driver, archetype, when not)**: blast radius, cells (not small user bases); latency/residency, edge (not heavy compute or strong consistency); many teams on one UI, micro-frontends/BFF (not one team); uniform capability across polyglot services, sidecar (not few services); data ownership at scale, data mesh (not before governance); offline/collaboration, local-first (not global invariants); many vendors, MACH/PBC (not one stable channel); operability, platform/IDP (not small orgs). Mature estates combine them."
+   ],
+   "terms": [
+    {
+     "term": "CRDT",
+     "def": "Conflict-free Replicated Data Type: data structure that merges concurrent edits automatically."
+    },
+    {
+     "term": "MACH",
+     "def": "Microservices, API-first, Cloud-native SaaS, Headless."
+    },
+    {
+     "term": "Packaged Business Capability (PBC)",
+     "def": "Self-contained, assemblable unit of one business capability's data and services."
+    },
+    {
+     "term": "Internal Developer Platform (IDP)",
+     "def": "Self-service platform with golden paths so teams build and run services consistently."
+    }
+   ],
+   "check": [
+    {
+     "q": "A concert-ticketing app wants to be local-first so fans can pick seats offline. Where does local-first work here and where doesn't it?",
+     "a": "It works for drafts, such as building a seat selection or a wishlist on the local replica. It can't guarantee that a seat is sold only once, because an offline replica doesn't know about other replicas' bookings, and CRDT-style merging doesn't protect global invariants. Confirm the purchase through an authoritative coordination step before promising the seat."
+    },
+    {
+     "q": "A retailer composes its commerce stack from a vendor cart, a vendor tax engine, in-house pricing and a headless CMS (MACH). Two years in, nobody knows who owns checkout failures. What went wrong?",
+     "a": "Integration became the architecture without a capability map that names owners, so MACH turned into distributed procurement. Each packaged business capability needs a clear owner and integration contracts. Integration, identity and cost across many vendors are routinely underestimated."
+    },
+    {
+     "q": "A 12-developer company plans to build an internal developer platform with golden paths and self-service templates. Is it worth it?",
+     "a": "Probably not yet. Platform engineering pays off when cognitive load limits delivery across many teams, and it must be run as a product, measured by adoption and DORA metrics. For 12 developers, shared templates and a simple pipeline may be enough. The risk at any size is the platform team becoming a gatekeeper instead of an enabler."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A bank wants to modernise a 15-year-old monolithic loan system used by 300 branches while continuing to issue loans every day. Propose a target style and a migration approach, and name the two biggest trade-offs.",
+   "a": "Target microservices split by business capability (application, credit check, disbursement, notification), each owning its data, with hexagonal design inside services for testability and events between them for loose coupling. Migrate incrementally with a strangler approach, routing one capability at a time to new services, rather than a big-bang rewrite that would stop loan issuance. The trade-offs are distributed-system problems (latency, partial failures, consistency across stores) and operational overhead, so invest in observability and platform automation before the number of services grows."
+  },
+  {
+   "q": "Design a data architecture for a ride-hailing company that needs surge pricing within 5 seconds of demand changes and nightly retraining on 3 years of trips. Justify Lambda or Kappa, and say what would change your choice.",
+   "a": "Lambda: a speed layer processes the trip-event stream for near-real-time surge prices, a batch layer holds full history and retrains models nightly, and a serving layer merges the results. Batch remains the accurate source of truth. The cost is two pipelines with logic that must stay consistent. Choose Kappa instead if reprocessing can be done by replaying the stream within the nightly window, which trades the second pipeline for harder stateful stream processing. Event-driven ingestion keeps producers decoupled either way."
+  },
+  {
+   "q": "A government services app must reach all citizens, including those on old phones. It needs form-filling that survives a dropped connection, and a later phase adds reading ID cards over NFC at kiosks. Native or PWA? Give the design implications for the backend services.",
+   "a": "Start with a PWA: broad reach, no install barrier, one codebase and instant updates suit a citizen service. Design offline form drafts with local storage and sync. For the NFC kiosks, use a native or cross-platform native kiosk app, because hardware access through browsers varies, and the kiosks are controlled devices. Backend implications: APIs must accept delayed, batched submissions idempotently and handle conflicts, a separate backend for each experience (BFF) may serve web and kiosk clients, and API versioning is needed for installed kiosk apps."
+  },
+  {
+   "q": "An e-commerce site handles normal traffic but fails on Black Friday at 12 times the load: the database's write capacity is exhausted and checkout slows everything else. Apply the AKF scale cube to the problem and name a side effect of each change.",
+   "a": "x axis: add load-balanced clones of the stateless web tier, plus read replicas; side effect: replica lag gives stale reads. y axis: split checkout into its own service and store so it scales and fails independently; side effect: cross-service consistency for orders and inventory. z axis: shard orders by customer or region to spread writes, which is the fix for exhausted write capacity; side effect: cross-shard queries and reporting become harder. Add a queue in front of order processing to level the peak."
+  },
+  {
+   "q": "A global SaaS needs sub-100 ms response for login and personalisation worldwide, must keep EU data in the EU, and had an outage last year where one bad deploy hit every tenant. Which modern archetypes would you combine, and what are their costs?",
+   "a": "Cells per region and tenant group bound the blast radius and keep EU tenants' data in EU cells, with releases rolled out cell by cell. Edge-native functions handle authentication checks and personalisation near users, with the origin remaining the system of record. A platform with GitOps operates N cells consistently. The costs are duplicated infrastructure, a critical cell router, hard cross-cell reporting, eventual consistency and limited runtimes at the edge, and the investment in platform automation."
+  },
+  {
+   "q": "A new product will have 3 developers at launch, sporadic traffic from 0 to 2,000 requests a minute, and a plan to grow to 6 teams in 2 years. Compare monolith, microservices and serverless, and recommend a path.",
+   "a": "A modular monolith minimises deployment and network complexity for 3 developers but scales as one unit. Microservices give independent scaling and releases but bring partial failures, data coordination and operational overhead the team can't afford yet. Serverless suits the sporadic load and costs little when idle, but brings cold starts, runtime limits and lock-in. Recommend a modular monolith, or a few functions with a hexagonal core for the spiky parts, with clear module boundaries so services can be extracted as the 6 teams arrive."
+  }
+ ]
+}

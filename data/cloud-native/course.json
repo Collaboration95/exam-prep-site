@@ -1,0 +1,943 @@
+{
+ "id": "cloud-native",
+ "title": "Cloud Native Solution Design",
+ "days": [
+  {
+   "n": 1,
+   "date": "Mon 28 Sep",
+   "title": "Cloud foundations and migration",
+   "intro": "What cloud is (service and deployment models), how architects frame a cloud solution (reference architecture, cloud-native vs cloud-enabled), automating infrastructure with code, and how to move existing apps to the cloud (the 7 Rs).",
+   "topics": [
+    {
+     "key": "01-cloud-overview-august-2026",
+     "title": "Overview of Cloud Computing",
+     "overview": "Learn what cloud computing is, why organisations adopt it, and how service models divide operational responsibility. Compare deployment models and the cloud-hosted, optimised and native approaches. Use these distinctions to justify a workload-specific strategy rather than assuming cloud always saves money.",
+     "sections": [
+      {
+       "id": "cloud-pillars",
+       "title": "Cloud characteristics and economies of scale",
+       "slides": [
+        5,
+        7
+       ]
+      },
+      {
+       "id": "definitions",
+       "title": "Definitions of cloud computing",
+       "slides": [
+        9,
+        11
+       ]
+      },
+      {
+       "id": "motivations",
+       "title": "Why adopt cloud: benefits, barriers, trend",
+       "slides": [
+        13,
+        18
+       ]
+      },
+      {
+       "id": "service-models",
+       "title": "Service models: IaaS, PaaS, SaaS",
+       "slides": [
+        20,
+        25
+       ]
+      },
+      {
+       "id": "deployment-models",
+       "title": "Deployment models",
+       "slides": [
+        27,
+        29
+       ]
+      },
+      {
+       "id": "vendor-offerings",
+       "title": "Major providers",
+       "slides": [
+        30,
+        34
+       ]
+      },
+      {
+       "id": "strategy",
+       "title": "Development options, myths and strategy mistakes",
+       "slides": [
+        35,
+        37
+       ]
+      }
+     ]
+    },
+    {
+     "key": "02-cloud-reference-architecture-august-2",
+     "title": "Cloud Reference Architecture",
+     "overview": "Use reference architectures to connect business requirements to cloud components. Compare cloud-native and cloud-enabled designs, migration routes, IaC, image security and hybrid or multi-cloud placement. The worked e-commerce, gaming and recovery designs show why each component is needed.",
+     "sections": [
+      {
+       "id": "architect-roles",
+       "title": "Architect roles and where cloud architects fit",
+       "slides": [
+        2,
+        7
+       ]
+      },
+      {
+       "id": "native-vs-enabled",
+       "title": "Cloud-native vs cloud-enabled",
+       "slides": [
+        8,
+        11
+       ]
+      },
+      {
+       "id": "building-blocks",
+       "title": "Cloud-native building blocks and ecosystem",
+       "slides": [
+        12,
+        17
+       ]
+      },
+      {
+       "id": "migration-iac-images",
+       "title": "Migration choices, Infrastructure as Code and image security",
+       "slides": [
+        18,
+        24
+       ]
+      },
+      {
+       "id": "hybrid-multicloud",
+       "title": "Hybrid, multi-cloud and reference architectures",
+       "slides": [
+        25,
+        28
+       ]
+      },
+      {
+       "id": "example-architectures",
+       "title": "Worked reference architectures and the case for Kubernetes",
+       "slides": [
+        29,
+        36
+       ]
+      }
+     ]
+    },
+    {
+     "key": "02a-infrastructure-as-code-vendor-specif",
+     "title": "Infrastructure as Code: Vendor-Specific Examples",
+     "overview": "IaC defines infrastructure in versioned files rather than manual clicks. Compare provisioning, configuration and orchestration, then apply them to AWS serverless, Azure microservices, a GCP pipeline and multi-cloud Kubernetes. GitOps keeps cluster desired state in Git and synchronises it through automation.",
+     "sections": [
+      {
+       "id": "iac-fundamentals",
+       "title": "IaC concepts and reference architecture",
+       "slides": [
+        2,
+        4
+       ]
+      },
+      {
+       "id": "vendor-native-iac",
+       "title": "Vendor-native IaC: AWS SAM and Azure Bicep",
+       "slides": [
+        5,
+        8
+       ]
+      },
+      {
+       "id": "terraform-and-gitops",
+       "title": "Terraform, multi-cloud and Kubernetes GitOps",
+       "slides": [
+        9,
+        13
+       ]
+      }
+     ]
+    },
+    {
+     "key": "03-cloud-migration-august-2026",
+     "title": "Cloud Adoption and Migration",
+     "overview": "Choose a migration approach by diagnosing the application’s business and technical problems. Compare VMs, containers, IaaS and PaaS, then apply the migration options and six modernisation drivers. Assess dependencies, risk and total cost, including the temporary cost bubble, before sequencing an incremental migration.",
+     "sections": [
+      {
+       "id": "iaas-recap",
+       "title": "Recap: VMs, containers, managed services and IaaS",
+       "slides": [
+        5,
+        10
+       ]
+      },
+      {
+       "id": "openstack-ansible",
+       "title": "OpenStack and Ansible (IaaS as code)",
+       "slides": [
+        11,
+        15
+       ]
+      },
+      {
+       "id": "paas-and-containers",
+       "title": "PaaS and containers vs VMs",
+       "slides": [
+        16,
+        21
+       ]
+      },
+      {
+       "id": "migration-framework",
+       "title": "Migration framework and strategy",
+       "slides": [
+        23,
+        27
+       ]
+      },
+      {
+       "id": "rehost-replatform",
+       "title": "Migration options I: Rehost and Replatform",
+       "slides": [
+        28,
+        33
+       ]
+      },
+      {
+       "id": "rearchitect-to-encapsulate",
+       "title": "Migration options II: Rearchitect to Encapsulate",
+       "slides": [
+        34,
+        39
+       ]
+      },
+      {
+       "id": "choosing-and-planning",
+       "title": "Choosing the approach and planning",
+       "slides": [
+        40,
+        46
+       ]
+      },
+      {
+       "id": "assessment",
+       "title": "Application concerns and assessment",
+       "slides": [
+        47,
+        50
+       ]
+      },
+      {
+       "id": "sourcing-hosting",
+       "title": "Sourcing and hosting models",
+       "slides": [
+        51,
+        57
+       ]
+      }
+     ]
+    },
+    {
+     "key": "mtech-ft-cnsd-day-1",
+     "title": "Day 1: What the Instructor Emphasised in Class",
+     "overview": "These classroom sketches connect architecture decisions, backlog work and hosting choices. Follow the same web application from on-premises tiers to cloud services and an orchestrated container design. Use the progression to explain why a component changes; the drawings are examples rather than requirements for every cloud-native system.",
+     "sections": [
+      {
+       "id": "apps-and-architecture-thinking",
+       "title": "Apps, architecture and backlog",
+       "slides": [
+        1,
+        3
+       ]
+      },
+      {
+       "id": "hosting-evolution",
+       "title": "From on-prem to cloud to cloud native",
+       "slides": [
+        4,
+        6
+       ]
+      },
+      {
+       "id": "packaging-and-timeline",
+       "title": "Packaging options and history",
+       "slides": [
+        7,
+        8
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Discussion 1: Cloud Migration Case Study (TickIt)",
+     "path": "02-homework-and-practice/discussions/Discussion 1 - Cloud Migration Case Study.pdf",
+     "note": "Pick a 7R migration strategy for a ticketing app and propose a cloud-enabled reference architecture."
+    },
+    {
+     "title": "Assignment page: Cloud Migration",
+     "path": "02-homework-and-practice/assignment-pages/Cloud Migration.html",
+     "note": "The questions your group was asked for Discussion 1."
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "date": "Tue 29 Sep",
+   "title": "Persistence and cloud-native design",
+   "intro": "Choosing where data lives: relational vs NoSQL families, CAP/BASE, polyglot persistence. Then what makes an application cloud-native (12-factor app, resilience, scalability, observability). The course spread lecture 05 across Days 1–3; it is placed here.",
+   "topics": [
+    {
+     "key": "04-cloud-persistence-september-2026",
+     "title": "Cloud Persistence",
+     "overview": "Choose persistence from the data shape, access pattern, consistency requirement and scale. Trace relational and object databases into the four NoSQL families, then compare sharding, replication and eventual consistency. Map local, file, block, object and database storage to cloud services while accounting for the operating cost of multiple stores.",
+     "sections": [
+      {
+       "id": "why-persistence",
+       "title": "Why persistence matters in the cloud",
+       "slides": [
+        2,
+        6
+       ]
+      },
+      {
+       "id": "db-history",
+       "title": "Database history: navigational, relational, object",
+       "slides": [
+        8,
+        16
+       ]
+      },
+      {
+       "id": "big-data-nosql",
+       "title": "Big data and the birth of NoSQL",
+       "slides": [
+        18,
+        26
+       ]
+      },
+      {
+       "id": "nosql-patterns",
+       "title": "The four NoSQL data store patterns",
+       "slides": [
+        27,
+        31
+       ]
+      },
+      {
+       "id": "choosing-a-store",
+       "title": "Choosing a store: KV, column, document, graph, NewSQL",
+       "slides": [
+        33,
+        40
+       ]
+      },
+      {
+       "id": "scaling-consistency",
+       "title": "Sharding, replication and eventual consistency",
+       "slides": [
+        42,
+        45
+       ]
+      },
+      {
+       "id": "cloud-storage-options",
+       "title": "Cloud persistence options: file storage types",
+       "slides": [
+        47,
+        51
+       ]
+      },
+      {
+       "id": "aws-examples-summary",
+       "title": "AWS storage services and summary",
+       "slides": [
+        53,
+        59
+       ]
+      }
+     ]
+    },
+    {
+     "key": "05-architecting-a-cloud-native-applicati",
+     "title": "Architecting a Cloud Native Application",
+     "overview": "Design services for elasticity, resilience, automation and observable operation. Start with state placement and the 12-factor practices, then connect immutable delivery, external configuration and orchestration. Use the design checklists to test scaling, availability, security, operations and feasibility against actual requirements.",
+     "sections": [
+      {
+       "id": "what-is-cloud-native",
+       "title": "What is cloud native?",
+       "slides": [
+        3,
+        9
+       ]
+      },
+      {
+       "id": "service-models-and-principles",
+       "title": "Service models, stack and principles",
+       "slides": [
+        10,
+        14
+       ]
+      },
+      {
+       "id": "state-pets-vs-cattle",
+       "title": "State: pets vs cattle",
+       "slides": [
+        15,
+        18
+       ]
+      },
+      {
+       "id": "twelve-factor-app",
+       "title": "The 12-factor app",
+       "slides": [
+        19,
+        22
+       ]
+      },
+      {
+       "id": "packaging-and-orchestration",
+       "title": "Packaging, config and orchestration",
+       "slides": [
+        23,
+        27
+       ]
+      },
+      {
+       "id": "maturity-and-comparison",
+       "title": "Maturity, traditional vs cloud native, summary",
+       "slides": [
+        28,
+        35
+       ]
+      },
+      {
+       "id": "design-space-and-characteristics",
+       "title": "Design space, characteristics and guidelines",
+       "slides": [
+        38,
+        40
+       ]
+      },
+      {
+       "id": "design-considerations",
+       "title": "Design considerations: scalability to feasibility",
+       "slides": [
+        41,
+        48
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Discussion 2: Data Store Design for Big Data (shopping cart)",
+     "path": "02-homework-and-practice/discussions/Discussion 2 - Data Store Design for Big Data.pdf",
+     "note": "Design a schema for a shopping-cart app, then decide which parts belong in which kind of store."
+    },
+    {
+     "title": "Assignment page: Data Persistence Workshop",
+     "path": "02-homework-and-practice/assignment-pages/Data Persistence Workshop.html",
+     "note": "Submission instructions for the persistence workshop."
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "date": "Wed 30 Sep",
+   "title": "Containers, Kubernetes, styles and microservices",
+   "intro": "Running cloud-native apps: containers and Kubernetes, when to use vendor-managed services instead, the main application architecture styles (monolith, microservices, event-driven, serverless, lambda/kappa…), and how to decompose and design microservices.",
+   "topics": [
+    {
+     "key": "05a-kubernetes-september-2026",
+     "title": "Kubernetes: A Simple Introduction",
+     "overview": "Kubernetes schedules container workloads and reconciles them toward declared state. Learn the control-plane and worker roles, then connect Pods, Deployments, Services, Ingress, storage and configuration. Compare local and managed clusters, and distinguish the automation Kubernetes supplies from the availability and security choices you must design.",
+     "sections": [
+      {
+       "id": "why-kubernetes",
+       "title": "Why containers and Kubernetes",
+       "slides": [
+        2,
+        5
+       ]
+      },
+      {
+       "id": "orchestrators",
+       "title": "Orchestration technologies",
+       "slides": [
+        6,
+        8
+       ]
+      },
+      {
+       "id": "architecture-components",
+       "title": "Cluster architecture and components",
+       "slides": [
+        9,
+        14
+       ]
+      },
+      {
+       "id": "pods-services-ingress",
+       "title": "Pods, Services and Ingress",
+       "slides": [
+        15,
+        21
+       ]
+      },
+      {
+       "id": "running-kubernetes",
+       "title": "Running K8s: Minikube, YAML and cloud",
+       "slides": [
+        22,
+        28
+       ]
+      },
+      {
+       "id": "cloud-native-on-k8s",
+       "title": "Cloud native design on Kubernetes",
+       "slides": [
+        29,
+        32
+       ]
+      },
+      {
+       "id": "summary-appendix",
+       "title": "Design patterns, state and traffic flow",
+       "slides": [
+        34,
+        38
+       ]
+      }
+     ]
+    },
+    {
+     "key": "05b-vendor-managed-services-september-20",
+     "title": "Vendor Managed Services",
+     "overview": "Map an architectural need to a managed-service category, then to a provider example. Compare compute, storage, networking, data, messaging and security across AWS, Azure and Google Cloud. Similar categories help comparison, but service semantics and customer responsibilities still need checking.",
+     "sections": [
+      {
+       "id": "vendors-and-compute",
+       "title": "Vendor landscape and compute",
+       "slides": [
+        2,
+        4
+       ]
+      },
+      {
+       "id": "storage-and-networking",
+       "title": "Storage and networking",
+       "slides": [
+        5,
+        7
+       ]
+      },
+      {
+       "id": "data-messaging-security",
+       "title": "Data, messaging, performance and security",
+       "slides": [
+        8,
+        12
+       ]
+      }
+     ]
+    },
+    {
+     "key": "06-application-architecture-styles-septe",
+     "title": "Application Architecture Styles (Archetypes)",
+     "overview": "Choose architecture styles from quality attributes, data needs and team capacity. Compare frontend options, monoliths, microservices, hexagonal design, serverless, and Lambda/Kappa data processing. The modern archetypes add decisions about blast radius, placement, ownership, offline work and repeatable operations; combine them only where their benefits justify the cost.",
+     "sections": [
+      {
+       "id": "context-full-stack",
+       "title": "Industry context and full stack layers",
+       "slides": [
+        4,
+        8
+       ]
+      },
+      {
+       "id": "pwa-vs-native",
+       "title": "Progressive Web Apps vs native apps",
+       "slides": [
+        9,
+        12
+       ]
+      },
+      {
+       "id": "architectural-thinking",
+       "title": "Choosing an architecture and architectural thinking",
+       "slides": [
+        13,
+        18
+       ]
+      },
+      {
+       "id": "monolith-vs-microservices",
+       "title": "Monolithic vs distributed; microservices",
+       "slides": [
+        19,
+        23
+       ]
+      },
+      {
+       "id": "hexagonal-serverless",
+       "title": "Hexagonal and serverless architectures",
+       "slides": [
+        24,
+        26
+       ]
+      },
+      {
+       "id": "data-event-ai-archetypes",
+       "title": "Lambda, Kappa, IoT, event-driven, multi-cluster, AI",
+       "slides": [
+        27,
+        33
+       ]
+      },
+      {
+       "id": "scaling-evolution-summary",
+       "title": "Modern composables, scale cube and evolution",
+       "slides": [
+        34,
+        38
+       ]
+      },
+      {
+       "id": "modern-archetypes-1",
+       "title": "Appendix: cells, edge, micro-frontends, sidecars, data mesh",
+       "slides": [
+        40,
+        44
+       ]
+      },
+      {
+       "id": "modern-archetypes-2",
+       "title": "Appendix: local-first, MACH, platform engineering, selection",
+       "slides": [
+        45,
+        48
+       ]
+      }
+     ]
+    },
+    {
+     "key": "07-microservices-design-september-2026",
+     "title": "Microservices Design",
+     "overview": "Decompose services around business capabilities and define their APIs, data ownership and collaborations. Compare synchronous calls, messaging, REST and gRPC, then connect gateways, discovery, versioning and maintenance. Adopt the extra distributed-system complexity only where independent delivery or scaling provides enough benefit.",
+     "sections": [
+      {
+       "id": "monolith-vs-microservices",
+       "title": "Monolith vs microservices",
+       "slides": [
+        3,
+        9
+       ]
+      },
+      {
+       "id": "microservices-in-practice",
+       "title": "When microservices fit and how to migrate",
+       "slides": [
+        10,
+        15
+       ]
+      },
+      {
+       "id": "why-microservices",
+       "title": "Why adopt microservices: the benefits",
+       "slides": [
+        17,
+        29
+       ]
+      },
+      {
+       "id": "design-and-building-blocks",
+       "title": "Decomposition, characteristics and building blocks",
+       "slides": [
+        30,
+        35
+       ]
+      },
+      {
+       "id": "tools-landscape",
+       "title": "Tools by capability (reference)",
+       "slides": [
+        36,
+        39
+       ]
+      },
+      {
+       "id": "inter-process-communication",
+       "title": "Inter-process communication",
+       "slides": [
+        40,
+        49
+       ]
+      },
+      {
+       "id": "gateway-and-discovery",
+       "title": "API gateway, versioning and service discovery",
+       "slides": [
+        50,
+        56
+       ]
+      },
+      {
+       "id": "maintenance-and-summary",
+       "title": "Maintenance, maturity and pros/cons",
+       "slides": [
+        57,
+        65
+       ]
+      }
+     ]
+    },
+    {
+     "key": "mtech-ft-cnsd-day-3",
+     "title": "What the Instructor Emphasised in Day 3: Kubernetes, Toolchains and Architecture Styles",
+     "overview": "These sketches connect Kubernetes control-plane roles, delivery-toolchain choices and application styles. Read the modernisation examples as options rather than mandatory replacements. The key architectural decisions are where durable state lives, how capability boundaries are drawn and which scaling mechanism addresses the actual bottleneck.",
+     "sections": [
+      {
+       "id": "k8s-toolchain-modernisation",
+       "title": "Kubernetes, toolchain and traditional vs cloud native",
+       "slides": [
+        1,
+        3
+       ]
+      },
+      {
+       "id": "architecture-styles-map",
+       "title": "Architecture style classification and scaling map",
+       "slides": [
+        4,
+        6
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Discussion 5: Application Architecture Styles",
+     "path": "02-homework-and-practice/discussions/Discussion 5 - Application Architecture Styles.pdf",
+     "note": "Pick and justify an architecture style for a case study. Very close to the class-test format."
+    },
+    {
+     "title": "Assignment page: Cloud Native Architectural Styles",
+     "path": "02-homework-and-practice/assignment-pages/Cloud Native Architectural Styles.html",
+     "note": "Instructions for Discussion 5."
+    },
+    {
+     "title": "Workshop 03: Modernizing Zumata",
+     "path": "02-homework-and-practice/workshops/Workshop 03 - Modernizing Zumata.pdf",
+     "note": "Decompose a monolith into microservices."
+    },
+    {
+     "title": "Workshop 04: Microservices Design and Implementation",
+     "path": "02-homework-and-practice/workshops/Workshop 04 - Microservices Design and Implementation.pdf",
+     "note": "Design-side microservices exercise."
+    },
+    {
+     "title": "Workshop 01: Podman and Podman Compose",
+     "path": "02-homework-and-practice/workshops/Workshop 01 - Podman And Podman Compose.pdf",
+     "note": "Hands-on container commands. Skim for vocabulary only."
+    },
+    {
+     "title": "Workshop 02: Kubernetes Lab Sheets",
+     "path": "02-homework-and-practice/workshops/Workshop 02 - Kubernetes Lab Sheets.pdf",
+     "note": "Hands-on Minikube labs. Skim for vocabulary only."
+    },
+    {
+     "title": "Workshop 05: Spring Boot, Eureka, Zipkin, Config Server",
+     "path": "02-homework-and-practice/workshops/Workshop 05 - Simple Microservices Using Spring Boot, Eureka, ZipKin and Config Server.pdf",
+     "note": "108-step coding lab. Know what each component does; skip the steps."
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "date": "Thu 1 Oct",
+   "title": "Serverless, generative AI and security",
+   "intro": "Serverless computing (FaaS, triggers, cold starts, when it fits), integrating GenAI into cloud-native apps (managed model APIs vs self-hosting, RAG, agents), and cloud security (shared responsibility, identity, data protection). The afternoon was the class test.",
+   "topics": [
+    {
+     "key": "08-serverless-computing-september-2026",
+     "title": "Serverless Architecture",
+     "overview": "Serverless shifts function-server operations to a provider while the application still needs sound state, error and security design. Choose it for suitable event-driven work, and compare function, gateway, queue, stream and legacy-proxy patterns. Learn the Lambda configuration and invocation model without treating the lecture’s pricing details as permanent limits.",
+     "sections": [
+      {
+       "id": "what-is-serverless",
+       "title": "What serverless is",
+       "slides": [
+        3,
+        8
+       ]
+      },
+      {
+       "id": "principles-use-cases",
+       "title": "Design principles and when to use serverless",
+       "slides": [
+        9,
+        11
+       ]
+      },
+      {
+       "id": "layers-services",
+       "title": "Layers of abstraction and serverless compute and data services",
+       "slides": [
+        12,
+        16
+       ]
+      },
+      {
+       "id": "example-architectures",
+       "title": "Serverless architecture patterns",
+       "slides": [
+        17,
+        23
+       ]
+      },
+      {
+       "id": "aws-lambda",
+       "title": "AWS Lambda in practice",
+       "slides": [
+        26,
+        36
+       ]
+      }
+     ]
+    },
+    {
+     "key": "09-integrating-generative-ai-tools-into-",
+     "title": "Integrating Generative AI Tools into Cloud Native Applications",
+     "overview": "Connect the Transformer’s attention mechanism to practical uses of language models. Compare a plain model call, retrieval-augmented generation and tool-using agents, then place them in the GenAI stack. Choose the simplest pattern that supplies the context or actions the application needs, with a clear business benefit.",
+     "sections": [
+      {
+       "id": "from-rnn-to-transformers",
+       "title": "From RNNs to Transformers",
+       "slides": [
+        2,
+        6
+       ]
+      },
+      {
+       "id": "self-attention",
+       "title": "How self-attention works",
+       "slides": [
+        7,
+        9
+       ]
+      },
+      {
+       "id": "llm-rag-agents",
+       "title": "LLM vs RAG vs Agents, and what GenAI is",
+       "slides": [
+        10,
+        13
+       ]
+      },
+      {
+       "id": "models-and-stack",
+       "title": "Model families, value and the GenAI stack",
+       "slides": [
+        14,
+        18
+       ]
+      },
+      {
+       "id": "applications",
+       "title": "Key applications and use cases",
+       "slides": [
+        19,
+        24
+       ]
+      }
+     ]
+    },
+    {
+     "key": "11-cloud-security-september-2026",
+     "title": "Cloud Security: An Overview",
+     "overview": "Analyse a cloud threat by its affected security property, responsible party and relevant control. Apply shared responsibility across service models, then protect data, applications and identities through their lifecycle. Use the lecture’s historical cases to connect prevention with monitoring, audit and recovery rather than assuming a cloud model is inherently secure.",
+     "sections": [
+      {
+       "id": "security-threats",
+       "title": "Security threats: motives, types, statistics",
+       "slides": [
+        4,
+        8
+       ]
+      },
+      {
+       "id": "shared-responsibility-csa",
+       "title": "Shared responsibility, enterprise concerns and CSA",
+       "slides": [
+        10,
+        15
+       ]
+      },
+      {
+       "id": "treacherous-twelve",
+       "title": "CSA Treacherous Twelve threats",
+       "slides": [
+        16,
+        27
+       ]
+      },
+      {
+       "id": "data-security",
+       "title": "Data security and encryption",
+       "slides": [
+        29,
+        36
+       ]
+      },
+      {
+       "id": "app-user-access",
+       "title": "Application, user and access security",
+       "slides": [
+        37,
+        40
+       ]
+      },
+      {
+       "id": "managing-security",
+       "title": "Managing cloud security and conclusions",
+       "slides": [
+        43,
+        47
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Discussion 6: Managed Service vs Self-Hosted Containers (AI workloads)",
+     "path": "02-homework-and-practice/discussions/Discussion 6 - Managed Service vs Self-Hosted Containers.pdf",
+     "note": "Compare Bedrock/Azure OpenAI-style APIs with hosting a model on Kubernetes."
+    },
+    {
+     "title": "Past class test: Cloud Assessment 2026",
+     "path": "02-homework-and-practice/past-class-test/Cloud Assessment 2026.docx",
+     "note": "The 1 Oct class test: pick architecture styles, prioritise two services, justify persistence. Best exam rehearsal."
+    },
+    {
+     "title": "Assignment page: CNSD Class Test",
+     "path": "02-homework-and-practice/assignment-pages/CNSD Class Test.html",
+     "note": "Class test instructions."
+    }
+   ]
+  }
+ ],
+ "extras": [
+  {
+   "key": "10-appendix-cloud-patterns-and-practices",
+   "title": "Appendix: Cloud Patterns and Practices"
+  },
+  {
+   "key": "gartner-cloud-migration-strategy",
+   "title": "Gartner: Choosing the Right Approach for Application Modernization and Cloud Migration"
+  }
+ ]
+}

@@ -1,0 +1,2843 @@
+{
+ "key": "mock-5-claimsure",
+ "kind": "mock",
+ "short": "Mock 5",
+ "title": "Mock paper 5: ClaimSure (SWE5001 format)",
+ "module": "Original mock in the SWE5001 Architecting Scalable Systems format",
+ "domain": "Motor insurance claims with GenAI-assisted assessment",
+ "blurb": "Storm surges, a 20-TPS mainframe, explainable AI decisions, object-level authorisation, orchestration vs choreography.",
+ "intro": [
+  "An original paper in the structure, length and marks of the SWE5001 sample (Section A 25, Section B 13, Section C 12). Open the [case study](case#top) in a second tab and answer before opening any model answer."
+ ],
+ "sections": [
+  {
+   "id": "A",
+   "title": "Section A",
+   "focus": "Architecting + Platform",
+   "questions": [
+    {
+     "n": 1,
+     "marks": 25,
+     "intro": [
+      "Refer to the case study in Appendix A and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "body": [
+        "ClaimSure's promise is that a claim is acknowledged in seconds and assessed in minutes, even after a storm."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 2,
+         "pattern": "diagnose",
+         "topics": [
+          "architecting/06-design-for-performance-in-architectur#complexity-data-flow",
+          "architecting/05-design-highly-available-architecture-#distributed-failures",
+          "cloud-native/03-cloud-migration-august-2026#rearchitect-to-encapsulate"
+         ],
+         "body": [
+          "In a flood-surge rehearsal, *Report Accident* acknowledgements took up to 40 seconds and many failed with timeouts. The logs show every report calling the legacy policy system synchronously to check cover, and the policy system, capped at **20 transactions per second** ([Section 4](case#s4)), rejecting calls. Give the most likely cause and one countermeasure."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** a synchronous dependency on a capacity-capped legacy system sits on the critical path of a surge-prone use case. At 1,400 claims per hour plus adjusters' lookups, bursts easily exceed 20 TPS. Requests queue and then time out at the mainframe, retries add more load, and the acknowledgement, which only needs to record the report, waits for a check it does not need to finish first.",
+           "**Countermeasure:** take the mainframe off the acknowledgement path. Record the report and acknowledge at once, then verify cover **asynchronously** (an event and a worker that calls the policy system at a throttled rate of at most 20 TPS, with a priority queue). Better still, serve cover checks from a **coverage replica** kept current by change data capture or a nightly-plus-delta feed behind a policy facade, and call the mainframe only when the replica can't answer."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: a synchronous call to a 20-TPS-capped legacy system on the critical path; surge exceeds the cap, so queueing, timeouts and retries."
+           },
+           {
+            "m": 1,
+            "t": "Countermeasure: async verification with throttling, or a replicated coverage cache or CDC via a facade, decoupling the ack from the mainframe."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 2,
+         "pattern": "defend",
+         "topics": [
+          "cloud-native/04-cloud-persistence-september-2026#cloud-storage-options",
+          "cloud-native/05b-vendor-managed-services-september-20#storage-and-networking",
+          "architecting/07-perform-capacity-planning-for-archite#disk"
+         ],
+         "body": [
+          "A developer proposes storing claim photos as BLOB columns in the claims relational database ‘so that a claim and its photos are always consistent’. You recommend storing photos in an object store and keeping only references in the database. Give two reasons."
+         ],
+         "answer": {
+          "text": [
+           "1. **Volume and database health:** a surge day is 8,000 claims × 20 photos × 3 MB ≈ **480 GB of photos per day**. In BLOB columns that bloats the database, its backups, replicas and restore time, and pushes megabytes through the database tier on every read. An object store scales to that volume cheaply, and the database stays small and fast for the transactional claim data.",
+           "2. **Direct, scalable upload and lifecycle:** the app can upload straight to the object store with **pre-signed URLs**, so the surge's photo traffic (about 23 MB/s at peak) never passes through the application tier. Lifecycle rules handle the 7-year retention and tiering to cold storage, and upload events trigger the image pipeline. Consistency is handled by referencing the object key and checksum from the claim record (write the reference after the upload completes, and clean up orphans)."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Volume or database impact with the case's numbers (≈ 480 GB/day; backups, replication)."
+           },
+           {
+            "m": 1,
+            "t": "Pre-signed direct upload, lifecycle or retention, events; consistency handled by references."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "body": [
+        "With reference to the domain model in [Section 7](case#s7), analyse the following issues. For each, identify the most likely cause, propose a countermeasure by revising the domain model, and suggest its major drawback(s), if any."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 5,
+         "pattern": "fix-cost",
+         "topics": [
+          "platform/04-reusable-services-and-api-gateway-v2-#context-mapping",
+          "cloud-native/03-cloud-migration-august-2026#rearchitect-to-encapsulate",
+          "platform/02-reusable-assets-and-frameworks-v2-1#bounded-contexts-ubiquitous-language"
+         ],
+         "body": [
+          "Whenever the policy system team renames or re-codes a field (for example a new coverage code), the Claims, Fraud and Payment services all break and must be released together."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** the legacy model has leaked into three bounded contexts. PolicyRecord in ClaimManager mirrors POLICY_MASTER field by field (POL_NO, CVG_CD, EXP_DT), and FraudCase and Disbursement associate directly with PolicyRecord. The mainframe's record format is effectively a shared model, so the services conform to it with no translation, and any change ripples through all of them.",
+           "**Countermeasure:** create a **Policy** bounded context in front of the legacy system with an **anti-corruption layer** (a facade that encapsulates the mainframe). It translates POLICY_MASTER into a stable **published language**: a CoverageSummary value object (policyId, coverTypes, excess, validFrom/To, insuredVehicle) and a PayeeAccount reference. ClaimManager stores a **coverage snapshot** taken at report time. Fraud and Payment ask the Policy context (or consume PolicyChanged events) and never touch POLICY_MASTER fields. Only the ACL changes when the mainframe changes.",
+           "**Drawbacks:** another component to build and run, and every change in the legacy system needs mapping work in the ACL. Extra latency or staleness if the ACL caches data. Snapshots may differ from the live policy after endorsements, which needs a re-check rule before payment."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: a legacy record mirrored (conformist shared model) and referenced directly by three contexts."
+           },
+           {
+            "m": 1,
+            "t": "Explains the ripple: field changes break all consumers, so coordinated releases."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: a Policy context with ACL or facade, a published-language CoverageSummary, a snapshot in Claim, other contexts depending on the Policy API or events."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: ACL upkeep, latency or staleness, snapshot divergence."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 4,
+         "pattern": "fix-cost",
+         "topics": [
+          "cloud-native/10-appendix-cloud-patterns-and-practices#event-sourcing-resilience",
+          "architecting/08-ensure-maintainable-architecture-v3-1#analyzability",
+          "cloud-native/09-integrating-generative-ai-tools-into-#applications"
+         ],
+         "body": [
+          "Auditors cannot reconstruct why a claim was approved. The AI estimate shown to the adjuster at approval time has often been overwritten by a later re-run, and nobody can tell which model or prompt produced it."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** DamageAssessment is a single **mutable** entity per claim (0..1), with the estimate, model name and an updatedAt. Every re-run overwrites it. Approval references only the Claim, not the assessment the adjuster actually saw, and nothing records the inputs (which photos, which prompt template, which model version) or the adjuster's reasoning.",
+           "**Countermeasure:** make assessments **immutable and versioned**. Replace DamageAssessment with **AssessmentRun** (runId, claimRef, photoRefs, modelId and version, promptTemplateVersion, output estimate, confidence, createdAt), with 1..* runs per claim, append-only. **Approval** (or a Decision entity) references the specific AssessmentRun it relied on, plus the adjuster, the final amount, any override and a rationale. Publish AssessmentCompleted and ClaimApproved events to an audit log.",
+           "**Drawback:** storage and retention: 7 years of runs, inputs and outputs, possibly with personal data inside prompts, so storage must be minimised and encrypted, and erasure rules made explicit. More entities, and reports must pick the ‘current’ run deliberately."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: a mutable single assessment overwritten by re-runs; the approval is not linked to the specific run; no model, prompt or input lineage."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: immutable AssessmentRun history with lineage fields; Approval references the run plus rationale; audit events."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: storage or retention and PII handling, complexity."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "platform/03-api-design-v2-2#versioning-security-basics",
+        "platform/03-api-design-v2-2#security-patterns-cors",
+        "platform/03-api-design-v2-2#resource-design-http",
+        "cloud-native/11-cloud-security-september-2026#app-user-access"
+       ],
+       "body": [
+        "Partner workshops use the Workshop API below from their own portal.",
+        {
+         "table": {
+          "columns": [
+           "URI",
+           "Service",
+           "Inputs",
+           "Outputs",
+           "Explanation",
+           "HTTP Action"
+          ],
+          "rows": [
+           [
+            "`/claims?workshop={workshop-id}`",
+            "ClaimManager",
+            "workshop id",
+            "all open claims of every workshop, with policyholder NRIC, phone and address",
+            "List claims assigned to the workshop",
+            "GET"
+           ],
+           [
+            "`/claims/{claimNo}/quote/submitQuote`",
+            "ClaimManager",
+            "workshop id, quote lines",
+            "“submitted”",
+            "Submit a repair quote",
+            "POST"
+           ],
+           [
+            "`/claims/{claimNo}/quote`",
+            "ClaimManager",
+            "body: withdrawal reason",
+            "“OK”",
+            "Withdraw a quote",
+            "DELETE"
+           ]
+          ]
+         }
+        },
+        "A security review found that a workshop could read other workshops' claims by changing the `workshop` parameter.",
+        {
+         "ol": [
+          "Identify the design and security problems in these interfaces.",
+          "Propose how authorisation should work so that a workshop can only see and act on claims assigned to it.",
+          "Reconstruct the table with corrected interfaces."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         "**1. Problems.** **Broken object-level authorisation:** the API trusts a client-supplied workshop id, so any workshop can enumerate any claim. **Excessive data exposure:** NRIC, phone and address are returned to workshops that only need the vehicle, damage and photos. Action verbs in URIs (submitQuote), a body on DELETE (which many intermediaries drop) and plain-string responses with no status codes. The workshop identity also arrives as a free input rather than from the credential.",
+         "**2. Authorisation.** Workshops authenticate with OAuth2 (client credentials for the portal, or user tokens for staff), so the token carries the workshop id and scopes (`claims:read`, `quotes:write`). Every request derives the workshop from the token, never from parameters. The Claim service checks **assignment** for each object: claim.assignedWorkshop == token.workshop, otherwise 404 (so existence is not leaked). The gateway validates tokens and scopes, and the service enforces object-level rules (complete mediation). Responses use a workshop-specific projection with no policyholder identity. Every access is audited.",
+         "**3. Corrected interfaces:**",
+         {
+          "table": {
+           "columns": [
+            "URI",
+            "Service",
+            "Inputs",
+            "Outputs",
+            "Explanation",
+            "HTTP"
+           ],
+           "rows": [
+            [
+             "`/v1/workshop/claims?status=open&cursor=`",
+             "ClaimManager",
+             "Workshop from the OAuth token (no parameter); filters; pagination",
+             "200: assigned claims only, as a projection (claim no, vehicle, damage summary, photo links). No NRIC, phone or address",
+             "List my assigned claims",
+             "GET"
+            ],
+            [
+             "`/v1/claims/{claimNo}/quotes`",
+             "ClaimManager (Workshop)",
+             "Body: quote lines; token; `Idempotency-Key`",
+             "201 Created + Location; 403/404 if not assigned; 409 if a quote is already accepted",
+             "Submit a repair quote",
+             "POST"
+            ],
+            [
+             "`/v1/claims/{claimNo}/quotes/{quoteId}`",
+             "ClaimManager (Workshop)",
+             "Body `{status: \"withdrawn\", reason}`; token",
+             "200; 409 if already accepted",
+             "Withdraw a quote (keeps history)",
+             "PATCH"
+            ]
+           ]
+          }
+         }
+        ],
+        "points": [
+         {
+          "m": 2,
+          "t": "Problems: object-level authorisation (IDOR), oversharing PII, action URIs or DELETE-with-body or no status codes, identity from input."
+         },
+         {
+          "m": 2,
+          "t": "Authorisation design: identity and scopes from the token, per-object assignment check in the service, 404 on mismatch, data projection, audit."
+         },
+         {
+          "m": 2,
+          "t": "Corrected table: resource URIs, correct verbs and status codes, token-derived identity, minimal data, versioning, idempotency."
+         }
+        ]
+       }
+      },
+      {
+       "label": "d",
+       "marks": 2,
+       "pattern": "agree",
+       "topics": [
+        "cloud-native/09-integrating-generative-ai-tools-into-#llm-rag-agents",
+        "architecting/01-introduction-to-solution-architecture#quality-attributes-utility-tree",
+        "architecting/04-design-secure-architecture-v4-7#risk-treatment"
+       ],
+       "body": [
+        "To meet the surge requirement, a team member proposes letting the AI model **auto-approve every claim under $2,000** already in Phase 1. Do you agree? Justify your answer."
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** Decisions must be explainable and auditable for 7 years ([Section 5](case#s5)), and straight-through processing is planned for Phase 2 with controls. A model estimate is not a decision: models can be wrong or manipulated (staged photos), and an unreviewed $2,000 payout multiplied by a surge is a material fraud and regulatory risk. The surge problem is **throughput**, and it is better solved by queueing, prioritisation and pre-filled AI estimates that adjusters confirm quickly. Introduce auto-approval later, behind rules (cover confirmed, low fraud score, model confidence above a threshold), with sampling audits and a human for exceptions."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict tied to the explainability or audit NFR and model or fraud risk."
+         },
+         {
+          "m": 1,
+          "t": "Offers the right fix for the real driver (surge throughput) and a controlled path to auto-approval."
+         }
+        ]
+       }
+      },
+      {
+       "label": "e",
+       "marks": 4,
+       "pattern": "agree",
+       "topics": [
+        "cloud-native/09-integrating-generative-ai-tools-into-#models-and-stack",
+        "platform/05-platform-management-v2-1#metrics",
+        "platform/03-api-design-v2-2#product-mindset-principles"
+       ],
+       "body": [
+        "A team member proposes the **number of LLM tokens consumed per day** as the key metric showing the quality of the AI assessment and the claim assistant. Do you agree? If not, what would you measure?"
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** Tokens measure usage and cost, not quality. A verbose, wrong answer consumes more tokens than a short, correct one, and a broken prompt that loops could look like ‘high engagement’.",
+         "**Quality of the AI estimate:** the adjuster **acceptance rate** (estimate approved without change); the **deviation** of the AI estimate from the final approved amount (median and p90 error); the override rate by damage type; and the performance on a fixed, labelled **evaluation set** before every model or prompt change. **Quality of the assistant:** answers grounded in the cited policy text (groundedness or hallucination rate on an evaluation set), resolution without handover to a human, and user rating. Add latency (estimate within 2 min) and error rate.",
+         "**Keep tokens** as a **cost** metric against the daily budget, per claim and per feature."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: tokens are cost or usage, not quality; a counter-example."
+         },
+         {
+          "m": 2,
+          "t": "Quality metrics for the estimate (acceptance, deviation, evaluation set) and the assistant (groundedness, resolution)."
+         },
+         {
+          "m": 1,
+          "t": "Keeps tokens in their place: cost against budget; adds latency."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Section B",
+   "focus": "Cloud native",
+   "questions": [
+    {
+     "n": 2,
+     "marks": 13,
+     "intro": [
+      "With reference to the case study in Appendix A, answer the following questions. The policy administration system stays on the insurer's mainframe; everything else becomes cloud native, with GenAI features in Phases 1 and 2."
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 10,
+       "pattern": "design",
+       "topics": [
+        "cloud-native/02-cloud-reference-architecture-august-2#hybrid-multicloud",
+        "cloud-native/03-cloud-migration-august-2026#rearchitect-to-encapsulate",
+        "cloud-native/08-serverless-computing-september-2026#example-architectures",
+        "cloud-native/09-integrating-generative-ai-tools-into-#llm-rag-agents",
+        "cloud-native/05a-kubernetes-september-2026#cloud-native-on-k8s",
+        "architecting/08-ensure-maintainable-architecture-v3-1#defer-binding"
+       ],
+       "body": [
+        "The pilot architecture is shown below.",
+        {
+         "figure": "mvp"
+        },
+        "Transform it into a **hybrid** cloud native reference architecture for Phases 1 and 2. *Hint: consider microservices, workflow, event-driven and serverless processing, and the GenAI components.*"
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "body": [
+          "Draw the reference architecture with its essential components and interactions. Which components are essential because the policy system remains on the mainframe?"
+         ]
+        },
+        {
+         "label": "ii",
+         "body": [
+          "How will photos flow from the app to the AI assessment, and how will the internal services communicate? Label this in your diagram and justify the patterns."
+         ]
+        },
+        {
+         "label": "iii",
+         "body": [
+          "Identify **one** component that must remember state and propose a state-management mechanism."
+         ]
+        },
+        {
+         "label": "iv",
+         "body": [
+          "Describe the deployment on Kubernetes, including where the AI components run."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         {
+          "figure": "ans-ref"
+         },
+         "**i. Components.** Apps and portals reach the API gateway (OAuth2, object-level authorisation, rate limits) behind CDN + WAF. Services: Intake (records the accident report and acknowledges), the **Claim workflow** (orchestrates the lifecycle), Assessment (AI), Fraud, Workshop, Payment, Notification, and in Phase 2 the Assistant (RAG). An event stream carries ClaimReported, PhotosProcessed, AssessmentCompleted and ClaimApproved. The object store holds photos (pre-signed upload, 7-year lifecycle), and upload events trigger **functions** for thumbnails, OCR and image metadata. An AI gateway sits in front of the vision and LLM endpoint (rate limit, cost cap, redaction, logging). A CronJob purges data past retention. **Mainframe essentials:** private connectivity (redundant VPN or a dedicated link); a **policy facade** that encapsulates POLICY_MASTER behind a stable API; a **coverage replica** fed by change data capture so most reads never reach the 20-TPS system; a throttled request queue for the writes that must reach it; and identity federation with the insurer's directory.",
+         "**ii. Photos and services.** The app asks Intake for pre-signed URLs and uploads straight to the object store. ObjectCreated triggers the image function, which publishes PhotosProcessed. The workflow then asks Assessment to run, and Assessment sends a batch of the best photos per claim through the AI gateway and stores an immutable AssessmentRun. Internally, **orchestration** by the workflow for the claim lifecycle (explicit steps, human tasks, timeouts) uses commands, while **events** let Fraud, Notification and analytics react without coupling. Synchronous REST only for user-facing reads. The queue gives the AI calls backpressure.",
+         "**iii. State.** The **Claim workflow** is long-running (days to weeks, waiting on adjusters, workshops and payments). It keeps its state durably: a workflow engine with a persisted state machine per claim (current step, timers, history), in its own database, so pods are stateless and any instance resumes a claim after a crash. Timers drive SLAs, such as escalating if a workshop hasn't quoted in 48 h. (Alternative: the assistant's conversation state, kept in a TTL store keyed by session.)",
+         "**iv. Kubernetes.** A managed cluster in the approved region across three zones, with namespaces for claims, AI, integration and platform. Deployments with HPAs on requests per second or queue depth, and Intake with a high minimum for surges. The workflow engine runs with its database as a managed service. AI: the hosted vision and LLM endpoint is reached through the AI gateway, which runs in the cluster with private connectivity to the provider. If a model is self-hosted, it gets a dedicated GPU node pool with taints and tolerations, scaled on queue depth. Network policies apply, the facade namespace is the only one allowed to reach the private link, secrets come from the KMS, and delivery uses GitOps with canary releases and evaluation-gated model and prompt changes."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "Diagram: intake, workflow, services, stream, object store with functions, AI gateway and endpoint, RAG (Phase 2), data stores."
+         },
+         {
+          "m": 1,
+          "t": "Mainframe essentials: private link, facade (encapsulate), CDC coverage replica, throttled queue, identity federation."
+         },
+         {
+          "m": 2,
+          "t": "Photo flow via pre-signed upload → event → function → assessment; orchestration plus events, justified."
+         },
+         {
+          "m": 2,
+          "t": "Stateful component with a durable mechanism (persisted workflow state or timers, or a session store) and recovery."
+         },
+         {
+          "m": 2,
+          "t": "k8s plan incl. AI placement (gateway, GPU pool if self-hosted), scaling signals, isolation of the integration path."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "pattern": "a-or-b",
+       "topics": [
+        "platform/04-reusable-services-and-api-gateway-v2-#orchestration-choreography",
+        "architecting/08-ensure-maintainable-architecture-v3-1#defer-binding",
+        "platform/05-platform-management-v2-1#sagas"
+       ],
+       "body": [
+        "Would you coordinate the claim lifecycle (report → assess → quote → approve → pay) by **orchestration** with a central workflow, or by **choreography** with services reacting to each other's events? What are the implications for the services?"
+       ],
+       "answer": {
+        "text": [
+         "**Orchestration** for the lifecycle. Regulators need to see *why* and *when* each step happened ([Section 5](case#s5)). The lifecycle has human tasks, timeouts and compensations (withdraw a quote, reverse a payment), and the steps will change as Phase 2 adds straight-through processing. A central workflow makes the process explicit, inspectable and changeable as configuration, deferring the binding to run time. In choreography, the end-to-end flow exists only implicitly in many services' subscriptions, which is hard to audit and to change. The cost is that the orchestrator is a critical component and a possible bottleneck, and it must not swallow the domain logic.",
+         "**Implications:** services expose **commands** (AssessClaim, RequestQuote, Disburse) with idempotent handlers and report completion. The workflow stores state and timers durably. Compensating actions must exist for each step. Events are still published for loosely coupled consumers (fraud analytics, notifications, reporting), so the two styles coexist."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Decision justified by audit, explainability, human steps or timeouts, changeability."
+         },
+         {
+          "m": 1,
+          "t": "Trade-off: orchestrator criticality or coupling vs choreography's implicit flow."
+         },
+         {
+          "m": 1,
+          "t": "Implications: idempotent commands, durable workflow state or timers, compensations, events kept for side consumers."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "title": "Section C",
+   "focus": "Architecting",
+   "questions": [
+    {
+     "n": 3,
+     "marks": 12,
+     "intro": [
+      "Refer to the logical architecture in [Section 6](case#s6), the domain model in [Section 7](case#s7) and the packaging model in [Section 8](case#s8), and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "architecting/03-architect-the-solution-architecture-m#logical-deployment-verify",
+        "architecting/04-design-secure-architecture-v4-7#key-management-motion",
+        "cloud-native/11-cloud-security-september-2026#data-security",
+        "architecting/02-architect-the-solution-architecture-a#structural-styles"
+       ],
+       "body": [
+        "Evaluate the incomplete and potentially erroneous logical packaging cum deployment model for the *Assess Damage* use case (Figure 3). Identify **two** undesirable architectural decisions, propose corrective actions, and justify how each decision leads to your correction."
+       ],
+       "answer": {
+        "text": [
+         "Any two, each as decision → consequence → correction:",
+         "1. **LLM Client Control (EstimatePrompter) is deployed in the adjuster's browser and calls the LLM provider directly.** The provider's API key ships to every browser, where it can be extracted and abused. Photos and claim details go to the provider with no redaction, logging, rate limiting or cost cap, and nothing records which model or prompt produced the estimate, which breaks the audit requirement. **Correction:** move prompting into the Assessment service behind an **AI gateway** in the internal zone. Keys stay in the KMS, requests are redacted, rate-limited and logged, and AssessmentRuns are stored. The browser only displays results.",
+         "2. **Assessment Control uses the mainframe directly (‘«use» direct’).** That bypasses the integration tier, couples Assessment to POLICY_MASTER and adds load to a 20-TPS system from an interactive path. **Correction:** go through the Policy facade (anti-corruption layer) and its coverage replica, via the integration tier.",
+         "3. **DamageAssessment is manifested by both Claim Data Access and Fraud Data Access.** Two owners of the estimate cause divergent copies, which is the audit problem again. **Correction:** Assessment owns its AssessmentRuns. Fraud receives AssessmentCompleted events or queries the Assessment API."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "First decision: problem, consequence (key exposure, no redaction, audit, coupling, ownership) and corrected placement or packaging."
+         },
+         {
+          "m": 3,
+          "t": "Second decision: problem, consequence and correction, justified."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "pattern": "design",
+       "topics": [
+        "architecting/07-perform-capacity-planning-for-archite#approach",
+        "architecting/06-design-for-performance-in-architectur#complexity-data-flow",
+        "cloud-native/08-serverless-computing-september-2026#example-architectures",
+        "platform/05-platform-management-v2-1#rate-limiting"
+       ],
+       "body": [
+        "Use the surge figures in [Section 4](case#s4): 8,000 claims in 24 hours with a peak hour of **1,400 claims**, 20 photos of 3 MB per claim, an AI estimate within **2 minutes for 90%** of claims, an AI provider limit of **300 requests per minute**, about **$0.04 per single-image request** and a **$3,000 daily** AI budget. Show whether ‘one AI request per photo’ works at the peak, propose a plan that meets the acknowledgement and estimate targets under the surge, and identify two side effects to monitor."
+       ],
+       "answer": {
+        "text": [
+         "**Load at the peak hour:** 1,400 claims/h ≈ **23 claims/min**; photos: 28,000/h ≈ **467/min ≈ 7.8/s**, about 23 MB/s of uploads.",
+         "**One request per photo fails twice:** 467 requests/min is over the provider limit of 300/min, so a backlog grows by about 167 requests/min and the 2-minute target is lost within minutes of the peak. Cost: 8,000 × 20 = 160,000 requests × $0.04 ≈ **$6,400/day**, more than double the $3,000 budget.",
+         "**Plan:**",
+         {
+          "ol": [
+           "**Acknowledge without waiting:** Intake records the report and returns the claim number (< 5 s). Photos go by pre-signed upload straight to the object store, so no AI or mainframe call is on this path.",
+           "**Reduce the AI work per claim:** an upload-triggered function makes thumbnails, removes near-duplicates and selects the best 4–6 views. Assessment then sends **one multi-image request per claim**: about 23 requests/min at peak, well under 300/min. Assume each request costs about $0.10–0.20 for several images: 8,000 × $0.15 ≈ $1,200/day, within budget.",
+           "**Control the flow:** a claims queue with priority (injury and total-loss first), workers that scale on queue depth, and a **token-bucket limiter at about 250/min** to keep headroom under the provider cap. Retries use backoff and jitter. A per-day cost guard falls back to manual assessment.",
+           "**Degrade gracefully:** if queue age exceeds about 90 s, low-value or low-priority claims get ‘estimate pending’ and are processed off-peak. The 90% target is met by putting the urgent claims first."
+          ]
+         },
+         "**Side effects to monitor:** (1) **estimate quality** from fewer or downscaled photos, so watch the adjuster override rate and deviation by damage type; (2) **queue age and backlog** for deferred claims (time-to-estimate p90); (3) **provider throttling and retry storms** (429 rate, retry counts); (4) **duplicate processing** under at-least-once delivery, so assessments must be idempotent per claim and photo set; (5) storage growth of about 480 GB/day and its lifecycle cost."
+        ],
+        "points": [
+         {
+          "m": 2,
+          "t": "Correct arithmetic: ≈ 467 req/min > 300 limit; ≈ $6,400/day > $3,000; conclusion that per-photo fails."
+         },
+         {
+          "m": 2,
+          "t": "Plan: async ack and direct upload; per-claim batching or photo selection; queue, priority, rate limiter, autoscaling; graceful degradation within budget."
+         },
+         {
+          "m": 2,
+          "t": "Two side effects with metrics (quality or override rate, queue age, throttling, duplicates, storage)."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "case": {
+  "label": "Appendix A",
+  "title": "ClaimSure",
+  "subtitle": "Case study for Mock paper 5 (fictitious)",
+  "intro": [
+   "Figures 2 and 3 were drafted by other team members and may contain mistakes."
+  ],
+  "sections": [
+   {
+    "id": "top",
+    "title": "Background",
+    "blocks": [
+     "Motor insurers compete on how quickly and fairly they settle claims. *ClaimSure* is a mid-sized motor insurer with 1.2 million policies whose claims process is still largely manual: policyholders phone in, surveyors visit workshops, and adjusters re-key data into the policy system on the mainframe.",
+     "ClaimSure wants a claims **platform** connecting policyholders, partner workshops, surveyors and adjusters, with AI that estimates repair costs from photos and an assistant that answers policyholders' questions from their policy wording. Storms and floods produce sudden surges of claims that the current process cannot absorb.",
+     "You are the Lead Solution Architect. Phase 1 digitises the claim lifecycle with AI-assisted estimates; Phase 2 adds the GenAI assistant, straight-through processing for small claims and fraud-network analytics. The policy administration system stays on the mainframe."
+    ]
+   },
+   {
+    "id": "s1",
+    "n": "1",
+    "title": "Phase 1 of the Platform",
+    "blocks": [
+     "Actors:",
+     {
+      "ol": [
+       "**Policyholder:** reports an accident in the app, uploads photos and tracks the claim.",
+       "**Workshop:** a partner repair garage that receives assigned claims and submits repair quotes.",
+       "**Adjuster:** reviews claims, AI estimates and quotes, and approves or rejects.",
+       "**Surveyor:** inspects vehicles on site when needed.",
+       "**Fraud Analyst:** investigates flagged claims.",
+       "**Policy System:** the on-premises mainframe that holds policies and cover (POLICY_MASTER).",
+       "**AI Provider:** an external vision and language model service in an approved region. **Bank:** pays workshops and policyholders."
+      ]
+     },
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Report Accident",
+         "The Policyholder records time, place and description and uploads 10–30 photos; the platform acknowledges with a claim number."
+        ],
+        [
+         "Check Cover",
+         "The platform checks the policy is valid and covers the event."
+        ],
+        [
+         "Assess Damage",
+         "The platform produces an AI repair estimate from the photos; the Adjuster reviews it."
+        ],
+        [
+         "Assign Workshop",
+         "The Adjuster or Policyholder chooses a partner workshop."
+        ],
+        [
+         "Submit / Withdraw Quote",
+         "The Workshop submits a repair quote, or withdraws it."
+        ],
+        [
+         "Approve Claim",
+         "The Adjuster approves the claim and amount, or rejects it, recording a reason."
+        ],
+        [
+         "Screen for Fraud",
+         "Rules flag suspicious claims to the Fraud Analyst."
+        ],
+        [
+         "Pay",
+         "The platform pays the workshop or the policyholder through the bank."
+        ],
+        [
+         "Track Claim",
+         "The Policyholder sees status and messages."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s2",
+    "n": "2",
+    "title": "Phase 2 of the Platform",
+    "blocks": [
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Ask Assistant",
+         "A GenAI assistant answers policyholders' questions grounded in their policy wording and claim status."
+        ],
+        [
+         "Straight-through Processing",
+         "Claims under $2,000 that pass all checks can be approved without an adjuster."
+        ],
+        [
+         "Analyse Fraud Networks",
+         "Links between parties, vehicles and workshops across claims are analysed to detect organised fraud."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s3",
+    "n": "3",
+    "title": "Extensibility of the Platform",
+    "blocks": [
+     "New AI models and prompts, new partner types (towing, car rental) and new claim types (windscreen) must be addable without changing the core lifecycle."
+    ]
+   },
+   {
+    "id": "s4",
+    "n": "4",
+    "title": "Performance, Scalability and Capacity",
+    "blocks": [
+     {
+      "ul": [
+       "Normally about **600** claims/day; after a storm up to **8,000** claims in 24 hours with a peak hour of **1,400**.",
+       "**10–30** photos per claim (average **20**) at about **3 MB** each.",
+       "Report Accident acknowledged in under **5 s** for **95%** of reports, including during surges.",
+       "AI estimate available within **2 minutes** for **90%** of claims.",
+       "**250** concurrent adjusters.",
+       "The mainframe policy system accepts at most **20 transactions per second** and is available **06:00–23:00** only.",
+       "The AI provider allows **300 requests per minute**; a single-image request costs about **$0.04**; the AI budget is **$3,000 per day**."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s5",
+    "n": "5",
+    "title": "Security and Compliance",
+    "blocks": [
+     {
+      "ul": [
+       "Claim decisions must be **explainable** and auditable for **7 years**, including any AI input used.",
+       "Personal data sent to AI providers must be minimised and stay in the approved region; provider keys never leave ClaimSure's internal zone.",
+       "Workshops may only access claims assigned to them and only the data needed to repair the vehicle."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s6",
+    "n": "6",
+    "title": "Initial Architecture",
+    "blocks": [
+     {
+      "h": "6.1 Logical Architecture Overview",
+      "id": "s6-1"
+     },
+     {
+      "figure": "overview"
+     },
+     {
+      "h": "6.2 Deployment Options",
+      "id": "s6-2"
+     },
+     "The platform is to be cloud native in the approved region; the policy system remains on the on-premises mainframe."
+    ]
+   },
+   {
+    "id": "s7",
+    "n": "7",
+    "title": "Domain Model for Phase 1",
+    "blocks": [
+     "A software architect has produced the following domain model.",
+     {
+      "figure": "domain"
+     }
+    ]
+   },
+   {
+    "id": "s8",
+    "n": "8",
+    "title": "Logical Packaging cum Deployment Model",
+    "blocks": [
+     "An **incomplete** and **potentially erroneous** packaging and deployment model for the *Assess Damage* use case.",
+     {
+      "figure": "packaging"
+     }
+    ]
+   }
+  ]
+ },
+ "figures": {
+  "overview": {
+   "title": "Figure 1: Logical Architecture Overview",
+   "caption": "Users and partners on the Internet, the policy system on premises, the AI provider as an external service.",
+   "size": [
+    1000,
+    530
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 245,
+     "h": 320
+    },
+    {
+     "id": "onprem",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "On-premises DC",
+     "tone": 1,
+     "x": 15,
+     "y": 352,
+     "w": 245,
+     "h": 165
+    },
+    {
+     "id": "dmz",
+     "kind": "zone",
+     "stereo": "zone",
+     "label": "DMZ",
+     "tone": 2,
+     "x": 280,
+     "y": 12,
+     "w": 185,
+     "h": 505
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Cloud Internal Zone",
+     "tone": 0,
+     "x": 485,
+     "y": 12,
+     "w": 500,
+     "h": 505
+    },
+    {
+     "id": "svc",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Service Tier",
+     "tone": 0,
+     "x": 500,
+     "y": 66,
+     "w": 470,
+     "h": 210
+    },
+    {
+     "id": "sto",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Storage Tier",
+     "tone": 1,
+     "x": 500,
+     "y": 296,
+     "w": 225,
+     "h": 205,
+     "sub": "claims · photos\nassessments · payments"
+    },
+    {
+     "id": "itg",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Integration Tier",
+     "tone": 5,
+     "x": 745,
+     "y": 296,
+     "w": 225,
+     "h": 205,
+     "sub": "policy system · bank\nAI provider adapters"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 40,
+     "y": 66,
+     "w": 95,
+     "h": 150,
+     "label": "Claims",
+     "sub": "app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 150,
+     "y": 70,
+     "w": 95,
+     "h": 140,
+     "label": "Portals",
+     "sub": "adjuster ·\nworkshop"
+    },
+    {
+     "id": "ai",
+     "kind": "external",
+     "x": 32,
+     "y": 236,
+     "w": 210,
+     "h": 76,
+     "label": "AI Provider",
+     "sub": "vision + language models"
+    },
+    {
+     "id": "mf",
+     "kind": "external",
+     "x": 32,
+     "y": 405,
+     "w": 210,
+     "h": 86,
+     "label": "Mainframe",
+     "sub": "POLICY_MASTER · 20 TPS"
+    },
+    {
+     "id": "api",
+     "kind": "gateway",
+     "x": 295,
+     "y": 80,
+     "w": 155,
+     "h": 76,
+     "label": "API Gateway"
+    },
+    {
+     "id": "wp",
+     "kind": "service",
+     "tone": 4,
+     "x": 295,
+     "y": 196,
+     "w": 155,
+     "h": 70,
+     "label": "Web\nPresentation"
+    },
+    {
+     "id": "vpn",
+     "kind": "security",
+     "x": 295,
+     "y": 410,
+     "w": 155,
+     "h": 76,
+     "label": "Private link"
+    },
+    {
+     "id": "c1",
+     "kind": "component",
+     "x": 515,
+     "y": 122,
+     "w": 140,
+     "h": 56,
+     "label": "Claim\nManager"
+    },
+    {
+     "id": "c2",
+     "kind": "component",
+     "x": 670,
+     "y": 122,
+     "w": 140,
+     "h": 56,
+     "label": "Assessment"
+    },
+    {
+     "id": "c3",
+     "kind": "component",
+     "x": 825,
+     "y": 122,
+     "w": 130,
+     "h": 56,
+     "label": "Fraud\nManager"
+    },
+    {
+     "id": "c4",
+     "kind": "component",
+     "x": 590,
+     "y": 198,
+     "w": 140,
+     "h": 56,
+     "label": "Workshop\nManager"
+    },
+    {
+     "id": "c5",
+     "kind": "component",
+     "x": 745,
+     "y": 198,
+     "w": 140,
+     "h": 56,
+     "label": "Payment\nManager"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "api",
+     "style": "flow",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       87,
+       54
+      ],
+      [
+       272,
+       54
+      ]
+     ],
+     "toAt": [
+      0,
+      0.25
+     ]
+    },
+    {
+     "from": "web",
+     "to": "wp",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.85
+     ],
+     "toAt": [
+      0,
+      0.4
+     ]
+    },
+    {
+     "from": "api",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "wp",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.75
+     ]
+    },
+    {
+     "from": "mf",
+     "to": "vpn",
+     "style": "flow"
+    },
+    {
+     "from": "vpn",
+     "to": "itg",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       475,
+       448
+      ],
+      [
+       475,
+       519
+      ],
+      [
+       858,
+       519
+      ]
+     ],
+     "toAt": [
+      0.55,
+      1
+     ]
+    },
+    {
+     "from": "itg",
+     "to": "ai",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.2
+     ],
+     "via": [
+      [
+       978,
+       337
+      ],
+      [
+       978,
+       6
+      ],
+      [
+       270,
+       6
+      ],
+      [
+       270,
+       274
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "HTTPS",
+     "labelAt": 0.5
+    },
+    {
+     "from": "svc",
+     "to": "sto",
+     "style": "flow",
+     "fromAt": [
+      0.24,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "itg",
+     "style": "flow",
+     "fromAt": [
+      0.76,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    }
+   ]
+  },
+  "domain": {
+   "title": "Figure 2: Domain Model for Phase 1",
+   "caption": "Entities by owning service with key attributes and multiplicities. The «legacy» package is the mainframe's record layout.",
+   "size": [
+    1045,
+    650
+   ],
+   "groups": [
+    {
+     "id": "cm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "ClaimManager",
+     "tone": 0,
+     "x": 20,
+     "y": 30,
+     "w": 540,
+     "h": 330
+    },
+    {
+     "id": "pa",
+     "kind": "package",
+     "stereo": "legacy",
+     "label": "PolicyAdmin (mainframe)",
+     "tone": 1,
+     "x": 590,
+     "y": 30,
+     "w": 200,
+     "h": 175
+    },
+    {
+     "id": "wm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "WorkshopManager",
+     "tone": 4,
+     "x": 810,
+     "y": 30,
+     "w": 210,
+     "h": 300
+    },
+    {
+     "id": "fm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "FraudManager",
+     "tone": 5,
+     "x": 20,
+     "y": 390,
+     "w": 320,
+     "h": 240
+    },
+    {
+     "id": "pm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "PaymentManager",
+     "tone": 2,
+     "x": 370,
+     "y": 390,
+     "w": 320,
+     "h": 240
+    }
+   ],
+   "nodes": [
+    {
+     "id": "Claim",
+     "kind": "class",
+     "tone": 0,
+     "x": 40,
+     "y": 90,
+     "w": 160,
+     "label": "Claim",
+     "attrs": [
+      "claimNo",
+      "status",
+      "lossDate"
+     ]
+    },
+    {
+     "id": "DA",
+     "kind": "class",
+     "tone": 0,
+     "x": 225,
+     "y": 90,
+     "w": 185,
+     "label": "DamageAssessment",
+     "attrs": [
+      "estimate",
+      "modelName",
+      "updatedAt"
+     ]
+    },
+    {
+     "id": "Photo",
+     "kind": "class",
+     "tone": 0,
+     "x": 40,
+     "y": 240,
+     "w": 150,
+     "label": "Photo",
+     "attrs": [
+      "imageBlob",
+      "takenAt"
+     ]
+    },
+    {
+     "id": "Approval",
+     "kind": "class",
+     "tone": 0,
+     "x": 225,
+     "y": 240,
+     "w": 155,
+     "label": "Approval",
+     "attrs": [
+      "approvedBy",
+      "approvedAt"
+     ]
+    },
+    {
+     "id": "PolicyRecord",
+     "kind": "class",
+     "tone": 0,
+     "x": 400,
+     "y": 230,
+     "w": 145,
+     "label": "PolicyRecord",
+     "attrs": [
+      "POL_NO",
+      "CVG_CD",
+      "EXP_DT"
+     ]
+    },
+    {
+     "id": "PM",
+     "kind": "class",
+     "stereo": "table",
+     "tone": 1,
+     "x": 605,
+     "y": 90,
+     "w": 170,
+     "label": "POLICY_MASTER",
+     "attrs": [
+      "POL_NO",
+      "CVG_CD",
+      "BNK_ACCT"
+     ]
+    },
+    {
+     "id": "Workshop",
+     "kind": "class",
+     "tone": 4,
+     "x": 830,
+     "y": 90,
+     "w": 160,
+     "label": "Workshop",
+     "attrs": [
+      "workshopId",
+      "name"
+     ]
+    },
+    {
+     "id": "Quote",
+     "kind": "class",
+     "tone": 4,
+     "x": 830,
+     "y": 220,
+     "w": 160,
+     "label": "RepairQuote",
+     "attrs": [
+      "amount",
+      "items"
+     ]
+    },
+    {
+     "id": "FraudCase",
+     "kind": "class",
+     "tone": 5,
+     "x": 40,
+     "y": 450,
+     "w": 170,
+     "label": "FraudCase",
+     "attrs": [
+      "score",
+      "rulesHit"
+     ]
+    },
+    {
+     "id": "Disb",
+     "kind": "class",
+     "tone": 2,
+     "x": 500,
+     "y": 450,
+     "w": 180,
+     "label": "Disbursement",
+     "attrs": [
+      "amount",
+      "payee",
+      "status"
+     ]
+    }
+   ],
+   "edges": [
+    {
+     "from": "Claim",
+     "to": "Photo",
+     "style": "comp",
+     "m2": "0..*"
+    },
+    {
+     "from": "Claim",
+     "to": "DA",
+     "style": "assoc",
+     "m1": "1",
+     "m2": "0..1"
+    },
+    {
+     "from": "Claim",
+     "to": "Approval",
+     "style": "assoc",
+     "fromAt": [
+      0.8,
+      1
+     ],
+     "toAt": [
+      0.3,
+      0
+     ],
+     "m1": "1",
+     "m2": "0..1"
+    },
+    {
+     "from": "Claim",
+     "to": "PolicyRecord",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.95
+     ],
+     "toAt": [
+      0,
+      0.3
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "PolicyRecord",
+     "to": "PM",
+     "style": "dep",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "label": "mirrors",
+     "labelDx": 26
+    },
+    {
+     "from": "Quote",
+     "to": "Workshop",
+     "style": "assoc",
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "Claim",
+     "to": "Quote",
+     "style": "assoc",
+     "fromAt": [
+      0.9,
+      0
+     ],
+     "via": [
+      [
+       184,
+       15
+      ],
+      [
+       1032,
+       15
+      ],
+      [
+       1032,
+       258
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "FraudCase",
+     "to": "Claim",
+     "style": "assoc",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "via": [
+      [
+       10,
+       488
+      ],
+      [
+       10,
+       136
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "FraudCase",
+     "to": "PolicyRecord",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.3
+     ],
+     "toAt": [
+      0.25,
+      1
+     ],
+     "label": "checks",
+     "labelAt": 0.6
+    },
+    {
+     "from": "Disb",
+     "to": "Claim",
+     "style": "assoc",
+     "fromAt": [
+      0.2,
+      0
+     ],
+     "via": [
+      [
+       536,
+       375
+      ],
+      [
+       212,
+       375
+      ],
+      [
+       212,
+       150
+      ]
+     ],
+     "toAt": [
+      1,
+      0.65
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "Disb",
+     "to": "PolicyRecord",
+     "style": "assoc",
+     "fromAt": [
+      0.4,
+      0
+     ],
+     "toAt": [
+      0.95,
+      1
+     ],
+     "label": "pays to BNK_ACCT",
+     "labelDx": 70
+    }
+   ]
+  },
+  "packaging": {
+   "title": "Figure 3: Logical Packaging cum Deployment Model (Assess Damage)",
+   "caption": "Subsystems «manifest» elements and are «deploy»ed to nodes; «use» marks a direct dependency on a node. Incomplete and potentially erroneous.",
+   "size": [
+    1060,
+    640
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 205,
+     "h": 290
+    },
+    {
+     "id": "browser",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Adjuster\nBrowser",
+     "x": 35,
+     "y": 70,
+     "w": 160,
+     "h": 210
+    },
+    {
+     "id": "onprem",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "On-premises DC",
+     "tone": 1,
+     "x": 15,
+     "y": 322,
+     "w": 205,
+     "h": 302
+    },
+    {
+     "id": "mf",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Mainframe",
+     "x": 35,
+     "y": 380,
+     "w": 160,
+     "h": 220
+    },
+    {
+     "id": "saas",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "External SaaS",
+     "tone": 2,
+     "x": 845,
+     "y": 12,
+     "w": 200,
+     "h": 290
+    },
+    {
+     "id": "llm",
+     "kind": "node",
+     "stereo": "node",
+     "label": "AI Provider",
+     "x": 862,
+     "y": 70,
+     "w": 165,
+     "h": 210
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Cloud Internal Zone",
+     "tone": 0,
+     "x": 845,
+     "y": 322,
+     "w": 200,
+     "h": 302
+    },
+    {
+     "id": "csn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Claims\nService",
+     "x": 862,
+     "y": 380,
+     "w": 165,
+     "h": 222
+    },
+    {
+     "id": "ap",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Assessment Presentation",
+     "tone": 0,
+     "x": 240,
+     "y": 12,
+     "w": 170,
+     "h": 64
+    },
+    {
+     "id": "lcc",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "LLM Client Control",
+     "tone": 2,
+     "x": 425,
+     "y": 12,
+     "w": 160,
+     "h": 64
+    },
+    {
+     "id": "ac",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Assessment Control",
+     "tone": 0,
+     "x": 600,
+     "y": 12,
+     "w": 180,
+     "h": 64
+    },
+    {
+     "id": "cda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Claim Data Access",
+     "tone": 0,
+     "x": 250,
+     "y": 450,
+     "w": 220,
+     "h": 64
+    },
+    {
+     "id": "fda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Fraud Data Access",
+     "tone": 5,
+     "x": 560,
+     "y": 450,
+     "w": 200,
+     "h": 64
+    }
+   ],
+   "nodes": [
+    {
+     "id": "screen",
+     "kind": "class",
+     "stereo": "boundary",
+     "tone": 4,
+     "x": 245,
+     "y": 150,
+     "w": 150,
+     "label": "AssessScreen"
+    },
+    {
+     "id": "prompter",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 418,
+     "y": 150,
+     "w": 168,
+     "label": "EstimatePrompter"
+    },
+    {
+     "id": "actl",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 605,
+     "y": 150,
+     "w": 190,
+     "label": "AssessmentController"
+    },
+    {
+     "id": "claim",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 250,
+     "y": 300,
+     "w": 110,
+     "label": "Claim"
+    },
+    {
+     "id": "photo",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 380,
+     "y": 300,
+     "w": 110,
+     "label": "Photo"
+    },
+    {
+     "id": "da",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 510,
+     "y": 300,
+     "w": 190,
+     "label": "DamageAssessment"
+    },
+    {
+     "id": "fc",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 720,
+     "y": 300,
+     "w": 115,
+     "label": "FraudCase"
+    }
+   ],
+   "edges": [
+    {
+     "from": "ap",
+     "to": "browser",
+     "style": "dep",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "toAt": [
+      1,
+      0.12
+     ],
+     "label": "deploy",
+     "labelDy": -10
+    },
+    {
+     "from": "lcc",
+     "to": "browser",
+     "style": "dep",
+     "fromAt": [
+      0.07,
+      1
+     ],
+     "via": [
+      [
+       436,
+       112
+      ]
+     ],
+     "toAt": [
+      1,
+      0.2
+     ],
+     "label": "deploy",
+     "labelAt": 0.88
+    },
+    {
+     "from": "ac",
+     "to": "csn",
+     "style": "dep",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       833,
+       44
+      ],
+      [
+       833,
+       420
+      ]
+     ],
+     "toAt": [
+      0,
+      0.18
+     ],
+     "label": "deploy",
+     "labelAt": 0.2
+    },
+    {
+     "from": "cda",
+     "to": "csn",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       360,
+       590
+      ],
+      [
+       850,
+       590
+      ]
+     ],
+     "toAt": [
+      0,
+      0.95
+     ],
+     "label": "deploy",
+     "labelAt": 0.6
+    },
+    {
+     "from": "prompter",
+     "to": "llm",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       502,
+       232
+      ],
+      [
+       823,
+       232
+      ],
+      [
+       823,
+       200
+      ]
+     ],
+     "toAt": [
+      0,
+      0.62
+     ],
+     "label": "«use» API key in browser",
+     "labelAt": 0.4
+    },
+    {
+     "from": "actl",
+     "to": "mf",
+     "style": "dep",
+     "fromAt": [
+      0.9,
+      1
+     ],
+     "via": [
+      [
+       776,
+       266
+      ],
+      [
+       230,
+       266
+      ],
+      [
+       230,
+       430
+      ]
+     ],
+     "toAt": [
+      1,
+      0.23
+     ],
+     "label": "«use» direct",
+     "labelAt": 0.25
+    },
+    {
+     "from": "ap",
+     "to": "screen",
+     "style": "dep",
+     "fromAt": [
+      0.48,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30,
+     "labelAt": 0.7
+    },
+    {
+     "from": "lcc",
+     "to": "prompter",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30,
+     "labelAt": 0.65
+    },
+    {
+     "from": "ac",
+     "to": "actl",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30
+    },
+    {
+     "from": "screen",
+     "to": "prompter",
+     "style": "assoc"
+    },
+    {
+     "from": "prompter",
+     "to": "actl",
+     "style": "assoc"
+    },
+    {
+     "from": "actl",
+     "to": "claim",
+     "style": "assoc",
+     "fromAt": [
+      0.05,
+      1
+     ]
+    },
+    {
+     "from": "actl",
+     "to": "photo",
+     "style": "assoc",
+     "fromAt": [
+      0.2,
+      1
+     ]
+    },
+    {
+     "from": "actl",
+     "to": "da",
+     "style": "assoc",
+     "fromAt": [
+      0.4,
+      1
+     ]
+    },
+    {
+     "from": "actl",
+     "to": "fc",
+     "style": "assoc",
+     "fromAt": [
+      0.75,
+      1
+     ]
+    },
+    {
+     "from": "cda",
+     "to": "claim",
+     "style": "dep",
+     "fromAt": [
+      0.15,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": -32
+    },
+    {
+     "from": "cda",
+     "to": "photo",
+     "style": "dep",
+     "fromAt": [
+      0.55,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32
+    },
+    {
+     "from": "cda",
+     "to": "da",
+     "style": "dep",
+     "fromAt": [
+      0.95,
+      0
+     ],
+     "toAt": [
+      0.2,
+      1
+     ],
+     "label": "manifest",
+     "labelDx": 34,
+     "labelAt": 0.45
+    },
+    {
+     "from": "fda",
+     "to": "da",
+     "style": "dep",
+     "fromAt": [
+      0.25,
+      0
+     ],
+     "toAt": [
+      0.75,
+      1
+     ],
+     "label": "manifest",
+     "labelDx": -34
+    },
+    {
+     "from": "fda",
+     "to": "fc",
+     "style": "dep",
+     "fromAt": [
+      0.8,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32
+    }
+   ]
+  },
+  "mvp": {
+   "title": "Pilot architecture",
+   "caption": "One server and database; photos stored in the database; the mainframe exchanges a nightly file.",
+   "size": [
+    880,
+    320
+   ],
+   "legend": false,
+   "groups": [
+    {
+     "id": "vm",
+     "kind": "tier",
+     "tone": 0,
+     "x": 225,
+     "y": 25,
+     "w": 470,
+     "h": 280,
+     "label": "Cloud VM"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 25,
+     "w": 105,
+     "h": 135,
+     "label": "Claims app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 190,
+     "w": 130,
+     "h": 70,
+     "label": "Adjuster\nportal"
+    },
+    {
+     "id": "mono",
+     "kind": "component",
+     "x": 262,
+     "y": 110,
+     "w": 200,
+     "h": 86,
+     "label": "Claims server",
+     "sub": "(monolith)"
+    },
+    {
+     "id": "db",
+     "kind": "db",
+     "x": 530,
+     "y": 100,
+     "w": 130,
+     "h": 106,
+     "label": "Database",
+     "sub": "incl. photos"
+    },
+    {
+     "id": "mf",
+     "kind": "external",
+     "x": 725,
+     "y": 128,
+     "w": 140,
+     "h": 60,
+     "label": "Mainframe"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "mono",
+     "style": "sync",
+     "label": "photos",
+     "labelDy": -12
+    },
+    {
+     "from": "web",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "mono",
+     "to": "db",
+     "style": "sync"
+    },
+    {
+     "from": "mf",
+     "to": "mono",
+     "style": "async",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       795,
+       255
+      ],
+      [
+       362,
+       255
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "label": "nightly file",
+     "labelDy": 12
+    }
+   ]
+  },
+  "ans-ref": {
+   "title": "Model answer: hybrid reference architecture with GenAI",
+   "caption": "Direct uploads to object storage, event-triggered image functions, an orchestrated claim workflow, an AI gateway in front of the model provider, and a policy facade with a CDC replica in front of the mainframe.",
+   "size": [
+    1080,
+    760
+   ],
+   "groups": [
+    {
+     "id": "edge",
+     "kind": "zone",
+     "label": "Edge (DMZ)",
+     "tone": 2,
+     "x": 168,
+     "y": 20,
+     "w": 164,
+     "h": 720
+    },
+    {
+     "id": "cloud",
+     "kind": "cloud",
+     "label": "Approved cloud region (IaC)",
+     "tone": 0,
+     "x": 350,
+     "y": 20,
+     "w": 715,
+     "h": 720
+    },
+    {
+     "id": "k8s",
+     "kind": "cluster",
+     "label": "Managed Kubernetes · 3 zones",
+     "tone": 0,
+     "x": 365,
+     "y": 52,
+     "w": 460,
+     "h": 498
+    },
+    {
+     "id": "dc",
+     "kind": "zone",
+     "label": "On-prem DC",
+     "tone": 1,
+     "x": 12,
+     "y": 470,
+     "w": 146,
+     "h": 130
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 40,
+     "w": 110,
+     "h": 120,
+     "label": "Claims app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 185,
+     "w": 130,
+     "h": 76,
+     "label": "Portals",
+     "sub": "adjuster, workshop"
+    },
+    {
+     "id": "idp",
+     "kind": "external",
+     "x": 20,
+     "y": 290,
+     "w": 130,
+     "h": 58,
+     "label": "Identity",
+     "sub": "OIDC / OAuth2"
+    },
+    {
+     "id": "bank",
+     "kind": "external",
+     "x": 20,
+     "y": 380,
+     "w": 130,
+     "h": 58,
+     "label": "Bank"
+    },
+    {
+     "id": "mf",
+     "kind": "external",
+     "x": 25,
+     "y": 515,
+     "w": 120,
+     "h": 60,
+     "label": "Mainframe",
+     "sub": "20 TPS"
+    },
+    {
+     "id": "waf",
+     "kind": "security",
+     "x": 183,
+     "y": 60,
+     "w": 134,
+     "h": 52,
+     "label": "CDN + WAF"
+    },
+    {
+     "id": "gw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 150,
+     "w": 134,
+     "h": 80,
+     "label": "API gateway",
+     "sub": "OAuth2, object\nauthz, limits"
+    },
+    {
+     "id": "vpn",
+     "kind": "security",
+     "x": 183,
+     "y": 510,
+     "w": 134,
+     "h": 70,
+     "label": "Private link",
+     "sub": "redundant"
+    },
+    {
+     "id": "intake",
+     "kind": "service",
+     "x": 380,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Intake",
+     "sub": "ack + upload URLs"
+    },
+    {
+     "id": "wf",
+     "kind": "service",
+     "x": 530,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Claim workflow",
+     "sub": "orchestrator",
+     "accent": true
+    },
+    {
+     "id": "facade",
+     "kind": "service",
+     "x": 680,
+     "y": 100,
+     "w": 130,
+     "h": 62,
+     "label": "Policy facade",
+     "sub": "ACL"
+    },
+    {
+     "id": "assess",
+     "kind": "ai",
+     "x": 380,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Assessment",
+     "sub": "AssessmentRuns"
+    },
+    {
+     "id": "fraud",
+     "kind": "service",
+     "x": 530,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Fraud",
+     "sub": "rules; graph Ph 2"
+    },
+    {
+     "id": "workshop",
+     "kind": "service",
+     "x": 680,
+     "y": 185,
+     "w": 130,
+     "h": 62,
+     "label": "Workshop"
+    },
+    {
+     "id": "stream",
+     "kind": "stream",
+     "x": 380,
+     "y": 278,
+     "w": 430,
+     "h": 64,
+     "label": "Event stream",
+     "sub": "ClaimReported · PhotosProcessed · AssessmentCompleted · ClaimApproved",
+     "accent": true
+    },
+    {
+     "id": "aigw",
+     "kind": "gateway",
+     "x": 380,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "AI gateway",
+     "sub": "limit, redact, log"
+    },
+    {
+     "id": "assist",
+     "kind": "ai",
+     "x": 530,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Assistant",
+     "sub": "RAG, Phase 2"
+    },
+    {
+     "id": "pay",
+     "kind": "service",
+     "x": 680,
+     "y": 375,
+     "w": 130,
+     "h": 62,
+     "label": "Payment"
+    },
+    {
+     "id": "purge",
+     "kind": "job",
+     "x": 530,
+     "y": 465,
+     "w": 135,
+     "h": 56,
+     "label": "Retention purge",
+     "sub": "CronJob"
+    },
+    {
+     "id": "notify",
+     "kind": "service",
+     "x": 680,
+     "y": 465,
+     "w": 130,
+     "h": 56,
+     "label": "Notification"
+    },
+    {
+     "id": "llm",
+     "kind": "external",
+     "x": 380,
+     "y": 575,
+     "w": 285,
+     "h": 56,
+     "label": "Vision + LLM endpoint",
+     "sub": "approved region, 300 req/min"
+    },
+    {
+     "id": "imgfn",
+     "kind": "function",
+     "x": 680,
+     "y": 575,
+     "w": 130,
+     "h": 56,
+     "label": "Image pipeline",
+     "sub": "thumbs, OCR"
+    },
+    {
+     "id": "claimdb",
+     "kind": "db",
+     "x": 845,
+     "y": 56,
+     "w": 200,
+     "h": 70,
+     "label": "Claim + workflow DB"
+    },
+    {
+     "id": "cov",
+     "kind": "cache",
+     "x": 845,
+     "y": 140,
+     "w": 200,
+     "h": 62,
+     "label": "Coverage replica",
+     "sub": "fed by CDC"
+    },
+    {
+     "id": "runs",
+     "kind": "db",
+     "x": 845,
+     "y": 215,
+     "w": 200,
+     "h": 74,
+     "label": "Assessment runs",
+     "sub": "append-only, 7 years"
+    },
+    {
+     "id": "vec",
+     "kind": "db",
+     "x": 845,
+     "y": 375,
+     "w": 200,
+     "h": 70,
+     "label": "Vector store",
+     "sub": "policy wording"
+    },
+    {
+     "id": "obj",
+     "kind": "store",
+     "x": 845,
+     "y": 560,
+     "w": 200,
+     "h": 72,
+     "label": "Object store",
+     "sub": "photos, 7-yr lifecycle",
+     "accent": true
+    },
+    {
+     "id": "plat",
+     "kind": "box",
+     "tone": 2,
+     "x": 365,
+     "y": 660,
+     "w": 680,
+     "h": 62,
+     "label": "Shared platform services",
+     "sub": "IaC + GitOps · KMS (provider keys) · audit log · evaluation sets · logs, metrics, traces"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "waf",
+     "style": "sync"
+    },
+    {
+     "from": "web",
+     "to": "gw",
+     "style": "sync"
+    },
+    {
+     "from": "waf",
+     "to": "gw",
+     "style": "sync"
+    },
+    {
+     "from": "gw",
+     "to": "idp",
+     "style": "sync",
+     "fromAt": [
+      0.2,
+      1
+     ],
+     "toAt": [
+      0.7,
+      0
+     ]
+    },
+    {
+     "from": "gw",
+     "to": "k8s",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.4
+     ],
+     "toAt": [
+      0,
+      0.24
+     ]
+    },
+    {
+     "from": "app",
+     "to": "obj",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.9
+     ],
+     "via": [
+      [
+       160,
+       148
+      ],
+      [
+       160,
+       648
+      ],
+      [
+       945,
+       648
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "label": "pre-signed upload",
+     "labelAt": 0.55
+    },
+    {
+     "from": "obj",
+     "to": "imgfn",
+     "style": "event",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "uploaded",
+     "labelDy": -12
+    },
+    {
+     "from": "imgfn",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       745,
+       550
+      ],
+      [
+       818,
+       550
+      ],
+      [
+       818,
+       310
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    },
+    {
+     "from": "intake",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      1,
+      0.8
+     ],
+     "via": [
+      [
+       522,
+       150
+      ],
+      [
+       522,
+       268
+      ]
+     ],
+     "toAt": [
+      0.3256,
+      0
+     ]
+    },
+    {
+     "from": "wf",
+     "to": "claimdb",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       597,
+       80
+      ],
+      [
+       835,
+       80
+      ]
+     ],
+     "toAt": [
+      0,
+      0.35
+     ]
+    },
+    {
+     "from": "facade",
+     "to": "cov",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.8
+     ],
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "assess",
+     "to": "runs",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       447,
+       262
+      ],
+      [
+       835,
+       262
+      ]
+     ],
+     "toAt": [
+      0,
+      0.6
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "wf",
+     "style": "event",
+     "fromAt": [
+      0.6791,
+      0
+     ],
+     "toAt": [
+      0.9,
+      1
+     ],
+     "via": [
+      [
+       672,
+       172
+      ]
+     ]
+    },
+    {
+     "from": "assess",
+     "to": "aigw",
+     "style": "sync",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "via": [
+      [
+       371,
+       216
+      ],
+      [
+       371,
+       406
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "aigw",
+     "to": "llm",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.24,
+      0
+     ]
+    },
+    {
+     "from": "assist",
+     "to": "aigw",
+     "style": "sync"
+    },
+    {
+     "from": "assist",
+     "to": "vec",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       597,
+       358
+      ],
+      [
+       835,
+       358
+      ]
+     ],
+     "toAt": [
+      0,
+      0.2
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "pay",
+     "style": "event",
+     "fromAt": [
+      0.85,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "pay",
+     "to": "bank",
+     "style": "sync",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "via": [
+      [
+       672,
+       425
+      ],
+      [
+       672,
+       448
+      ],
+      [
+       355,
+       448
+      ],
+      [
+       355,
+       409
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    },
+    {
+     "from": "mf",
+     "to": "vpn",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "vpn",
+     "to": "facade",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       342,
+       545
+      ],
+      [
+       342,
+       562
+      ],
+      [
+       836,
+       562
+      ],
+      [
+       836,
+       131
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "CDC + throttled calls",
+     "labelAt": 0.4
+    }
+   ]
+  }
+ }
+}

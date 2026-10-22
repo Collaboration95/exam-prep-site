@@ -1,0 +1,191 @@
+{
+ "key": "mtech-ft-cnsd-day-3",
+ "title": "What the Instructor Emphasised in Day 3: Kubernetes, Toolchains and Architecture Styles",
+ "pages": 6,
+ "minutes": 12,
+ "overview": "These sketches connect Kubernetes control-plane roles, delivery-toolchain choices and application styles. Read the modernisation examples as options rather than mandatory replacements. The key architectural decisions are where durable state lives, how capability boundaries are drawn and which scaling mechanism addresses the actual bottleneck.",
+ "big_ideas": [
+  "A highly available Kubernetes control plane replicates components; leader election applies to coordinating controllers, while API servers and etcd have different availability roles.",
+  "A cloud native stack is a chain of choices: language, data store, build, deploy, release, then the product.",
+  "Traditional web concerns still exist; cloud-native designs choose suitable interfaces, state stores, security and observability mechanisms for them.",
+  "Keep durable state out of individual replaceable service instances; browsers may still use cookies or tokens and shared server-side sessions can be valid.",
+  "Architectures are singular (monolith, small pipelines, IoT microkernel) or distributed (microservices, event-driven, large pipelines, microliths, Lambda/Kappa, AI-native); real systems are often hybrid.",
+  "Styles can be placed on a three-axis scaling chart: business-function decomposition, data scaling and replication."
+ ],
+ "sections": [
+  {
+   "id": "k8s-toolchain-modernisation",
+   "title": "Kubernetes, toolchain and traditional vs cloud native",
+   "slides": [
+    1,
+    3
+   ],
+   "summary": "How Kubernetes is organised, the technology choices along a delivery toolchain, and how each traditional web concern maps to a cloud native equivalent.",
+   "notes": [
+    "**Separate control-plane availability roles.** API servers accept requests; controllers reconcile objects; the scheduler places Pods; etcd persists cluster state. In an HA design these components are replicated appropriately: coordinating controllers and schedulers use leader election, API servers can serve concurrently, and etcd needs quorum. A blanket active-master/standby model hides these differences.",
+    "**Containers underpin it**: a container is Linux kernel isolation plus a runtime, not a VM, which is why Kubernetes can pack and restart them so cheaply.",
+    "**The toolchain is a chain of choices**: language, then data store (RDBMS, document, column-family, in-memory, object, graph, vector), then build, then deploy (CI/CD and GitOps with Argo/Flux), then release tracking, then product. An architect justifies each link, not just the product names.",
+    "**Modernise each concern where it helps.** SPA/PWA and edge/Wasm are interface options; relational, NoSQL, NewSQL and vector stores serve different data needs. OAuth/IAM and layered controls strengthen access. REST/gateways and events can replace selected SOAP/ESB integrations; agent harnesses add a different kind of workflow with verification needs. None automatically replaces every existing mechanism.",
+    "**Read “cookies disabled” as a sketch example, not a cloud-native rule.** Cookies can carry session identifiers or tokens; a shared server-side session store also supports replaceable replicas. Avoid durable state held only in one application instance. Token formats, cookie transport and state placement are separate choices."
+   ],
+   "terms": [
+    {
+     "term": "Master / control plane",
+     "def": "The Kubernetes components that schedule and manage workloads across nodes."
+    },
+    {
+     "term": "Kubelet",
+     "def": "Agent on each node that starts and monitors the pods the master assigns."
+    },
+    {
+     "term": "Leader election",
+     "def": "Selecting an active coordinator among replicas, as used by scheduler/controller instances; not the operating model of every control-plane component."
+    },
+    {
+     "term": "ReplicaSet / Deployment",
+     "def": "ReplicaSet keeps N pod copies running; a Deployment manages ReplicaSets for rolling updates."
+    },
+    {
+     "term": "GitOps",
+     "def": "Declare desired state in Git and let a tool such as Argo CD or Flux sync the cluster to it."
+    },
+    {
+     "term": "A2A",
+     "def": "Agent-to-agent communication between AI agents."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team designs a highly available Kubernetes control plane as 'one active master and one standby master'. What does this description hide?",
+     "a": "Each control-plane component has its own availability model. API servers can serve concurrently behind a load balancer, controllers and schedulers use leader election so only one acts at a time, and etcd needs a quorum, usually an odd number of members. A single active/standby pair can lose etcd quorum or leave API requests unserved, so design each component's replication and recovery separately."
+    },
+    {
+     "q": "A traditional web app keeps user sessions in each app server's memory and uses cookies to hold session IDs. A teammate says going cloud native means disabling cookies. Do you agree?",
+     "a": "No. A cookie can still carry a session identifier or token. The scaling problem is session state that lives only on one replaceable instance. Move sessions to a shared store, or use suitable client-held tokens, so any replica can serve the next request. The cookie transport and where the state lives are separate choices."
+    },
+    {
+     "q": "In the delivery toolchain (language, data store, build, deploy, release tracking), a team picks a vector database as its main store 'because it's modern'. The app records orders and payments. What is wrong?",
+     "a": "Each link in the toolchain should be justified by requirements. Orders and payments need transactions and integrity, which point to relational or NewSQL stores. A vector store serves similarity search, for example for RAG, and could sit alongside them. Modern options are added where they help, not as automatic replacements."
+    },
+    {
+     "q": "A company wants to replace its SOAP web services and ESB-based workflows. What cloud-native options does the instructor map them to, and what caution applies?",
+     "a": "SOAP services can become Kubernetes services exposed through API gateways with REST. ESB and BPEL orchestration can move toward events and lightweight orchestration, and in the instructor's list toward agent harnesses with evals and human validation. Replace selected integrations where requirements justify it, since none of these automatically replaces every working mechanism, and agent workflows need verification."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "layers",
+     "title": "Control-plane HA has different roles",
+     "layers": [
+      {
+       "label": "API servers",
+       "sub": "concurrent request handling",
+       "detail": "Provide access to cluster resources. Multiple serving instances reduce reliance on one management node."
+      },
+      {
+       "label": "Schedulers and controllers",
+       "sub": "elect active coordinators",
+       "detail": "Replicas use leader election for coordinated scheduling and reconciliation."
+      },
+      {
+       "label": "etcd quorum",
+       "sub": "durable cluster state",
+       "detail": "Replicated state needs a working majority and backups; an extra API server cannot substitute for lost state quorum.",
+       "accent": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "architecture-styles-map",
+   "title": "Architecture style classification and scaling map",
+   "slides": [
+    4,
+    6
+   ],
+   "summary": "Singular vs distributed families, where each style sits on a three-axis scaling chart, and a Netflix-style application as a decomposition exercise.",
+   "notes": [
+    "**Application architectures split into singular and distributed families.** Singular: monolith, small-scale pipelines, IoT microkernels. Distributed: microservices (usually with event-driven architecture), large-scale pipelines, microliths, data-driven Lambda/Kappa, and AI-driven/AI-native. Real systems are hybrids, and small pipelines grow into Lambda/Kappa.",
+    "**Separate three scaling decisions.** Functional decomposition splits capability ownership; replication adds instances; partitioning spreads data or tenant subsets. The sketch’s VM/container/function and database names are examples, not a ranking of scalability. A VM can host services, a container a monolith, and a relational database can be partitioned.",
+    "**Microlith** is the instructor's term for a coarse-grained deployable between monolith and microservices: independent deployment with far fewer moving parts.",
+    "**Practice case**: decompose a Netflix-style app (search, profile, catalogue rows, playback and resume) into services, each with a fitting data store."
+   ],
+   "terms": [
+    {
+     "term": "Singular architecture",
+     "def": "Instructor's term for styles deployed as one unit: monolith, small pipelines, microkernel."
+    },
+    {
+     "term": "Microlith",
+     "def": "Coarse-grained service between monolith and microservices."
+    },
+    {
+     "term": "AI-native architecture",
+     "def": "Systems designed around AI models or agents as core components, not add-ons."
+    }
+   ],
+   "check": [
+    {
+     "q": "A 6-person team wants independent deployment for three areas of its product but can't operate dozens of services. Microservices, monolith or something between?",
+     "a": "A microlith, the instructor's term for a coarse-grained deployable between a monolith and microservices: three independently deployable units, each with some independent scaling, and far fewer moving parts than fine-grained services. It suits teams without the operational maturity for many services. Split further later if one area needs it."
+    },
+    {
+     "q": "A team says 'we moved from VMs to containers to functions, so we are now properly decomposed by business function'. Is that right?",
+     "a": "No. Packaging and decomposition are separate decisions. A VM can host several services, a container can hold a monolith, and a function can be one handler inside a service. Decompose by business capability and operating needs first, then choose the execution unit for each part. Replication and data partitioning are further, independent scaling decisions."
+    },
+    {
+     "q": "Decompose a streaming app's search, profile, playback-resume and title-row recommendations into services, choosing a data store for each with a reason.",
+     "a": "Search: a search index or document store for text queries. Profile: relational or key-value, for structured per-user data. Playback resume position: a fast key-value store, written often and read by user and title. Recommendations: a service fed by viewing events, which precomputes the title rows into a fast read store. Each store adds operational cost, so share stores where the access patterns match."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Choose the scaling axis from the bottleneck",
+     "columns": [
+      "Problem",
+      "Mechanism",
+      "Example"
+     ],
+     "rows": [
+      [
+       "More traffic",
+       "Replicate instances",
+       "More API Pods"
+      ],
+      [
+       "Capability bottleneck",
+       "Decompose functions",
+       "Separate Search and Playback"
+      ],
+      [
+       "Data or write limit",
+       "Partition by key",
+       "Shard users or orders"
+      ]
+     ],
+     "caption": "Database family and packaging format do not create a universal scale ranking."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "Decompose a Netflix-like streaming platform into a cloud-native architecture: identify services and data stores, how viewing events reach recommendations, how it is deployed, and how it scales on each axis.",
+   "a": "Services: search, profile, catalogue, recommendations and playback, each with a fitting store (search index, relational or key-value, document, precomputed fast reads, and key-value for resume position). Viewing events flow through a stream into recommendation processing, Kappa-style. Run stateless services as Kubernetes Deployments behind Services and an API gateway, using tokens or shared session state so any replica can serve. Scale by replication (more replicas), functional decomposition (hot services such as playback scale alone) and partitioning (shard user data by user ID). The costs are eventual consistency in recommendations and more services to operate."
+  },
+  {
+   "q": "Modernise a traditional web app that uses server-side sessions in memory, SOAP services, an ESB for workflows and a relational database. Decide what to keep, what to change and why.",
+   "a": "Keep the relational database for transactional data and keep cookies, but move sessions to a shared store or tokens so replicas are replaceable. Expose SOAP functions through an API gateway with REST, rewriting services only where change justifies it. Move ESB workflows toward events or lightweight orchestration one flow at a time. Add observability and automated delivery (CI/CD or GitOps) first, because they make every later change safer. Don't swap in a vector store or agents unless a requirement calls for them."
+  },
+  {
+   "q": "Explain how Kubernetes provides high availability for both the control plane and the applications, and say why a large replica count alone doesn't guarantee availability to users.",
+   "a": "Control plane: replicate API servers behind a load balancer, run controllers and schedulers with leader election, and keep etcd with quorum across failure domains. Applications: run ready replicas spread across zones, with health probes so kubelet restarts failed containers and controllers replace lost Pods, and persistent data with its own replication and recovery. Replica count alone doesn't help if replicas share one zone, lack capacity headroom, depend on a single database, or fail readiness together, so availability must be designed end to end."
+  },
+  {
+   "q": "A new product will start with one team and modest load but expects to grow. Choose between a singular and a distributed architecture, and explain how you would leave room to evolve.",
+   "a": "Choose a singular, modular architecture: simplicity and low latency outweigh independent scaling at this size. Keep clear internal boundaries by business capability, make it stateless and containerised so replication works from day one, and keep data ownership per module so the parts can later be split into microliths or microservices. Real systems end up hybrid, so plan the first split around the module most likely to need independent scaling."
+  }
+ ]
+}

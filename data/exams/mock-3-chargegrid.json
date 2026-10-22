@@ -1,0 +1,2733 @@
+{
+ "key": "mock-3-chargegrid",
+ "kind": "mock",
+ "short": "Mock 3",
+ "title": "Mock paper 3: ChargeGrid (SWE5001 format)",
+ "module": "Original mock in the SWE5001 Architecting Scalable Systems format",
+ "domain": "EV charging network with roaming and smart charging",
+ "blurb": "Reconnect storms, tariff snapshots, async APIs for slow devices, stateful WebSocket connections, Little's Law sizing.",
+ "intro": [
+  "An original paper in the structure, length and marks of the SWE5001 sample (Section A 25, Section B 13, Section C 12). Open the [case study](case#top) in a second tab and answer before opening any model answer."
+ ],
+ "sections": [
+  {
+   "id": "A",
+   "title": "Section A",
+   "focus": "Architecting + Platform",
+   "questions": [
+    {
+     "n": 1,
+     "marks": 25,
+     "intro": [
+      "Refer to the case study in Appendix A and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "body": [
+        "ChargeGrid's platform value grows with every station and roaming partner it connects."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 2,
+         "pattern": "diagnose",
+         "topics": [
+          "architecting/05-design-highly-available-architecture-#distributed-failures",
+          "architecting/05-design-highly-available-architecture-#availability-tactics",
+          "platform/05-platform-management-v2-1#circuit-breaker"
+         ],
+         "body": [
+          "After a regional power cut, power returned to about 2,000 stations within one minute. Every station reconnected and resent its queued meter values immediately. For the next 25 minutes the station gateway and the session service kept crashing and restarting, and drivers elsewhere could not start sessions. Give the most likely cause and one countermeasure."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** a **reconnect storm** (thundering herd) turning into a restart cascade. Thousands of stations connected and flushed backlogs at the same instant, far above normal load. The gateway exhausted memory and connections and crashed. Its restart dropped every connection, the stations reconnected together again, and the cycle repeated. Overloaded session-service pods failed their health checks and were restarted mid-recovery, which made it worse.",
+           "**Countermeasure:** spread and shed the load. Stations reconnect with **exponential backoff plus random jitter**, and the platform tells them when to retry. The gateway caps the connection-accept rate and sheds or queues excess load (backpressure), accepting backlog uploads only at a throttled rate. Separate pools (bulkheads) protect start/stop from backlog ingestion. Readiness probes stop overloaded pods taking traffic instead of killing them."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: synchronised reconnects and backlog flush overload the gateway; restarts repeat the surge (cascading failure)."
+           },
+           {
+            "m": 1,
+            "t": "Countermeasure: jittered backoff, admission or rate control and load shedding, bulkheads, or sensible probes, explained."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 2,
+         "pattern": "defend",
+         "topics": [
+          "cloud-native/10-appendix-cloud-patterns-and-practices#data-patterns",
+          "platform/05-platform-management-v2-1#sagas",
+          "platform/03-api-design-v2-2#gateway-orchestration-transactions"
+         ],
+         "body": [
+          "An architect proposes one shared database for SessionManager, StationManager and BillingManager ‘so that billing is always consistent with sessions’. You recommend a database per service, with domain events and a saga for *Stop Session → Bill → Capture Payment*. Give two reasons."
+         ],
+         "answer": {
+          "text": [
+           "1. **Isolation and independent scaling:** station heartbeats and meter values (thousands of writes per minute) would share one database with billing transactions, so a telemetry surge, like the reconnect storm, would slow or block billing. Schema changes in one service would force coordinated releases of all three. Separate stores let each scale, change and fail on its own.",
+           "2. **A shared database doesn't make the flow atomic anyway:** payment capture happens at an external gateway, which cannot join a local transaction or a two-phase commit. A saga makes the steps explicit: SessionStopped → InvoiceCreated → PaymentCaptured, with **compensations** (void the invoice, refund, flag for retry) when a later step fails. Consistency is achieved, and failures are handled deliberately instead of assumed away."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Isolation or independent scaling and deployment, using the case's load."
+           },
+           {
+            "m": 1,
+            "t": "External payment can't be in a local transaction; saga with compensations gives consistency."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "body": [
+        "With reference to the domain model in [Section 7](case#s7), analyse the following issues. For each, identify the most likely cause, propose a countermeasure by revising the domain model, and suggest its major drawback(s), if any."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 5,
+         "pattern": "fix-cost",
+         "topics": [
+          "platform/04-reusable-services-and-api-gateway-v2-#aggregates",
+          "platform/04-reusable-services-and-api-gateway-v2-#context-mapping",
+          "platform/02-reusable-assets-and-frameworks-v2-1#strategic-tactical-design"
+         ],
+         "body": [
+          "Drivers dispute bills: a driver who started a session at 18:00 at $0.45/kWh was billed $0.60/kWh for the whole session because the site host changed the tariff at 18:30. The same happens to idle fees."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** ChargingSession and Invoice both hold a **live reference** to the mutable Tariff entity in TariffManager (‘priced by’, ‘computed with’). The price is looked up when the invoice is computed at stop time, so any change during the session is applied retroactively. The price agreed at start is never recorded. Pricing knowledge leaks across three contexts.",
+           "**Countermeasure:** price is part of the session's own data. Make Tariff versioned: TariffVersion (versionId, pricePerKwh, idleFee, effectiveFrom), immutable once published. At start, ChargingSession captures an immutable **PriceSnapshot** value object (or the tariffVersionId plus a copy of the prices) inside its own aggregate. Invoice is computed from the session's snapshot and meter values, with no association to Tariff. TariffManager publishes TariffPublished events for display and future sessions.",
+           "**Drawbacks:** duplicated price data in every session. A legitimate mid-session change, such as a regulator-mandated cap, now needs an explicit process. Every client has to handle tariff versioning, and the snapshot schema becomes part of the session contract."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: a live association to a mutable Tariff from Session and Invoice; the price is resolved at stop time."
+           },
+           {
+            "m": 1,
+            "t": "Names the modelling principle: the agreed price belongs to the session aggregate (snapshot or value object, not a reference)."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: versioned immutable tariffs, a PriceSnapshot or tariffVersionId in the session, Invoice computed from the session, Tariff association removed."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: duplication, handling legitimate mid-session changes, contract and versioning effort."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 4,
+         "pattern": "fix-cost",
+         "topics": [
+          "cloud-native/10-appendix-cloud-patterns-and-practices#data-patterns",
+          "platform/04-reusable-services-and-api-gateway-v2-#domain-events",
+          "cloud-native/06-application-architecture-styles-septe#data-event-ai-archetypes"
+         ],
+         "body": [
+          "The Phase 2 smart-charging prototype must keep each site under its grid cap and react to a utility demand-response signal within 60 seconds. In tests it takes 2–4 minutes to compute a site's current load, and the team says the model ‘has nowhere to put’ the charging limits sent to stations."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** the model has no concept of a site's **live load**. MeterValues exist only inside each ChargingSession aggregate in SessionManager, connector status lives in StationManager, and the grid cap is an attribute of Site. Computing a site's load means querying every active session's latest meter value across contexts and joining with station data on every decision, which is slow and gets worse with scale. There is also no entity for the limit sent to a station.",
+           "**Countermeasure:** add a **SmartCharging** context with a **SiteLoad** aggregate (siteId, gridCapKw, currentKw, perConnector loads), kept current from MeterValueReported and ConnectorStatusChanged events: a read model, updated in memory per site. Add **ChargingProfile** (connectorId, maxKw, validFrom, validTo, reason) as the command the context issues to stations, and DemandResponseEvent from the utility. Decisions then read one aggregate per site.",
+           "**Drawback:** the load view is only as fresh as the meter interval (30 s) plus event lag, which leaves only part of the 60 s budget, so the system must act on estimates. There is extra infrastructure and duplicated state. Profiles need acknowledgement tracking, because a station may be offline."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: load data scattered (meter values per session, status in StationManager); a cross-context join on each decision; no entity for limits."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: a SmartCharging context with a SiteLoad aggregate fed by events, plus ChargingProfile and DemandResponseEvent entities."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: staleness relative to the 60 s budget, duplication, profile delivery and acknowledgement complexity."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "platform/03-api-design-v2-2#richardson-maturity",
+        "platform/03-api-design-v2-2#feedback-status-codes",
+        "platform/03-api-design-v2-2#security-patterns-cors",
+        "platform/03-api-design-v2-2#operations-resilience"
+       ],
+       "body": [
+        "Roaming partners (other charging networks) use the Partner API below to start and stop sessions for their own drivers at ChargeGrid stations. A station takes up to **20 seconds** to confirm that charging has started.",
+        {
+         "table": {
+          "columns": [
+           "URI",
+           "Service",
+           "Inputs",
+           "Outputs",
+           "Explanation",
+           "HTTP Action"
+          ],
+          "rows": [
+           [
+            "`/api/v1/startCharging?partnerSecret={secret}`",
+            "SessionManager",
+            "partner id, driver token, station id, connector id",
+            "full session record incl. driver name, card last 4 digits, all connectors of the station; waits until the station confirms",
+            "Start a session",
+            "POST"
+           ],
+           [
+            "`/api/v1/sessions/stop?sessionId={id}`",
+            "SessionManager",
+            "session id",
+            "{\"error\": \"…\"} or invoice (always HTTP 200)",
+            "Stop a session",
+            "GET"
+           ],
+           [
+            "`/api/v1/getStationStatus`",
+            "StationManager",
+            "station id (in body)",
+            "status of every connector",
+            "Read station status",
+            "POST"
+           ]
+          ]
+         }
+        },
+        {
+         "ol": [
+          "Assess the interfaces against RMM Level 2 and give the reasons.",
+          "The start call times out at partners' 10-second client limit. Propose an interaction style that copes with the 20-second station confirmation, and explain how the partner learns the outcome.",
+          "Reconstruct the table with corrected interfaces."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         "**1. Not Level 2.** URIs name actions (startCharging, stop, getStationStatus). GET changes state (stop), POST is used for a read (status), and errors come back as HTTP 200 with an error body, so clients, retries and monitoring can't tell success from failure. Security and design: the **partner secret is in the query string**, where it is logged. Responses over-share (driver name, card digits). Start blocks for up to 20 s.",
+         "**2. Asynchronous request-reply.** `POST /v1/sessions` validates the request and returns **202 Accepted** at once, with `Location: /v1/sessions/{id}` and status `pending`. The platform sends the start command to the station. The partner either polls the session resource (with `Retry-After`) or registers a **callback/webhook** that is called when the status becomes `charging` or `failed`. The POST carries an `Idempotency-Key`, so a partner retry after a timeout cannot start two sessions, and the station command is idempotent on the session id.",
+         "**3. Corrected interfaces:**",
+         {
+          "table": {
+           "columns": [
+            "URI",
+            "Service",
+            "Inputs",
+            "Outputs",
+            "Explanation",
+            "HTTP"
+           ],
+           "rows": [
+            [
+             "`/v1/sessions`",
+             "SessionManager",
+             "Body: driver token, station id, connector id, optional callback URL. Headers: OAuth2 client credentials, `Idempotency-Key`",
+             "202 Accepted + `Location`; session id, status `pending`. 409 if the connector is busy",
+             "Request a session start",
+             "POST"
+            ],
+            [
+             "`/v1/sessions/{id}`",
+             "SessionManager",
+             "Path id; partner token",
+             "200: status, start time, kWh so far, price snapshot. No other drivers' data",
+             "Session status (poll target)",
+             "GET"
+            ],
+            [
+             "`/v1/sessions/{id}/stop`",
+             "SessionManager",
+             "Path id; partner token; `Idempotency-Key`",
+             "202 Accepted, then the final invoice via callback or GET. 404 or 409 as appropriate",
+             "Request a stop (a state transition resource; or `PATCH /v1/sessions/{id}` with `status: stopping`)",
+             "POST"
+            ],
+            [
+             "`/v1/stations/{id}/connectors`",
+             "StationManager",
+             "Path id; partner token",
+             "200: connector statuses; `Cache-Control: max-age=30`",
+             "Read station status",
+             "GET"
+            ]
+           ]
+          }
+         }
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict with reasons: action URIs, wrong verbs, 200-for-errors (plus the secret in the URL, oversharing)."
+         },
+         {
+          "m": 2,
+          "t": "Async request-reply: 202 + Location, poll or webhook, idempotency on start and stop."
+         },
+         {
+          "m": 3,
+          "t": "Corrected table: resources, correct verbs and status codes, credentials in headers, minimal data, caching on status."
+         }
+        ]
+       }
+      },
+      {
+       "label": "d",
+       "marks": 2,
+       "pattern": "agree",
+       "topics": [
+        "architecting/07-perform-capacity-planning-for-archite#scalability-laws",
+        "architecting/06-design-for-performance-in-architectur#validate-document"
+       ],
+       "body": [
+        "A team member says that because 3,500 stations are already connected without problems, the platform is ‘proven scalable’, and no further scalability testing is needed before opening the Partner API to 12 roaming partners. Do you agree? Justify your answer."
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** Working at today's load says nothing about the next load level, because scaling is rarely linear: contention and coherency costs (Amdahl's law, the Universal Scalability Law) can flatten or even reverse throughput as load grows. Roaming also adds a *different* workload: 12 partners at up to 50 requests/s each is about 600 req/s of start/stop/status traffic, plus their drivers' sessions, with a new failure mode (partner retries). Load-test the new mix at and beyond the expected peak, fit the scalability curve from a few measured points, and set per-partner quotas."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: current success doesn't extrapolate; scalability is non-linear (USL or Amdahl)."
+         },
+         {
+          "m": 1,
+          "t": "Identifies the new workload (≈ 600 req/s partner traffic) and proposes testing or modelling it."
+         }
+        ]
+       }
+      },
+      {
+       "label": "e",
+       "marks": 4,
+       "pattern": "agree",
+       "topics": [
+        "architecting/07-perform-capacity-planning-for-archite#procurement-elasticity",
+        "architecting/06-design-for-performance-in-architectur#metrics",
+        "platform/05-platform-management-v2-1#metrics"
+       ],
+       "body": [
+        "A team member proposes using the **CPU utilisation** of the session service both as its autoscaling trigger and as the key indicator of drivers' experience when starting a session. Do you agree? Justify your answer and propose alternatives where needed."
+       ],
+       "answer": {
+        "text": [
+         "**Partly disagree.** CPU is a reasonable *resource* metric, but the session service mostly **waits**: on stations (up to 20 s), the payment gateway and the database. It can be saturated (all workers or connections busy, requests queuing) while CPU sits at 30%. Scaling on CPU would then not add capacity when it is needed.",
+         "**As an autoscaling trigger:** use a signal that tracks the work waiting: in-flight requests per pod, request queue length or worker pool utilisation, or consumer lag for event-driven parts. Add **scheduled** pre-scaling for the evening peak, because scale-out takes time.",
+         "**As the driver-experience indicator:** CPU is not an experience metric at all. Measure **start-session latency** from tap to charging confirmed (p95 against 5 s), the **start success rate**, and errors by cause (station timeout, payment declined)."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict with reason: an I/O-bound service saturates without high CPU."
+         },
+         {
+          "m": 1,
+          "t": "Better autoscaling signal (concurrency, queue or lag) plus scheduled scaling."
+         },
+         {
+          "m": 2,
+          "t": "Experience metrics: p95 tap-to-charging vs 5 s, success rate, error breakdown, so user-facing vs resource metrics are separated."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Section B",
+   "focus": "Cloud native",
+   "questions": [
+    {
+     "n": 2,
+     "marks": 13,
+     "intro": [
+      "With reference to the case study in Appendix A, answer the following questions. ChargeGrid is moving from its prototype to a cloud native platform ready for roaming and smart charging (Phase 2)."
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 10,
+       "pattern": "design",
+       "topics": [
+        "cloud-native/06-application-architecture-styles-septe#data-event-ai-archetypes",
+        "cloud-native/07-microservices-design-september-2026#gateway-and-discovery",
+        "cloud-native/08-serverless-computing-september-2026#example-architectures",
+        "cloud-native/05-architecting-a-cloud-native-applicati#state-pets-vs-cattle",
+        "cloud-native/05a-kubernetes-september-2026#pods-services-ingress",
+        "cloud-native/02-cloud-reference-architecture-august-2#building-blocks"
+       ],
+       "body": [
+        "The prototype is shown below. Stations hold a persistent WebSocket connection to the server.",
+        {
+         "figure": "mvp"
+        },
+        "Transform the prototype into a cloud native reference architecture for Phases 1 and 2. *Hint: consider microservices, event/stream-driven services, scheduled tasks and serverless functions.*"
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "body": [
+          "Draw the reference architecture with its essential components and interactions. Which additional components are essential to expose the platform safely to roaming partners and the utility?"
+         ]
+        },
+        {
+         "label": "ii",
+         "body": [
+          "How will stations, partners and internal services communicate? Label the communication components and justify the patterns."
+         ]
+        },
+        {
+         "label": "iii",
+         "body": [
+          "Identify **one** component that must remember state and propose a state-management mechanism."
+         ]
+        },
+        {
+         "label": "iv",
+         "body": [
+          "Describe the deployment on Kubernetes."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         {
+          "figure": "ans-ref"
+         },
+         "**i. Components.** A station gateway holds the stations' persistent connections (mTLS per station). The API gateway serves the driver app and fleet portal. A separate **partner gateway** exposes the Partner API with OAuth2 client credentials, per-partner quotas, request validation and API versioning. Services: Session, Station, Tariff, Billing, Driver and, in Phase 2, Smart charging. An event stream carries meter values, status changes and session events. A time-series store holds meter values, and relational stores hold sessions and billing. Functions produce receipts and invoice PDFs; a CronJob runs monthly fleet invoicing. **Externally facing essentials:** the partner gateway with quotas and a developer portal, webhook delivery with signing and retries for callbacks, an inbound adapter for the utility's demand-response signals, and audit logging of partner calls. The payment gateway uses tokenisation, so card data never enters the platform (keeping it out of PCI scope).",
+         "**ii. Communication.** Stations use bidirectional messages over their **persistent WebSocket** (station protocol): commands such as start, stop or set-profile carry correlation ids and acknowledgements, and telemetry flows up. The gateway turns telemetry into events on the stream and routes commands to the right connection. Partners use **async request-reply** (202 + callback). Internally, Session, Billing and Smart charging react to events (choreography), and the stop → bill → pay flow runs as a saga. Synchronous REST only for reads where a user waits.",
+         "**iii. State.** The **station gateway** is stateful: each station's WebSocket lives on exactly one pod. Keep a **connection registry** (stationId → pod) in a replicated in-memory store, updated on connect and disconnect, so commands are routed to the right pod (or published on a per-pod topic). Use consistent hashing or session affinity at the load balancer. The station's last known state goes in a durable **device shadow** owned by the Station service. If a pod dies, its stations reconnect with jittered backoff to other pods and the registry updates.",
+         "**iv. Kubernetes.** A managed cluster across three zones. The station gateway runs as a Deployment behind a layer-4 load balancer with long connection timeouts, graceful draining (preStop hooks, slow rollouts) and a PodDisruptionBudget, scaled on connection count. Other services are Deployments with HPAs (requests per second or consumer lag), with namespaces per domain and network policies isolating the partner-facing namespace. The stream runs as a StatefulSet or managed service, and invoicing as a CronJob. Secrets come from the KMS, delivery from GitOps, with canary releases for the gateway."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "Diagram: station gateway, API and partner gateways, services per context, stream, time-series and relational stores, functions and CronJob, Phase 2 smart charging."
+         },
+         {
+          "m": 1,
+          "t": "Partner and utility essentials: partner gateway with OAuth or quotas or versioning, webhooks, demand-response adapter, tokenised payments, audit."
+         },
+         {
+          "m": 2,
+          "t": "Station WebSocket with commands and acks; async request-reply for partners; internal events and saga; justified."
+         },
+         {
+          "m": 2,
+          "t": "Gateway connection state with registry or affinity plus device shadow; reconnection handling."
+         },
+         {
+          "m": 2,
+          "t": "k8s plan: long-lived connection handling (draining, PDB), HPA signals, namespaces or policies, StatefulSet or CronJob."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "pattern": "a-or-b",
+       "topics": [
+        "cloud-native/04-cloud-persistence-september-2026#choosing-a-store",
+        "platform/06-data-management-v2-1#why-nosql",
+        "platform/06-data-management-v2-1#cap"
+       ],
+       "body": [
+        "For charging sessions and their billing, would you use a relational database or a distributed NoSQL store? What are the implications for the rest of the platform?"
+       ],
+       "answer": {
+        "text": [
+         "**Relational for sessions and billing, plus a separate time-series store for meter values (polyglot persistence).** Sessions and invoices are money. They need transactions over a session and its invoice lines, constraints (one active session per connector), and exact, auditable reporting. The volume (25,000 sessions/day) is small for a relational database. The high-rate meter values (every 30 s per active connector) and station telemetry go to a time-series or wide-column store, partitioned by station and day.",
+         "**Implications:** two stores to operate and keep consistent. The session keeps only totals, and invoices are computed from validated meter data. Use an outbox or events to move data between them, and accept that analytics joins happen in a separate reporting store. For partner traffic, scale reads with replicas or a cache, and keep writes on the primary."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Choice justified by transactional money data and constraints (and volume)."
+         },
+         {
+          "m": 1,
+          "t": "Recognises the different workload (meter values) and gives it a fitting store."
+         },
+         {
+          "m": 1,
+          "t": "Knock-on effects: consistency between stores (outbox or events), reporting path, read scaling."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "title": "Section C",
+   "focus": "Architecting",
+   "questions": [
+    {
+     "n": 3,
+     "marks": 12,
+     "intro": [
+      "Refer to the logical architecture in [Section 6](case#s6), the domain model in [Section 7](case#s7) and the packaging model in [Section 8](case#s8), and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "architecting/03-architect-the-solution-architecture-m#logical-deployment-verify",
+        "architecting/04-design-secure-architecture-v4-7#secure-design-principles",
+        "architecting/02-architect-the-solution-architecture-a#structural-styles",
+        "cloud-native/11-cloud-security-september-2026#shared-responsibility-csa"
+       ],
+       "body": [
+        "Evaluate the incomplete and potentially erroneous logical packaging cum deployment model for the *Start Charging Session* use case (Figure 3). Identify **two** undesirable architectural decisions, propose corrective actions, and justify how each decision leads to your correction."
+       ],
+       "answer": {
+        "text": [
+         "Any two, each as decision → consequence → correction:",
+         "1. **Payment Control (PaymentAuthoriser) is deployed on the Station Gateway node in the DMZ, together with PaymentMethod.** Payment logic and card-related data would sit on the most exposed node, which takes connections from thousands of field devices. That pulls the DMZ into PCI scope and gives an attacker who breaks the gateway a direct path to payments. Defence in depth and segregation are lost. **Correction:** the DMZ node runs only connection handling and protocol translation. Payment Control moves to the Billing service in the internal zone and talks to the payment gateway using tokens only. PaymentMethod (token only) is owned by Driver data.",
+         "2. **Session Control (SessionController) is deployed to the charging station.** The station would decide whether a session may start and how it is priced. Firmware is hard to update, may be tampered with in the field, and is offline at times. **Correction:** authorisation and pricing decisions go server-side in the Session service. The station only executes commands (start, stop, apply a profile) and reports meter values.",
+         "3. **Tariff is manifested by Session Data Access.** That is the same ownership error as the live-tariff bug. **Correction:** Tariff belongs to Tariff Data Access, and the session stores only its price snapshot."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "First decision: problem, consequence (PCI scope, exposure, trust or ownership) and corrected placement or packaging."
+         },
+         {
+          "m": 3,
+          "t": "Second decision: problem, consequence and correction, justified."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "pattern": "design",
+       "topics": [
+        "architecting/06-design-for-performance-in-architectur#littles-law",
+        "architecting/06-design-for-performance-in-architectur#multi-server",
+        "architecting/06-design-for-performance-in-architectur#tactics-load-balancing",
+        "architecting/05-design-highly-available-architecture-#availability-tactics"
+       ],
+       "body": [
+        "At today's evening peak, start requests arrive at **6 per second**. Each start holds a worker in the session service for **4 seconds** on average, blocked waiting for the station's confirmation. The service runs **2 pods with 16 workers each**. Use Little's Law to compute the worker utilisation now and at **twice** today's peak (expected after roaming opens), and explain what will happen to drivers. Propose a design that keeps start latency under 5 s (p95) at twice the peak, and identify two side effects to monitor."
+       ],
+       "answer": {
+        "text": [
+         "**Now:** Little's Law, N = X × R: 6/s × 4 s = **24 busy workers** of 32, so utilisation is **75%**. Queueing is already significant: with random arrivals, waits grow steeply above about 70–80%, which explains occasional slow starts.",
+         "**At 2× peak:** 12/s × 4 s = **48 workers needed** but only 32 exist, so U > 100%. The queue grows without limit during the peak, waits climb into tens of seconds, starts time out, drivers retry, and the retries add more load. The service collapses until the peak passes.",
+         "**Design:**",
+         {
+          "ol": [
+           "**Stop holding workers while waiting:** make the start flow asynchronous. Accept the request, send the command, and return 202 with the session in `pending`. The station's confirmation arrives as an event and is pushed to the app. Service time per request drops from 4 s to a few milliseconds of CPU, so a handful of workers handles 12/s.",
+           "**Bound the wait itself:** the station confirmation time (4 s average) still counts toward the driver's 5 s. Set command timeouts, and alert on stations that are slow to confirm.",
+           "If the blocking style must stay for now: size by Little's Law with headroom, ⌈48 / 0.7⌉ ≈ 69 workers (about 5 pods of 16). Add a separate pool (bulkhead) for start/stop, apart from status reads, and scale on in-flight requests."
+          ]
+         },
+         "**Side effects to monitor:** (1) **duplicate starts**: retries plus async commands can start twice, so the session id must be idempotent at the station; count duplicate commands. (2) **Pending sessions that never resolve**, when a station never confirms: track pending age and add a timeout sweeper with compensation. (3) **Push delivery failures** to the app: monitor delivery rate and provide a polling fallback. (4) Event lag on the confirmation path against the 5 s budget."
+        ],
+        "points": [
+         {
+          "m": 2,
+          "t": "Correct Little's Law: 24 of 32 = 75% now; 48 needed > 32 at 2× peak, so unbounded queueing, with consequences explained."
+         },
+         {
+          "m": 2,
+          "t": "Design: non-blocking async start (202 + push), or correctly sized pools, bulkheads and scaling, with the station's own latency considered."
+         },
+         {
+          "m": 2,
+          "t": "Two side effects with monitoring (duplicate starts or idempotency, stuck pending, push failures, lag)."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "case": {
+  "label": "Appendix A",
+  "title": "ChargeGrid",
+  "subtitle": "Case study for Mock paper 3 (fictitious)",
+  "intro": [
+   "Figures 2 and 3 were drafted by other team members and may contain mistakes."
+  ],
+  "sections": [
+   {
+    "id": "top",
+    "title": "Background",
+    "blocks": [
+     "Electric vehicles are a fast-growing share of new car sales, and drivers need public chargers they can find, start and pay for easily. *ChargeGrid* operates a network of charging stations at malls, offices and car parks owned by **site hosts**, who set their own tariffs and earn a share of revenue.",
+     "ChargeGrid wants to become a platform: its own drivers should be able to charge on partner networks, partner networks' drivers on ChargeGrid stations (**roaming**), and sites should share limited grid capacity intelligently (**smart charging**). The local utility will pay sites to cut load during grid stress (**demand response**).",
+     "You are the Lead Solution Architect. Phase 1 replaces the prototype; Phase 2 adds roaming and smart charging."
+    ]
+   },
+   {
+    "id": "s1",
+    "n": "1",
+    "title": "Phase 1 of the Platform",
+    "blocks": [
+     "Actors:",
+     {
+      "ol": [
+       "**Driver:** registers in the app, adds a vehicle and a payment method, finds and starts chargers.",
+       "**Fleet Manager:** manages a company's vehicles and receives a monthly invoice.",
+       "**Site Host:** owns a site; sets tariffs and views revenue.",
+       "**Operations Engineer:** monitors stations and resets them remotely.",
+       "**Charging Station:** a field device with one to four connectors, connected over 4G or site Ethernet using a standard station protocol over WebSocket.",
+       "**Payment Gateway:** an external card payment service (tokenised cards). **Utility:** the grid operator (Phase 2)."
+      ]
+     },
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Find Charger",
+         "The Driver searches for available connectors near a location."
+        ],
+        [
+         "Reserve Connector",
+         "The Driver holds a connector for up to 15 minutes."
+        ],
+        [
+         "Start Charging Session",
+         "The Driver scans the station's QR code; the platform authorises the driver and payment method, fixes the price and commands the station to start. The station confirms within a few seconds (up to 20 s on weak connections)."
+        ],
+        [
+         "Report Meter Values",
+         "During a session the station reports energy delivered every 30 seconds."
+        ],
+        [
+         "Stop Session and Bill",
+         "The Driver or the vehicle stops the session; the platform computes the cost (energy plus idle fee), issues a receipt and captures payment."
+        ],
+        [
+         "Manage Tariffs",
+         "The Site Host sets the price per kWh and idle fees for its site; changes take effect immediately for new sessions."
+        ],
+        [
+         "Monitor and Reset Station",
+         "Operations views station health and sends remote resets."
+        ],
+        [
+         "Invoice Fleet",
+         "Monthly invoices for fleet customers."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s2",
+    "n": "2",
+    "title": "Phase 2 of the Platform",
+    "blocks": [
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Roam",
+         "Up to 12 partner networks start and stop sessions for their drivers through a Partner API, and ChargeGrid drivers charge on partners' stations."
+        ],
+        [
+         "Smart Charging",
+         "The platform keeps each site under its grid capacity by sending charging limits (profiles) to connectors."
+        ],
+        [
+         "Demand Response",
+         "When the utility signals grid stress, participating sites must reduce load within 60 seconds."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s3",
+    "n": "3",
+    "title": "Extensibility of the Platform",
+    "blocks": [
+     "New station vendors, new partner networks and new tariff models (time-of-day pricing) must be addable without changing the core session flow."
+    ]
+   },
+   {
+    "id": "s4",
+    "n": "4",
+    "title": "Performance, Scalability and Availability",
+    "blocks": [
+     {
+      "ul": [
+       "**3,500** stations with **9,000** connectors; heartbeats every **60 s**; meter values every **30 s** per active connector.",
+       "**25,000** sessions/day; up to **1,800** concurrent sessions at the evening peak (18:00–21:00).",
+       "Start Charging Session: from tap to charging confirmed in under **5 s** for **95%** of attempts.",
+       "Roaming: up to **12** partners, each up to **50** requests/s.",
+       "Start and stop must be **99.9%** available; demand-response reduction within **60 s**.",
+       "**200,000** registered drivers."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s5",
+    "n": "5",
+    "title": "Security",
+    "blocks": [
+     {
+      "ul": [
+       "Card data must never be stored or processed by ChargeGrid systems; only gateway tokens.",
+       "Each station authenticates with its own certificate; stations in the field are considered physically accessible to attackers.",
+       "Partners authenticate per partner; partner calls are audited."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s6",
+    "n": "6",
+    "title": "Initial Architecture",
+    "blocks": [
+     {
+      "h": "6.1 Logical Architecture Overview",
+      "id": "s6-1"
+     },
+     {
+      "figure": "overview"
+     },
+     {
+      "h": "6.2 Deployment Options",
+      "id": "s6-2"
+     },
+     "The platform is to be cloud native; services are microservices in the internal zone. Stations stay in the field."
+    ]
+   },
+   {
+    "id": "s7",
+    "n": "7",
+    "title": "Domain Model for Phase 1",
+    "blocks": [
+     "A software architect has produced the following domain model.",
+     {
+      "figure": "domain"
+     }
+    ]
+   },
+   {
+    "id": "s8",
+    "n": "8",
+    "title": "Logical Packaging cum Deployment Model",
+    "blocks": [
+     "An **incomplete** and **potentially erroneous** packaging and deployment model for the *Start Charging Session* use case.",
+     {
+      "figure": "packaging"
+     }
+    ]
+   }
+  ]
+ },
+ "figures": {
+  "overview": {
+   "title": "Figure 1: Logical Architecture Overview",
+   "caption": "Drivers and partners on the Internet, stations in the field, gateways in the DMZ, services in the internal zone.",
+   "size": [
+    1000,
+    530
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 245,
+     "h": 320
+    },
+    {
+     "id": "field",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Sites (field)",
+     "tone": 5,
+     "x": 15,
+     "y": 352,
+     "w": 245,
+     "h": 165
+    },
+    {
+     "id": "dmz",
+     "kind": "zone",
+     "stereo": "zone",
+     "label": "DMZ",
+     "tone": 2,
+     "x": 280,
+     "y": 12,
+     "w": 185,
+     "h": 505
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internal Zone",
+     "tone": 0,
+     "x": 485,
+     "y": 12,
+     "w": 500,
+     "h": 505
+    },
+    {
+     "id": "svc",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Service Tier",
+     "tone": 0,
+     "x": 500,
+     "y": 66,
+     "w": 470,
+     "h": 210
+    },
+    {
+     "id": "sto",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Storage Tier",
+     "tone": 1,
+     "x": 500,
+     "y": 296,
+     "w": 225,
+     "h": 205,
+     "sub": "sessions · stations · tariffs\nbilling"
+    },
+    {
+     "id": "itg",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Integration Tier",
+     "tone": 5,
+     "x": 745,
+     "y": 296,
+     "w": 225,
+     "h": 205,
+     "sub": "payment gateway · utility\npartners (Phase 2)"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 40,
+     "y": 66,
+     "w": 95,
+     "h": 150,
+     "label": "Driver",
+     "sub": "app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 150,
+     "y": 70,
+     "w": 95,
+     "h": 140,
+     "label": "Portals",
+     "sub": "fleet · host\n· ops"
+    },
+    {
+     "id": "partner",
+     "kind": "external",
+     "x": 32,
+     "y": 236,
+     "w": 210,
+     "h": 76,
+     "label": "Partner networks",
+     "sub": "(Phase 2)"
+    },
+    {
+     "id": "station",
+     "kind": "iot",
+     "x": 32,
+     "y": 405,
+     "w": 210,
+     "h": 86,
+     "label": "Charging Station",
+     "sub": "WebSocket · 4G / Ethernet"
+    },
+    {
+     "id": "api",
+     "kind": "gateway",
+     "x": 295,
+     "y": 80,
+     "w": 155,
+     "h": 76,
+     "label": "API Gateway"
+    },
+    {
+     "id": "pgw",
+     "kind": "gateway",
+     "x": 295,
+     "y": 236,
+     "w": 155,
+     "h": 76,
+     "label": "Partner API",
+     "sub": "(Phase 2)"
+    },
+    {
+     "id": "sgw",
+     "kind": "gateway",
+     "x": 295,
+     "y": 410,
+     "w": 155,
+     "h": 76,
+     "label": "Station Gateway"
+    },
+    {
+     "id": "c1",
+     "kind": "component",
+     "x": 515,
+     "y": 122,
+     "w": 140,
+     "h": 56,
+     "label": "Session\nManager"
+    },
+    {
+     "id": "c2",
+     "kind": "component",
+     "x": 670,
+     "y": 122,
+     "w": 140,
+     "h": 56,
+     "label": "Station\nManager"
+    },
+    {
+     "id": "c3",
+     "kind": "component",
+     "x": 825,
+     "y": 122,
+     "w": 130,
+     "h": 56,
+     "label": "Tariff\nManager"
+    },
+    {
+     "id": "c4",
+     "kind": "component",
+     "x": 590,
+     "y": 198,
+     "w": 140,
+     "h": 56,
+     "label": "Billing\nManager"
+    },
+    {
+     "id": "c5",
+     "kind": "component",
+     "x": 745,
+     "y": 198,
+     "w": 140,
+     "h": 56,
+     "label": "Driver\nManager"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "api",
+     "style": "flow",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       87,
+       54
+      ],
+      [
+       272,
+       54
+      ]
+     ],
+     "toAt": [
+      0,
+      0.25
+     ]
+    },
+    {
+     "from": "web",
+     "to": "api",
+     "style": "flow"
+    },
+    {
+     "from": "partner",
+     "to": "pgw",
+     "style": "flow"
+    },
+    {
+     "from": "station",
+     "to": "sgw",
+     "style": "flow"
+    },
+    {
+     "from": "api",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "pgw",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.78
+     ]
+    },
+    {
+     "from": "sgw",
+     "to": "svc",
+     "style": "flow",
+     "via": [
+      [
+       475,
+       448
+      ],
+      [
+       475,
+       262
+      ]
+     ],
+     "toAt": [
+      0,
+      0.93
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "sto",
+     "style": "flow",
+     "fromAt": [
+      0.24,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "itg",
+     "style": "flow",
+     "fromAt": [
+      0.76,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    }
+   ]
+  },
+  "domain": {
+   "title": "Figure 2: Domain Model for Phase 1",
+   "caption": "Entities by owning service, with key attributes and multiplicities. Filled diamond = composition.",
+   "size": [
+    1045,
+    660
+   ],
+   "groups": [
+    {
+     "id": "dm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "DriverManager",
+     "tone": 0,
+     "x": 20,
+     "y": 30,
+     "w": 300,
+     "h": 300
+    },
+    {
+     "id": "stm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "StationManager",
+     "tone": 4,
+     "x": 350,
+     "y": 30,
+     "w": 370,
+     "h": 300
+    },
+    {
+     "id": "bm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "BillingManager",
+     "tone": 2,
+     "x": 750,
+     "y": 30,
+     "w": 270,
+     "h": 300
+    },
+    {
+     "id": "sm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "SessionManager",
+     "tone": 1,
+     "x": 20,
+     "y": 360,
+     "w": 470,
+     "h": 260
+    },
+    {
+     "id": "tm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "TariffManager",
+     "tone": 3,
+     "x": 520,
+     "y": 360,
+     "w": 250,
+     "h": 200
+    }
+   ],
+   "nodes": [
+    {
+     "id": "Driver",
+     "kind": "class",
+     "tone": 0,
+     "x": 40,
+     "y": 90,
+     "w": 150,
+     "label": "Driver",
+     "attrs": [
+      "driverId",
+      "email"
+     ]
+    },
+    {
+     "id": "Vehicle",
+     "kind": "class",
+     "tone": 0,
+     "x": 40,
+     "y": 210,
+     "w": 130,
+     "label": "Vehicle",
+     "attrs": [
+      "plate",
+      "connectorType"
+     ]
+    },
+    {
+     "id": "PaymentMethod",
+     "kind": "class",
+     "tone": 0,
+     "x": 182,
+     "y": 210,
+     "w": 130,
+     "label": "PaymentMethod",
+     "attrs": [
+      "token",
+      "last4"
+     ]
+    },
+    {
+     "id": "Site",
+     "kind": "class",
+     "tone": 4,
+     "x": 370,
+     "y": 90,
+     "w": 150,
+     "label": "Site",
+     "attrs": [
+      "siteId",
+      "gridCapKw"
+     ]
+    },
+    {
+     "id": "Station",
+     "kind": "class",
+     "tone": 4,
+     "x": 550,
+     "y": 90,
+     "w": 150,
+     "label": "Station",
+     "attrs": [
+      "stationId",
+      "firmware",
+      "status"
+     ]
+    },
+    {
+     "id": "Connector",
+     "kind": "class",
+     "tone": 4,
+     "x": 550,
+     "y": 215,
+     "w": 150,
+     "label": "Connector",
+     "attrs": [
+      "connectorNo",
+      "type",
+      "status"
+     ]
+    },
+    {
+     "id": "Invoice",
+     "kind": "class",
+     "tone": 2,
+     "x": 780,
+     "y": 90,
+     "w": 170,
+     "label": "Invoice",
+     "attrs": [
+      "invoiceNo",
+      "amount"
+     ]
+    },
+    {
+     "id": "Payment",
+     "kind": "class",
+     "tone": 2,
+     "x": 780,
+     "y": 210,
+     "w": 170,
+     "label": "Payment",
+     "attrs": [
+      "status",
+      "gatewayRef"
+     ]
+    },
+    {
+     "id": "Session",
+     "kind": "class",
+     "tone": 1,
+     "x": 40,
+     "y": 420,
+     "w": 190,
+     "label": "ChargingSession",
+     "attrs": [
+      "sessionId",
+      "startAt",
+      "stopAt",
+      "kWh"
+     ]
+    },
+    {
+     "id": "MeterValue",
+     "kind": "class",
+     "tone": 1,
+     "x": 280,
+     "y": 420,
+     "w": 160,
+     "label": "MeterValue",
+     "attrs": [
+      "at",
+      "kWh",
+      "kW"
+     ]
+    },
+    {
+     "id": "Tariff",
+     "kind": "class",
+     "tone": 3,
+     "x": 545,
+     "y": 420,
+     "w": 200,
+     "label": "Tariff",
+     "attrs": [
+      "pricePerKwh",
+      "idleFeePerMin",
+      "updatedAt"
+     ]
+    }
+   ],
+   "edges": [
+    {
+     "from": "Driver",
+     "to": "Vehicle",
+     "style": "assoc",
+     "fromAt": [
+      0.3,
+      1
+     ],
+     "toAt": [
+      0.35,
+      0
+     ],
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "Driver",
+     "to": "PaymentMethod",
+     "style": "assoc",
+     "fromAt": [
+      0.8,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "Site",
+     "to": "Station",
+     "style": "comp",
+     "m2": "1..*"
+    },
+    {
+     "from": "Station",
+     "to": "Connector",
+     "style": "comp",
+     "m2": "1..4"
+    },
+    {
+     "from": "Site",
+     "to": "Tariff",
+     "style": "assoc",
+     "fromAt": [
+      0.95,
+      0
+     ],
+     "toAt": [
+      0.8,
+      0
+     ],
+     "m1": "1",
+     "m2": "1",
+     "label": "applies",
+     "labelAt": 0.3,
+     "labelDx": 0,
+     "via": [
+      [
+       512,
+       22
+      ],
+      [
+       728,
+       22
+      ],
+      [
+       728,
+       405
+      ]
+     ],
+     "labelDy": -10
+    },
+    {
+     "from": "Invoice",
+     "to": "Payment",
+     "style": "assoc",
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "Session",
+     "to": "MeterValue",
+     "style": "comp",
+     "fromAt": [
+      1,
+      0.4
+     ],
+     "toAt": [
+      0,
+      0.45
+     ],
+     "m2": "0..*"
+    },
+    {
+     "from": "Session",
+     "to": "Connector",
+     "style": "assoc",
+     "fromAt": [
+      0.9,
+      0
+     ],
+     "toAt": [
+      0.1,
+      1
+     ],
+     "m1": "0..*",
+     "m2": "1",
+     "label": "at",
+     "labelAt": 0.3
+    },
+    {
+     "from": "Session",
+     "to": "Driver",
+     "style": "assoc",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "via": [
+      [
+       10,
+       474
+      ],
+      [
+       10,
+       128
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "Session",
+     "to": "Tariff",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       135,
+       592
+      ],
+      [
+       645,
+       592
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "m1": "0..*",
+     "m2": "1",
+     "label": "priced by",
+     "labelAt": 0.5
+    },
+    {
+     "from": "Invoice",
+     "to": "Session",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       1032,
+       128
+      ],
+      [
+       1032,
+       640
+      ],
+      [
+       78,
+       640
+      ]
+     ],
+     "toAt": [
+      0.2,
+      1
+     ],
+     "m1": "1",
+     "m2": "1",
+     "label": "bills",
+     "labelAt": 0.6
+    },
+    {
+     "from": "Invoice",
+     "to": "Tariff",
+     "style": "assoc",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "via": [
+      [
+       740,
+       150
+      ],
+      [
+       740,
+       410
+      ]
+     ],
+     "toAt": [
+      0.95,
+      0
+     ],
+     "m1": "0..*",
+     "m2": "1",
+     "label": "computed with",
+     "labelAt": 0.62,
+     "labelDx": 46
+    },
+    {
+     "from": "Payment",
+     "to": "PaymentMethod",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       865,
+       345
+      ],
+      [
+       247,
+       345
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "m1": "0..*",
+     "m2": "1",
+     "label": "charges",
+     "labelAt": 0.3
+    }
+   ]
+  },
+  "packaging": {
+   "title": "Figure 3: Logical Packaging cum Deployment Model (Start Charging Session)",
+   "caption": "Subsystems «manifest» elements and are «deploy»ed to nodes. The station protocol link between station and gateway is not drawn. Incomplete and potentially erroneous.",
+   "size": [
+    1060,
+    640
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 205,
+     "h": 278
+    },
+    {
+     "id": "phone",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Driver Phone",
+     "x": 35,
+     "y": 70,
+     "w": 160,
+     "h": 200
+    },
+    {
+     "id": "site",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Site (field)",
+     "tone": 5,
+     "x": 15,
+     "y": 310,
+     "w": 205,
+     "h": 314
+    },
+    {
+     "id": "station",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Charging\nStation",
+     "x": 35,
+     "y": 368,
+     "w": 160,
+     "h": 236
+    },
+    {
+     "id": "dmz",
+     "kind": "zone",
+     "stereo": "zone",
+     "label": "DMZ",
+     "tone": 2,
+     "x": 845,
+     "y": 12,
+     "w": 200,
+     "h": 290
+    },
+    {
+     "id": "sgn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Station\nGateway",
+     "x": 862,
+     "y": 70,
+     "w": 165,
+     "h": 210
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internal Zone",
+     "tone": 0,
+     "x": 845,
+     "y": 322,
+     "w": 200,
+     "h": 302
+    },
+    {
+     "id": "ssn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Session\nService",
+     "x": 862,
+     "y": 380,
+     "w": 165,
+     "h": 222
+    },
+    {
+     "id": "dap",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Driver App Presentation",
+     "tone": 3,
+     "x": 240,
+     "y": 12,
+     "w": 170,
+     "h": 64
+    },
+    {
+     "id": "sc",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Session Control",
+     "tone": 1,
+     "x": 425,
+     "y": 12,
+     "w": 150,
+     "h": 64
+    },
+    {
+     "id": "pc",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Payment Control",
+     "tone": 2,
+     "x": 590,
+     "y": 12,
+     "w": 185,
+     "h": 64
+    },
+    {
+     "id": "sda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Session Data Access",
+     "tone": 1,
+     "x": 255,
+     "y": 450,
+     "w": 215,
+     "h": 64
+    },
+    {
+     "id": "dda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Driver Data Access",
+     "tone": 0,
+     "x": 600,
+     "y": 450,
+     "w": 190,
+     "h": 64
+    }
+   ],
+   "nodes": [
+    {
+     "id": "screen",
+     "kind": "class",
+     "stereo": "boundary",
+     "tone": 4,
+     "x": 245,
+     "y": 150,
+     "w": 150,
+     "label": "StartScreen"
+    },
+    {
+     "id": "ctl",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 415,
+     "y": 150,
+     "w": 170,
+     "label": "SessionController"
+    },
+    {
+     "id": "pay",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 605,
+     "y": 150,
+     "w": 170,
+     "label": "PaymentAuthoriser"
+    },
+    {
+     "id": "sess",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 245,
+     "y": 300,
+     "w": 175,
+     "label": "ChargingSession"
+    },
+    {
+     "id": "tariff",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 450,
+     "y": 300,
+     "w": 120,
+     "label": "Tariff"
+    },
+    {
+     "id": "pm",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 610,
+     "y": 300,
+     "w": 165,
+     "label": "PaymentMethod"
+    }
+   ],
+   "edges": [
+    {
+     "from": "dap",
+     "to": "phone",
+     "style": "dep",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "toAt": [
+      1,
+      0.12
+     ],
+     "label": "deploy",
+     "labelDy": -10
+    },
+    {
+     "from": "sc",
+     "to": "station",
+     "style": "dep",
+     "fromAt": [
+      0.07,
+      1
+     ],
+     "via": [
+      [
+       436,
+       112
+      ],
+      [
+       230,
+       112
+      ],
+      [
+       230,
+       420
+      ]
+     ],
+     "toAt": [
+      1,
+      0.22
+     ],
+     "label": "deploy",
+     "labelAt": 0.6
+    },
+    {
+     "from": "pc",
+     "to": "sgn",
+     "style": "dep",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.3
+     ],
+     "label": "deploy"
+    },
+    {
+     "from": "sda",
+     "to": "ssn",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       362,
+       590
+      ],
+      [
+       850,
+       590
+      ]
+     ],
+     "toAt": [
+      0,
+      0.95
+     ],
+     "label": "deploy",
+     "labelAt": 0.6
+    },
+    {
+     "from": "dap",
+     "to": "screen",
+     "style": "dep",
+     "fromAt": [
+      0.48,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30,
+     "labelAt": 0.7
+    },
+    {
+     "from": "sc",
+     "to": "ctl",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30,
+     "labelAt": 0.65
+    },
+    {
+     "from": "pc",
+     "to": "pay",
+     "style": "dep",
+     "fromAt": [
+      0.55,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30
+    },
+    {
+     "from": "screen",
+     "to": "ctl",
+     "style": "assoc"
+    },
+    {
+     "from": "ctl",
+     "to": "pay",
+     "style": "assoc"
+    },
+    {
+     "from": "ctl",
+     "to": "sess",
+     "style": "assoc",
+     "fromAt": [
+      0.2,
+      1
+     ]
+    },
+    {
+     "from": "ctl",
+     "to": "tariff",
+     "style": "assoc",
+     "fromAt": [
+      0.6,
+      1
+     ]
+    },
+    {
+     "from": "pay",
+     "to": "pm",
+     "style": "assoc"
+    },
+    {
+     "from": "sda",
+     "to": "sess",
+     "style": "dep",
+     "fromAt": [
+      0.3,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": -32
+    },
+    {
+     "from": "sda",
+     "to": "tariff",
+     "style": "dep",
+     "fromAt": [
+      0.8,
+      0
+     ],
+     "toAt": [
+      0.4,
+      1
+     ],
+     "label": "manifest",
+     "labelDx": 34
+    },
+    {
+     "from": "dda",
+     "to": "pm",
+     "style": "dep",
+     "fromAt": [
+      0.45,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32
+    }
+   ]
+  },
+  "mvp": {
+   "title": "Prototype architecture",
+   "caption": "Stations, the driver app and the portals all connect to one server and one database.",
+   "size": [
+    880,
+    310
+   ],
+   "legend": false,
+   "groups": [
+    {
+     "id": "vm",
+     "kind": "tier",
+     "tone": 0,
+     "x": 225,
+     "y": 25,
+     "w": 470,
+     "h": 265,
+     "label": "Cloud VM"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 15,
+     "w": 105,
+     "h": 130,
+     "label": "Driver app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 160,
+     "w": 130,
+     "h": 60,
+     "label": "Portals"
+    },
+    {
+     "id": "st",
+     "kind": "iot",
+     "x": 20,
+     "y": 236,
+     "w": 130,
+     "h": 58,
+     "label": "Stations"
+    },
+    {
+     "id": "mono",
+     "kind": "component",
+     "x": 262,
+     "y": 110,
+     "w": 200,
+     "h": 86,
+     "label": "Charging server",
+     "sub": "(monolith)"
+    },
+    {
+     "id": "db",
+     "kind": "db",
+     "x": 530,
+     "y": 105,
+     "w": 130,
+     "h": 96,
+     "label": "Single\ndatabase"
+    },
+    {
+     "id": "pay",
+     "kind": "external",
+     "x": 725,
+     "y": 120,
+     "w": 140,
+     "h": 64,
+     "label": "Payment",
+     "sub": "gateway"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "web",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "st",
+     "to": "mono",
+     "style": "flow",
+     "label": "WebSocket",
+     "labelDy": 14,
+     "labelDx": 12
+    },
+    {
+     "from": "mono",
+     "to": "db",
+     "style": "sync"
+    },
+    {
+     "from": "mono",
+     "to": "pay",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       362,
+       250
+      ],
+      [
+       795,
+       250
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "label": "card charge",
+     "labelDy": 12
+    }
+   ]
+  },
+  "ans-ref": {
+   "title": "Model answer: event-driven reference architecture",
+   "caption": "Station connections terminate in a stateful gateway; partners get their own gateway with async request-reply; billing runs as a saga; smart charging keeps a per-site load model.",
+   "size": [
+    1080,
+    760
+   ],
+   "groups": [
+    {
+     "id": "edge",
+     "kind": "zone",
+     "label": "Edge (DMZ)",
+     "tone": 2,
+     "x": 168,
+     "y": 20,
+     "w": 164,
+     "h": 720
+    },
+    {
+     "id": "cloud",
+     "kind": "cloud",
+     "label": "Cloud region (IaC)",
+     "tone": 0,
+     "x": 350,
+     "y": 20,
+     "w": 715,
+     "h": 720
+    },
+    {
+     "id": "k8s",
+     "kind": "cluster",
+     "label": "Managed Kubernetes · 3 zones",
+     "tone": 0,
+     "x": 365,
+     "y": 52,
+     "w": 460,
+     "h": 498
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 40,
+     "w": 110,
+     "h": 115,
+     "label": "Driver app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 175,
+     "w": 130,
+     "h": 70,
+     "label": "Portals"
+    },
+    {
+     "id": "partner",
+     "kind": "external",
+     "x": 20,
+     "y": 270,
+     "w": 130,
+     "h": 60,
+     "label": "Partners",
+     "sub": "roaming"
+    },
+    {
+     "id": "station",
+     "kind": "iot",
+     "x": 20,
+     "y": 360,
+     "w": 130,
+     "h": 80,
+     "label": "Stations",
+     "sub": "jittered reconnect"
+    },
+    {
+     "id": "utility",
+     "kind": "external",
+     "x": 20,
+     "y": 470,
+     "w": 130,
+     "h": 60,
+     "label": "Utility",
+     "sub": "demand response"
+    },
+    {
+     "id": "pgwx",
+     "kind": "external",
+     "x": 20,
+     "y": 640,
+     "w": 130,
+     "h": 60,
+     "label": "Payment",
+     "sub": "gateway (tokens)"
+    },
+    {
+     "id": "waf",
+     "kind": "security",
+     "x": 183,
+     "y": 60,
+     "w": 134,
+     "h": 52,
+     "label": "CDN + WAF"
+    },
+    {
+     "id": "gw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 140,
+     "w": 134,
+     "h": 70,
+     "label": "API gateway"
+    },
+    {
+     "id": "pgw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 255,
+     "w": 134,
+     "h": 80,
+     "label": "Partner gateway",
+     "sub": "OAuth2, quotas,\n202 + webhooks"
+    },
+    {
+     "id": "sgw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 357,
+     "w": 134,
+     "h": 86,
+     "label": "Station\ngateway",
+     "sub": "WebSocket, mTLS",
+     "accent": true
+    },
+    {
+     "id": "dr",
+     "kind": "gateway",
+     "x": 183,
+     "y": 470,
+     "w": 134,
+     "h": 60,
+     "label": "DR adapter"
+    },
+    {
+     "id": "session",
+     "kind": "service",
+     "x": 380,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Session",
+     "sub": "saga owner"
+    },
+    {
+     "id": "stationsvc",
+     "kind": "service",
+     "x": 530,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Station",
+     "sub": "device shadows"
+    },
+    {
+     "id": "tariff",
+     "kind": "service",
+     "x": 680,
+     "y": 100,
+     "w": 130,
+     "h": 62,
+     "label": "Tariff",
+     "sub": "versioned"
+    },
+    {
+     "id": "reg",
+     "kind": "cache",
+     "x": 380,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Connection",
+     "sub": "registry"
+    },
+    {
+     "id": "driver",
+     "kind": "service",
+     "x": 530,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Driver"
+    },
+    {
+     "id": "fleet",
+     "kind": "job",
+     "x": 680,
+     "y": 185,
+     "w": 130,
+     "h": 62,
+     "label": "Fleet invoicing",
+     "sub": "monthly CronJob"
+    },
+    {
+     "id": "stream",
+     "kind": "stream",
+     "x": 380,
+     "y": 278,
+     "w": 430,
+     "h": 64,
+     "label": "Event stream",
+     "sub": "MeterValue · StatusChanged · SessionStopped",
+     "accent": true
+    },
+    {
+     "id": "billing",
+     "kind": "service",
+     "x": 380,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Billing",
+     "sub": "invoice + capture"
+    },
+    {
+     "id": "smart",
+     "kind": "service",
+     "x": 530,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Smart charging",
+     "sub": "SiteLoad (Phase 2)"
+    },
+    {
+     "id": "ingest",
+     "kind": "service",
+     "x": 680,
+     "y": 375,
+     "w": 130,
+     "h": 62,
+     "label": "Meter ingest"
+    },
+    {
+     "id": "q",
+     "kind": "queue",
+     "x": 380,
+     "y": 465,
+     "w": 135,
+     "h": 56,
+     "label": "Receipt\nqueue"
+    },
+    {
+     "id": "receiptfn",
+     "kind": "function",
+     "x": 380,
+     "y": 575,
+     "w": 135,
+     "h": 56,
+     "label": "Receipt / PDF",
+     "sub": "function"
+    },
+    {
+     "id": "sdb",
+     "kind": "db",
+     "x": 845,
+     "y": 56,
+     "w": 200,
+     "h": 70,
+     "label": "Session DB",
+     "sub": "relational"
+    },
+    {
+     "id": "shadow",
+     "kind": "db",
+     "x": 845,
+     "y": 140,
+     "w": 200,
+     "h": 70,
+     "label": "Station shadows"
+    },
+    {
+     "id": "tdb",
+     "kind": "db",
+     "x": 845,
+     "y": 224,
+     "w": 200,
+     "h": 62,
+     "label": "Tariff versions"
+    },
+    {
+     "id": "ts",
+     "kind": "db",
+     "x": 845,
+     "y": 375,
+     "w": 200,
+     "h": 70,
+     "label": "Meter store",
+     "sub": "time-series"
+    },
+    {
+     "id": "bdb",
+     "kind": "db",
+     "x": 845,
+     "y": 470,
+     "w": 200,
+     "h": 66,
+     "label": "Billing DB"
+    },
+    {
+     "id": "plat",
+     "kind": "box",
+     "tone": 2,
+     "x": 365,
+     "y": 660,
+     "w": 680,
+     "h": 62,
+     "label": "Shared platform services",
+     "sub": "IaC + GitOps · device certificates · secrets / KMS · partner audit · logs, metrics, traces"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "waf",
+     "style": "sync"
+    },
+    {
+     "from": "web",
+     "to": "gw",
+     "style": "sync"
+    },
+    {
+     "from": "waf",
+     "to": "gw",
+     "style": "sync"
+    },
+    {
+     "from": "partner",
+     "to": "pgw",
+     "style": "sync"
+    },
+    {
+     "from": "station",
+     "to": "sgw",
+     "style": "flow",
+     "label": "persistent",
+     "labelDy": -12
+    },
+    {
+     "from": "utility",
+     "to": "dr",
+     "style": "sync"
+    },
+    {
+     "from": "gw",
+     "to": "k8s",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.21
+     ]
+    },
+    {
+     "from": "pgw",
+     "to": "k8s",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.44
+     ]
+    },
+    {
+     "from": "sgw",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      1,
+      0.6
+     ],
+     "via": [
+      [
+       352,
+       409
+      ],
+      [
+       352,
+       320
+      ]
+     ],
+     "toAt": [
+      0,
+      0.65
+     ]
+    },
+    {
+     "from": "sgw",
+     "to": "reg",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.15
+     ],
+     "via": [
+      [
+       340,
+       370
+      ],
+      [
+       340,
+       216
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "dr",
+     "to": "smart",
+     "style": "event",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       355,
+       500
+      ],
+      [
+       355,
+       455
+      ],
+      [
+       597,
+       455
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "session",
+     "to": "sdb",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       447,
+       80
+      ],
+      [
+       835,
+       80
+      ]
+     ],
+     "toAt": [
+      0,
+      0.35
+     ]
+    },
+    {
+     "from": "stationsvc",
+     "to": "shadow",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       597,
+       172
+      ],
+      [
+       835,
+       172
+      ]
+     ],
+     "toAt": [
+      0,
+      0.45
+     ]
+    },
+    {
+     "from": "tariff",
+     "to": "tdb",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.8
+     ],
+     "toAt": [
+      0,
+      0.4
+     ]
+    },
+    {
+     "from": "fleet",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.86,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "billing",
+     "style": "event",
+     "fromAt": [
+      0.15,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "smart",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "ingest",
+     "style": "event",
+     "fromAt": [
+      0.85,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "ingest",
+     "to": "ts",
+     "style": "sync"
+    },
+    {
+     "from": "billing",
+     "to": "bdb",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.8
+     ],
+     "via": [
+      [
+       525,
+       425
+      ],
+      [
+       525,
+       448
+      ],
+      [
+       835,
+       448
+      ]
+     ],
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "billing",
+     "to": "q",
+     "style": "async"
+    },
+    {
+     "from": "q",
+     "to": "receiptfn",
+     "style": "async"
+    },
+    {
+     "from": "billing",
+     "to": "pgwx",
+     "style": "sync",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "via": [
+      [
+       372,
+       425
+      ],
+      [
+       372,
+       645
+      ],
+      [
+       160,
+       645
+      ],
+      [
+       160,
+       670
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "capture",
+     "labelAt": 0.55
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,704 @@
+{
+ "key": "02-reusable-assets-and-frameworks-v2-1",
+ "title": "Reusable Assets and Frameworks",
+ "pages": 61,
+ "minutes": 29,
+ "overview": "Platforms offer reusable services, frameworks and shared libraries. Domain-Driven Design (DDD) helps find cohesive service boundaries through bounded contexts and ubiquitous language, then shapes their internals with aggregates and domain events. The Scrum and Maid2Order cases apply these ideas; the final sections explain framework design and the coupling risks of shared libraries.",
+ "big_ideas": [
+  "Three reusable assets by scale of reuse: **services** (across features and use cases), **frameworks** (to build many clients and services), **shared libraries** (smaller, ad-hoc reuse among clients and services).",
+  "A reusable service is long-lived, single-responsibility (stable, cohesive), loosely coupled and horizontally scalable on its own.",
+  "DDD finds service boundaries: **strategic design** (bounded contexts, ubiquitous language, subdomains, context mapping) is coarse-grained; **tactical design** (aggregates, domain events) is fine-grained.",
+  "A **bounded context** is a semantic boundary inside which each entity has one specific meaning, described by one **ubiquitous language**; the same word (e.g. Policy) can mean different things in different contexts.",
+  "The lecture recommends one owning team, source repository and database schema per BC; a team may own several BCs. These support clear service boundaries.",
+  "Without bounded contexts a domain model grows into a **Big Ball of Mud**: tangled models, blurred languages, no explicit boundaries.",
+  "DDD supports domain cohesion and loose coupling in IDEALS; it does not automatically supply delivery automation, resilience or an appropriate consistency policy.",
+  "Good frameworks are simple, scenario-driven and layered (simple things simple, complex things possible); shared libraries couple services and clients, so apply DRY within a service but relax it across services."
+ ],
+ "sections": [
+  {
+   "id": "reusable-assets",
+   "title": "Reusable assets in a platform",
+   "slides": [
+    2,
+    5
+   ],
+   "summary": "The three kinds of reusable asset in a platform and how their scale of reuse differs.",
+   "notes": [
+    "**Where the assets sit:** a platform's architecture has clients (iOS, Android, web browser), an API gateway, web server, service registry, WebSocket server, microservices in containers, application servers, data stores, event queues, SMS and email gateways and identity services (IAM, OpenID provider). Each client and service is built from reusable assets: services, plus frameworks (FW) and shared libraries (LIB) on both client and server sides.",
+    "**Services:** reusable across features or use cases. For example the Customer service can be used by both the Purchase and Delivery services.",
+    "**Frameworks:** reusable to build multiple clients and services. For example Spring Boot can be used to build both the Purchase and Delivery services.",
+    "**Shared libraries:** reusable across multiple clients and services at a smaller scale than frameworks. For example a Purchase shared library lets the Purchase client and service share common entities.",
+    "**Order of scale:** services and frameworks enable larger-scale reuse; libraries give smaller-scale, ad-hoc reuse. The course's goals are to design reusable components from domain analysis, design common services and architect frameworks."
+   ],
+   "terms": [
+    {
+     "term": "Reusable service",
+     "def": "A service reused across features or use cases (e.g. Customer service used by Purchase and Delivery)."
+    },
+    {
+     "term": "Shared library",
+     "def": "Classes shared among services, among clients or across both."
+    }
+   ],
+   "check": [
+    {
+     "q": "The Purchase client and the Purchase service both need the same Order entity classes, and the Purchase and Delivery services both need customer details. Which kind of reusable asset fits each need?",
+     "a": "Share the Order entities through a **shared library** used by the Purchase client and service: that is reuse of classes at a small scale. Get customer details from a **Customer service** that Purchase and Delivery both call, because that is reuse of a business capability across features. The library ties client and service releases together, and the service adds a remote call, so each choice has a cost."
+    },
+    {
+     "q": "A platform team must build ten new services quickly, all with the same web conventions, configuration and request handling. Should it reuse a service, a framework or a shared library?",
+     "a": "A framework, such as Spring Boot in the lecture: frameworks are reused to build many clients and services and give them a common structure and behaviour. A service provides a capability at runtime, not a way to build services, and a library supplies classes without imposing the overall structure. The catch is that a good framework is expensive to design, so it pays off only when many services will use it."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "cards",
+     "title": "Three reusable assets",
+     "items": [
+      {
+       "label": "Services",
+       "sub": "reused across features and use cases",
+       "detail": "Customer service used by both Purchase and Delivery services. Larger-scale reuse.",
+       "accent": true
+      },
+      {
+       "label": "Frameworks",
+       "sub": "reused to build clients and services",
+       "detail": "Spring Boot used to build Purchase and Delivery services. Larger-scale reuse."
+      },
+      {
+       "label": "Shared libraries",
+       "sub": "reused across clients and services",
+       "detail": "Purchase shared library shares common entities between Purchase client and service. Smaller scale than frameworks."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "services-and-ddd-basics",
+   "title": "Identifying reusable services with DDD",
+   "slides": [
+    6,
+    14
+   ],
+   "summary": "What makes a service reusable, why DDD is used to find service boundaries, how it differs from OOAD and how it relates to IDEALS and onion architecture.",
+   "notes": [
+    "**Characteristics of a reusable service:** used for the long haul (maintainable, extensible, resilient); stable and cohesive functions, i.e. single-minded under the Single Responsibility Principle; as decoupled as possible, even message-driven for the loosest coupling; and horizontally scalable without depending on the scalability of other services. Service boundaries should be aligned with business requirements and facilitate those characteristics.",
+    "**DDD is the technique for finding the boundaries.** It identifies services, maps dependencies among them and groups domain entities into right-sized clusters. Definition: an approach to complex software that connects implementation to an evolving model by focusing on the core domain and domain logic, basing complex designs on a model of the domain, and having technical and domain experts collaborate iteratively to refine a conceptual model. Coined by Eric Evans.",
+    "**DDD vs OOAD:** the lecture contrasts OOAD’s progression from use cases to analysis, design and framework objects with DDD’s focus on domain objects. DDD is useful for finding cohesive service boundaries; technical concerns still need engineering outside the domain model.",
+    "**IDEALS:** Interface segregation gives each client a suitable contract; Deployability requires automated packaging and release; Event-driven interaction loosens coupling; Availability over consistency allows delayed updates where the business permits; Loose coupling limits ripple effects; Single responsibility keeps services cohesive. DDD supports the domain design; DevOps supplies deployment automation. Neither availability nor resilience follows from DDD alone.",
+    "**DDD and onion architecture:** the application is built around an independent object model; inner layers define interfaces and outer layers implement them; coupling points toward the centre; the application core can be compiled and run apart from infrastructure. From the centre outward: Domain Model (entities, value objects), Domain Services, Application Services, then user interface, infrastructure (DB, file system, web services) and tests. DDD concentrates on the domain services and domain model at the core."
+   ],
+   "terms": [
+    {
+     "term": "DDD",
+     "def": "Domain-Driven Design: modelling the core domain collaboratively with domain experts to drive design (Eric Evans)."
+    },
+    {
+     "term": "Single Responsibility Principle",
+     "def": "A service has one cohesive purpose and one reason to change."
+    },
+    {
+     "term": "IDEALS",
+     "def": "Interface segregation, Deployability, Event-driven, Availability over consistency, Loose coupling, Single responsibility."
+    },
+    {
+     "term": "Onion architecture",
+     "def": "Layered design with the domain model at the centre; dependencies point inward only."
+    }
+   ],
+   "check": [
+    {
+     "q": "A proposed Customer service can scale only when the Order service scales with it, because the two share an in-process session cache. Which reusable-service characteristic does this break, and what would you change?",
+     "a": "It breaks horizontal scalability without depending on other services, and loose coupling. Give each service its own state and talk through its interface or messages, which the lecture calls the loosest coupling. The cost is some duplicated data and having to accept eventual consistency between the two."
+    },
+    {
+     "q": "A team used DDD to find well-bounded services, but each release still takes a week of manual packaging and deployment. A manager blames the domain design. Do you agree?",
+     "a": "Mostly no. DDD produces designs that satisfy the IDEALS principles except **Deployability**, which comes from DevOps automation of packaging and deployment, so the fix is pipelines, not boundaries. The manager would have a point only if the boundaries force several services to be released in lockstep, because that is a coupling problem in the design."
+    },
+    {
+     "q": "In a code review, a domain entity class imports the database driver and saves itself. Which onion-architecture rule does this break, and why does it matter for a reusable service?",
+     "a": "Dependencies must point toward the centre: inner layers define interfaces and outer layers implement them, so the application core compiles and runs without infrastructure. Define a repository interface in the core and implement it in the outer layer. The core can then be tested and reused with a different store, at the cost of one more interface and adapter."
+    },
+    {
+     "q": "While modelling a service with DDD, a team adds RetryPolicy and HttpClientWrapper classes to the domain model. Should these be there?",
+     "a": "No. DDD focuses squarely on domain objects and leaves out non-domain concerns, while OOAD would add design and framework objects in later stages. Retry and HTTP handling still need designing, but in the outer layers around the domain model. Mixing them in blurs the ubiquitous language and ties the core to infrastructure."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "layers",
+     "title": "Onion architecture (outside to inside)",
+     "layers": [
+      {
+       "label": "UI, infrastructure, tests",
+       "sub": "outer ring",
+       "detail": "User interface, web services, file system, DB and frameworks. They implement interfaces defined by inner layers."
+      },
+      {
+       "label": "Application Services",
+       "sub": "use-case entry and exit points",
+       "detail": "Entry and exit points of the application (use cases, repository interfaces)."
+      },
+      {
+       "label": "Domain Services",
+       "sub": "logic across several entities",
+       "detail": "Domain logic involving several entities. DDD focuses here."
+      },
+      {
+       "label": "Domain Model",
+       "sub": "most stable business rules",
+       "detail": "Entities, value objects and the most stable business rules; the core everything depends on.",
+       "accent": true
+      }
+     ],
+     "caption": "Dependency goes inwards; the application core can run without infrastructure."
+    }
+   ]
+  },
+  {
+   "id": "strategic-tactical-design",
+   "title": "DDD strategic and tactical design",
+   "slides": [
+    15,
+    16
+   ],
+   "summary": "The two levels of DDD and the toolkit of each: bounded contexts, ubiquitous language, subdomains and context mapping (strategic); aggregates and domain events (tactical).",
+   "notes": [
+    "**Two levels of design.** Strategic design addresses coarse-grained concerns: how the whole system is divided. Tactical design addresses fine-grained concerns inside a context. The nesting is: a system contains bounded contexts, each context contains aggregates, each aggregate groups domain entities named in the ubiquitous language.",
+    "**Strategic tools:** bounded contexts define semantic boundaries; ubiquitous language names concepts precisely within each boundary; core, supporting and generic areas identify business importance; context mappings describe integration. The lecture illustrates these areas as BCs, but their business role and their language boundary answer different design questions.",
+    "**Tactical tools:** an Aggregate is a collection composed of related entities, treated as a unit. Textbook rule: it has one root entity, is the consistency and transaction boundary, outside objects reference only the root, and each aggregate is small. A Domain Event is a record of a business-significant occurrence in a bounded context, such as the backlog item committed event in the deck's Scrum example. Events are named in the past tense and carry information to other aggregates, inside the same context or in another, so contexts integrate loosely instead of through shared tables.",
+    "**Worked example:** Bounded Context 1 is the core domain holding Aggregates 1A and 1B; Bounded Context 2 is a subdomain holding Aggregate 2A. A context mapping joins the two contexts. A domain event emitted from Aggregate 1A triggers reactions in 1B and in 2A.",
+    "**Why it matters here:** strategic design answers where service, team, repository and database boundaries go; tactical design shapes what is inside each service and how services communicate (events fit the Event-driven and Loose-coupling IDEALS principles)."
+   ],
+   "terms": [
+    {
+     "term": "Bounded context (BC)",
+     "def": "Semantic boundary within which each model entity has a specific meaning and behaviour."
+    },
+    {
+     "term": "Ubiquitous language (UL)",
+     "def": "Rigorous shared language of one BC, used by the team and implemented in the model."
+    },
+    {
+     "term": "Core domain / subdomain",
+     "def": "Core: business-critical area. Supporting or generic areas serve other needs; the lecture illustrates these as bounded contexts."
+    },
+    {
+     "term": "Aggregate",
+     "def": "Collection of related entities treated as one unit (textbook: with a root and consistency boundary)."
+    },
+    {
+     "term": "Domain event",
+     "def": "Record of a business-significant occurrence in a bounded context."
+    }
+   ],
+   "check": [
+    {
+     "q": "You receive a 60-entity domain model for a new platform and two weeks to propose services. Do you start by designing aggregates or by drawing bounded contexts?",
+     "a": "Bounded contexts first. Strategic design is coarse-grained: it divides the domain into contexts, sets each one's ubiquitous language and classifies core and subdomains. Aggregates are tactical, fine-grained clusters inside one context, so designing them first risks clusters that cut across what should be separate contexts. Revisit the context boundaries once aggregate design shows where invariants really sit."
+    },
+    {
+     "q": "When a backlog item is committed to a sprint, the resource-management context must update team availability. A teammate proposes that resource management reads the core context's tables directly. What would you use instead, and why?",
+     "a": "Have the core publish a domain event such as BacklogItemCommitted and let resource management react to it in its own transaction. Each context keeps its own schema and model, so the core can change its tables without breaking a consumer. The price is eventual consistency: availability is updated shortly after the commit, not in the same transaction."
+    },
+    {
+     "q": "An e-commerce firm wins business through its pricing and recommendation engine; identity, billing and notifications look like everyone else's. Which is the core domain, and what does that classification change in your design?",
+     "a": "Pricing and recommendation is the core domain: it is the context critical to the business. Identity, billing and notifications are supporting or generic subdomains. Classifying them tells you where the model needs the most refinement, and which generic contexts are candidates to split out and reuse across systems."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "layers",
+     "title": "Where DDD decisions apply",
+     "layers": [
+      {
+       "label": "System and contexts",
+       "sub": "strategic design",
+       "detail": "Divide meanings with bounded contexts and their languages. Context mappings describe how the models integrate."
+      },
+      {
+       "label": "Aggregates within contexts",
+       "sub": "tactical design",
+       "detail": "Group related entities and value objects under a root to protect a local consistency boundary.",
+       "accent": true
+      },
+      {
+       "label": "Entities and values",
+       "sub": "inside an aggregate",
+       "detail": "Name concepts with the context’s language. Domain events carry completed outcomes to other aggregates or contexts."
+      }
+     ],
+     "caption": "Contexts bound model meaning; aggregates inside them bound transactional consistency."
+    }
+   ]
+  },
+  {
+   "id": "bounded-contexts-ubiquitous-language",
+   "title": "Bounded contexts and ubiquitous language in depth",
+   "slides": [
+    17,
+    23
+   ],
+   "summary": "The service-identification questions BCs and UL answer, how BCs map to teams, repositories and databases, why a single model becomes a Big Ball of Mud, and how to find BCs.",
+   "notes": [
+    "**Questions that BCs and UL answer:** how to extract domain entities from requirements and who should be involved; how to segregate entities into services; how to name entities consistently within a service and resolve name clashes across services; which team, source repository and database each service gets.",
+    "**Ubiquitous Language (UL):** the language used among team members and implemented in the software model. It must be rigorous (strict, exact, tight), like the official languages of EU nations. **Bounded Context (BC):** a semantic contextual boundary within which each entity has a specific meaning and does specific things. It transcends problem and solution spaces: BCs appear in discussions of the problem and are where solutions are implemented. DDD is primarily about modelling a UL in an explicitly bounded context.",
+    "**BC to team, repository, database:** one BC is assigned to exactly one team (a team may work on several BCs). Each BC gets its own source code repository holding source, acceptance tests and unit tests together, and its own database schema. The team defines the BC's official interfaces. This cleanly separates responsibilities; some firms go further, e.g. Amazon's 'You built it, you run it'. Boundaries of a BC can also be the boundaries of services, repositories and databases.",
+    "**Without BCs: the Big Ball of Mud.** A system starts with a few entities and piles more onto the same domain model as features arrive, ending with multiple tangled models, blurred languages and no explicit boundaries. **With BCs:** DDD embraces differences by segregating entities into different BCs, each with its own language. The deck's example is Policy: in Underwriting, Claims and Inspections contexts the same name means different things, so each context has its own Policy model. Business stakeholders and technical teams must align on each entity's meaning per context.",
+    "**Benefits:** entities in a BC are functionally cohesive (non-cohesive entities are pushed to other BCs), all specified by one UL; multiple BCs prevent monolithic design and give smaller test sets per BC; teams are assigned per BC.",
+    "**How to identify BCs:** involve both software developers and domain experts (possibly different experts per business function). Developers must not be consumed by technology and ignore the business, since the domain model is more complex than the technical aspects. Extract entities from the domain experts' mental model, brainstorm and iterate to a combined domain model, and challenge whether each entity belongs in the UL."
+   ],
+   "terms": [
+    {
+     "term": "Big Ball of Mud",
+     "def": "Single model that has grown tangled, with blurred languages and no explicit boundaries."
+    },
+    {
+     "term": "Semantic boundary",
+     "def": "Limit within which a term has one precise meaning."
+    },
+    {
+     "term": "You built it, you run it",
+     "def": "Amazon's practice of the building team also operating the service."
+    }
+   ],
+   "check": [
+    {
+     "q": "Underwriting, Claims and Inspections all use the word 'Policy'. An architect proposes one canonical Policy entity shared by all three teams. Do you agree?",
+     "a": "No. Inside each bounded context, Policy has a specific meaning and does specific things, so a single shared entity has to carry every context's attributes and rules and becomes coupled to all three teams. DDD segregates them into separate models with their own ubiquitous language and translates at the boundaries. The cost is that business and technical people must agree explicitly on what Policy means in each context."
+    },
+    {
+     "q": "Two teams share one repository and one database schema for the Claims bounded context, and both change its interfaces. What problems would you expect, and what does the lecture prescribe?",
+     "a": "Expect conflicting changes to the model and interfaces, unclear ownership, and schema changes from one team breaking the other. The lecture prescribes one team per bounded context (a team may own several), a separate repository with source, acceptance and unit tests together, a separate schema, and interfaces defined by the owning team. If the context is too big for one team, the boundary itself is probably wrong."
+    },
+    {
+     "q": "Every new feature adds entities to one shared domain model. The test suite now takes hours and teams disagree about what 'Account' means. Diagnose the problem and propose a fix.",
+     "a": "It is a Big Ball of Mud: tangled models, blurred language and no explicit boundaries. Split the entities by functional cohesion into bounded contexts, each with one ubiquitous language, so 'Account' can mean different things in different contexts. Each context gets a smaller test set and can become the boundary for a service, repository, schema and team. The split costs integration work between contexts that used to share objects."
+    },
+    {
+     "q": "A group of developers tries to find bounded contexts from the existing database schema alone, without domain experts. What is the risk?",
+     "a": "The schema reflects the current, possibly tangled, model, so it tends to reproduce the Big Ball of Mud rather than the business's own boundaries. The lecture requires domain experts, whose mental model drives entity extraction, and developers who engage with business aspects instead of being consumed by technology. The schema is useful evidence, but the boundaries should come from iterating on a combined model with the experts."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "hub",
+     "title": "What one bounded context owns",
+     "center": {
+      "label": "Bounded Context",
+      "sub": "one UL, one meaning per entity",
+      "detail": "A semantic boundary in which each entity has a specific meaning; the unit of cohesion, ownership and deployment.",
+      "accent": true
+     },
+     "items": [
+      {
+       "label": "One team",
+       "sub": "a team may own several BCs",
+       "detail": "A BC is assigned to only one team, which defines its official interfaces."
+      },
+      {
+       "label": "One source repo",
+       "sub": "code + tests together",
+       "detail": "Source code, acceptance tests and unit tests are kept together in a repository of their own."
+      },
+      {
+       "label": "One database schema",
+       "sub": "separate per BC",
+       "detail": "Each BC uses its own database schema, so data is not shared across contexts."
+      },
+      {
+       "label": "Service boundary",
+       "sub": "right-sized, cohesive",
+       "detail": "BC boundaries can serve as the boundaries of services, supporting loose coupling and independent scaling."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "bc-case-study-and-ul",
+   "title": "Case study: splitting a model and developing the UL",
+   "slides": [
+    24,
+    27
+   ],
+   "summary": "Split the Scrum tool by business responsibility, then derive each context’s language and acceptance tests from concrete scenarios.",
+   "notes": [
+    "**The case:** a tool for Scrum teams with products, backlog items, releases, sprints and tasks; collaboration (forums, discussions, shared calendars); multi-tenant support with tiered plans and payments; human-resource availability and utilisation; and likely more features later. Modelled as one domain model, this becomes a Big Ball of Mud.",
+    "**The lecture's split:** the single model is divided by functional cohesion into a core and supporting bounded contexts. The **Agile Project Management Core** is the core domain: Product, BacklogItem, Release, Sprint, Task, ScheduledBacklogItem, CommittedBacklogItem, Volunteer, EstimationLogEntry, Team, ProductOwner, TeamMember (and its own Discussion). The rest are subdomains: an identity/tenancy context (Tenant, User, Role), a billing context (Account, Payment), a support context (SupportPlan, Incident), a collaboration context (Forum, Discussion, Post, Calendar, CalendarEntry) and a resource-management context (ResourceManager, TimeConsumingResource, Schedule, Availability). The supporting context labels describe their entity groups.",
+    "**Procedure behind the split:** identify BCs by functional cohesion of domain entities; classify each as core or subdomain; split a BC further if the resulting BCs are more reusable across systems. Note that Discussion appears both in the core and in collaboration: the same name in two contexts, each with its own meaning and model, which is exactly what ubiquitous language per BC allows.",
+    "**Developing the UL of a BC:** write concrete scenarios describing how the domain model should behave, including nouns, verbs and adverbs, plus pre-conditions, post-conditions and constraints. Entities are likely to be the nouns; some nouns are really properties of an entity, and some properties group into an entity; entities must live inside the BC.",
+    "**Acceptance test:** Given a backlog item scheduled for release, the product owner, a target sprint and quorum approval, When the owner commits the item, Then it is committed and BacklogItemCommitted is created. If moving it between sprints, uncommit the old association and notify both sprints. Conditions and outcomes make the shared language testable."
+   ],
+   "terms": [
+    {
+     "term": "Concrete scenario",
+     "def": "Prose example of the domain model in action, with pre-conditions, post-conditions and constraints."
+    },
+    {
+     "term": "Executable specification",
+     "def": "Given/When/Then restatement of a scenario that serves as an acceptance test."
+    }
+   ],
+   "check": [
+    {
+     "q": "From the scenario 'the product owner commits a backlog item to a sprint only if it is scheduled for release and a quorum of team members approved', a junior developer makes Quorum an entity. Do you agree?",
+     "a": "Probably not. Nouns are candidate entities, but the lecture warns that some nouns are properties of an entity, and here quorum approval is a pre-condition on the commitment. Model it as part of the commitment rule. It would become an entity only if individual approvals must be tracked and changed over time."
+    },
+    {
+     "q": "A team records its ubiquitous language as a glossary document kept apart from the code and tests. What does the lecture's approach add?",
+     "a": "Restate the concrete scenarios as executable Given/When/Then specifications that serve as acceptance tests. The language then stays tied to verifiable behaviour, such as the backlog item becoming committed and the BacklogItemCommitted event being created. A separate glossary drifts from the code without anyone noticing."
+    },
+    {
+     "q": "In the Scrum tool split, Discussion appears in both the core context and the collaboration context. A reviewer flags it as duplication to remove. How do you respond?",
+     "a": "It is not a defect. Each bounded context has its own ubiquitous language and model, so the same name can mean and do different things in each. Merging them would recreate a shared model that couples the core to collaboration features. What is needed is an explicit mapping between them wherever the two contexts interact."
+    },
+    {
+     "q": "Another product line also needs tenant billing with accounts and payments, which the Scrum tool already has in its billing context. What does the lecture's procedure suggest?",
+     "a": "Split a bounded context further if the resulting contexts are more reusable across systems. Keep billing as a separate generic subdomain with no dependency on project-management concepts, so the other product can reuse it. The billing context then needs a stable interface and an owner who serves both consumers."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "cards",
+     "title": "Scrum tool: bounded contexts",
+     "items": [
+      {
+       "label": "Agile Project Mgmt Core",
+       "sub": "core domain",
+       "accent": true,
+       "detail": "Product, BacklogItem, Release, Sprint, Task, ScheduledBacklogItem, CommittedBacklogItem, Volunteer, EstimationLogEntry, Team, ProductOwner, TeamMember, Discussion. The part critical to the business."
+      },
+      {
+       "label": "Identity and tenancy",
+       "sub": "subdomain",
+       "detail": "Tenant, User and Role: who may use the system and under which tenant."
+      },
+      {
+       "label": "Billing",
+       "sub": "subdomain",
+       "detail": "Account and Payment: payments for the tiered plans of multiple tenants."
+      },
+      {
+       "label": "Support",
+       "sub": "subdomain",
+       "detail": "SupportPlan and Incident: the tiered support plans and the incidents raised under them."
+      },
+      {
+       "label": "Collaboration",
+       "sub": "subdomain",
+       "detail": "Forum, Discussion, Post, Calendar and CalendarEntry. Has its own Discussion, separate from the core's."
+      },
+      {
+       "label": "Resource management",
+       "sub": "subdomain",
+       "detail": "ResourceManager, TimeConsumingResource, Schedule and Availability: human-resource availability and utilisation."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "maid2order-workshop",
+   "title": "Workshop: Maid2Order entities, BCs and ULs",
+   "slides": [
+    28,
+    35
+   ],
+   "summary": "Applying the technique to a platform that connects customers with maid agencies: the lecture's sample solution turns the scenarios into seven service-sized bounded contexts with consistently named entities.",
+   "notes": [
+    "**The task:** Maid2Order connects customers needing maid services with agencies that supply them. Features: management of agents, customers and maids; ordering of maid services and loans; billing and payment. From six concrete scenarios, identify domain entities and relationships, the BCs, and name entities consistently from each BC's UL.",
+    "**What the scenarios supply:** enrolment and archiving lifecycles for agencies, customers and maids (system admin or agent admin registers, maintains particulars, archives on leaving); automatic monthly billing of agencies for platform usage; maids' daily job schedules; customer orders (one-time ad-hoc or usage plans OnceAFortnight, OnceAWeek, TwiceAWeek with preferential rates); agency-to-agency maid loans (ad-hoc or Weekly/Monthly plans); billing frequency depending on service type; payments via gateway (bank transfer, credit card, PayNow, or mailed cheque) with auto receipt for electronic payments and an admin-created receipt for cheques.",
+    "**The sample solution has seven service-sized BCs (stereotype service):** CustomerManager (Customer); UserManager (UserAccount, SystemAdmin); AgencyManager (MaidAgency, AgentAdmin, Maid, JobSchedule, PlatformUsage, PlatformMonthlyBill); MaidOrderManager (MaidUsage, MaidUsageBill, and MaidUsagePlan specialised into OneTime, OnceAFortnight, OnceAWeek and TwiceAWeek plans); MaidLoanManager (MaidLoanUsage, MaidLoanBill, MaidLoanPlan specialised into OneTime, Weekly and Monthly); BillingManager (Bill); PaymentManager (Payment specialised into Cheque and ElectronicPayment, the latter into BankTransfer, PayNow and CreditCardPayment, plus Receipt).",
+    "**Lessons in the solution:** ordering for customers (MaidOrderManager) and loans between agencies (MaidLoanManager) are separate contexts with parallel but distinct names (MaidUsage vs MaidLoanUsage, MaidUsageBill vs MaidLoanBill). Billing is its own context: the platform monthly bill, maid usage bill and maid loan bill all lead to the common Bill, which Payment settles. Payment variants are modelled as specialisations. Relationships cross contexts (Customer to MaidAgency, Customer to MaidUsage, JobSchedule to MaidUsage), so the contexts integrate through references rather than shared models.",
+    "**Typical exam use:** expect a business narrative and a request for entities, BCs, names per UL and how contexts integrate (for example a maid-usage order leading to a bill and then a payment). The lecture's car rental samples (drawn in Visual Paradigm) only illustrate the entity-relationship notation expected."
+   ],
+   "terms": [
+    {
+     "term": "Domain entity",
+     "def": "A business concept with identity in the model, named in the BC's ubiquitous language."
+    }
+   ],
+   "check": [
+    {
+     "q": "A teammate proposes merging MaidOrderManager and MaidLoanManager into a single ServiceOrderManager, because both have plans, usages and bills. Do you agree?",
+     "a": "No. Customer orders and agency-to-agency loans are different business functions with different parties and plans (OnceAFortnight, OnceAWeek and TwiceAWeek for customers; Weekly and Monthly for loans), so each has its own ubiquitous language: MaidUsage and MaidUsagePlan against MaidLoanUsage and MaidLoanPlan. A merged context would change for two unrelated reasons and blur those terms. The cost of keeping them apart is some parallel structure."
+    },
+    {
+     "q": "Maid2Order adds a new digital-wallet payment method. Using the lecture's sample solution, which contexts change, and which should not?",
+     "a": "Only PaymentManager: add a new ElectronicPayment specialisation alongside BankTransfer, PayNow and CreditCardPayment, still producing a Receipt. BillingManager, MaidOrderManager and MaidLoanManager do not change, because they deal with bills and a payment simply settles a Bill. If they did need to change, that would show the payment details had leaked across the boundary."
+    },
+    {
+     "q": "A teammate proposes moving MaidUsageBill, MaidLoanBill and PlatformMonthlyBill into BillingManager so that every bill type lives in one place. Do you agree?",
+     "a": "No. Each specific bill belongs to the context whose business activity produces it, and BillingManager holds only the common Bill they lead to. Pulling the specific types in would make BillingManager depend on ordering, loan and platform-usage rules, so it would change whenever they do and could not be reused elsewhere. The cost of the lecture's design is a translation from each specific bill to Bill at the boundary."
+    },
+    {
+     "q": "In the sample solution, Customer in CustomerManager holds only the customer's particulars. Where should the customer's current usage plan live, and why?",
+     "a": "In MaidOrderManager, as a MaidUsage under a MaidUsagePlan that refers to the customer. Ordering is that context's responsibility, so CustomerManager stays small and reusable. The two contexts are linked by a reference, not a shared object, which means a screen showing both needs data from two services."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "cards",
+     "title": "Maid2Order bounded contexts (sample solution)",
+     "items": [
+      {
+       "label": "CustomerManager",
+       "sub": "Customer",
+       "detail": "Holds the Customer; linked to MaidAgency and to maid usage."
+      },
+      {
+       "label": "UserManager",
+       "sub": "UserAccount, SystemAdmin",
+       "detail": "User accounts and the system admin role."
+      },
+      {
+       "label": "AgencyManager",
+       "sub": "agency, maids, schedules",
+       "detail": "MaidAgency, AgentAdmin, Maid, JobSchedule, PlatformUsage and PlatformMonthlyBill."
+      },
+      {
+       "label": "MaidOrderManager",
+       "sub": "customer maid orders",
+       "detail": "MaidUsage, MaidUsageBill and MaidUsagePlan with OneTime, OnceAFortnight, OnceAWeek and TwiceAWeek plans.",
+       "accent": true
+      },
+      {
+       "label": "MaidLoanManager",
+       "sub": "agency-to-agency loans",
+       "detail": "MaidLoanUsage, MaidLoanBill and MaidLoanPlan with OneTime, Weekly and Monthly plans."
+      },
+      {
+       "label": "BillingManager",
+       "sub": "Bill",
+       "detail": "The common Bill that platform, usage and loan bills lead to.",
+       "accent": true
+      },
+      {
+       "label": "PaymentManager",
+       "sub": "Payment, Receipt",
+       "detail": "Payment specialised into Cheque and ElectronicPayment (BankTransfer, PayNow, CreditCardPayment), plus Receipt."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "reusable-frameworks",
+   "title": "Reusable frameworks for platforms",
+   "slides": [
+    36,
+    43
+   ],
+   "summary": "What a framework is, why a platform provider standardises on frameworks, and examples (Java RMI, Singapore Government Tech Stack, DBS Developers Platform).",
+   "notes": [
+    "**Characteristics of a reusable framework:** it solves a specific domain problem (UI, data access) with a set of communicating design patterns; it provides a partial implementation of the domain architecture in a specific environment (e.g. Spring Web MVC for web applications), so building those classes from scratch is not economical; it is designed for reuse across systems; a system may need several frameworks for different layers (Spring Web MVC for presentation and business layers, Spring Data for data access).",
+    "**Why a platform provider cares:** a platform has many constituent systems that may span enterprises and clients (backend, legacy and partner services, web and mobile clients), each using multiple frameworks. The provider should use frameworks to standardise and reuse common behaviours shared by services and clients and common interactions between services, and between clients and services.",
+    "**Examples:** Java RMI is a framework for remote invocation (stubs and a registry between client and server; the lecture's example is a weather app). The Singapore Government Tech Stack (SGTS) answers the problem that each agency builds its own services and infrastructure: a common platform of tools and services on common infrastructure so agencies build digital services quickly with consistent, secure experiences and easy data exchange (examples: myinfo.gov.sg, mycareersfuture.sg). The DBS Developers Platform exposes 200+ consumer-banking APIs in 20+ categories (funds transfer, rewards, PayLah!, real-time payments); DBS does not share its design."
+   ],
+   "terms": [
+    {
+     "term": "Spring Web MVC",
+     "def": "Framework for building web applications (presentation and business layers)."
+    },
+    {
+     "term": "SGTS",
+     "def": "Singapore Government Tech Stack: common platform of tools and services for agencies' digital services."
+    }
+   ],
+   "check": [
+    {
+     "q": "A platform's web, mobile, backend and partner services are built by different teams, each with its own way of calling the others and handling errors. What problem does this create, and what does the lecture recommend?",
+     "a": "Interactions are inconsistent, so every pair of systems needs custom integration, and the same behaviour is rebuilt many times. The lecture says the platform provider should use frameworks to standardise common behaviours and the interactions between services and clients. The cost is the design effort of the framework and less freedom for teams with unusual needs."
+    },
+    {
+     "q": "A ministry plans for each agency to build its own citizen-facing services and infrastructure, since each serves a different group. Using the SGTS case, argue against this, and say what is given up.",
+     "a": "Separate stacks duplicate effort, give citizens an inconsistent experience and make it hard to exchange data across agencies. SGTS puts a common platform of tools and services on common infrastructure, so agencies build faster, with a more secure, consistent and connected experience and easier data exchange for policy insights. Agencies give up some freedom and depend on the central platform's roadmap and availability."
+    }
+   ]
+  },
+  {
+   "id": "framework-design",
+   "title": "Designing frameworks well",
+   "slides": [
+    44,
+    52
+   ],
+   "summary": "Qualities of a good framework, the fundamentals and principles of framework design, the two process models and the pitfalls.",
+   "notes": [
+    "**Eight design qualities:** Simple; Expensive to design (dedicated design effort); Full of trade-offs; Borrow from the past; Designed to evolve; Integrated; Consistent; Testable. Test simplicity with sample client code before fixing the API.",
+    "**Fundamentals:** be powerful and easy to use: simple things simple, complex things possible; concentrate on the important 20% of scenarios and APIs (80/20 rule). Design explicitly for a broad range of developers (styles, requirements, skill levels) and programming languages, e.g. a strongly typed API can trouble dynamically typed languages.",
+    "**Four principles:** Scenario-Driven Design (start with usage scenarios and sample client code); Low Barrier of Entry (make experimentation and error correction easy); Self-Documenting Object Models (names, types and exceptions explain simple uses); Layered Architecture (convenient common-case APIs over powerful lower-level APIs).",
+    "**Process:** analyse the domain and collect application examples; build an initial whitebox framework implementing them; use it to build other applications, find weak points and improve it, usually becoming more blackbox; release when suggestions for improvement become rare. Two models: (1) framework designers do not design applications: app designers extend the framework and give feedback; suits larger groups and external users and is more popular; (2) framework designers also build applications, alternating between extending and revising; suits small groups that can budget revision effort.",
+    "**Pitfalls:** an immature domain causes misunderstanding and extra iterations; unstable interfaces ripple through application classes (unstable behaviour is easier to revise); unrepresentative original examples leave valid applications unsupported; publishing prematurely, so release only once proven and validated through small pilot projects."
+   ],
+   "terms": [
+    {
+     "term": "Whitebox vs blackbox framework",
+     "def": "Whitebox is extended by subclassing and knowing internals; blackbox is used via configuration and composition without internals."
+    },
+    {
+     "term": "80/20 rule",
+     "def": "Focus effort on the important 20% of scenarios and APIs."
+    },
+    {
+     "term": "Client-first programming",
+     "def": "Write sample client code first to test whether an API is simple."
+    }
+   ],
+   "check": [
+    {
+     "q": "Users of your framework fall into two groups: beginners who want one call to send a payment, and experts who need control over retries and the wire format. How do you serve both?",
+     "a": "Use a layered architecture: a lower layer with rich, low-level types exposes all the power, and a higher layer wraps it in convenient calls for the common case. That makes simple things simple and complex things possible, which a single-layer API cannot do. The cost is designing and keeping two consistent layers."
+    },
+    {
+     "q": "A three-person team is building a framework for its own applications; a 20-person team is building one for external partners. Which framework-design process model fits each?",
+     "a": "The small team fits the model in which designers alternate between building applications on the framework and consolidating good extensions, provided they can budget effort for revision. The larger group targeting external users fits the more popular model: designers design and test, application builders extend it and give feedback, and designers revise. That model only works if designers have enough time set aside for the revisions."
+    },
+    {
+     "q": "Partners are pressing for a framework, and the team wants to publish v1 to all of them after one internal application has used it. Advise.",
+     "a": "Hold back: one application is unlikely to be representative, and publishing while the design is still changing means unstable interfaces ripple into every partner's code. Validate it through a few small pilot projects and release once suggestions for improvement become rare. Partners wait longer but avoid painful rework, and 'you can always add, you cannot ever remove' argues against shipping half-finished parts just to have them."
+    },
+    {
+     "q": "A design review finds that one module of the framework names things and handles errors differently from the rest. Why is this a concern, and when could it be justified?",
+     "a": "Consistency across the framework promotes productivity and lets knowledge transfer from one part to another, and a deviation signals that the part is genuinely different. An accidental inconsistency sends that signal falsely and confuses users. It is justified only when the module really has a unique consideration, and then the difference should be deliberate and documented."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "layers",
+     "title": "Convenience over power",
+     "layers": [
+      {
+       "label": "Common scenarios",
+       "sub": "simple client code",
+       "detail": "Start design from representative applications and test whether the client code is easy to write."
+      },
+      {
+       "label": "Convenience API",
+       "sub": "higher-level layer",
+       "detail": "Wrap frequent operations with a small, easy-to-discover API.",
+       "accent": true
+      },
+      {
+       "label": "Powerful primitives",
+       "sub": "lower-level layer",
+       "detail": "Keep lower-level types available for advanced cases that the convenient wrappers do not cover."
+      }
+     ],
+     "caption": "Layering supports the important common cases without removing access to advanced capabilities."
+    }
+   ]
+  },
+  {
+   "id": "shared-libraries",
+   "title": "Shared libraries: use and pitfalls",
+   "slides": [
+    53,
+    61
+   ],
+   "summary": "What shared libraries share, their drawbacks, the DRY trap across services, client library pitfalls (Netflix vs AWS) and guidelines.",
+   "notes": [
+    "**What they are:** classes shared among services, among clients or across clients and services. They share state specification (attributes of a super class), behavioural specification (abstract operations or interfaces) and behavioural implementation (operations implemented in a super class). They are essential building blocks of frameworks and may come from the platform provider or third parties.",
+    "**General drawbacks:** loss of true technology heterogeneity (language- and platform-specific); independent scaling is curtailed when parts are tied by library constructs (static variable, mutex); few obvious seams for resilience measures; a new library version needs redeploying the whole process (less of an issue for dynamically linked libraries); shared communication code is a point of coupling, e.g. Java RMI brittleness where a changed endpoint needs new stubs that hit clients that did not need the change.",
+    "**DRY across service boundaries:** sharing domain-object code makes services depend on one model, so a change can force coordinated releases. Keep each BC’s model private; avoid duplication within a service, but accept some across services to preserve autonomy. Evaluate shared technical utilities by their coupling cost.",
+    "**Client libraries:** they make services easy to consume and avoid duplication, but server logic can creep in (especially if one team owns both), eroding the server's cohesion and forcing changes in many clients to roll out a server fix, and mandating them limits clients' technology choices. Netflix's client libraries handle service discovery, failure modes and logging and make clients easy to run reliably, but coupling between clients and server is worrisome. AWS exposes SOAP/REST APIs with SDKs written by the community or an AWS team that does not work on the APIs, giving good separation, and clients decide when to upgrade.",
+    "**Guidelines for client libraries:** separate transport-protocol handling from things specific to the destination service, so clients on other technology stacks can still call the APIs; let clients control when they upgrade the library, preserving the ability to release services independently.",
+    "**Summary:** reusable assets boost platform team productivity; services and frameworks enable larger-scale reuse, shared libraries smaller ad-hoc reuse; DDD identifies and designs services; guidelines exist for frameworks; overusing shared libraries can unnecessarily constrain platform components."
+   ],
+   "terms": [
+    {
+     "term": "DRY",
+     "def": "Don't Repeat Yourself: avoid duplicating system behaviour and knowledge."
+    },
+    {
+     "term": "Client library",
+     "def": "Library that makes it easy for clients to call a service (e.g. an SDK)."
+    },
+    {
+     "term": "Point of coupling",
+     "def": "Shared code through which a change in one component forces change in others."
+    }
+   ],
+   "check": [
+    {
+     "q": "To obey DRY, a teammate proposes a common-domain library of Customer, Order and Payment classes used by all 12 services. Do you agree?",
+     "a": "No. A shared domain library couples every service to it: one change forces coordinated changes and redeployments across all 12, which undermines independent release and blurs bounded contexts. The lecture's rule is not to violate DRY within a service but to be relaxed about DRY across services. The price is some duplicated code, which is cheaper than lockstep releases."
+    },
+    {
+     "q": "Your platform will publish client libraries for its APIs. Option A: the API team writes a smart client that handles discovery, failures and logging, and all callers must use it. Option B: thin SDKs maintained separately, with callers choosing when to upgrade. Choose.",
+     "a": "Option B for a platform with varied consumers. Like the AWS SDKs, it keeps clients loosely coupled to the server and lets them upgrade on their own schedule. Option A, the Netflix style, gets clients running quickly and reliably but couples them tightly, invites server logic into the client, and limits technology choices if it is mandated. A could suit a single organisation on one technology stack that values uniform resilience."
+    },
+    {
+     "q": "After a fix to a shared library, three services that did not need the fix have to be rebuilt and redeployed, and a Python client cannot use the library at all. Which drawbacks are these, and what would reduce them?",
+     "a": "A new library version cannot be deployed without redeploying the whole process, and the library is language-specific, so technology heterogeneity is lost. Shared communication code is a coupling point, much like regenerated RMI stubs. Reduce it by not sharing code across service boundaries, separating transport-protocol code from service-specific code, and letting clients decide when to upgrade."
+    },
+    {
+     "q": "The team that owns the Order service also writes its client library, and order-validation rules have started to appear in the library. What is the risk?",
+     "a": "Server logic is creeping into the client library, which the lecture says is especially likely when the same team owns both. The server's cohesion breaks down, and fixing a rule now means changing and rolling out many clients instead of one service. Keep the rules in the service and limit the library to making calls convenient."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Server vs client library pitfalls",
+     "columns": [
+      "",
+      "Server libraries",
+      "Client libraries"
+     ],
+     "rows": [
+      [
+       "Intent",
+       "Avoid duplication across services (DRY)",
+       "Make services easy to consume and avoid duplicate client code"
+      ],
+      [
+       "Main danger",
+       "Shared code couples services; one change hits all",
+       "Server logic creeps in, breaking server cohesion"
+      ],
+      [
+       "Side effects",
+       "Brittle shared communication code",
+       "Fixes need many clients changed; limited technology choices if mandated"
+      ],
+      [
+       "Guidance",
+       "Keep domain models private; accept duplication across services where it preserves autonomy",
+       "Separate transport handling from service specifics; clients choose when to upgrade"
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A ride-hailing platform's NotificationService defines every notification type itself, including TripAssigned, FareReceipt, DriverPayoutReady and PromoOffer, each with content specific to another service's responsibility. The company wants to reuse it in its new food-delivery platform without major adaptation. Identify the most likely cause of poor reusability, propose a countermeasure by revising the domain model, and give its main drawback.",
+   "a": "Cause: the service is not cohesive or single-minded. It holds knowledge that belongs to the Trip, Payment, Payout and Marketing contexts, so it is coupled to this platform's domain. Countermeasure: make it a generic subdomain that models only generic concepts, such as a notification with recipient, channel, template and delivery status, and move each specific notification's content into the context that owns the event, which requests sending through a published interface or by publishing domain events. Drawback: every owning service now has to compose its own notifications, and there is more integration and some repeated formatting code across services."
+  },
+  {
+   "q": "A logistics company has one shared model in which 'Shipment' means a customer order in Sales, a truck load in Dispatch and a customs declaration in Compliance. One team of 25 owns the code and a single database. Propose a restructuring of contexts, teams, repositories and data, and name one new problem it creates.",
+   "a": "Split into Sales, Dispatch and Compliance bounded contexts, each with its own ubiquitous language, so 'Shipment' gets a precise meaning in each, for example Order, Load and Declaration, or the same name with separate models. Give each context one owning team, its own repository with code and acceptance and unit tests, its own schema and interfaces defined by that team. Integrate through explicit interfaces or domain events, not shared tables. New problem: a change that spans contexts now needs coordination and translation between models, with eventual consistency instead of one local transaction."
+  },
+  {
+   "q": "In the Scrum tool, the product owner commits a backlog item to a sprint; it must already be scheduled for release, a quorum must approve, and if it is in another sprint it must be uncommitted first. Write the Given/When/Then specification, identify the aggregate or aggregates involved, and say how both sprints learn about the change.",
+   "a": "Given a backlog item scheduled for release, its product owner, a target sprint and quorum approval; When the product owner commits it to the sprint; Then it is committed to the sprint and a BacklogItemCommitted event is created. The commitment rule sits with the backlog item, the aggregate whose invariant it is, and the sprint is referenced rather than changed in the same transaction. The previous sprint and the new sprint learn of it by reacting to the domain event, which keeps each transaction small but makes their views eventually consistent. The scenario wording also becomes part of the context's ubiquitous language and doubles as an acceptance test."
+  },
+  {
+   "q": "Maid2Order adds corporate customers: a company subscribes to maid services for several offices and wants one monthly invoice. Using the lecture's seven-context solution, place the new concepts, justify each placement, and name one context that should not change.",
+   "a": "The corporate customer and its offices belong in CustomerManager as a kind of Customer, because that context holds the party's particulars. The per-office services stay in MaidOrderManager as MaidUsage under usage plans, because ordering rules live there. The single monthly invoice belongs in BillingManager, whose common Bill can consolidate the usage bills. PaymentManager should not change, since it simply settles a Bill. If corporate contracts turn out to have very different rules, a separate context may be justified, at the cost of more integration."
+  },
+  {
+   "q": "A platform's 15 services all need (a) customer-profile lookups, (b) the same request logging, tracing and configuration conventions, and (c) a Money value class. Choose service, framework or shared library for each, and state the risk of each choice.",
+   "a": "(a) A Customer service: reuse of a business capability, scaled and released independently; the risk is remote-call latency and failures, so callers need timeouts. (b) A framework, which standardises common behaviour for building many services; the risk is that it is expensive to design well and ties services to its release cycle. (c) A shared library for a small, stable value class; the risk is coupling and language lock-in, so share only stable technical types and keep domain models within each service."
+  },
+  {
+   "q": "A four-person platform team must deliver an integration framework for 30 partner companies in nine months. Propose the design process and the qualities you would check, and name the pitfall you fear most.",
+   "a": "Analyse example integrations from several representative partners, design scenario-first from sample client code, and build a whitebox version for them. Pilot it with two or three partners, collect feedback (the external-user process model), make the framework more blackbox, and release widely only when suggestions become rare. Check simplicity, low barrier of entry, self-documenting names, a layered design for power users, consistency, testability and backward compatibility. The biggest pitfall is premature release under schedule pressure with unrepresentative examples, since unstable interfaces would then ripple into 30 partners' code."
+  }
+ ]
+}

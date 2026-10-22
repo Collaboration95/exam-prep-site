@@ -1,0 +1,220 @@
+{
+ "key": "mtech-ft-cnsd-day-1",
+ "title": "Day 1: What the Instructor Emphasised in Class",
+ "pages": 8,
+ "minutes": 15,
+ "overview": "These classroom sketches connect architecture decisions, backlog work and hosting choices. Follow the same web application from on-premises tiers to cloud services and an orchestrated container design. Use the progression to explain why a component changes; the drawings are examples rather than requirements for every cloud-native system.",
+ "big_ideas": [
+  "Architecture answers what (components and how they interact), where (data, infra, application, platform, security, enterprise viewpoints) and how (decisions driven by constraints, requirements and objectives).",
+  "Architecture is communicated human-to-human (diagrams) and human-to-machine / machine-to-machine (IaC, YAML, properties files).",
+  "Functional and non-functional requirements both feed the product backlog; skipped work becomes technical debt, a hidden 'secret list'.",
+  "Classic hosting: DNS, firewall, routers, API gateway and load balancers in front of web and app server tiers, with replicated databases (active-active or active-passive).",
+  "A one-to-one cloud migration swaps each on-prem box for an AWS service (CloudFront/IAM, API Gateway, ELB, ECS/EKS/EC2, RDS) without redesigning.",
+  "Cloud native: API gateway at ingress, Services and Deployments of pods on Kubernetes nodes, images from a container registry, service mesh (Istio) for service-to-service calls.",
+  "VMs and containers can run always-on or scheduled workloads; functions execute on demand under provider runtime constraints.",
+  "The classroom timeline links cloud infrastructure and platforms, Docker packaging, and Kubernetes orchestration; treat its dates as sketch annotations rather than verified launch dates."
+ ],
+ "sections": [
+  {
+   "id": "apps-and-architecture-thinking",
+   "title": "Apps, architecture and backlog",
+   "slides": [
+    1,
+    3
+   ],
+   "summary": "Starts from familiar apps, then frames what an architecture is and how requirements and technical debt flow into the backlog.",
+   "notes": [
+    "**Different problem types lead to different architectures and technology stacks.** The instructor grouped familiar systems (messaging, e-commerce platforms, streaming, agent-driven) to show that the domain shapes language and design choices.",
+    "**Architecture answers three questions:** what (reference architecture: layers, components and their interactions), how (decisions driven by constraints, requirements and objectives) and where (viewpoints: data, infrastructure, application, platform, security, enterprise). A solution architecture combines architecture, design and products into a blueprint.",
+    "**Architecture has two audiences:** humans (drawn architecture views, H2H) and machines (IaC, YAML, properties files, H2M/M2M). In cloud native work the provisioning code is part of the architecture.",
+    "**Functional and non-functional requirements belong in the backlog.** Shortcuts and deferred design or quality work can accumulate technical debt. The instructor calls it a hidden “secret list”; make its cost and remediation visible rather than treating hidden debt as good practice."
+   ],
+   "terms": [
+    {
+     "term": "Reference architecture",
+     "def": "A reusable template of layers and components and how they interact for a type of system."
+    },
+    {
+     "term": "H2H / H2M / M2M",
+     "def": "Human-to-human, human-to-machine, machine-to-machine: who the architecture artifact is for."
+    },
+    {
+     "term": "Technical debt",
+     "def": "Deferred work or shortcuts that must be paid back later; often unseen by stakeholders."
+    },
+    {
+     "term": "MVP",
+     "def": "Minimum Viable Product: the smallest release that delivers value."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team hands in an architecture made of polished diagrams only. Infrastructure is still set up by hand from a wiki page. Using the instructor's framing, what is missing?",
+     "a": "Architecture has two audiences: people, through diagrams and views, and machines, through IaC, YAML and properties files. In cloud native work, the provisioning code is part of the architecture, so without it the design can't be reproduced or checked against what is running. Add versioned IaC and config alongside the diagrams."
+    },
+    {
+     "q": "A messaging app and a video-streaming service are both being designed by the same team, and a manager wants one standard architecture and stack for both. Is that sensible?",
+     "a": "Probably not. Different problem types lead to different architectures and stacks: messaging needs many long-lived connections and low-latency delivery, while streaming needs large content delivery and catalogue and recommendation workloads. Share platform tooling where it helps, but let each domain's constraints drive its design decisions."
+    },
+    {
+     "q": "To hit an MVP date, a team skips automated tests and hardcodes config, and records none of it. Six months later, every change breaks something. What went wrong, and what should they have done?",
+     "a": "The shortcuts became hidden technical debt, which the instructor calls the 'secret list': future costs that stakeholders can't see or prioritise. Shortcuts can be a valid trade-off for an MVP, but each one should be recorded in the backlog with its consequence and a remediation item, next to the functional and non-functional requirements."
+    }
+   ]
+  },
+  {
+   "id": "hosting-evolution",
+   "title": "From on-prem to cloud to cloud native",
+   "slides": [
+    4,
+    6
+   ],
+   "summary": "The same web application in three stages: on-premise, a like-for-like migration to AWS, and a cloud-native Kubernetes design.",
+   "notes": [
+    "**The same web application is drawn at three maturity stages**, which is a ready-made storyline for an exam answer on migration.",
+    "**On-premise:** DNS, firewall, routers and API gateway in front of load-balanced web and app server tiers, with a database pair that is active-active (both serve) or active-passive (standby takes over) for availability.",
+    "**One-to-one cloud mapping preserves the broad tiers.** The sketch replaces edge delivery, access control, gateways, load balancers, compute and databases with AWS services. Match roles carefully: CloudFront is a CDN, Route 53 supplies DNS, and IAM controls access. Managed compute can already provide scaling or replacement; business-service decomposition is a separate change.",
+    "**Cloud native on Kubernetes:** an API gateway (firewall, throttling, IAM, monitoring) fronts public endpoints and a service registry; a Service load-balances across a Deployment's pods on nodes, images come from a container registry, and a service mesh (Istio) carries service-to-service calls (e.g. gRPC). A backend deployment set might be one load balancer, five Tomcat copies and two MongoDB copies."
+   ],
+   "terms": [
+    {
+     "term": "Active-active / active-passive",
+     "def": "Database replication where both nodes serve traffic, or one stands by to take over."
+    },
+    {
+     "term": "Pod",
+     "def": "Smallest Kubernetes unit: one or more containers scheduled together on a node."
+    },
+    {
+     "term": "Kubelet",
+     "def": "Agent on each Kubernetes node that runs the pods assigned to it."
+    },
+    {
+     "term": "Service mesh (Istio)",
+     "def": "Infrastructure layer handling service-to-service traffic, security and observability."
+    },
+    {
+     "term": "Container registry",
+     "def": "Store for container images, e.g. Amazon ECR, Docker Hub, Quay."
+    }
+   ],
+   "check": [
+    {
+     "q": "An on-premises three-tier app is moved one-to-one to cloud equivalents (managed DNS, CDN, load balancer, VMs or containers, managed database). What does this gain, and what doesn't it change?",
+     "a": "It gains managed components, possibly with autoscaling and automatic replacement of failed instances, while keeping the broad tier structure. It doesn't create independently deployable business services, so release coordination and whole-app scaling stay the same. Redesign further only where a specific delivery or scaling problem justifies it."
+    },
+    {
+     "q": "The on-premises database pair must survive a server failure. Active-active or active-passive?",
+     "a": "Active-passive if the goal is simple failover: a standby takes over when the primary fails, with straightforward consistency, but the standby's capacity is idle. Active-active if both nodes must serve load: better use of capacity and no failover delay, but concurrent writes need conflict handling or partitioning. Choose by write pattern and acceptable complexity."
+    },
+    {
+     "q": "In the cloud-native version, internal calls go through a service mesh using gRPC, and external traffic comes through an API gateway. Why split it this way rather than routing everything through the gateway?",
+     "a": "The gateway handles north-south concerns at the edge: firewalling, throttling, identity and monitoring for public endpoints. The mesh handles east-west service-to-service traffic with consistent routing, encryption and telemetry, and gRPC is efficient for internal calls. Sending internal traffic through the gateway would add a hop and make it a bottleneck and single point of failure."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Same app, three maturity stages",
+     "steps": [
+      {
+       "label": "On-premise",
+       "sub": "tiers + DB pair",
+       "detail": "DNS, firewall, routers, load balancers and API gateway in front of load-balanced web and app servers; database pair (AA / AP)."
+      },
+      {
+       "label": "One-to-one cloud",
+       "sub": "one-on-one replacement",
+       "detail": "Each box swapped for an AWS service: CloudFront, IAM, API Gateway, ELB, web and app tiers on EC2/ECS/EKS, database on AWS."
+      },
+      {
+       "label": "Cloud native",
+       "sub": "Kubernetes + service mesh",
+       "accent": true,
+       "icon": "kubernetes",
+       "detail": "An example using an API gateway, Kubernetes Services and Deployment Pods, a registry and optional service mesh. These components serve specific routing, rollout and traffic-management needs."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "packaging-and-timeline",
+   "title": "Packaging options and history",
+   "slides": [
+    7,
+    8
+   ],
+   "summary": "The three ways to wrap a solution and the history that led to Kubernetes.",
+   "notes": [
+    "**Packaging does not force an operating schedule.** VMs package a guest OS; containers package application dependencies while sharing a kernel; functions provide on-demand execution with a managed runtime. VMs and containers can also run scheduled or short-lived jobs.",
+    "**Choose from execution needs.** Always-on services may favour containers or VMs; sporadic event-driven work often favours functions. Check latency, startup, state, execution limits and cost rather than assuming a packaging choice decides them.",
+    "**Why Kubernetes emerged:** the cloud providers (AWS, Azure, GCP) made VMs (IaaS) and SDK platforms (PaaS) mainstream, Docker made single containers easy, and Google's Borg/Omega experience led to Kubernetes to schedule, scale and heal many containers; by 2018 it was the standard orchestrator with pluggable runtime, storage and networking interfaces."
+   ],
+   "terms": [
+    {
+     "term": "Serverless / function",
+     "def": "Code run on demand per invocation, with no always-on server to manage."
+    },
+    {
+     "term": "Orchestrator",
+     "def": "System (e.g. Kubernetes) that schedules, scales and heals containers across machines."
+    },
+    {
+     "term": "Borg / Omega",
+     "def": "Google's internal cluster managers that inspired Kubernetes."
+    }
+   ],
+   "check": [
+    {
+     "q": "A component generates invoices once a night for 10 minutes, and another serves a 24/7 API. Function, container or VM for each?",
+     "a": "The nightly job could be a function if it fits within execution limits, or a scheduled container job if it needs more time or runtime control, since containers can also run short jobs. The 24/7 API fits containers, or VMs if it needs OS-level control, because always-on load removes the pay-per-invocation advantage. Check startup, state and cost rather than assuming the packaging decides them."
+    },
+    {
+     "q": "A team runs 60 containers by hand on 8 machines with Docker. Failed containers stay down until someone notices. What does this show about why Kubernetes emerged?",
+     "a": "Docker made it easy to build and run single containers, but running many across many machines needs scheduling, scaling and self-healing. Kubernetes, drawing on Google's Borg and Omega experience, provides that orchestration, with pluggable runtime, storage and networking. The cost is learning and operating the cluster."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Wrapping a solution: VM, container or function",
+     "columns": [
+      "",
+      "VM",
+      "Container",
+      "Function"
+     ],
+     "rows": [
+      [
+       "Execution",
+       "Always-on or scheduled",
+       "Service or short-lived job",
+       "On-demand invocation"
+      ],
+      [
+       "Packages",
+       "Guest OS, runtime and app",
+       "App and runtime dependencies",
+       "Handler and dependencies on managed runtime"
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "Plan how to evolve a three-tier on-premises web application (DNS, firewall, load-balanced web and app tiers, active-passive database) to a cloud-native architecture in stages. For each stage, say what it gains and what triggers the next one.",
+   "a": "Stage 1, one-to-one mapping: managed DNS, CDN at the edge, cloud load balancers, VMs or containers for the tiers and a managed database. This gains managed operations and possibly autoscaling, with little application change. Stage 2, containerise the tiers and run replicas behind Kubernetes Services with images in a registry and IaC for everything. The trigger is a need for faster, repeatable deployments. Stage 3, extract business capabilities as services behind an API gateway, with a mesh for internal traffic, only where independent delivery or scaling is a real problem. Functions are added for event-driven parts. Each stage adds operational complexity, so take the next one only when its trigger appears."
+  },
+  {
+   "q": "For a new system with a 24/7 order API, a nightly reconciliation job and an image-thumbnail task triggered by uploads, compare VMs, containers and functions, and choose one for each component.",
+   "a": "VMs include a guest OS and give OS control, containers share a kernel and package dependencies lightly, and functions run on demand with a managed runtime. Order API: containers for always-on load and portability. Nightly reconciliation: a scheduled container job, or a function if it fits execution limits. Thumbnails: functions, for short, sporadic, event-triggered work billed per invocation. Choose by duration, startup latency, state, runtime control and cost, not by packaging fashion."
+  },
+  {
+   "q": "You are asked to produce the architecture for a new cloud-native platform. Using the Day 1 framing (what, how, where, and two audiences), outline what the deliverable must contain and how you would keep it from going stale.",
+   "a": "What: a reference architecture with layers, components and how they interact. How: decisions with the constraints, requirements and objectives behind each. Where: data, infrastructure, application, platform, security and enterprise viewpoints. Deliver diagrams for people and IaC, YAML and config for machines, so the running system is generated from the architecture. Keep functional and non-functional requirements and recorded technical debt in the backlog. Because the IaC is part of the architecture, changes to it go through review, which keeps the design and the system aligned."
+  }
+ ]
+}

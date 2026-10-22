@@ -1,0 +1,527 @@
+{
+ "key": "07-microservices-design-september-2026",
+ "title": "Microservices Design",
+ "pages": 67,
+ "minutes": 40,
+ "overview": "Decompose services around business capabilities and define their APIs, data ownership and collaborations. Compare synchronous calls, messaging, REST and gRPC, then connect gateways, discovery, versioning and maintenance. Adopt the extra distributed-system complexity only where independent delivery or scaling provides enough benefit.",
+ "big_ideas": [
+  "A monolith is one code base, one build, one deployable; microservices are small, independently deployable services that each own their data and talk over the network via language-agnostic APIs (REST or messaging).",
+  "Microservices are not a silver bullet: Fowler says only use them when a system is too complex to manage as a monolith, because they add the 'microservice premium' of operational overhead.",
+  "Key benefits: polyglot technology, selective scaling, substitution, fault isolation, coexisting versions, event-driven extensibility, and DevOps-friendly small teams.",
+  "Decompose in three steps: identify system operations, identify services (business capabilities or DDD subdomains), then define service APIs and collaborations.",
+  "Communication styles: synchronous request/response (simple but tightly coupled) vs asynchronous messaging/events (loosely coupled, resilient); start sync and refactor to async where it adds value.",
+  "An API gateway is the single entry point that routes, aggregates, secures and monitors calls (north-south traffic); a service mesh handles service-to-service (east-west) traffic; a service registry tells everyone where instances live.",
+  "Version APIs to signal compatibility, test existing consumer contracts, and retain old incompatible versions until clients migrate.",
+  "Costs of microservices: harder troubleshooting, extra network latency, operational complexity, and version management overhead."
+ ],
+ "sections": [
+  {
+   "id": "monolith-vs-microservices",
+   "title": "Monolith vs microservices",
+   "slides": [
+    3,
+    9
+   ],
+   "summary": "What a monolith is and why it hurts at scale, what microservices are, and the principles each service should follow.",
+   "notes": [
+    "**A monolith is one code base, one build, one deployable, usually over one shared database.** That is simple at first, but it makes scaling, availability, release coordination and library/technology choices all-or-nothing, so it becomes a bottleneck for innovation and costly to maintain.",
+    "**Microservices are small, independent processes that each do one thing, own their data and talk over the network via language-agnostic APIs (REST or messaging).** Monolith vs microservices: one shared RDBMS and one release train vs a private store per service (any language, any DB) and independent deployment, giving a modular system with a longer shelf life and faster development.",
+    "**Service principles support independence:** one business responsibility within a clear context, private data ownership, external configuration, explicit contracts, resilient error handling and useful metrics. Stateless application instances simplify scaling; the service can still own durable domain state in its store. Use reactive processing when the concurrency workload warrants it."
+   ],
+   "terms": [
+    {
+     "term": "Monolith",
+     "def": "Single code base, single build, single deployable binary, usually one shared database."
+    },
+    {
+     "term": "Bounded context",
+     "def": "A boundary within which a domain model has one consistent meaning; service boundaries should align with it, without requiring exactly one service per context."
+    },
+    {
+     "term": "Externalized configuration",
+     "def": "Config kept outside the code (e.g. a config server) so it varies per environment without rebuilding."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team split its monolith into 6 separately deployed apps, but they still share one relational database, and every release still needs a joint change window. Why?",
+     "a": "Shared tables mean a schema change for one app can break the others, so releases must be coordinated, and independent deployment is lost. Give each service private ownership of its data, with others reaching it through the service's API or events. The cost is that cross-service queries and consistency now need design."
+    },
+    {
+     "q": "In a monolith, ticket creation needs 10 times more capacity at peak, and the reporting module needs a newer library version that conflicts with the rest. Which monolith shortcomings are these, and how would microservices address them?",
+     "a": "All-or-nothing scaling (the whole app must be cloned to scale one hot function) and library or technology lock-in (one dependency set for everything). As separate services, ticketing scales on its own and reporting picks its own stack. The price is network calls, separate deployments and more to monitor."
+    },
+    {
+     "q": "A new microservice keeps its config in a file inside the image and holds user sessions in memory. Which service principles does it break, and why do they matter for independence?",
+     "a": "External configuration and stateless instances. Baked-in config means rebuilding to change environments. In-memory sessions mean instances can't be added or replaced freely. Move config outside the image and sessions to a shared store, while the service still owns its durable domain data in its own store."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Monolith vs microservices",
+     "columns": [
+      "",
+      "Monolith",
+      "Microservices"
+     ],
+     "rows": [
+      [
+       "Code and deploy",
+       "Single code base with multiple modules, one build system, one deployable binary",
+       "Small independent processes, deployed independently and loosely coupled"
+      ],
+      [
+       "Data",
+       "Shared RDBMS",
+       "**Own data storage**: a private database or a separate schema in a shared database"
+      ],
+      [
+       "Scaling",
+       "Whole-application replicas",
+       "Scale the busy service independently"
+      ],
+      [
+       "Technology",
+       "One code base and build",
+       "No restriction on language or platform per service; language-agnostic APIs"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "microservices-in-practice",
+   "title": "When microservices fit and how to migrate",
+   "slides": [
+    10,
+    15
+   ],
+   "summary": "What a microservice looks like in a system, why microservices are not always the right choice, and how to migrate and decide where to split.",
+   "notes": [
+    "**Microservices are not a silver bullet.** Fowler's microservice premium: they add overhead (operations, monitoring, versioning, network calls) that only pays off when the system is too complex to manage as a monolith; for simple systems a monolith is more productive.",
+    "**The shift is organisational as well as technical.** Monolith vs microservices: one large interdependent application run by layer-based teams (UI, DBA, test, build, server) vs small autonomous, domain-driven services run by cross-functional teams owning a service end to end. The price is more moving parts (more archives, config files and registration/discovery code).",
+    "**Migrate incrementally.** The lecture suggests extracting heavily used functions, but choose a coherent business capability with a measurable scaling or change problem and manageable dependencies. Splitting a busy but tightly coupled function too early can create chatty services.",
+    "**Decide where to split using four pressures (AKF Partners).** Developer throughput (change frequency, reuse, team size, specialist skills), availability and fault tolerance (required reliability, business criticality, failure risk), scalability (of data, services, dependencies) and cost."
+   ],
+   "terms": [
+    {
+     "term": "Microservice premium",
+     "def": "Fowler's term for the extra overhead microservices impose, worth paying only for complex systems."
+    },
+    {
+     "term": "Cross-functional team",
+     "def": "A small team with all skills needed to own one service end to end."
+    }
+   ],
+   "check": [
+    {
+     "q": "A startup with 3 developers and a simple CRUD app asks whether to start with microservices. What is your advice?",
+     "a": "Start with a monolith. For low-complexity systems the microservice premium (operations, monitoring, versioning, network calls) lowers productivity. Keep the code modular and split later when complexity, team size or scaling needs justify it."
+    },
+    {
+     "q": "The most-called function in a monolith is 'get customer', which nearly every module uses. A teammate wants to extract it first because it is the busiest. Do you agree?",
+     "a": "Not on usage alone. A function that every module calls is tightly coupled, so extracting it first turns in-process calls into many chatty network calls and adds latency everywhere. Extract first a coherent business capability with a measurable scaling or change problem and dependencies you can separate. Heavy use is one signal, not the deciding one."
+    },
+    {
+     "q": "A company adopts microservices but keeps separate UI, DBA, test and server teams, and every feature now needs four teams. What is missing?",
+     "a": "The organisational shift. Microservices assume small cross-functional teams that own a service end to end. With layer-based teams, every change crosses team boundaries and independence is lost. Reorganise around services, or the system takes on microservice overhead without the delivery benefit."
+    },
+    {
+     "q": "Using the four AKF pressures, should a company split out its payment capability, which changes rarely but must stay available during catalogue outages?",
+     "a": "Probably yes, driven by availability and fault tolerance: payment is business-critical and should not fail when the catalogue does. Developer throughput gives little reason, since it changes rarely. Weigh this against cost, because a separate service adds operations, and against the scalability of its data and dependencies."
+    }
+   ]
+  },
+  {
+   "id": "why-microservices",
+   "title": "Why adopt microservices: the benefits",
+   "slides": [
+    17,
+    29
+   ],
+   "summary": "The ten benefits taught in the lecture, with examples, and which well-known companies adopted the style.",
+   "notes": [
+    "**The benefits come from independence.** Polyglot: each service picks the right technology (e.g. an audit service on Kafka/HDFS beside MySQL services). Experimentation: a new feature (hotel recommendation) plugs into an existing flow so you can fail fast. Substitution: a self-contained service (pricing) can be swapped for in-house or third-party. Organic growth: a monolith can be peeled apart step by step.",
+    "**Selective scaling is the classic example.** Monolith vs microservices: a monolith scales by cloning the whole application behind a load balancer; microservices scale only the busy service (e.g. 3 Ticketing instances while Search and Catalog stay at 1), saving resources.",
+    "**Versions and technology debt are easier to manage.** New services use current technology while old ones stay put, and migrating one small end-of-life service is far cheaper than upgrading a monolith. Because each service packages its own runtime, V1 and V2 can coexist and a gateway routes by rule (e.g. one region to V2).",
+    "**Events enable new consumers without direct publisher calls.** An analytics service can subscribe to an existing order topic without changing the publisher’s code. It must still understand event contracts, retention, authorisation and duplicate handling; a new consumer does not eliminate impact analysis.",
+    "**Small services enable DevOps** (fast releases, automated testing, provisioning and deployment, teams aligned to service boundaries), which is why adopters such as Netflix, Uber, Amazon and Twitter use the style."
+   ],
+   "terms": [
+    {
+     "term": "Polyglot",
+     "def": "Different languages or databases for different services, each fit for purpose."
+    },
+    {
+     "term": "Selective scaling",
+     "def": "Scaling out only services under load rather than the whole app."
+    },
+    {
+     "term": "Event-driven architecture",
+     "def": "Services publish events to topics; any interested service subscribes without the publisher knowing."
+    },
+    {
+     "term": "Technology debt",
+     "def": "Accumulated cost of outdated technology that makes change expensive."
+    }
+   ],
+   "check": [
+    {
+     "q": "Only ticket creation is busy during a concert sale; search and catalogue are quiet. Compare how a monolith and microservices scale, and what each costs.",
+     "a": "The monolith clones the whole application behind a load balancer, paying for idle search and catalogue copies. Microservices scale only Ticketing, for example to 3 instances, while Search and Catalog stay at 1. The microservices approach costs separate deployments, discovery and monitoring, which pays off when load differs this much."
+    },
+    {
+     "q": "A product team wants to try a hotel-recommendation feature in the booking flow and drop it if it fails. Why is this easier with microservices, and what still needs care?",
+     "a": "Experimentation and substitution: a new, self-contained service plugs into the existing flow and can be removed without touching the rest, so the team can fail fast. Care is still needed with the API contract, timeouts and fallbacks, so the booking flow keeps working if the experiment is slow or removed."
+    },
+    {
+     "q": "An analytics team wants to subscribe to the existing order-events topic for a new dashboard, and says 'no impact analysis is needed because the publisher doesn't change'. Do you agree?",
+     "a": "Partly. The publisher's code doesn't change, which is the benefit of event-driven design. But the new consumer must understand the event contract, retention and authorisation, and handle duplicates, and a future change to the event schema now has one more consumer to consider. Register the consumer and its contract assumptions."
+    },
+    {
+     "q": "A pricing service needs a breaking change, but 3 partner integrations can't upgrade for 6 months. How can microservices handle this?",
+     "a": "Each service packages its own runtime, so V1 and V2 can run side by side. A gateway rule routes the partners to V1 and other clients, or one region, to V2. Retire V1 once the partners migrate. The cost is running and supporting two versions, including any data both must read."
+    }
+   ]
+  },
+  {
+   "id": "design-and-building-blocks",
+   "title": "Decomposition, characteristics and building blocks",
+   "slides": [
+    30,
+    35
+   ],
+   "summary": "How to decompose an application into services, the key architectural characteristics, and the platform capabilities needed to host microservices.",
+   "notes": [
+    "**Decompose in three steps.** (1) Identify system operations from the requirements, (2) identify services by business capability or DDD subdomain, (3) define service APIs and collaborations by assigning each operation to a service. A service is a standalone, independently deployable component reachable only through its API.",
+    "**Key architectural characteristics.** Business-oriented (designed around business objectives, deployable or removable without affecting others); design for failure (fault modelling, fault injection); decentralised data (own DB per service, avoid distributed transactions, polyglot persistence); discoverability (a registry); inter-service communication (sync REST or async broker); evolutionary design.",
+    "**The lecture contrasts ESB-centred SOA with lightweight microservices.** Microservices emphasise independent deployment and private data ownership. SOA is a broader service-oriented approach and does not inherently require a central ESB or shared database.",
+    "**Hosting needs platform building blocks.** API gateway (outside access), service discovery, diagnosability/monitoring, configuration and coordination, and a microservice chassis for cross-cutting concerns, on a cloud-native platform.",
+    "**Capabilities fall into four groups.** Core (listeners, implementation, storage, endpoints), infrastructure (cloud, VMs, containers, lifecycle management), supporting (gateway, load balancer, discovery, security, config, messaging, logging/monitoring, build) and process and governance (DevOps, automation, registry, documentation, templates)."
+   ],
+   "terms": [
+    {
+     "term": "Business capability",
+     "def": "Something the business does to create value (e.g. order management); a common basis for service boundaries."
+    },
+    {
+     "term": "Microservice chassis",
+     "def": "Base framework handling cross-cutting concerns (config, discovery, health, logging)."
+    },
+    {
+     "term": "Decentralised data management",
+     "def": "Each service owns its database, avoiding shared schemas and distributed transactions."
+    }
+   ],
+   "check": [
+    {
+     "q": "Decompose a food-delivery app (place order, assign rider, track delivery, pay, rate restaurant) using the three-step method. Where would you put 'assign rider'?",
+     "a": "Step 1 lists the system operations above. Step 2 identifies services by business capability: Order, Dispatch, Tracking, Payment, Ratings. Step 3 assigns each operation and defines APIs. 'Assign rider' belongs to Dispatch, which owns rider availability, and it collaborates with Order through an event or API. Putting it in Order would make Order own rider data it shouldn't."
+    },
+    {
+     "q": "Two services need to update an order and an inventory record together, and a teammate proposes a distributed transaction across both databases. What does the lecture's decentralised-data characteristic suggest?",
+     "a": "Avoid distributed transactions: each service owns its database, and the services coordinate through their APIs or events, with compensating actions if a step fails. This keeps services independently deployable. The cost is eventual consistency and designing for failed or repeated steps."
+    },
+    {
+     "q": "An architect says 'our SOA already has services, so we have microservices'. The SOA routes everything through a central enterprise bus and several services share a database. What is the difference?",
+     "a": "Microservices emphasise independent deployment, lightweight communication and private data ownership. A central bus that holds integration logic, plus a shared database, couples services in deployment and data. SOA doesn't require a central bus, but this one has one. To move toward microservices, move logic out of the bus and give each service its own data."
+    },
+    {
+     "q": "A team has deployed 8 services, but ops can't tell which one failed in an incident, and each service has its own way of reading config. Which platform building blocks are missing?",
+     "a": "Diagnosability and monitoring (central logs, metrics, tracing) and configuration management. A microservice chassis for cross-cutting concerns would standardise both. Service discovery and an API gateway are also needed for finding services and outside access. These capabilities are what make many small services operable."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "cards",
+     "title": "Four groups of microservice capabilities",
+     "items": [
+      {
+       "label": "Core",
+       "sub": "listeners, logic, storage",
+       "detail": "Service listeners and libraries, storage capabilities (physical and in-memory), service implementation, service endpoint."
+      },
+      {
+       "label": "Infrastructure",
+       "sub": "cloud, VMs, containers",
+       "detail": "Cloud hosting services, VM services, container services, application lifecycle management."
+      },
+      {
+       "label": "Supporting",
+       "sub": "LB, discovery, security, config, gateway",
+       "detail": "Software-defined load balancer, log management, service discovery, security, configuration, messaging, build and dependency management, operations monitoring, data lake, service gateway."
+      },
+      {
+       "label": "Process and governance",
+       "sub": "DevOps, registry, docs",
+       "detail": "DevOps automation, container registry, service documentation, reference architecture templates."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tools-landscape",
+   "title": "Tools by capability (reference)",
+   "slides": [
+    36,
+    39
+   ],
+   "summary": "Concrete tools for each capability group, mainly for open-book lookup.",
+   "notes": [
+    "**Each capability group has mature tooling; know the category, not every product.** Core: application frameworks (Spring Boot/Cloud) and endpoint/mesh tooling (Envoy, Istio). Infrastructure: containers and orchestration (Docker, Kubernetes), or a PaaS such as OpenShift that bundles them.",
+    "**Supporting capabilities map to familiar roles.** API gateway (Kong), load balancing, service registry (Eureka, Consul, Kubernetes DNS), security (OAuth), monitoring and tracing (Prometheus, Grafana, Jaeger), build/packaging (Docker, Helm) and data ingestion (Kafka).",
+    "**Process and governance covers safe, frequent release.** CI/CD pipelines, container registries, API documentation (Swagger), and release strategies: A/B testing, feature flags, canary (small traffic slice first) and blue-green or red-black (two environments, switch traffic in one step)."
+   ],
+   "terms": [
+    {
+     "term": "Canary deployment",
+     "def": "Release a new version to a small slice of traffic before full rollout."
+    },
+    {
+     "term": "Blue-green deployment",
+     "def": "Run old (blue) and new (green) environments side by side and switch traffic at once."
+    }
+   ],
+   "check": [
+    {
+     "q": "An exam answer lists a dozen product names for a microservices platform. What should replace the list to score well?",
+     "a": "The capability each tool provides and why the design needs it: an API gateway for external access, a service registry or platform DNS for discovery, monitoring and tracing for diagnosability, a CI/CD pipeline and registry for delivery. Name a product only as an example of a category. The marks are for matching capabilities to requirements, not for recalling products."
+    },
+    {
+     "q": "A team releases a risky change to a payment service. Should they use a canary release or blue-green, and what does each give up?",
+     "a": "A canary sends a small slice of traffic to the new version first, which limits exposure and gives real-traffic evidence, but both versions run at once, so they must be compatible. Blue-green switches all traffic between two environments in one step, which gives a fast, clean rollback but needs double capacity and exposes everyone at once. For a risky payment change, a canary is usually safer."
+    },
+    {
+     "q": "A team on Kubernetes plans to install a separate service registry. What would you ask before approving it?",
+     "a": "Whether the platform already provides discovery: Kubernetes DNS and Services already resolve and load-balance service names. A separate registry adds another component that must stay highly available. It is justified when services span environments outside the cluster or need registry features the platform lacks."
+    }
+   ]
+  },
+  {
+   "id": "inter-process-communication",
+   "title": "Inter-process communication",
+   "slides": [
+    40,
+    49
+   ],
+   "summary": "Communication styles, protocol and format choices, RPC/gRPC, REST maturity, messaging, and how to choose sync vs async.",
+   "notes": [
+    "**Communication style is the central design choice.** Synchronous blocking (caller waits) vs asynchronous non-blocking (caller carries on); request/response (expects a result) vs one-way notification vs publish/subscribe (one-to-many); event-driven (emitter doesn't know the consumers); common data (a shared source, rarely a good idea). Synchronous request/response is simple but tightly couples services; async messaging via queues or topics decouples them and improves resilience at the cost of complexity.",
+    "**Choose sync or async per interaction.** A direct query may need an immediate result; deferred work benefits from a durable queue or topic. Async introduces ordering, retry and consistency questions. Reactive non-blocking code changes how a process waits; it does not remove downstream dependencies or guarantee delivery.",
+    "**Implementation options.** RPC (call a remote method like a local one), REST (resources and standard HTTP verbs), GraphQL (consumer writes a custom query across services) and message brokers. Message formats: text (JSON, XML) is self-describing but verbose and slower to parse; binary (Protocol Buffers, Avro) is compact.",
+    "**gRPC vs REST:** gRPC combines schema-defined messages, HTTP/2 and streaming for efficient cross-language calls. REST/JSON often fits external web APIs. Check browser/proxy support and client tooling rather than assuming every JavaScript client or firewall has the same limitation.",
+    "**Richardson REST maturity.** Level 0: POST everything to one URL. Level 1: resources exist but actions are still POSTed. Level 2: proper HTTP verbs (GET/POST/PUT), enabling caching of GETs. Level 3: HATEOAS, responses carry links to next actions."
+   ],
+   "terms": [
+    {
+     "term": "gRPC",
+     "def": "Cross-language RPC framework using Protocol Buffers over HTTP/2 with streaming."
+    },
+    {
+     "term": "Protocol Buffers",
+     "def": "Compact binary message format defined by an IDL schema."
+    },
+    {
+     "term": "HATEOAS",
+     "def": "Responses carry links for next actions (REST level 3)."
+    },
+    {
+     "term": "GraphQL",
+     "def": "Query language letting clients request exactly the data they need, possibly from several services."
+    },
+    {
+     "term": "Publish/subscribe",
+     "def": "One-to-many async messaging via a topic."
+    }
+   ],
+   "check": [
+    {
+     "q": "When an order is placed, the Order service calls Payment, Inventory and Notification synchronously, and an outage in Notification makes orders fail. Redesign the communication.",
+     "a": "Keep a synchronous, time-bounded call only where the order needs an immediate result, such as payment authorisation. Publish an 'order placed' event to a durable topic for notification and other deferred work, so a Notification outage delays emails instead of failing orders. The cost is eventual consistency and handling retries, ordering and duplicate events."
+    },
+    {
+     "q": "Internal services exchange large volumes of small messages, and JSON parsing is a measurable cost. A public partner API also exists. Would you use gRPC, REST/JSON or both?",
+     "a": "Both. gRPC fits the internal calls: schema-defined binary messages over HTTP/2 are compact and fast to parse across languages, and they support streaming. REST/JSON fits the partner API: self-describing and widely supported by web clients and tooling. Check proxy and browser support before using gRPC beyond internal traffic."
+    },
+    {
+     "q": "An API uses POST /api for every action, with the action name in the request body, and the team wonders why responses can't be cached. Which REST maturity level is this, and what would you change?",
+     "a": "Level 0: one URL with everything POSTed. Move to resources (Level 1) and proper HTTP verbs (Level 2), so reads become GET requests that web infrastructure can cache, and writes use POST, PUT or DELETE. Level 3 would add links to next actions (HATEOAS), which helps discoverability but is optional for most internal APIs."
+    },
+    {
+     "q": "A team switched to reactive, non-blocking code and says 'our services are now decoupled from their dependencies'. Is that right?",
+     "a": "No. Reactive code changes how a process waits, so threads aren't blocked, but the service still depends on its downstream calls succeeding and has no delivery guarantee. Decoupling comes from asynchronous messaging through a durable queue or topic, together with timeouts and fallbacks."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "layers",
+     "title": "Richardson REST maturity",
+     "layers": [
+      {
+       "label": "Level 3: HATEOAS",
+       "sub": "responses carry links",
+       "detail": "Each response includes links to the next possible actions.",
+       "accent": true
+      },
+      {
+       "label": "Level 2: HTTP verbs",
+       "sub": "GET / POST / PUT",
+       "detail": "Use HTTP method and status semantics on resources. GET responses may be cached when response headers and privacy constraints permit."
+      },
+      {
+       "label": "Level 1: Resources",
+       "sub": "many URLs, still POST",
+       "detail": "Separate resource URLs exist but actions are still POSTed."
+      },
+      {
+       "label": "Level 0: One endpoint",
+       "sub": "POST to one URL",
+       "detail": "A single URL endpoint receives every call; each request specifies the action, its target and parameters."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "gateway-and-discovery",
+   "title": "API gateway, versioning and service discovery",
+   "slides": [
+    50,
+    56
+   ],
+   "summary": "Why clients need an API gateway and a service registry, semantic versioning, and client-side vs server-side discovery.",
+   "notes": [
+    "**Clients need one front door and a way to find services.** In a monolith one call sufficed and location was fixed; with many services the client would make many calls and need to know where each lives. The **API gateway** is the single entry point that calls services and aggregates results; the **service registry** stores where instances live.",
+    "**Gateway vs mesh.** The gateway handles north-south (client to service) traffic: routing, transformation, throttling, security, metering, protocol translation, composition, caching and monitoring. A service mesh handles east-west (service to service) traffic.",
+    "**Why a gateway helps.** It separates consumers from providers, gives each client type the API it needs, orchestrates many calls into one (essential for mobile with latency and bandwidth limits) and centralises monitoring of API usage.",
+    "**Semantic Versioning signals compatibility:** MAJOR for incompatible changes, MINOR for compatible enhancements and PATCH for compatible fixes. Adding an optional field is compatible only if existing defaults and consumer behaviour remain valid; a new required field or changed meaning can still break clients.",
+    "**Client-side vs server-side discovery.** Services register with the registry (e.g. Eureka) and are then discovered. Client-side: the client queries the registry, load-balances itself and calls the instance directly, needing discovery code per language. Server-side: the client calls a load balancer that queries the registry and routes, hiding discovery from clients but adding another highly available component unless the platform (Kubernetes) provides it."
+   ],
+   "terms": [
+    {
+     "term": "API gateway",
+     "def": "Single entry point that routes, aggregates, secures, throttles and monitors requests."
+    },
+    {
+     "term": "Service registry",
+     "def": "Database of service instances and locations, e.g. Eureka, Consul."
+    },
+    {
+     "term": "Service mesh",
+     "def": "Infrastructure layer (Istio, Linkerd) for east-west traffic."
+    },
+    {
+     "term": "Semantic Versioning",
+     "def": "MAJOR.MINOR.PATCH scheme signalling breaking vs compatible changes."
+    }
+   ],
+   "check": [
+    {
+     "q": "A mobile app's home screen makes 9 calls to different services and is slow on poor networks. What would you change?",
+     "a": "Add an API gateway (or a backend for the mobile client) that calls the services and composes one response tailored to the screen, cutting round trips and payload size for limited mobile bandwidth. The gateway becomes a critical component that must be highly available and must not accumulate business logic."
+    },
+    {
+     "q": "A polyglot estate (Java, Go, Python) uses client-side discovery with a registry library, and the Python library is unmaintained. What are the options?",
+     "a": "Switch to server-side discovery: clients call a load balancer or platform service name that queries the registry, so no discovery code is needed per language. The cost is another component that must be highly available, unless the platform, such as Kubernetes, already provides it. Client-side discovery saves a hop but needs library support in every language."
+    },
+    {
+     "q": "A team adds an optional request field and a new response attribute and calls it version 2.0.0. Is MAJOR right?",
+     "a": "Usually not: this is MINOR if omitting the field keeps the old meaning and existing consumers ignore unknown response fields. A MAJOR bump wrongly signals a breaking change and can trigger unnecessary migrations. Test those consumer assumptions, because a new required field or a changed meaning would be MAJOR."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "hub",
+     "title": "API gateway as the single entry point",
+     "center": {
+      "label": "API Gateway",
+      "sub": "north-south traffic",
+      "detail": "Web, mobile and partner clients reach one front door for routing, policy and selected aggregation."
+     },
+     "items": [
+      {
+       "label": "Service A",
+       "sub": "REST API",
+       "detail": "The gateway selects a backend and forwards or aggregates a request."
+      },
+      {
+       "label": "Service B",
+       "sub": "REST API",
+       "detail": "Different backend services can scale without exposing their instance addresses to clients."
+      },
+      {
+       "label": "Service C",
+       "sub": "other protocol",
+       "detail": "A configured gateway can translate protocols where the required integration is supported."
+      }
+     ],
+     "caption": "Clients enter above the gateway. Discovery resolves backend locations; the registry is not a hop through which application requests must pass."
+    }
+   ]
+  },
+  {
+   "id": "maintenance-and-summary",
+   "title": "Maintenance, maturity and pros/cons",
+   "slides": [
+    57,
+    65
+   ],
+   "summary": "Practices for keeping microservices healthy, a maturity model, rules and workflows, and the summary of advantages and disadvantages.",
+   "notes": [
+    "**Design recovery for each interaction.** Preserve compatible APIs, set client timeouts and return useful errors. Monitor before restarting; a slow dependency is not always a failed process. Durable queue subscriptions can retain work for recovery, subject to retention, acknowledgement and retry policy; make handlers idempotent.",
+    "**Maturity grows along five dimensions, Level 0 to 3.** Application: monolithic to API-centric; database: enterprise DB to data lake; infrastructure: physical to containers; monitoring: infra only to APM with central logs; process: waterfall to DevOps. Low maturity is a warning sign for adopting microservices.",
+    "**Rules and workflows.** Simple rules local to a service go in an embedded rule engine; complex or cross-domain rules go in a central rule repository; end-to-end processes mixing automation and people are composed with BPM or a dashboard.",
+    "**Advantages.** Technology heterogeneity, modularity, simplicity per service, selective scaling, continuous delivery and DevOps, fault isolation, graceful degradation, data segregation, team alignment, and composability or easy replacement.",
+    "**Disadvantages.** Harder troubleshooting (every network call can fail), added latency, operational complexity (hundreds of services to deploy, monitor and back up) and version management overhead."
+   ],
+   "terms": [
+    {
+     "term": "Failsafe design",
+     "def": "Designing calls to fail gracefully, e.g. client timeouts and provider defaults or clear error codes."
+    },
+    {
+     "term": "Fault isolation",
+     "def": "A failure in one service is contained and does not bring down others."
+    }
+   ],
+   "check": [
+    {
+     "q": "A downstream inventory service is often unavailable for minutes at a time, and the order service's threads pile up waiting. Give the cause, a countermeasure and the countermeasure's drawback.",
+     "a": "The cause is synchronous calls with no timeout, so failures propagate as blocked threads. Set client timeouts with clear errors, and where delayed processing is acceptable send work through a durable queue with acknowledgements and bounded retries, with idempotent handlers. The drawback is that orders are confirmed before stock is checked, so the business needs a path for orders that later fail."
+    },
+    {
+     "q": "A company with waterfall releases, physical servers and monitoring of infrastructure only wants to move to 50 microservices this year. What does the maturity model suggest?",
+     "a": "It is at a low level on the process, infrastructure and monitoring dimensions, which is a warning sign. With 50 services, missing DevOps, containers and APM with central logs would make troubleshooting and releases unmanageable. Raise maturity first: automate delivery, containerise, centralise logs and tracing, then grow the service count."
+    },
+    {
+     "q": "A discount rule applies only within the cart service, while a loyalty rule spans cart, orders and partners. Where should each rule live?",
+     "a": "The simple, local discount rule fits an embedded rule engine inside the cart service. The cross-domain loyalty rule belongs in a central rule repository that the services consult, so it is defined once. An end-to-end process that also involves people would be composed with BPM or a dashboard."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A retailer's monolithic e-commerce app slows down at sale peaks (search traffic rises 10 times, checkout 3 times), and releases take 6 weeks because 5 teams share one deployable. Propose a microservices design and an incremental migration plan, and name the main risk at each stage.",
+   "a": "Decompose by business capability: Catalog/Search, Cart, Order, Inventory, Payment. Assign operations and define APIs, giving each service its own data, behind an API gateway with service discovery. Extract Search first: it has the biggest load difference, it is read-heavy and its data can be copied. Then extract Cart and Order. Risks: at first, data synchronisation between the new Search store and the monolith; later, consistency between Order, Inventory and Payment without distributed transactions. Independent deployment through CI/CD addresses the 6-week release cycle, but only if teams are reorganised around services."
+  },
+  {
+   "q": "A 6-person team with manual deployments, infrastructure-only monitoring and a moderately complex internal app is told to 'go microservices'. Argue whether they should, using the microservice premium and the maturity model, and say what would change your answer.",
+   "a": "They shouldn't yet. The microservice premium (operations, monitoring, versioning, network latency, troubleshooting) pays off only when a system is too complex to manage as a monolith, and a moderately complex app for 6 people is unlikely to qualify. Low maturity on process and monitoring makes it worse, because they couldn't diagnose distributed failures. Build a modular monolith and raise DevOps maturity. Reconsider if the team grows, parts need very different scaling or availability, or release coordination becomes the bottleneck."
+  },
+  {
+   "q": "Design the communication between Order, Payment, Inventory and Notification services for a shop that must confirm payment to the user within 3 seconds and must never charge twice. Justify each synchronous or asynchronous choice.",
+   "a": "Order calls Payment synchronously with a time limit under the 3-second budget, because the user needs the outcome, and passes an idempotency key so a retry never charges twice. After payment, Order publishes an 'order paid' event to a durable topic: Inventory reserves stock and Notification sends email asynchronously, so their outages don't fail checkout. Persist order and payment state and handle duplicate events in consumers. If inventory later fails, compensate by refunding or back-ordering instead of using a distributed transaction. gRPC can carry the internal calls."
+  },
+  {
+   "q": "A system has 40 services, a mobile app and a web app. Explain the roles of an API gateway, a service registry and a service mesh, say which traffic each handles, and say which you could do without if the platform is Kubernetes.",
+   "a": "The gateway handles north-south traffic from the mobile and web apps: routing, composition, security, throttling, protocol translation and monitoring. It can be tailored per client type. The registry records where service instances live, for client-side or server-side discovery. The mesh manages east-west traffic between the 40 services: retries, encryption and telemetry. On Kubernetes, the platform's Services and DNS already provide discovery, so a separate registry is often unnecessary. The mesh is justified at 40 services if uniform policy is needed, at the cost of extra hops and a control plane."
+  },
+  {
+   "q": "A public pricing API is used by 200 external clients. The team must rename a field, add an optional discount field and fix a rounding bug. Plan the version numbers and the rollout so no client breaks.",
+   "a": "Rounding fix: PATCH. Optional discount field: MINOR, provided omitting it keeps the old meaning and clients ignore unknown response fields, which should be tested with consumer contracts. Renaming a field is incompatible: MAJOR. Run V1 and V2 side by side, route by version at the gateway, document both contracts with OpenAPI, and retire V1 only after the 200 clients have migrated, tracked through gateway metrics. The cost is supporting two versions for the migration period."
+  }
+ ]
+}

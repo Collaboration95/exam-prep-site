@@ -1,0 +1,641 @@
+{
+ "key": "05-platform-management-v2-1",
+ "title": "Platform Management",
+ "pages": 80,
+ "minutes": 37,
+ "overview": "Platform management keeps interactions scalable, available and safe to change. This topic covers discovery, deployment strategies, circuit breakers, rate limits, tracing, sagas, metrics and centralised logs. Practise choosing a tool from the failure it prevents and explaining the assumptions behind its guarantees.",
+ "big_ideas": [
+  "A platform's value is the producer-consumer interaction; engineering scales, limits, measures and evolves it.",
+  "Service discovery registers names and locations, resolves a target, then connects. Keep discovery infrastructure available; consensus-backed registries commonly use 3 or 5 nodes.",
+  "Blue/green switches environments; rolling gradually replaces instances; canary limits live exposure; shadowing mirrors requests and discards new-version responses.",
+  "Circuit breaker is a state machine (Closed, Open, Half-Open) that fails fast to stop cascading failures; rate limiting caps callers using an in-memory quota store.",
+  "Distributed tracing passes a UUID via headers; a trace spans services, a span is one unit of work.",
+  "Sagas replace 2PC with local transactions plus compensations (orchestrated or choreographed) but offer no read isolation.",
+  "Distinguish time-based uptime, request success (yield) and reachable data (harvest). Use the lecture’s stated uptime formula when requested, with its denominator assumption explicit.",
+  "Prefer platform features (Kubernetes DNS, Istio, ELK/Prometheus) over hand-coded plumbing."
+ ],
+ "sections": [
+  {
+   "id": "platform-toolbox",
+   "title": "Why engineers care: the platform toolbox",
+   "slides": [
+    2,
+    7
+   ],
+   "summary": "A platform exists to enable producer-consumer interaction, and engineering's job is a toolbox that scales, protects and evolves that interaction.",
+   "notes": [
+    "**A platform is a business model, and engineering makes its interactions work.** It creates value by facilitating exchanges between interdependent groups (consumers and producers), such as videos on YouTube or data and APIs for a health agency. Modern platforms blur infrastructure and application architecture, so they must solve service discovery, resource coordination, container orchestration and usage reporting.",
+    "**Three engineering concerns decide whether the platform survives:** scalability (increasing and limiting interaction), availability (a seamless experience) and evolvability (shipping fixes and features). Consistently bad experience kills a platform.",
+    "**The toolbox maps tools to business intent:** service discovery, deployment strategies (canary, rolling), circuit breaker and rate limiting, distributed tracing, metrics collection and log aggregation. Together they scale the interaction, limit it, measure it, and let you enhance the platform without disrupting users."
+   ],
+   "terms": [
+    {
+     "term": "Platform",
+     "def": "A business model that creates value by facilitating exchanges between producers and consumers."
+    }
+   ],
+   "check": [
+    {
+     "q": "A product manager calls deployment strategies and distributed tracing 'ops plumbing' and wants the platform team on features only. How do you argue for them?",
+     "a": "A platform's value is the interaction between producers and consumers, and a consistently bad experience drives both away. The toolbox protects that interaction: scalability (increasing and limiting it), availability (a seamless experience) and evolvability (releasing fixes and features safely), plus data to improve it. Features nobody can use during outages or slow fixes do not grow the platform."
+    },
+    {
+     "q": "Map each tool to the business intent it serves: canary releases, rate limiting and distributed tracing.",
+     "a": "Canary releases support experimentation and seamless rollout, which is evolvability without disrupting users. Rate limiting limits the interaction, protecting scarce resources and spending from excessive or abusive traffic. Distributed tracing lowers reaction time when something breaks, which shortens recovery and protects availability."
+    }
+   ]
+  },
+  {
+   "id": "service-discovery",
+   "title": "Service discovery",
+   "slides": [
+    8,
+    22
+   ],
+   "summary": "How services find each other when instances come and go: a registry that works like an internal DNS, kept highly available by a consensus cluster.",
+   "notes": [
+    "**Architecture trade-off:** a monolith is operationally simpler but scales and deploys as a unit. SOA and microservices add service boundaries and reuse. Microservices favour independent scaling, deployment and data ownership, with greater operational overhead; containers are a common implementation, not their definition.",
+    "**Hardcoded IPs fail in the cloud.** Auto-scaling creates new instances that must join load balancing, and nodes or containers restart and move (fallacies of distributed computing). The solution must survive node failures, store service locations, spare clients from using raw IPs, and not be a single point of failure.",
+    "**The answer is name-based lookup, as on the internet (DNS).** A service registry is effectively an internal DNS server for east-west traffic (service to service inside the platform), as opposed to north-south traffic (users to platform). Three steps: register the service (name to IP), look it up from the registry, connect to it.",
+    "**Keep discovery available:** consensus-backed registries such as ZooKeeper, etcd or Consul commonly use 3 or 5 nodes. A majority must agree on changes; 3 tolerates one unavailable node and 5 tolerates two. Even-sized clusters can form a majority, but an extra even-numbered member does not increase failure tolerance.",
+    "**Use platform discovery:** in the lecture’s Kubernetes example, callers use a service alias such as http://payment-manager-service:8080. Service registration and DNS integration are platform-managed. The Spring Cloud/Eureka example requires more application integration. Prefer a supported platform capability over duplicating plumbing."
+   ],
+   "terms": [
+    {
+     "term": "East-West traffic",
+     "def": "Traffic between services inside the platform."
+    },
+    {
+     "term": "North-South traffic",
+     "def": "Traffic between users and the platform."
+    },
+    {
+     "term": "Service registry",
+     "def": "Internal DNS-like store of service names and locations."
+    },
+    {
+     "term": "Consensus protocol",
+     "def": "Paxos/Raft/ZAB: keeps registry cluster nodes agreeing (ZooKeeper, etcd, consul)."
+    }
+   ],
+   "check": [
+    {
+     "q": "During a traffic spike, auto-scaling adds six new instances of the Payment service, but the callers are configured with the two original IP addresses. What happens, and what is the fix?",
+     "a": "All traffic still goes to the two original instances, so the new ones sit idle and the spike is not absorbed; if an original instance restarts at a new address, calls to it fail. Callers should refer to Payment by an alias resolved through a service registry, which works like an internal DNS: instances register, callers look up, then connect. The registry must itself be highly available."
+    },
+    {
+     "q": "A team wants a four-node service-registry cluster 'for extra safety' instead of three. Do you agree?",
+     "a": "No. A consensus protocol such as Raft or Paxos needs a majority: four nodes need three votes, so they still tolerate only one failure, the same as three nodes. Five nodes tolerate two. The fourth node adds cost and coordination without adding failure tolerance, which is why odd sizes such as three or five are the norm."
+    },
+    {
+     "q": "Services run on a container orchestrator with built-in DNS-based discovery. A teammate wants to add a library-based registry with client and server code as well. Advise.",
+     "a": "Use the built-in DNS: it already provides registration and lookup by alias, with no discovery code in the services. A library-based registry needs client and server code, which takes engineers away from business requirements, and a second registry is another component to keep highly available. Add one only if some services run outside the orchestrator and must be discovered the same way."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Three-step service discovery",
+     "steps": [
+      {
+       "label": "1. Register",
+       "sub": "name and location",
+       "detail": "On start-up each service (e.g. payment-service at 192.168.4.12) registers its alias and address with the service registry.",
+       "accent": true
+      },
+      {
+       "label": "2. Lookup",
+       "sub": "resolve an alias",
+       "detail": "The calling service (e.g. Agency) refers to the callee by alias and gets the current IP from the registry, like a DNS lookup."
+      },
+      {
+       "label": "3. Connect",
+       "sub": "caller talks directly to service",
+       "detail": "With the address in hand the caller connects to the service. The registry is not in the data path."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "deployment-strategies",
+   "title": "Deployment strategies",
+   "slides": [
+    23,
+    31
+   ],
+   "summary": "Four ways to release a new version (blue/green, rolling, canary, shadowing) and when to choose each.",
+   "notes": [
+    "**Pick a strategy from your business context.** Ask how tolerant customers are of downtime (nines; banks, e-commerce), whether users are global, how often you release, how fast you can roll back, and whether you want to experiment in production (A/B tests, passive machine learning models).",
+    "**Four strategies:** blue/green keeps old and new environments available and switches live traffic; rolling progressively replaces old instances; canary gives a small share of live requests to the new version (the lecture uses 5–10%); shadowing sends copies to the new version but discards its responses.",
+    "**Canary = low-risk, experiment-friendly.** Only a small set of users or servers sees the release. It must be incremental and backward compatible for easy rollback. Use it for cohort behaviour, evaluating new ML models and unpredictable feature behaviour.",
+    "**Rolling deployments:** gradually replace instances while others serve traffic. They avoid duplicating a full environment, but seamless service needs sufficient healthy capacity, traffic draining and compatible versions. Temporary extra capacity may still be needed; “no downtime” is a design goal, not an automatic property.",
+    "**Choose by risk:** rolling for compatible routine patches; canary for limited real-user exposure; blue/green for fast traffic switch-back while both environments remain ready. Shadowing compares behaviour without returning new responses, but mirrored writes must be isolated to avoid duplicate side effects. None automatically reverses database changes."
+   ],
+   "terms": [
+    {
+     "term": "Blue/green",
+     "def": "Two full environments; switch over once the new one is verified."
+    },
+    {
+     "term": "Rolling update",
+     "def": "Gradual one-by-one replacement of old instances."
+    },
+    {
+     "term": "Canary release",
+     "def": "New version serves a small percentage of traffic first."
+    },
+    {
+     "term": "Shadowing",
+     "def": "Traffic is mirrored to the new version whose responses are discarded."
+    }
+   ],
+   "check": [
+    {
+     "q": "A bank must release a backward-compatible bug fix with no downtime and has no budget for a second full environment. Which strategy fits?",
+     "a": "A rolling update: it progressively replaces V1 instances with V2, with no downtime or lost requests and no extra resources, which is what the lecture recommends for bug fixes and patches. It needs enough healthy capacity while instances are swapped, and V1 and V2 must stay compatible because both serve traffic during the rollout and rollback."
+    },
+    {
+     "q": "A new fraud-detection model must be evaluated on real traffic without affecting any customer's decision. Canary or shadowing?",
+     "a": "Shadowing: copies of requests go to V2 while customers get V1's responses, so you can compare decisions without exposing anyone to the new model. A canary would let 5 to 10% of customers be judged by an unproven model. Shadowing needs V2's writes and external side effects isolated, because ignoring its response does not stop those from happening."
+    },
+    {
+     "q": "During a rolling update, V2 starts writing a new required column that V1 does not fill. A rollback to V1 then fails with errors. Which rule was broken?",
+     "a": "Rolling and canary releases run old and new versions side by side and must allow rollback, so each new version must be backward compatible with existing data and callers. Make the column optional, or give it a default, until every version that writes the table fills it. Breaking changes need incremental releases rather than one step."
+    },
+    {
+     "q": "A major release must be switchable back within seconds if anything looks wrong, and the budget allows double capacity for a short time. Which strategy fits, and what does it not protect against?",
+     "a": "Blue/green: V2 runs alongside V1 and traffic switches only once V2 is confirmed working, so switching back is near-instant. It costs a second full environment for the duration. Switching traffic does not undo data V2 has already written to shared stores, so the data must stay readable by V1."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Traffic and rollback trade-offs",
+     "columns": [
+      "Strategy",
+      "Who answers?",
+      "Main condition"
+     ],
+     "rows": [
+      [
+       "Blue/green",
+       "Old or new environment after switch",
+       "Keep old environment ready; data must remain compatible"
+      ],
+      [
+       "Rolling",
+       "Mixed versions during replacement",
+       "Healthy capacity and compatible versions"
+      ],
+      [
+       "Canary",
+       "New version answers small cohort",
+       "Measure failures before increasing exposure"
+      ],
+      [
+       "Shadowing",
+       "Old version; new replies discarded",
+       "Isolate writes and other side effects"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "deployment-case",
+   "title": "Deployment case: splitting the Payment table",
+   "slides": [
+    32,
+    34
+   ],
+   "summary": "A breaking database change must be broken into backward-compatible increments (see the separate 05c case study).",
+   "notes": [
+    "**The scenario:** the Payment microservice stores all payment types in one Payment table. Analysis shows Cheque and Apple Pay capture different fields, so the table should be split into ChequePayment and ApplePayPayment. Version 1 writes to Payment; Version 2 writes to the two new tables.",
+    "**Why it is hard:** old data must be migrated and the change is not backward compatible (old payments could not be read). The cure is planning: incremental releases 1.1, 1.2 ... finally 2.0, each choosing a suitable deployment strategy."
+   ],
+   "terms": [
+    {
+     "term": "Backward compatibility",
+     "def": "New version still works with old data and callers, enabling rollback."
+    }
+   ],
+   "check": [
+    {
+     "q": "V1 of the Payment service writes everything to one Payment table; V2 will write to ChequePayment and ApplePayPayment instead. Why can't this be done as a single rolling update to V2?",
+     "a": "The change is not backward compatible: V2 cannot retrieve historical payments still in the Payment table, and during a rolling update V1 and V2 share traffic, so each would miss the other's writes. Rolling back would also hide payments V2 had accepted. The lecture breaks it into incremental releases (1.1, 1.2, then 2.0) so each step stays compatible."
+    },
+    {
+     "q": "Step 1 of the case creates the two new tables with a rolling update and no code change. Why is this step safe, and why do it on its own?",
+     "a": "No running code reads or writes the new tables yet, so V1 is unaffected, and rolling back just drops two empty tables. Doing the schema expansion alone separates the database change from any behaviour change, so if a later step fails, the cause is easier to isolate. Later releases can rely on the tables already existing."
+    }
+   ]
+  },
+  {
+   "id": "circuit-breaker",
+   "title": "Circuit breaker",
+   "slides": [
+    35,
+    43
+   ],
+   "summary": "Stop a failing dependency from dragging callers down: fail fast, retry carefully, with the logic in an interceptor rather than business code.",
+   "notes": [
+    "**The problem is cascading failure.** If Payment is down or so slow that requests time out, Agency keeps calling it, its thread pool clogs, it can no longer serve other calls, and requests to Agency clog in turn.",
+    "**Breaker behaviour:** count dependency errors or timeouts in a window; open when a threshold is exceeded and fail fast. After a reset interval, allow limited probes and close only on success. A retry policy is separate: use bounded backoff for transient failures without overwhelming recovery.",
+    "**Implement via interceptors, not code.** Coding forwarding/blocking logic into Agency is not a business problem and would change per protocol (HTTP, gRPC, Thrift). Libraries or a mesh intercept all outgoing requests, track failures in a time window, fail beyond the threshold, and retry some requests after the window, with little or no code. Options: Resilience4J, Sentinel, Hystrix (not active), Istio service mesh (Envoy).",
+    "**It is a state machine:** Closed (allow all), Open (deny all), Half-Open (allow some)."
+   ],
+   "terms": [
+    {
+     "term": "Circuit breaker",
+     "def": "Interceptor that stops calls to a failing service and probes it again later."
+    },
+    {
+     "term": "Exponential backoff",
+     "def": "Retry delays that double each time (50, 100, 200 ms ...)."
+    },
+    {
+     "term": "Cascading failure",
+     "def": "One slow or failed service exhausting others' resources up the call chain."
+    }
+   ],
+   "check": [
+    {
+     "q": "The Payment service becomes extremely slow, and soon the Agency service stops answering even requests that never touch Payment. Explain why, and how a circuit breaker helps.",
+     "a": "Agency's request threads all block waiting on Payment, so its thread pool clogs and it cannot serve anything; its own callers then clog too, a cascading failure. A circuit breaker counts failures and timeouts in a window and, past a threshold, opens and fails calls to Payment immediately, so Agency's threads stay free for other work. Callers get an error or fallback for payment features until Payment recovers."
+    },
+    {
+     "q": "A team configures its circuit breaker with a reset timeout of zero and lets all traffic through once the breaker is half-open. What goes wrong?",
+     "a": "The half-open state is meant to let a few sample requests test whether the dependency has recovered after a rest period. With no timeout and all traffic let through, a recovering Payment service is flooded immediately and probably fails again, so the breaker flaps between open and closed. Give it a real interval, use exponential backoff, and send only a subset of requests while half-open."
+    },
+    {
+     "q": "Developers plan to hand-code circuit-breaking logic around every outgoing call. Some services use HTTP and others gRPC. What would you suggest?",
+     "a": "Use an interceptor instead, through a resilience library or a service mesh. Circuit breaking is not a business problem, and hand-written logic would need rewriting for each protocol. An interceptor tracks failures, opens the circuit and retries samples with little or no code. The cost is another layer to configure and understand when debugging."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Circuit breaker state machine",
+     "steps": [
+      {
+       "label": "Closed",
+       "sub": "allow all requests",
+       "detail": "Normal state. Failures and timeouts are counted within a window.",
+       "accent": true
+      },
+      {
+       "label": "Open",
+       "sub": "deny all requests",
+       "detail": "Entered when failures or timeouts exceed the allowed limit. Callers get errors immediately without contacting the service."
+      },
+      {
+       "label": "Half-Open",
+       "sub": "allow some requests",
+       "detail": "Entered when the reset timeout expires. If the sample requests succeed it goes back to Closed; if they fail, back to Open."
+      }
+     ],
+     "caption": "Closed to Open when failures exceed limits; Open to Half-Open after the timeout; Half-Open to Closed on success or back to Open on failure."
+    }
+   ]
+  },
+  {
+   "id": "rate-limiting",
+   "title": "Rate limiting",
+   "slides": [
+    44,
+    49
+   ],
+   "summary": "Protect limited resources and spending by capping traffic per caller, again through interceptors.",
+   "notes": [
+    "**Why:** not all users are equal (conditional limits by plan), services have limited CPU, memory and IOPS and limited budget, and unrestricted traffic invites DDoS.",
+    "**How:** an interceptor intercepts all requests, extracts username, source IP, source service or user plan, and consults a fast in-memory quota database to verify and update limits and usage. Little or no code. Options: Resilience4J, Sentinel, Istio, all cloud providers.",
+    "**Circuit breaker vs rate limiter:** the breaker protects the caller from a failing callee; the limiter protects the callee from excessive callers. Both limit interaction."
+   ],
+   "terms": [
+    {
+     "term": "Rate limiting",
+     "def": "Capping requests per caller, plan or source, enforced by an interceptor."
+    }
+   ],
+   "check": [
+    {
+     "q": "On a shared API, one free-plan user's script sends 10,000 requests a minute and slows the service for paying enterprise customers. What would you put in place?",
+     "a": "Conditional rate limits enforced by an interceptor, which reads the username, source IP, source service and plan from each request and checks them against a quota store. Free-plan users get a lower limit than enterprise users, so one script cannot take capacity from everyone. This also protects limited CPU, memory and spending, and blunts denial-of-service attempts."
+    },
+    {
+     "q": "To avoid running another component, a teammate proposes keeping rate-limit counters in the main relational database. Do you agree?",
+     "a": "No. The quota check runs on every request, so it must add minimal latency, which is why the lecture uses a fast in-memory quota store. Counters in the main database would add a round trip and write load to every call and could slow the very service you are protecting. The in-memory store must be shared across instances, and briefly losing counts on a restart is usually acceptable for quotas."
+    },
+    {
+     "q": "A healthy service is being overloaded by one customer, while a different dependency is timing out. Which control fits each problem?",
+     "a": "Rate-limit the excessive customer to protect the service's capacity for others. Put a circuit breaker on the failing dependency so callers stop waiting on it and fail fast. Rate limiting controls incoming traffic volume; a circuit breaker reacts to failures of something you call. Using one in place of the other would not help."
+    }
+   ]
+  },
+  {
+   "id": "distributed-tracing",
+   "title": "Distributed tracing",
+   "slides": [
+    50,
+    55
+   ],
+   "summary": "Follow one user request across many services using a shared ID, so failures are found quickly and MTTR drops.",
+   "notes": [
+    "**Problem:** one request touches many services; without tracing it is hard to debug, fixes are slow, MTTR rises and teams lose communication.",
+    "**Mechanism:** propagate a trace ID in request headers across services; reuse incoming context and create a new trace at an entry point when needed. Instrumentation creates spans and records timing and parent/child relationships. A shared ID correlates work; it does not make the request a single database transaction.",
+    "**Trace vs span:** the lecture presents OpenTracing and a Tracer API. A trace follows an end-to-end request; a span records one unit of work such as an HTTP call or database query. One service may produce several spans, so service count and span count need not match.",
+    "**Tools:** Jaeger (CNCF), Spring Sleuth, Zipkin, Datadog, Stackdriver."
+   ],
+   "terms": [
+    {
+     "term": "Trace",
+     "def": "End-to-end record of a request or business operation across components; not a database transaction."
+    },
+    {
+     "term": "Span",
+     "def": "Timed unit of work within a trace; one service can create several spans."
+    },
+    {
+     "term": "MTTR",
+     "def": "Mean time to recover."
+    }
+   ],
+   "check": [
+    {
+     "q": "A request enters through the gateway, which calls Order, which calls Payment. Payment generates a new UUID instead of reusing the incoming trace header. What breaks?",
+     "a": "The trace splits in two, so you can no longer follow the request from the gateway to Payment, and a failure in Payment cannot be tied to the user request that caused it. The rule is that only the root creates the ID, and any service that finds the header populated reuses it. Tracing libraries enforce this by intercepting requests, which is safer than hand-written code in each service."
+    },
+    {
+     "q": "Users report intermittent checkout failures spanning five services. The team spent two days logging into each container to find the failing one. What would cut that time?",
+     "a": "Distributed tracing with a shared trace ID shows the spans for each request, so the failing or slow service stands out, and centralised logs searched by that ID give the detail without logging into containers. Untraceable problems are what make MTTR rise significantly. The cost is instrumenting services and running the tracing and logging back-ends."
+    },
+    {
+     "q": "In a 4-second checkout trace, the Payment span takes 3.8 seconds and contains a child span 'fraud-check' of 3.7 seconds. Where do you look first, and why does the child span matter?",
+     "a": "Look at the fraud check: almost all of Payment's time is spent there. A span is one unit of work, and services can create child spans through the tracer API to break their own work down. Without that child span you would only know Payment was slow, not which part."
+    }
+   ]
+  },
+  {
+   "id": "sagas",
+   "title": "Distributed transactions and the Saga pattern",
+   "slides": [
+    56,
+    64
+   ],
+   "summary": "Why two-phase commit does not fit microservices, and how sagas use compensating transactions with orchestration or choreography.",
+   "notes": [
+    "**Business transactions span services and need consistency.** The traditional answer is two-phase commit (prepare, then commit), but not all databases support ACID, platforms use several databases, and 2PC needs synchronous communication while modern systems are asynchronous. Skipping transactions is also risky because partial executions are dangerous.",
+    "**Saga:** commit local steps and compensate completed steps after a later failure. In the lecture, CreateOrder and CreateMaidOrder precede MakePayment. If payment fails, cancel MaidOrder, then Order. Compensation is a new business action, not an isolated database rollback, and may itself require retry.",
+    "**Coordination:** an orchestrator stores progress and directs forward and compensating steps; its availability and contention need attention. Choreography distributes reactions among services, avoiding one central controller but making the complete flow harder to debug. Both need reliable, duplicate-safe processing.",
+    "**Expectations:** a shared traceId is very important, and there is no read isolation: users may read data from incomplete transactions or in-progress cancellations."
+   ],
+   "terms": [
+    {
+     "term": "Saga",
+     "def": "Business transaction made of local transactions with compensations, instead of 2PC."
+    },
+    {
+     "term": "Compensating transaction",
+     "def": "Action that semantically undoes an earlier step (CancelPayment)."
+    },
+    {
+     "term": "Two-phase commit",
+     "def": "Prepare phase then commit phase; needs synchronous coordination."
+    }
+   ],
+   "check": [
+    {
+     "q": "Order data lives in a relational database and MaidOrder in a store without distributed-transaction support, and services talk asynchronously. A teammate proposes two-phase commit across them. Do you agree?",
+     "a": "No. Two-phase commit needs ACID-capable databases and synchronous communication, and this platform has neither. Use a saga: each service runs a local transaction, and each step Ti has a compensating transaction Ci that undoes it if a later step fails. You give up atomic isolation in exchange for loose coupling and asynchronous calls."
+    },
+    {
+     "q": "In the Maid2Order saga, CreateOrder and CreateMaidOrder succeed, then MakePayment fails. What runs next, and in what order?",
+     "a": "The compensations for the completed steps run in reverse: CancelMaidOrder in MaidOrderManager, then CancelOrder in CustomerManager. They run asynchronously like the forward steps, so each compensation must be safe to retry and handle duplicate messages. A shared trace ID shows whether the whole saga, including compensation, completed."
+    },
+    {
+     "q": "A customer sees a maid order as created, and a minute later it disappears because payment failed. Is this a bug?",
+     "a": "Not in itself. Sagas have no read isolation, so other users and screens can see data from transactions that are still in progress or being compensated. Expect it and design for it, for example by showing such orders as pending until the saga completes. If customers must never see unconfirmed orders, the read path has to filter on saga state."
+    },
+    {
+     "q": "The team must debug failed orders quickly. Should the three-service order saga be orchestrated or choreographed?",
+     "a": "Orchestrated: the orchestrator holds the logic and publishes each transaction and compensating event, so progress and failure points are visible in one place. Its drawback is that it can become a single point of failure or contention, so it must be made highly available. Choreography spreads logic across services and is harder to debug. Both still need tracing with a shared trace ID."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Payment failure reverses completed steps",
+     "steps": [
+      {
+       "label": "Create order",
+       "sub": "CustomerManager",
+       "detail": "Commit the local order. CancelOrder is its compensating action."
+      },
+      {
+       "label": "Create maid order",
+       "sub": "MaidOrderManager",
+       "detail": "Commit the maid-service order. CancelMaidOrder compensates this step."
+      },
+      {
+       "label": "Payment fails",
+       "sub": "PaymentManager",
+       "detail": "The saga must correct already-completed work; local commits do not disappear.",
+       "accent": true
+      },
+      {
+       "label": "Compensate in reverse",
+       "sub": "maid order, then order",
+       "detail": "Run CancelMaidOrder, then CancelOrder. These are new local transactions; observers may see intermediate state."
+      }
+     ],
+     "caption": "A shared trace ID helps follow the flow; a saga provides no automatic read isolation."
+    }
+   ]
+  },
+  {
+   "id": "metrics",
+   "title": "Metrics",
+   "slides": [
+    65,
+    71
+   ],
+   "summary": "What to measure (infra, application, availability) and the key formulas: uptime, nines, yield and harvest.",
+   "notes": [
+    "**Metrics serve business goals:** lower cost, faster APIs, better client retention and service, meeting SLAs. 'If you can't measure it, you can't improve it.'",
+    "**Infrastructure metrics:** CPU and memory, request volume (IOPS), availability, peak usage time, average response time with outliers and percentiles, success/failure rate, payload sizes, garbage collection time. **Application metrics:** task success (did the transaction finish or the customer drop out), clarity (ease of learning and use; heatmaps), happiness (returning visitors, visit frequency).",
+    "**Time-based availability:** the lecture uses (MTBF − MTTR) / MTBF, treating MTBF as the complete failure-to-failure interval including recovery. For 1000 h between failures and 1 h recovery: 999/1000 = 99.9%. If a problem instead defines MTBF as operating time only, use MTBF / (MTBF + MTTR). State the convention; the formulas are not interchangeable definitions. Three nines is about 9 h downtime/year, four about 50 min and five about 5 min.",
+    "**Yield and harvest:** yield = successful requests / total requests, measuring service actually received. Harvest = available data / total data, measuring completeness. A service can stay up yet return errors or incomplete data, so these measures answer different questions.",
+    "**Tech:** Prometheus time-series DB with Grafana, the TICK stack (Telegraf, InfluxDB, Chronograf, Kapacitor), Splunk metrics, metrics-as-a-service."
+   ],
+   "terms": [
+    {
+     "term": "Uptime",
+     "def": "Fraction of time available; the lecture uses (MTBF − MTTR) / MTBF with the full interval in the denominator."
+    },
+    {
+     "term": "Yield",
+     "def": "Successful requests divided by total requests."
+    },
+    {
+     "term": "Harvest",
+     "def": "Data available divided by total data."
+    }
+   ],
+   "check": [
+    {
+     "q": "A service fails on average every 500 hours and takes 2 hours to recover. Does it meet a 99.9% uptime target by the lecture's formula, and what would it take to meet it?",
+     "a": "Uptime = (MTBF - MTTR) / MTBF = (500 - 2) / 500 = 99.6%, so it misses 99.9%. With the same failure rate, MTTR would have to fall to 0.5 hours, since (500 - 0.5) / 500 = 99.9%. So faster recovery, through tracing, central logs and quick rollback, is as much a lever as failing less often."
+    },
+    {
+     "q": "An API answers every request successfully but returns only half of the requested dataset because some data servers are down. What do yield and harvest show?",
+     "a": "If those responses count as successful, yield (successful requests over total) is 100% while harvest (data available over total data) is 50%. Yield alone would hide the problem, so define success according to what users need and report both. Which matters more depends on whether a partial answer is useful to the user."
+    },
+    {
+     "q": "To show that an API meets 'responses within 3 seconds for 90% of requests', a teammate reports an average response time of 1.2 seconds. Does that show the target is met?",
+     "a": "No. An average hides outliers: a mostly fast API can still have well over 10% of requests above 3 seconds. Measure the 90th percentile directly over a defined window and load, which is why the lecture lists response time with outliers and percentiles. Report the failure rate as well, because failed requests are not fast successes."
+    },
+    {
+     "q": "A checkout API shows 99.99% yield and low latency, yet completed purchases have dropped by 20%. Which metrics would you look at?",
+     "a": "Application metrics: task success, meaning whether transactions end in success or customers drop out, and clarity, meaning how easily customers can use the product, for example through heatmaps. Infrastructure metrics show the API responds, not that users complete what they came for. Happiness signals such as returning visitors show whether the drop is lasting."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Availability metrics",
+     "columns": [
+      "Metric",
+      "Formula",
+      "Note"
+     ],
+     "rows": [
+      [
+       "Uptime",
+       "Available time / observed time",
+       "Lecture: (MTBF − MTTR) / MTBF"
+      ],
+      [
+       "5 nines",
+       "About 5 minutes down per year",
+       ""
+      ],
+      [
+       "4 nines",
+       "About 50 minutes down per year",
+       ""
+      ],
+      [
+       "3 nines",
+       "About 9 hours down per year",
+       ""
+      ],
+      [
+       "Yield",
+       "Successful requests / total requests",
+       "Request success reflects demand"
+      ],
+      [
+       "Harvest",
+       "Data available / total data",
+       "Data completeness, not simply server count"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "logging-summary",
+   "title": "Logging, monitoring and summary",
+   "slides": [
+    72,
+    80
+   ],
+   "summary": "Centralised log aggregation patterns and how all the tools map to platform goals.",
+   "notes": [
+    "**Why log:** engineers spend much of their time debugging, analysing and tuning. Typically log authentication/authorisation successes and failures, changes to data entities, access to external resources (database, files, queues), configuration, application errors and feature usage.",
+    "**Centralise logs.** With many components, one place to query and analyse beats logging into every machine or container. Three shipping patterns: (1) the app ships formatted logs directly to the central server; (2) the app ships raw logs to a transformation and shipping server that parses them into the central server's format; (3) the app writes to a local file, a lightweight shipping agent sends raw logs to a remote parser, and the heavy transformer stores into the central server. Tech: ELK (Elasticsearch, Logstash, Kibana) with FluentD or Filebeat, Splunk, AWS centralised logging, Stackdriver, Papertrail, Loggly.",
+    "**Summary mapping:** seamless interaction = deployment strategies (rollout, canary); scaling = auto-scaling; limiting = circuit breaker, rate limiting, retries; experimentation/traffic management = canary; data-driven intelligence = logs and metrics (observability); faster issue resolution = logging, monitoring and distributed tracing. Security (mutual TLS, reducing attack surface) is mentioned but not covered."
+   ],
+   "terms": [
+    {
+     "term": "Observability",
+     "def": "Understanding system behaviour from collected logs, metrics and traces."
+    },
+    {
+     "term": "Log shipping agent",
+     "def": "Lightweight process sending local log files to a remote parser (e.g. Filebeat)."
+    }
+   ],
+   "check": [
+    {
+     "q": "Applications parse and format their logs before shipping them, and CPU on the application hosts has risen by 15%. What pattern would reduce this?",
+     "a": "Write logs to a local file and run a lightweight shipping agent that sends raw logs to a separate, heavier parser and transformer, which then stores them in the central log server. Parsing moves off the application hosts. The cost is another tier to run, and some delay before logs are searchable."
+    },
+    {
+     "q": "After an incident, the team cannot tell who changed a customer's bank details or when. What should have been logged, and where?",
+     "a": "Authentication and authorisation successes and failures, changes to data entities, and access to external resources such as databases and queues, all shipped to a central log store. Centralising matters because the change may have passed through several services, and searching each container is slow. With the trace ID in each entry, the whole change can be followed across services."
+    },
+    {
+     "q": "In one incident, a partner floods the API, a downstream service fails slowly, and nobody can find where the errors start. Map each problem to the toolbox.",
+     "a": "Limit the flood with rate limiting. Contain the slow dependency with a circuit breaker, timeouts and careful retries, which also limit the interaction. Find where the errors start with distributed tracing plus centralised logging and monitoring, which lower reaction time. Each tool addresses a different failure, so having one does not replace the others."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Log aggregation: agent pattern",
+     "steps": [
+      {
+       "label": "Application",
+       "sub": "writes local log file",
+       "detail": "The app just writes raw logs locally."
+      },
+      {
+       "label": "Shipping agent",
+       "sub": "lightweight",
+       "detail": "Ships raw logs to a remote parser (e.g. Filebeat, FluentD)."
+      },
+      {
+       "label": "Parser / transformer",
+       "sub": "heavy work",
+       "detail": "Parses logs and converts them to the central server's format (e.g. Logstash)."
+      },
+      {
+       "label": "Central log server",
+       "sub": "query and analyse",
+       "detail": "Single place to search logs across all components (e.g. Elasticsearch with Kibana).",
+       "accent": true
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A platform runs ten microservices on a container orchestrator, each auto-scaling from 2 to 20 instances. Design how services find each other, how that mechanism stays available, and what you would not build yourself.",
+   "a": "Callers refer to each service by alias, resolved through a registry that works like an internal DNS: instances register, callers look up, then connect, so scaling and restarts never require configuration changes. The registry runs as a consensus-backed cluster of three or five nodes, tolerating one or two failures respectively; an even size adds nothing. Use the orchestrator's built-in DNS discovery rather than writing client and server discovery code, which takes engineers away from business requirements. Discovery handles traffic between services; user traffic still enters through the gateway."
+  },
+  {
+   "q": "The Payment service becomes slow, and the Agency service, which calls it, starts failing all its requests. Identify the cause, propose a countermeasure, and give the countermeasure's main drawback.",
+   "a": "Cause: Agency's threads block waiting on Payment, so its thread pool clogs and it cannot serve even unrelated requests, and its callers clog in turn, a cascading failure. Countermeasure: a circuit breaker in an interceptor, through a resilience library or service mesh, that counts failures and timeouts in a window, opens to fail fast, then goes half-open after an interval to send sample requests, with exponential backoff, and closes on success. Add rate limiting if Payment is overloaded by volume. Drawback: while the circuit is open, payment-dependent features fail fast or degrade for every user, and badly tuned thresholds can open the circuit on brief blips."
+  },
+  {
+   "q": "Choose a deployment strategy for (a) a routine, backward-compatible security patch; (b) a new recommendation model whose effect on user behaviour must be measured; (c) a major release that must be switchable back instantly. Justify each and give one shared precondition.",
+   "a": "(a) A rolling update: no downtime and no extra resources, ideal for patches, provided capacity holds during replacement. (b) A canary with 5 to 10% of traffic, to assess cohort behaviour live; shadowing would let you compare outputs without exposure but cannot measure user reaction. (c) Blue/green: V2 runs alongside V1 and traffic switches back at once, at the cost of double capacity. Shared precondition: versions must stay backward compatible with the data, because switching traffic does not undo writes."
+  },
+  {
+   "q": "An order spans CustomerManager (CreateOrder), MaidOrderManager (CreateMaidOrder) and PaymentManager (MakePayment), each with its own database and asynchronous messaging. Design the consistency mechanism, its failure handling, and what users may observe.",
+   "a": "Use a saga, because two-phase commit needs synchronous calls and ACID support across all databases. Each step has a compensation: if MakePayment fails, run CancelMaidOrder then CancelOrder. Choose an orchestrator for central visibility, made highly available to avoid a single point of failure, or choreography for independent reactions at the cost of harder debugging. Trace every step with a shared trace ID and make steps and compensations idempotent. Users may see in-progress or cancelled orders, because sagas have no read isolation, so show such orders as pending."
+  },
+  {
+   "q": "Over a 90-day quarter (2,160 hours), a platform had four failures, each taking 3 hours to recover. The SLA promises 99.9%. Using the lecture's metrics, does it comply, which metric matters most to users, and what would you change?",
+   "a": "MTBF is 2,160 / 4 = 540 hours, so uptime = (540 - 3) / 540 = 99.44%, which misses 99.9% (about 9 hours of downtime a year). To comply with the same failure rate, MTTR must fall to about 0.54 hours, so invest in tracing, centralised logs and fast rollback, and reduce failures with canaries and circuit breakers. Yield matters more than uptime to users: an outage at 3 a.m. with no traffic costs little, while one at peak costs many requests, so also report successful over total requests and the harvest of data served."
+  },
+  {
+   "q": "Users report intermittent errors on a flow that crosses five services, and nobody can reproduce them. Which observability tools would you use, in what order, and what does each contribute?",
+   "a": "Start with metrics: error rate and latency percentiles per service show when the errors happen and which service's numbers move. Then distributed tracing, with one ID created at the root and propagated in headers, shows which span fails or slows in an affected request, and child spans narrow it down within a service. Finally, centralised logs searched by that trace ID give the exception and context without logging into each container. Together they lower MTTR; the cost is instrumenting every service and running the back-ends."
+  }
+ ]
+}

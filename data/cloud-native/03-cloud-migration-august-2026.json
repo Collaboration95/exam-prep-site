@@ -1,0 +1,635 @@
+{
+ "key": "03-cloud-migration-august-2026",
+ "title": "Cloud Adoption and Migration",
+ "pages": 58,
+ "minutes": 40,
+ "overview": "Choose a migration approach by diagnosing the application’s business and technical problems. Compare VMs, containers, IaaS and PaaS, then apply the migration options and six modernisation drivers. Assess dependencies, risk and total cost, including the temporary cost bubble, before sequencing an incremental migration.",
+ "big_ideas": [
+  "VMs include a guest OS; containers share a kernel and typically start faster with lower overhead. Image size and startup time vary.",
+  "Choose among Rehost, Replatform, Rearchitect, Rebuild and Replace; Retain, Retire and Encapsulate are alternatives. Their IaaS/PaaS/SaaS mapping is illustrative, not mandatory.",
+  "Lift-and-shift favours speed and low initial effort; lift-and-optimise can improve ongoing cost and return at greater migration effort.",
+  "Pick the approach per application by diagnosing it with the six drivers: business fit, innovation, agility (business) and cost, complexity, risk (IT).",
+  "The more you change (infrastructure, then platform, then code, then functionality), the higher the potential value, but also the cost, time and risk.",
+  "Expect a temporary migration bubble of extra cost (duplicate environments, training, consulting, lease penalties) before savings appear.",
+  "Start with a low-risk workload you can learn from, not the highest-ROI one; then rinse and repeat.",
+  "Decide sourcing (internal vs partner) and hosting (data centre/IaaS/PaaS/SaaS) with weighted criteria: differentiation, operational complexity, skills."
+ ],
+ "sections": [
+  {
+   "id": "iaas-recap",
+   "title": "Recap: VMs, containers, managed services and IaaS",
+   "slides": [
+    5,
+    10
+   ],
+   "summary": "How VMs and containers package applications, what managed cloud services are, why IaaS emerged and which workloads suit it.",
+   "notes": [
+    "**VMs and containers isolate at different boundaries.** A VM boots a guest OS via a hypervisor; a container starts isolated processes sharing the host kernel. Containers usually have less overhead and faster startup; image pulls and application initialisation still take time. VMs suit different OS requirements or stronger kernel separation.",
+    "**IaaS is the cloud's raw-infrastructure layer.** It grew out of successive waves of sharing (networks, the web, grids, then services) and is justified by elastic capacity, lower upfront investment, cheaper DR, easy seasonal scaling and freeing the business to focus on core work. It suits analytics, ERP/CRM, collaboration, dev/test, backup/DR and general infrastructure workloads.",
+    "**Managed cloud services hand part or all of cloud operations (migration, configuration, optimization, security, maintenance) to a provider**, usually on subscription and contracted before migrating, so the client gets cloud benefit with less internal time and cost.",
+    "**IaC treats infrastructure as machine-readable definition files rather than manual setup**, which is what makes IaaS repeatable. An IaaS platform itself is run by three back-end systems: resource management (VIM), SLA management and billing."
+   ],
+   "terms": [
+    {
+     "term": "Managed cloud services",
+     "def": "Partial or full management of a client's cloud resources by a provider, usually on subscription."
+    },
+    {
+     "term": "Infrastructure as Code (IaC)",
+     "def": "Provisioning infrastructure from machine-readable definition files rather than manual setup."
+    },
+    {
+     "term": "VIM",
+     "def": "Virtual Infrastructure Manager: the component that manages VMs and images in an IaaS cloud."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team moved from VMs to containers to cut scale-out time, but new replicas still take 90 seconds to serve traffic. What is the likely cause, and what would you check?",
+     "a": "Containers skip booting a guest OS because they share the host kernel, but pulling a large image, loading dependencies and initialising the application can still dominate startup. Check the image size and pull time, and how long the application takes to warm up. Smaller images and lighter initialisation help more than changing the isolation boundary."
+    },
+    {
+     "q": "A legacy app needs a Windows kernel feature, and a second workload from a different tenant must run on the same hosts with strong separation. VMs or containers for each?",
+     "a": "VMs for both. The legacy app needs its own OS, which a container sharing the host kernel cannot provide, and a hypervisor boundary gives stronger separation between tenants than process-level isolation. You give up the lighter weight and faster startup of containers, which matter less for these two requirements."
+    },
+    {
+     "q": "A company with a 3-person IT team wants to migrate to the cloud this year but has no cloud skills. Should it run the migration itself or use a managed cloud service, and what is the catch?",
+     "a": "A managed cloud service fits: a provider takes on migration, configuration, optimisation, security and maintenance, usually on subscription, so the small team gets cloud benefits without building every skill first. The catch is the ongoing subscription cost and dependence on the provider. The contract must be in place before migrating, and the company still owns its data and decisions."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "VM vs container (slide 5)",
+     "columns": [
+      "",
+      "VM",
+      "Container"
+     ],
+     "rows": [
+      [
+       "Each instance contains",
+       "App + bins/libs + its own guest OS",
+       "Only the app + its dependencies"
+      ],
+      [
+       "Sits on",
+       "Hypervisor over the infrastructure",
+       "Container engine over the host operating system"
+      ],
+      [
+       "Kernel",
+       "Separate guest OS per VM",
+       "Multiple containers share the same kernel"
+      ],
+      [
+       "Size / start-up (general)",
+       "Heavier, slower to start",
+       "Lighter, faster to start"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "openstack-ansible",
+   "title": "OpenStack and Ansible (IaaS as code)",
+   "slides": [
+    11,
+    15
+   ],
+   "summary": "OpenStack as an open-source IaaS platform and Ansible as a way to provision it as code.",
+   "notes": [
+    "**OpenStack is an open-source suite that turns hardware into a private IaaS cloud**: compute (Nova), networking (Neutron), object and block storage (Swift, Cinder), identity (Keystone), VM templates (Glance), dashboard (Horizon) and orchestration (Heat).",
+    "**Ansible provisions and configures systems using ordered YAML playbooks.** Modules can express intended resource state without a resident target agent. Heat uses its own YAML format, HOT, for OpenStack orchestration; a Heat template is not an Ansible playbook.",
+    "**The point is Infrastructure as Code**: a playbook declares VM templates, servers, networks and security groups so a whole environment is versioned and re-runnable instead of hand-built. OpenStack-Ansible is even a common way to install OpenStack itself."
+   ],
+   "terms": [
+    {
+     "term": "OpenStack",
+     "def": "Open-source software suite for building a private IaaS cloud (Nova, Neutron, Swift, Cinder, Keystone, etc.)."
+    },
+    {
+     "term": "Ansible playbook",
+     "def": "A YAML file listing tasks Ansible runs to provision or configure systems."
+    },
+    {
+     "term": "HOT",
+     "def": "Heat Orchestration Template: OpenStack's YAML template format for orchestration."
+    }
+   ],
+   "check": [
+    {
+     "q": "A university wants a private IaaS cloud on its own hardware and asks what a hypervisor alone would be missing. Using OpenStack's components, explain.",
+     "a": "A hypervisor runs VMs, but an IaaS cloud also needs networking, block and object storage, identity, VM images, a self-service dashboard and orchestration. OpenStack supplies these (for example Neutron, Cinder, Swift, Keystone, Glance, Horizon, Heat) on top of compute (Nova). Without them, users still depend on administrators to wire each VM together, which fails on-demand self-service."
+    },
+    {
+     "q": "A security team won't allow extra agents on production servers but wants the servers' configuration managed as code. Does Ansible fit, and what does it still need?",
+     "a": "Yes: Ansible is agentless, so no resident agent has to be installed on each target. It still needs a reachable management connection, credentials, and whatever prerequisites its modules require on the target. The security team's concern then shifts to protecting those credentials and the control node."
+    },
+    {
+     "q": "An engineer calls an Ansible playbook a Heat template 'because both are YAML' and wants to feed the playbook to Heat. What is wrong?",
+     "a": "YAML is only the file syntax. Ansible runs a playbook's ordered tasks; Heat interprets HOT templates to orchestrate OpenStack resources. Each tool needs its own format. Either can describe infrastructure as code, so choose by whether you need OpenStack-native orchestration or general provisioning and configuration across systems."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "hub",
+     "title": "OpenStack services",
+     "center": {
+      "label": "OpenStack",
+      "icon": "openstack",
+      "detail": "Open-source suite that turns hardware into a private IaaS cloud; Ansible can provision and install it."
+     },
+     "items": [
+      {
+       "label": "Nova",
+       "sub": "compute",
+       "detail": "VMs."
+      },
+      {
+       "label": "Neutron",
+       "sub": "networking",
+       "detail": "Virtual networks and security groups."
+      },
+      {
+       "label": "Swift",
+       "sub": "object storage",
+       "detail": "Object storage."
+      },
+      {
+       "label": "Cinder",
+       "sub": "block storage",
+       "detail": "Volumes for VMs."
+      },
+      {
+       "label": "Keystone",
+       "sub": "identity",
+       "detail": "Authentication and service catalogue."
+      },
+      {
+       "label": "Glance",
+       "sub": "VM images",
+       "detail": "VM templates."
+      },
+      {
+       "label": "Horizon",
+       "sub": "dashboard",
+       "detail": "Web UI."
+      },
+      {
+       "label": "Heat",
+       "sub": "orchestration",
+       "detail": "YAML HOT templates."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "paas-and-containers",
+   "title": "PaaS and containers vs VMs",
+   "slides": [
+    16,
+    21
+   ],
+   "summary": "Why PaaS emerged, what it gives, which workloads fit it, the CNCF ecosystem, and the VM vs container comparison.",
+   "notes": [
+    "**PaaS reduces platform operations for developers:** deployment, scaling and runtime management are supplied by the platform. The lecture’s large labour, capital and delivery-time reductions are illustrative benefits, not guaranteed savings for every workload; teams still configure access and secure their code.",
+    "**IaaS vs PaaS fit:** workloads that consume managed platform services (databases, queues, APIs, rule engines, batch/ETL, CI/CD, mobile back-ends) fit PaaS; workloads needing server-level control (application servers, backup, DR, storage) fit IaaS.",
+    "**Compute abstraction keeps moving up the stack** (mainframe, client-server, web, now containers with edge devices), and the CNCF (Linux Foundation) hosts the open-source projects behind cloud-native computing.",
+    "**VM vs container in four contrasts:** hardware-level vs OS-level virtualization; isolation of machines vs processes; resources via hypervisor vs kernel namespaces and cgroups; hardware flexibility vs portability. VMs bring established management/security tools; containers bring lightness and speed."
+   ],
+   "terms": [
+    {
+     "term": "CNCF",
+     "def": "Cloud Native Computing Foundation: Linux Foundation body hosting cloud-native projects such as Kubernetes."
+    },
+    {
+     "term": "Namespaces and cgroups",
+     "def": "Linux kernel features that give containers isolated views of the system (namespaces) and resource limits (cgroups)."
+    },
+    {
+     "term": "Hypervisor",
+     "def": "Software (Type 1 or Type 2) that runs multiple VMs on one physical machine."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team's API uses a managed database, a queue and CI/CD, and needs no OS changes. A second system is a backup server that needs custom storage drivers. Which fits PaaS and which IaaS?",
+     "a": "The API fits PaaS: it consumes managed platform services, and the platform takes over deployment, scaling and runtime management. The backup server needs server-level control of drivers and storage, so it fits IaaS. With PaaS the team still configures access and secures its own code."
+    },
+    {
+     "q": "A vendor pitch says moving to PaaS will 'cut delivery time from months to hours'. How would you treat this claim in a business case?",
+     "a": "As an illustrative benefit, not a guaranteed saving. PaaS removes server setup and platform operations, which can shorten delivery a great deal, but the real gain depends on how much of the current delay is infrastructure work rather than design, testing or approvals. Measure the current lead time and its causes before promising a figure."
+    },
+    {
+     "q": "A multi-tenant SaaS platform plans to run every customer's code in containers on shared hosts. A security reviewer objects. What is the concern, and what are the options?",
+     "a": "Containers isolate processes through kernel namespaces and cgroups but share the host kernel, so a kernel exploit can reach other tenants. VMs isolate at the hardware level through a hypervisor and come with established security tooling. The options are VM-per-tenant (stronger isolation, more overhead), or containers grouped onto VMs by tenant, which keeps most of the containers' speed."
+    }
+   ]
+  },
+  {
+   "id": "migration-framework",
+   "title": "Migration framework and strategy",
+   "slides": [
+    23,
+    27
+   ],
+   "summary": "How to think about migration: an on-prem to AWS example, the AWS migration roadmap, lift-and-shift vs lift-and-optimize, and Gartner's six drivers of modernization.",
+   "notes": [
+    "**Migration is a decision process, not a single move.** The AWS roadmap runs discover and assess, then choose a path per application (do not move, decommission, vendor SaaS/PaaS, lift and shift, refactor, replatform/rearchitect/recode), then plan and sequence, migrate and UAT, tune, sign off, cut over and operate, with org/ops impact analysis and change management alongside.",
+    "**Lift-and-shift trades initial speed against later optimisation.** It moves largely unchanged applications quickly but may preserve inefficient resource use. Lift-and-optimise adapts during migration, usually taking longer and costing more initially for potential ongoing cost and ROI improvements. TCO is a cost to minimise; ROI is a return to improve.",
+    "**Diagnose before prescribing with Gartner's six drivers.** Business: business fit (no longer meets needs), innovation (blocks opportunities), agility (cannot keep pace with change). IT: cost (too high for its value), complexity (hard and risky to change), risk (security, compliance, supportability, scalability, skills shortage).",
+    "**Method:** understand each approach's scope and effect, run a cause-effect analysis with the six drivers to find the functional, architectural and technological problems, then pick an approach per application with Gartner's framework. An on-prem 3-tier app maps to AWS as DNS, load balancing, auto-scaling web/app fleets across two AZs and a managed database."
+   ],
+   "terms": [
+    {
+     "term": "Lift-and-shift",
+     "def": "Move an application to the cloud with minimal or no change."
+    },
+    {
+     "term": "Lift-and-optimize",
+     "def": "Migrate and adapt the application to use cloud services at the same time."
+    },
+    {
+     "term": "Availability Zone",
+     "def": "An isolated data-centre location within a cloud region; spreading across AZs gives resilience."
+    }
+   ],
+   "check": [
+    {
+     "q": "A firm must leave its data centre in 4 months and its apps are over-provisioned. Lift-and-shift or lift-and-optimise?",
+     "a": "Lift-and-shift for most apps, because the deadline and low initial change matter most. It will carry the over-provisioning into the cloud, so budget for right-sizing and optimisation after cutover. Lift-and-optimise would lower ongoing TCO and improve ROI sooner, but it takes longer and costs more up front, which the 4-month window doesn't allow."
+    },
+    {
+     "q": "A business owner says 'our app is too expensive, let's rewrite it as microservices'. Using the six drivers, what would you check before agreeing?",
+     "a": "Diagnose first. If the driver is cost (infrastructure too expensive for the value), Rehost or Replatform may fix it far more cheaply. A rewrite is justified when the drivers are business fit, innovation or agility, meaning the app can't meet needs or change fast enough. A cause-effect analysis shows whether the problem is functional, architectural or technological, and the option should fix that cause."
+    },
+    {
+     "q": "The migration roadmap lists 'do not move' and 'decommission' as paths alongside lift-and-shift and refactor. Why is it worth assessing every application before picking a default path?",
+     "a": "Migration is a decision per application. Some apps are better left in place or switched off, and moving them wastes effort and adds cloud cost. Discovering and assessing each app first, then planning and sequencing by dependency, avoids migrating something only to retire it later. The cost is the time spent on discovery before anything moves."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "cards",
+     "title": "Gartner's six migration drivers",
+     "items": [
+      {
+       "label": "Business fit",
+       "sub": "no longer meets needs",
+       "detail": "The application no longer meets business requirements; investigate whether its functions must change."
+      },
+      {
+       "label": "Innovation",
+       "sub": "blocks opportunities",
+       "detail": "The application blocks a new opportunity; identify the missing business capability."
+      },
+      {
+       "label": "Agility",
+       "sub": "cannot keep pace",
+       "detail": "Changes cannot keep pace with the business; investigate architecture and coupling."
+      },
+      {
+       "label": "Cost",
+       "sub": "too high for value",
+       "detail": "Operating and changing the application costs too much relative to its business value."
+      },
+      {
+       "label": "Complexity",
+       "sub": "hard, risky to change",
+       "detail": "Structure or technology makes maintenance and change risky or expensive."
+      },
+      {
+       "label": "Risk",
+       "sub": "security, skills, scale",
+       "detail": "IT driver: security, compliance, supportability, scalability, skills shortage."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rehost-replatform",
+   "title": "Migration options I: Rehost and Replatform",
+   "slides": [
+    28,
+    33
+   ],
+   "summary": "The option spectrum against IaaS/PaaS/SaaS, and the two lightest-touch options with typical use cases.",
+   "notes": [
+    "**The options form a spectrum of increasing change:** Retire, Rehost, Replatform, Rearchitect, Rebuild, Replace. Roughly, IaaS corresponds to Rehost, PaaS to Replatform through Rebuild, and SaaS to Replace.",
+    "**Rehost (lift and shift, redeploy)** moves the app to other infrastructure with no recompiling and no change to code, features or functions. Its benefits are infrastructure-only: scalability at peaks, less hardware upkeep, redundancy and availability, remote access, provider security and compliance posture.",
+    "**Replatform (lift, shape and shift)** moves to a new runtime platform with minimal compatibility changes (for example a managed cloud database, serverless or auto-scaling) but no change to code structure or features. Typical gains: better analytics or AI services, faster transactions, auto-scaling.",
+    "**Rehost vs Replatform:** Rehost changes only where it runs; Replatform also swaps platform pieces (database, runtime) while the application stays functionally the same."
+   ],
+   "terms": [
+    {
+     "term": "Rehost",
+     "def": "Redeploy unchanged to new infrastructure (lift and shift)."
+    },
+    {
+     "term": "Replatform",
+     "def": "Move to a new runtime platform with minimal code changes (lift, shape and shift)."
+    }
+   ],
+   "check": [
+    {
+     "q": "A bank wants its transaction system on a managed cloud database but cannot touch the business logic. Rehost or Replatform?",
+     "a": "Replatform: it swaps the platform (the database) with minimal compatibility changes while code structure and features stay the same. Rehost would move the app with its existing self-managed database unchanged. Replatform adds testing for database compatibility in exchange for less database operations work."
+    },
+    {
+     "q": "After a Rehost, the business asks why the app's features and slow reports didn't improve. Is the migration a failure?",
+     "a": "No, if the goal was infrastructure. Rehost changes only where the app runs, so its benefits are infrastructure ones: scaling at peaks, less hardware upkeep, redundancy, remote access and the provider's security posture. Faster reports or new features need Replatform (for example a managed analytics service) or deeper options. Set those expectations in the business case."
+    },
+    {
+     "q": "A retailer's app runs fine but the database can't cope with holiday peaks, and the code must not change. What option fits, and what would push you further along the spectrum?",
+     "a": "Replatform onto a managed database and auto-scaling, which addresses the peaks without touching code structure. If the code itself blocks scaling, for example through shared state in the app tier, Replatform won't be enough and Rearchitect becomes the option, at higher cost and risk."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Migration options are alternatives",
+     "columns": [
+      "Option",
+      "What changes",
+      "Typical target"
+     ],
+     "rows": [
+      [
+       "Rehost",
+       "Infrastructure",
+       "IaaS"
+      ],
+      [
+       "Replatform",
+       "Runtime or platform; minimal code edits",
+       "Managed platform"
+      ],
+      [
+       "Rearchitect",
+       "Code structure; preserve behaviour",
+       "Cloud services or containers"
+      ],
+      [
+       "Rebuild",
+       "Implementation, potentially features",
+       "New application"
+      ],
+      [
+       "Replace",
+       "Product and possibly processes",
+       "COTS or SaaS"
+      ],
+      [
+       "Retain / retire",
+       "Keep for now / decommission",
+       "No migration"
+      ]
+     ],
+     "caption": "These are choices per workload, not a required sequence. Encapsulate exposes retained functionality through APIs."
+    }
+   ]
+  },
+  {
+   "id": "rearchitect-to-encapsulate",
+   "title": "Migration options II: Rearchitect to Encapsulate",
+   "slides": [
+    34,
+    39
+   ],
+   "summary": "The deeper-change options (Rearchitect, Rebuild) and the non-migrating or replacing options (Replace, Retain, Retire, Encapsulate).",
+   "notes": [
+    "**Rearchitect (re-engineer, refactor) restructures code without changing external behaviour** to remove technical debt and improve non-functional qualities, often moving to microservices, serverless/event-driven, containers or CDN/caching so components scale independently.",
+    "**Rebuild (rewrite, redesign) writes the application afresh**, even as a like-for-like replacement, usually cloud-native, to gain new capabilities (mobile-first, IoT, AI, offline mode, microservices). Rearchitect vs Rebuild: Rearchitect keeps behaviour and reshapes the existing code; Rebuild may change functionality too and has the highest value, cost and risk.",
+    "**Replace (repurchase, drop and shop)** swaps the app for a COTS or SaaS product, taking new requirements into account; **Retire** decommissions it, often as part of a Replace.",
+    "**Retain** leaves the app as is for now because modernization is not worth the effort and risk or it is nearing retirement. **Encapsulate** exposes the app's data and functions as API services, extending its value while hiding the implementation."
+   ],
+   "terms": [
+    {
+     "term": "Rearchitect",
+     "def": "Restructure code/architecture without changing external behaviour, e.g. to microservices or serverless."
+    },
+    {
+     "term": "Rebuild",
+     "def": "Rewrite the application from scratch, often cloud-native."
+    },
+    {
+     "term": "Replace",
+     "def": "Drop the app and buy COTS/SaaS instead."
+    },
+    {
+     "term": "Encapsulate",
+     "def": "Wrap an existing app behind APIs so its functions can be reused as services."
+    },
+    {
+     "term": "COTS",
+     "def": "Commercial off-the-shelf software."
+    }
+   ],
+   "check": [
+    {
+     "q": "An app's features are fine, but one module can't scale and every change is risky because of technical debt. A teammate proposes Rebuild. Do you agree?",
+     "a": "Rearchitect is the better fit. It restructures the existing code without changing external behaviour, for example by extracting the bottleneck module so it scales independently, and it reduces technical debt. Rebuild rewrites everything and carries the highest cost and risk, which is justified only when new capabilities such as mobile-first, IoT or AI are needed."
+    },
+    {
+     "q": "A mainframe holds valuable pricing logic that a new mobile app needs, but the mainframe is too risky to change this year. Retain, Encapsulate or Rebuild?",
+     "a": "Encapsulate: expose the pricing data and functions as APIs so the mobile app can use them without rewriting the internals. Plain Retain would leave the logic inaccessible to the new app, and Rebuild is the risk the business wants to avoid. The cost is that the legacy system stays in place, and its performance and availability now limit the new app."
+    },
+    {
+     "q": "A department's expense tool is home-grown, offers nothing unique, and its developer has left. Which option fits, and what goes with it?",
+     "a": "Replace with a COTS or SaaS product, taking current requirements into account, and Retire the old tool as part of the move. It is not a differentiator, so owning code adds no value. The cost is that users adapt to the product's workflow, and data has to be migrated before decommissioning."
+    }
+   ]
+  },
+  {
+   "id": "choosing-and-planning",
+   "title": "Choosing the approach and planning",
+   "slides": [
+    40,
+    46
+   ],
+   "summary": "Gartner's comparison of what each option changes and its trade-offs, Gartner's migration stages, and the seven-step plan with eight classification criteria.",
+   "notes": [
+    "**More change means more value but more cost and risk.** Rehost changes only infrastructure; Replatform adds platform/data layers; Rearchitect adds configuration and custom code; Rebuild and Replace can change everything including business logic and UX. In Gartner's ratings Rehost is lowest overall, Rebuild is highest on change, value, cost and risk, and Replace causes the most business disruption. Pick the lightest option that fixes the diagnosed drivers.",
+    "**Gartner's four steps for mass migration to IaaS:** choose the approach (lift-and-shift vs lift-and-optimize, weighing lock-in against unique cloud value); build the business case; prepare (landing zone, cloud patterns, migration partner, cloud operations model); migrate and optimize using cloud-native services sooner.",
+    "**The seven-step plan:** (1) identify desired outcomes, (2) classify cloud candidates, (3) define service and deployment criteria per workload (IaaS/PaaS/SaaS and public/private placement), (4) devise an iterative agile process that fails fast and learns fast, (5) get buy-in, (6) start simple and prioritize learning over ROI, (7) rinse and repeat.",
+    "**Candidates are classified on eight criteria:** architecture, security, availability, performance, scalability, strategic importance, future plans and enthusiasm of the team. The first project should be low-risk and highly instructive, not the highest-ROI one, because early success builds skills and buy-in."
+   ],
+   "terms": [
+    {
+     "term": "Landing zone",
+     "def": "A pre-configured, secure cloud environment and architecture set up before workloads are migrated."
+    },
+    {
+     "term": "Vendor lock-in",
+     "def": "Dependence on one provider's unique services that makes switching costly."
+    },
+    {
+     "term": "Fail fast, learn fast",
+     "def": "Agile migration mindset: small iterations that surface problems early."
+    }
+   ],
+   "check": [
+    {
+     "q": "Rebuild scores highest on value in Gartner's comparison. Why is it not the default answer?",
+     "a": "It also has the highest cost of change, the highest risk and a long time to value. If the diagnosed drivers only call for infrastructure or platform fixes, Rehost or Replatform give faster, cheaper, lower-risk results. Choose the lightest option that fixes the drivers, and keep Rebuild for when business logic or UX must change."
+    },
+    {
+     "q": "Leadership wants the first cloud migration to be the system with the biggest projected ROI, a customer-facing billing platform. How do you respond?",
+     "a": "Push back. The seven-step plan says to start simple and prioritise learning over ROI: the first project should be low-risk and highly instructive, because early success builds skills and buy-in. A billing platform is strategically important and high-risk, so a failure would set back the whole programme. Migrate it in a later wave, once the landing zone and operating model have been proven."
+    },
+    {
+     "q": "Two candidate first workloads score the same on architecture, security, availability and performance. One team is eager, the other was told to migrate. Which would you pick?",
+     "a": "The eager team's workload. Team enthusiasm is one of the eight classification criteria because migrations need the owning team's engagement, and a willing team makes an early success and useful lessons more likely. The other workload can follow once there is a proven pattern to copy."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Seven-step migration plan",
+     "steps": [
+      {
+       "label": "Desired outcomes",
+       "detail": "Identify what you want from cloud."
+      },
+      {
+       "label": "Classify candidates",
+       "detail": "Eight criteria: architecture, security, availability, performance, scalability, strategic importance, future plans, team enthusiasm."
+      },
+      {
+       "label": "Deployment criteria",
+       "detail": "IaaS, PaaS, SaaS or private per workload."
+      },
+      {
+       "label": "Iterative process",
+       "detail": "Agile; fail fast, learn fast."
+      },
+      {
+       "label": "Get buy-in",
+       "detail": "Show the top-down or bottom-up support needed across the organization."
+      },
+      {
+       "label": "Start simple",
+       "accent": true,
+       "detail": "Low-risk, highly instructive first project; prioritise learning over ROI."
+      },
+      {
+       "label": "Rinse and repeat",
+       "detail": "Iterate across the portfolio."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "assessment",
+   "title": "Application concerns and assessment",
+   "slides": [
+    47,
+    50
+   ],
+   "summary": "What to assess in each application, the migration planning framework, the migration cost bubble and TCO.",
+   "notes": [
+    "**Assess each application across concern families:** performance (elasticity, latency, throughput), architecture (complexity, data, life expectancy), financial (operating cost, business value), risk (business criticality, technical, contractual, audit), operations (continuity, tooling, deployment) and security/compliance (jurisdiction, regulation, privacy, encryption), which can rule out regions or providers.",
+    "**The planning framework** establishes a baseline (drivers, portfolio analysis assigning an R to each app, requirement recovery), designs the target, then follows a road map to migration complete, supported by stakeholder buy-in, quality assurance, risk mitigation and a scope/schedule plan.",
+    "**Budget for the migration bubble:** discovery, duplicate environments, training, consultants, tools and lease penalties raise costs temporarily. Compare lifetime TCO with the baseline; retirement and optimisation may produce savings, but only the business case can establish whether and when they occur."
+   ],
+   "terms": [
+    {
+     "term": "Migration bubble",
+     "def": "Temporary cost increase from migration activities and overlapping environments; later savings depend on the business case."
+    },
+    {
+     "term": "TCO",
+     "def": "Total Cost of Ownership: full lifetime cost of running a system, used to compare on-prem vs cloud."
+    },
+    {
+     "term": "Portfolio analysis",
+     "def": "Reviewing all applications to assign each a migration decision (the R options)."
+    }
+   ],
+   "check": [
+    {
+     "q": "Six months into migration, a CFO sees costs higher than before and wants to stop. What is the likely explanation, and what would you show?",
+     "a": "The migration bubble: duplicate environments, training, consultants, tools and lease penalties raise costs temporarily before old infrastructure is retired and optimisation starts. Show lifetime TCO against the baseline and the dates when on-premises costs stop. If the business case never showed savings, or retirement keeps slipping, the CFO's concern is valid."
+    },
+    {
+     "q": "An app processes citizens' health records and must stay within national borders. The preferred provider has no local region. How does this assessment concern affect the plan?",
+     "a": "Jurisdiction and regulation can rule out regions or providers, so that provider is excluded for this app no matter what else it offers. Options include another provider with a local region, a private or hybrid placement for the records, or keeping the app on premises (Retain). Encryption and privacy controls are still needed, but they don't remove a data-location rule."
+    },
+    {
+     "q": "A portfolio analysis assigns Rehost to an app with 2 years of remaining life and high audit risk. Which assessment concerns would make you question that choice?",
+     "a": "Architecture (life expectancy) and risk (audit, contractual). With 2 years left, Retain or Retire may cost less than migrating, and audit risk means checking compliance in the target environment before moving. The planning framework expects each app's R to come from these concerns, not from a default."
+    }
+   ]
+  },
+  {
+   "id": "sourcing-hosting",
+   "title": "Sourcing and hosting models",
+   "slides": [
+    51,
+    57
+   ],
+   "summary": "Deciding who should run each capability and where it should be hosted, using weighted criteria, then the overall assessment approach.",
+   "notes": [
+    "**Two separate decisions per capability:** the sourcing model (who operates it: internal team or a partner such as an MSP or cloud product partner) and the hosting model (where it runs: own data centre, IaaS, PaaS or SaaS).",
+    "**Sourcing factors:** level of differentiation (core stays internal, non-differentiators go to partners), complexity of business processes (complex stays internal) and skills (common skills in-house, highly specialized skills outsourced). Capabilities that are core, complex and commonly skilled lean internal; non-differentiating, simple, specialized ones lean partner.",
+    "**Make it systematic with weighted scoring:** rate each criterion 1-3 and weight it (example: differentiation 60%, operational complexity 20%, skills 20%, with skills scored inversely so 1 means highly specialized), combine into a composite classification and validate with stakeholders.",
+    "**Finish with options and proof:** assess portfolio dependencies, data type, coupling, compliance and audience, compare pros and cons of alternatives, and use a proof of concept to reduce risk."
+   ],
+   "terms": [
+    {
+     "term": "Sourcing model",
+     "def": "Who operates a capability: internal team or partner (MSP / product partner)."
+    },
+    {
+     "term": "Hosting model",
+     "def": "Where it runs: data centre, IaaS, PaaS or SaaS."
+    },
+    {
+     "term": "MSP",
+     "def": "Managed Service Provider that runs operations for you."
+    }
+   ],
+   "check": [
+    {
+     "q": "A company's CRM is not a differentiator, has simple processes, and needs specialist skills it cannot hire. What sourcing and hosting model would you suggest?",
+     "a": "All three sourcing factors point to a partner, and the hosting would most likely be SaaS. That makes it effectively a Replace decision. The company gives up deep customisation and control of the roadmap, which is acceptable for a non-differentiating capability."
+    },
+    {
+     "q": "A trading firm's pricing engine is its main differentiator and has complex logic, but it needs rare low-latency skills. The sourcing factors conflict. How do you decide?",
+     "a": "Differentiation carries the most weight (60% in the example), so the engine stays internally sourced even though skills point to a partner. Address the skills gap by hiring or training, or use a partner only for specialised infrastructure work. Validate the decision with stakeholders, because the weights are a decision aid, not a rule."
+    },
+    {
+     "q": "Using the example weights, a capability scores differentiation 3, complexity 2 and skills 1. What does the result suggest, and what should you do with it?",
+     "a": "3 × 0.6 + 2 × 0.2 + 1 × 0.2 = 2.4, which leans toward internal sourcing in the example. Skills is scored inversely, so the 1 means highly specialised skills are needed, which is a real gap to plan for. Validate against actual skills and constraints, and test risky choices with a proof of concept."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A hospital's 15-year-old on-premises patient scheduling system slows down at morning peaks. The code is stable and meets business needs, but the database server is end-of-life, and patient data must stay in the country. Recommend a migration option, justify it with the drivers, and name two risks to manage.",
+   "a": "The drivers are risk (end-of-life platform) and scalability, not business fit, so Replatform: move to a managed database and auto-scaling in an in-country region, with minimal code change. Rebuild would add cost and risk without fixing anything the business needs. Manage database compatibility (test on the new engine, ideally with a proof of concept) and compliance (jurisdiction, privacy, encryption). Budget for the migration bubble while both environments run."
+  },
+  {
+   "q": "A firm must exit its data centre in 6 months, with 80 apps, many over-provisioned. The CFO expects savings in year one. Compare lift-and-shift and lift-and-optimise, recommend a mix, and respond to the CFO.",
+   "a": "Lift-and-shift needs the least initial change and fits the deadline, but it carries over-provisioning and inefficiency. Lift-and-optimise lowers ongoing TCO but takes longer and costs more up front. Recommend lift-and-shift for most apps, sequenced by dependency and risk, with optimisation only for a few high-cost apps that can be done in time, and right-sizing after cutover. Tell the CFO that year one includes the migration bubble (duplicate environments, training, lease penalties), so savings depend on retirement and optimisation afterwards."
+  },
+  {
+   "q": "Design a portfolio assessment for an organisation with 200 applications and a 2-year programme. How would you decide each app's R, and which app would you migrate first?",
+   "a": "Establish a baseline: the drivers, an inventory and dependency map, and the application concerns (performance, architecture, financial, risk, operations, security and compliance). Diagnose each app's problem with the six drivers, then assign the lightest R that fixes it, using the sourcing and hosting scoring to decide who runs it and where. Choose the first migration on the eight criteria: low-risk, instructive, with an enthusiastic team, not the highest ROI. Then iterate in waves and compare TCO against the baseline."
+  },
+  {
+   "q": "An insurer's 30-year-old policy system holds valuable rules, is nearly impossible to change, and is due to be replaced by a SaaS product in 3 years. A new mobile app needs policy data now. Choose between Retain, Encapsulate and Rebuild, and say what changes if the SaaS project is cancelled.",
+   "a": "Encapsulate: expose policy data and functions through APIs so the mobile app can use them now, hiding the internals, while the system stays in place until the planned Replace. Rebuild would duplicate work the SaaS replacement will make redundant, and plain Retain would leave the mobile app without data. The legacy system's availability and performance now limit the mobile app. If the SaaS project is cancelled, revisit the drivers: a Rearchitect or Rebuild behind the same APIs becomes the long-term path, and the APIs let you swap the implementation without breaking the app."
+  },
+  {
+   "q": "A team migrating a 3-tier app proposes containers instead of VMs for the web and app tiers, keeping the database on a VM. Evaluate the proposal, including where containers would be the wrong choice.",
+   "a": "Reasonable for stateless web and app tiers: containers are lighter, usually start faster, package the app consistently, and let each tier scale on its own. Keep the database on a VM or move it to a managed database if it needs OS-level tuning or strong isolation. Containers would be the wrong choice where a workload needs a different OS kernel or strong tenant separation, because they share the host kernel. Actual startup gains depend on image size and application initialisation."
+  }
+ ]
+}

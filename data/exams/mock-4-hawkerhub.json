@@ -1,0 +1,2655 @@
+{
+ "key": "mock-4-hawkerhub",
+ "kind": "mock",
+ "short": "Mock 4",
+ "title": "Mock paper 4: HawkerHub (SWE5001 format)",
+ "module": "Original mock in the SWE5001 Architecting Scalable Systems format",
+ "domain": "Hawker-centre ordering and payment",
+ "blurb": "Lunch-peak elasticity, exactly-once payment, multi-stall orders, settlement reconciliation, offline-first stall tablets.",
+ "intro": [
+  "An original paper in the structure, length and marks of the SWE5001 sample (Section A 25, Section B 13, Section C 12). Open the [case study](case#top) in a second tab and answer before opening any model answer."
+ ],
+ "sections": [
+  {
+   "id": "A",
+   "title": "Section A",
+   "focus": "Architecting + Platform",
+   "questions": [
+    {
+     "n": 1,
+     "marks": 25,
+     "intro": [
+      "Refer to the case study in Appendix A and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "body": [
+        "HawkerHub has to win over diners and stall owners in the same 90-minute lunch rush."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 2,
+         "pattern": "diagnose",
+         "topics": [
+          "platform/03-api-design-v2-2#resource-design-http",
+          "platform/04-reusable-services-and-api-gateway-v2-#integration-types",
+          "platform/05-platform-management-v2-1#sagas"
+         ],
+         "body": [
+          "On a busy Friday, about 1,500 diners were charged twice. The payment provider shows two successful captures for each of these orders. The order service logs show that the diner app retried *Pay* after its 10-second timeout while the first payment call was still in progress. Give the most likely cause and the countermeasure."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** the payment step is **not idempotent**. The app's retry is a new, indistinguishable request, so the order service calls the provider a second time. The first call had not failed, it was only slow, so both captures succeed. At-least-once delivery from retries met an operation with side effects that has no deduplication.",
+           "**Countermeasure:** give every payment attempt an **idempotency key**, generated once per order and payment attempt by the client and reused on every retry. The order service records the key with the payment state in the same transaction (pending, then captured) and returns the existing result for a repeat. It passes the same key to the provider, which also deduplicates. Reconcile the captures against orders daily and refund any duplicates automatically."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: a non-idempotent payment operation plus client retries during a slow (not failed) call."
+           },
+           {
+            "m": 1,
+            "t": "Countermeasure: an idempotency key persisted with the state and propagated to the provider, with reconciliation."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 2,
+         "pattern": "defend",
+         "topics": [
+          "architecting/06-design-for-performance-in-architectur#caching",
+          "platform/06-data-management-v2-1#scaling-databases",
+          "cloud-native/02-cloud-reference-architecture-august-2#building-blocks"
+         ],
+         "body": [
+          "To cope with menu browsing at lunch, an architect proposes adding read replicas to the menu database. You recommend instead caching menus at the CDN and in an application cache, invalidated by *ItemSoldOut* and *MenuChanged* events. Give two reasons."
+         ],
+         "answer": {
+          "text": [
+           "1. **The workload is overwhelmingly cacheable:** menus are read about 10× more than orders are placed ([Section 4](case#s4)), are identical for every diner at a stall and change rarely. CDN and edge caching serves them close to the diner without touching the platform, absorbing the lunch spike more cheaply than replicas, which still need every request to reach the database tier.",
+           "2. **Freshness is controlled by events, not by luck:** sold-out changes must be visible within 30 s. Replicas have unpredictable replication lag under load and still serve stale data. Event-driven invalidation (purge the stall's menu key on ItemSoldOut, with a short TTL as a safety net) gives a bounded freshness window. The cost: an invalidation path to build and monitor, and a brief window in which a just-sold-out item can still be ordered, so the order service must re-check stock."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Read-heavy, shared, rarely changing data is ideal for CDN or app caching; cheaper scaling than replicas."
+           },
+           {
+            "m": 1,
+            "t": "Event-based invalidation bounds staleness to the 30 s requirement (vs replica lag), with the re-check at order time."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "body": [
+        "With reference to the domain model in [Section 7](case#s7), analyse the following issues. For each, identify the most likely cause, propose a countermeasure by revising the domain model, and suggest its major drawback(s), if any."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 5,
+         "pattern": "fix-cost",
+         "topics": [
+          "platform/04-reusable-services-and-api-gateway-v2-#aggregates",
+          "platform/05-platform-management-v2-1#sagas",
+          "platform/04-reusable-services-and-api-gateway-v2-#orchestration-choreography"
+         ],
+         "body": [
+          "Diners often order from three or four stalls in one order. At the lunch peak, a whole order fails with a ‘stock changed’ error whenever any one stall marks one item sold out, and there are frequent database lock timeouts on MenuItem rows."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** Order is one aggregate composed of OrderItems from *every* stall, and each OrderItem ‘reserves stock’ by updating MenuItem.stockCount (MenuManager's data) inside the same transaction. A four-stall order locks rows in four stalls' menus at once and commits all or nothing. One sold-out item aborts everything, and popular items become lock hot-spots across thousands of concurrent orders.",
+           "**Countermeasure:** split the consistency boundaries. **Order** (diner-level: orderNo, payment, total) references a set of **StallTickets**, one aggregate per stall (stallNo, items, status), each committed independently. OrderItem refers to MenuItem by id plus a **price snapshot**, with no stock update across contexts. MenuManager owns availability, and Order checks it optimistically. A short **saga** handles the flow: place the order, reserve per stall (StallTicketAccepted or Rejected), capture payment for the accepted tickets, and partially refund or ask the diner when a stall rejects.",
+           "**Drawbacks:** partial orders must be designed into the UX (‘chicken rice is sold out: continue with the other three?’). Compensation logic, partial refunds and more states to test. A brief window in which a sold-out item is accepted and then rejected."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: one Order aggregate spanning many stalls (all-or-nothing)."
+           },
+           {
+            "m": 1,
+            "t": "Cause: a cross-context stock update in the same transaction, creating lock hot-spots."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: Order plus per-stall StallTicket aggregates, MenuItem by id plus price snapshot, availability owned by MenuManager, saga for accept, pay or partial refund."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: partial-order UX, compensation or refund complexity, brief inconsistency."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 4,
+         "pattern": "fix-cost",
+         "topics": [
+          "cloud-native/10-appendix-cloud-patterns-and-practices#event-sourcing-resilience",
+          "platform/04-reusable-services-and-api-gateway-v2-#domain-events",
+          "platform/02-reusable-assets-and-frameworks-v2-1#bounded-contexts-ubiquitous-language"
+         ],
+         "body": [
+          "Stall owners complain that their T+1 settlement often does not match what they received: refunds issued at the counter are missing or counted twice, and finance cannot reconcile settlements with the payment provider's statements."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** money is modelled in the wrong place. A refund is just an attribute (refundAmount) on OrderItem in OrderManager, which can be overwritten, and Settlement is computed by summing OrderItems, not from the payment records. PaymentTransaction has no refund entries and Settlement has no link to it, so the platform's money view and the provider's statement come from different sources and drift apart.",
+           "**Countermeasure:** make PaymentManager own an append-only **ledger**: PaymentCaptured, RefundIssued and ChargebackReceived entries, each immutable and carrying amount, stallNo, orderNo and the provider reference. Refunds are new entries, never edits. **Settlement** in SettlementManager is computed only from ledger events (consumed as events up to a cut-off), with a SettlementLine per entry. A daily reconciliation compares the ledger with the provider's statement.",
+           "**Drawback:** extra events and entities, and eventual consistency at the cut-off, so a refund issued at 23:59 may land in the next day's settlement. That needs explicit rules and adjustment lines. Replays must be idempotent so entries aren't counted twice."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: refunds as mutable attributes in OrderManager; settlement summed from orders, not payments."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: an immutable payment ledger (captures, refunds) owned by PaymentManager; settlement from ledger events; reconciliation with the provider."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: cut-off timing or eventual consistency, more events, idempotent replays."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "platform/03-api-design-v2-2#richardson-maturity",
+        "platform/03-api-design-v2-2#performance-testing-maturity",
+        "platform/03-api-design-v2-2#styles-and-rest-constraints",
+        "platform/03-api-design-v2-2#versioning-security-basics"
+       ],
+       "body": [
+        "Stall tablets use the API below. Each of the 6,000 tablets polls for new orders every 2 seconds.",
+        {
+         "table": {
+          "columns": [
+           "URI",
+           "Service",
+           "Inputs",
+           "Outputs",
+           "Explanation",
+           "HTTP Action"
+          ],
+          "rows": [
+           [
+            "`/stalls/getOrders?stall={no}&since={ts}`",
+            "OrderManager",
+            "stall no, since",
+            "all new orders of the whole centre, incl. diners' phone numbers",
+            "Tablet fetches new orders",
+            "GET"
+           ],
+           [
+            "`/orders/{orderNo}?action=ready`",
+            "OrderManager",
+            "order no, action",
+            "“OK”",
+            "Mark an order ready for collection",
+            "GET"
+           ],
+           [
+            "`/v3.2/menu/update`",
+            "MenuManager",
+            "the stall's whole menu as JSON (~300 KB)",
+            "“OK”",
+            "Mark one item sold out",
+            "POST"
+           ]
+          ]
+         }
+        },
+        {
+         "ol": [
+          "Assess the interfaces against RMM Level 2 and give the reasons.",
+          "Polling every 2 s from 6,000 tablets is 3,000 requests/s even when nothing happens. Propose a better way for tablets to receive new orders within 5 s, and a better way to mark an item sold out.",
+          "Reconstruct the table with corrected interfaces."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         "**1. Not Level 2.** The URIs name actions (getOrders, update, `action=ready`) and the verbs are misused: GET changes state (mark ready), and POST replaces a whole menu to change one field. There are no meaningful status codes. Also: returning **all centre orders with diners' phone numbers** to a stall is a data-minimisation breach ([Section 5](case#s5)), and a minor version sits in the path.",
+         "**2. Push and partial updates.** Tablets keep one **WebSocket or server-sent events** connection to a ticket service. New tickets are pushed when created, with a sequence number, and the tablet acknowledges each ticket. After a reconnect the tablet asks for ‘tickets since sequence n’, so nothing is lost during Wi-Fi drops, and if push is impossible it falls back to long-polling with `ETag`/`If-None-Match`, giving 304 responses when nothing changed. Sold-out becomes a small **PATCH** of one item's availability. MenuManager publishes ItemSoldOut, which purges the menu cache (see a.ii).",
+         "**3. Corrected interfaces:**",
+         {
+          "table": {
+           "columns": [
+            "URI",
+            "Service",
+            "Inputs",
+            "Outputs",
+            "Explanation",
+            "HTTP"
+           ],
+           "rows": [
+            [
+             "`/v3/stalls/{stall-id}/tickets?after={seq}`",
+             "OrderManager (Ticket)",
+             "Path stall id; `after` sequence; tablet token bound to the stall",
+             "200: that stall's tickets after seq (items, queue no). No diner phone numbers. Or a WebSocket/SSE stream at `/v3/stalls/{id}/ticket-stream`",
+             "Fetch or receive new tickets",
+             "GET"
+            ],
+            [
+             "`/v3/stalls/{stall-id}/tickets/{ticket-id}`",
+             "OrderManager (Ticket)",
+             "Body `{status: \"ready\"}`; tablet token",
+             "200 with the new status; 409 if already collected",
+             "Mark ready",
+             "PATCH"
+            ],
+            [
+             "`/v3/stalls/{stall-id}/menu-items/{item-id}`",
+             "MenuManager",
+             "Body `{available: false}`; tablet token",
+             "200; ItemSoldOut event published",
+             "Mark one item sold out",
+             "PATCH"
+            ]
+           ]
+          }
+         }
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict with reasons: action URIs, unsafe GET, whole-resource POST for a field change, no status codes (plus oversharing)."
+         },
+         {
+          "m": 2,
+          "t": "Push or SSE with sequence or ack and catch-up (or conditional long-poll with ETag); PATCH sold-out plus cache invalidation."
+         },
+         {
+          "m": 3,
+          "t": "Corrected table: per-stall resources, PATCH for state changes, stall-scoped auth, minimal data, major version."
+         }
+        ]
+       }
+      },
+      {
+       "label": "d",
+       "marks": 2,
+       "pattern": "agree",
+       "topics": [
+        "architecting/03-architect-the-solution-architecture-m#requirements-prioritise-detail",
+        "cloud-native/10-appendix-cloud-patterns-and-practices#multi-tenancy"
+       ],
+       "body": [
+        "A team member argues that **multi-tenancy** (hawker centres and, later, other countries as tenants) should be the top-priority non-functional requirement for Phase 1, because ‘we will expand to Malaysia next year’. Do you agree? Justify your answer."
+       ],
+       "answer": {
+        "text": [
+         "**Disagree for Phase 1, but design so it can be added.** The architecturally significant requirements now are the lunch peak (order and ticket latency at peak), exactly-once payment and settlement correctness, all stated with numbers in [Section 4](case#s4). Expansion is a business plan for later. Building full tenant isolation now adds cost and complexity to every service while the product is still finding its fit. Keep the option open cheaply: put a tenant and country id in the data model and in the tokens, avoid hard-coded currency and tax rules, and keep data partitionable by centre. Then raise its priority when the expansion is confirmed."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: Phase 1's significant NFRs are peak performance and payment correctness; expansion is not yet a requirement."
+         },
+         {
+          "m": 1,
+          "t": "Shows how to keep the option open cheaply (tenant ids, partitioning, no hard-coded locale) rather than ignoring it."
+         }
+        ]
+       }
+      },
+      {
+       "label": "e",
+       "marks": 4,
+       "pattern": "agree",
+       "topics": [
+        "architecting/06-design-for-performance-in-architectur#metrics",
+        "platform/05-platform-management-v2-1#metrics",
+        "architecting/07-perform-capacity-planning-for-archite#time-metrics"
+       ],
+       "body": [
+        "A team member proposes the **average response time of Place Order over the whole day** as the service-level objective (SLO) for ordering. Do you agree? If not, what would you use?"
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** Nearly half of the day's orders arrive in 90 minutes. A daily average is dominated by the quiet hours, so the lunch peak can be terrible while the average looks fine. Averages also hide the tail: if 10% of orders take 8 s, the average can still be about 1.5 s. The requirement itself is a percentile, **< 3 s for 95%** ([Section 4](case#s4)).",
+         "**Use instead:** **p95 (and p99) latency of Place Order**, measured in short windows (1 to 5 minutes) and evaluated specifically over the meal-peak windows. Add the **success rate**, excluding diners' own payment declines, and the **ticket delivery latency** (payment to stall tablet, p99 < 5 s). Keep an error budget per month and report per centre, so a single centre's bad Wi-Fi or a hot stall is visible.",
+         "The daily average is fine as a trend line, not as the SLO."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: a daily average hides the lunch peak, dominated by idle hours."
+         },
+         {
+          "m": 1,
+          "t": "Averages hide tails; the requirement is percentile-based."
+         },
+         {
+          "m": 2,
+          "t": "Proper SLOs: p95/p99 in short windows over peak periods, success rate, ticket latency, error budget, per-centre breakdown."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Section B",
+   "focus": "Cloud native",
+   "questions": [
+    {
+     "n": 2,
+     "marks": 13,
+     "intro": [
+      "With reference to the case study in Appendix A, answer the following questions. The prototype worked in two pilot centres; HawkerHub now has to scale to 120 centres, with delivery partners in Phase 2."
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 10,
+       "pattern": "design",
+       "topics": [
+        "cloud-native/05-architecting-a-cloud-native-applicati#design-considerations",
+        "cloud-native/07-microservices-design-september-2026#design-and-building-blocks",
+        "cloud-native/08-serverless-computing-september-2026#principles-use-cases",
+        "cloud-native/05a-kubernetes-september-2026#summary-appendix",
+        "architecting/07-perform-capacity-planning-for-archite#procurement-elasticity",
+        "cloud-native/10-appendix-cloud-patterns-and-practices#data-patterns"
+       ],
+       "body": [
+        "The pilot architecture is shown below. Payment is called synchronously inside the order request.",
+        {
+         "figure": "mvp"
+        },
+        "Transform it into a cloud native reference architecture for Phases 1 and 2. *Hint: consider microservices, event/stream-driven services, scheduled tasks and serverless.*"
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "body": [
+          "Draw the reference architecture with its essential components and interactions. Which components or managed services are essential to handle the lunch peak elastically?"
+         ]
+        },
+        {
+         "label": "ii",
+         "body": [
+          "How will tablets, queue displays and internal services communicate? Label this in the diagram and justify the patterns."
+         ]
+        },
+        {
+         "label": "iii",
+         "body": [
+          "Identify **one** service that must remember state and propose a state-management mechanism."
+         ]
+        },
+        {
+         "label": "iv",
+         "body": [
+          "Describe the deployment on Kubernetes."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         {
+          "figure": "ans-ref"
+         },
+         "**i. Components.** A CDN caches menus and the PWA. The API gateway handles diner tokens, throttling and routing. Services: Menu (with an app cache), Order (owns the order saga), Payment (ledger), Ticket (pushes to tablets), Queue display (publishes to centre screens), and Delivery adapter in Phase 2. An event stream carries OrderPlaced, PaymentCaptured, TicketReady and ItemSoldOut. A **settlement CronJob** runs at 02:00 (T+1) over the ledger. **Functions** send receipts and generate settlement statements. Data: Menu DB and cache; Order DB partitioned by centre; an append-only payment ledger; Settlement DB. **Lunch-peak elasticity essentials:** CDN offload; **scheduled scaling** before 11:30, plus HPAs on requests per second and the cluster autoscaler with warm node headroom; queue-based levelling for non-critical work (tickets, receipts and analytics run asynchronously); a database connection pooler; and a managed database sized for peak writes, or partitioned.",
+         "**ii. Communication.** Tablets keep a **WebSocket** to the Ticket service through the gateway, with tickets pushed and acknowledged, and catch-up by sequence after a Wi-Fi drop. Queue displays **subscribe** over a lightweight pub/sub channel (MQTT-style) to their centre's topic. Internally: synchronous REST only on the diner's critical path (place order, authorise payment); everything downstream is events (choreography), with the order saga coordinating accept, pay and refund. Commands to functions go over queues with retries and dead-letter queues.",
+         "**iii. State.** The **Order saga** must remember where each order is: awaiting payment, payment captured, tickets accepted 3 of 4, refund pending. Persist the saga state in the Order database (a state machine per order, updated with each event, plus an outbox for its commands), so any Order pod can resume an order after a crash. No in-memory or sticky state. (Alternative: the diner's cart, kept in the client or in a TTL key-value store so the service stays stateless.)",
+         "**iv. Kubernetes.** A managed cluster across three zones, with namespaces per domain. Ordering-path Deployments run at least 3 replicas with HPAs on requests per second. **Scheduled scaling** (a CronJob or KEDA cron trigger) raises minimum replicas at 11:15 and 17:00 and lowers them after 14:00 and 20:30. The Ticket service runs as a Deployment behind a load balancer with connection draining and a PodDisruptionBudget. Settlement runs as a CronJob. Node autoscaling keeps a small warm buffer. Delivery uses GitOps with canary releases outside meal peaks (a change freeze from 11:00 to 14:00)."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "Diagram: CDN, gateway, services per context, event stream, saga, ledger, CronJob, functions, partitioned data."
+         },
+         {
+          "m": 1,
+          "t": "Elasticity essentials: scheduled plus reactive scaling, cluster autoscaling headroom, CDN offload, queue levelling, connection pooling."
+         },
+         {
+          "m": 2,
+          "t": "Push with ack and catch-up for tablets; pub/sub for displays; sync only on the critical path, events downstream; justified."
+         },
+         {
+          "m": 2,
+          "t": "Stateful component (saga state persisted with outbox, or the cart externalised) with recovery."
+         },
+         {
+          "m": 2,
+          "t": "k8s plan with scheduled scaling windows, HPAs, connection handling, CronJob, change freeze."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "pattern": "a-or-b",
+       "topics": [
+        "cloud-native/06-application-architecture-styles-septe#modern-archetypes-2",
+        "cloud-native/06-application-architecture-styles-septe#pwa-vs-native",
+        "cloud-native/04-cloud-persistence-september-2026#scaling-consistency"
+       ],
+       "body": [
+        "Centre Wi-Fi drops for up to 10 minutes at a time ([Section 4](case#s4)). Would you build the stall tablet app as an **offline-first (local-first)** app with a local database that syncs, or as a thin online web app? What are the implications for the backend services?"
+       ],
+       "answer": {
+        "text": [
+         "**Offline-first.** A stall cannot stop cooking because the Wi-Fi drops. The tablet must keep showing the tickets it already has, let the owner mark them ready and record cash or counter orders while disconnected, then sync. A thin online app shows a spinner for 10 minutes at the worst time. The cost: a more complex client and sync logic, and a need to manage app versions on 6,000 tablets.",
+         "**Backend implications:** a **sync protocol**: tickets carry sequence numbers, the tablet resumes ‘after n’, and local changes are queued and replayed. Status updates must be **idempotent** and carry the client timestamp and version, so replays don't double-apply. **Conflict rules** are needed, for example ‘collected’ beats ‘ready’ and server-side cancellations win (a CRDT-style or ordered state machine). Diners need to see a tablet's offline state (‘your ticket is at the stall; status updates delayed’). The APIs must stay backward compatible, since old tablet versions linger."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Decision justified by the 10-minute drops and the stall's need to keep working."
+         },
+         {
+          "m": 1,
+          "t": "Trade-off: client complexity, sync and conflicts, version management."
+         },
+         {
+          "m": 1,
+          "t": "Backend implications: sequence-based sync, idempotent versioned updates, conflict rules, backward-compatible APIs, offline state shown."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "title": "Section C",
+   "focus": "Architecting",
+   "questions": [
+    {
+     "n": 3,
+     "marks": 12,
+     "intro": [
+      "Refer to the logical architecture in [Section 6](case#s6), the domain model in [Section 7](case#s7) and the packaging model in [Section 8](case#s8), and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "architecting/03-architect-the-solution-architecture-m#logical-deployment-verify",
+        "architecting/02-architect-the-solution-architecture-a#structural-styles",
+        "architecting/04-design-secure-architecture-v4-7#secure-design-principles"
+       ],
+       "body": [
+        "Evaluate the incomplete and potentially erroneous logical packaging cum deployment model for the *Place Order* use case (Figure 3). Identify **two** undesirable architectural decisions, propose corrective actions, and justify how each decision leads to your correction."
+       ],
+       "answer": {
+        "text": [
+         "Any two, each as decision → consequence → correction:",
+         "1. **Order Pricing Control (OrderPricer) is deployed in the diner's browser (the PWA).** Totals, discounts and the amount to charge would be computed on a device the diner controls, so a modified request could pay $0.50 for a $5 order. Never trust the client with price or amount. **Correction:** keep pricing server-side in the Order service. The PWA may *display* an estimate, but the server recomputes from the menu price snapshots and authorises that amount.",
+         "2. **Order Control (OrderController) is deployed on the Web/API node in the DMZ, with direct access to the order data.** Business logic and database credentials would sit on the exposed tier, and a compromise of the DMZ node would give direct database access. Defence in depth is lost. **Correction:** the DMZ runs only the gateway and web presentation. Order Control moves to the Order service in the internal zone, behind the gateway.",
+         "3. **MenuItem is manifested by Order Data Access.** Order would own menu and stock data that belongs to MenuManager, which is the root of the lock contention in Q1b(i). **Correction:** MenuItem stays in Menu Data Access. Order keeps an item id and price snapshot and checks availability through Menu's API or events."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "First decision: problem, consequence (tampering, exposure, ownership) and corrected placement or packaging."
+         },
+         {
+          "m": 3,
+          "t": "Second decision: problem, consequence and correction, justified."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "pattern": "design",
+       "topics": [
+        "architecting/07-perform-capacity-planning-for-archite#procurement-elasticity",
+        "architecting/07-perform-capacity-planning-for-archite#servers-benchmark",
+        "architecting/06-design-for-performance-in-architectur#tactics-load-balancing",
+        "platform/06-data-management-v2-1#scaling-databases"
+       ],
+       "body": [
+        "Today the Order service runs a fixed **6 pods**. Load tests show each pod sustains **8 orders/s** at 70% CPU, and at today's lunch peak the order database already reaches **85% CPU**. Using the figures in [Section 4](case#s4), compute the order rate during the lunch window and during the 12:00 burst, and show whether the current set-up copes. Propose an elastic design that handles the lunch peak without over-provisioning all day, and identify two side effects to monitor."
+       ],
+       "answer": {
+        "text": [
+         "**Rates:** 45% of 400,000 = 180,000 orders in 90 minutes = **2,000/min ≈ 33 orders/s** on average over lunch. The 12:00–12:10 burst runs at double that: **≈ 67 orders/s**.",
+         "**Does it cope?** Capacity is 6 × 8 = **48 orders/s** at a healthy 70%. Lunch average (33/s) is fine, but the burst (67/s) is about 40% over capacity. Queues build, p95 goes well past 3 s, and retries add load. The database at 85% CPU is the second bottleneck: adding pods sends it *more* work, so scaling the pods alone will not fix it.",
+         "**Design:**",
+         {
+          "ol": [
+           "**Scheduled plus reactive scaling of the service:** raise minimum replicas at 11:30 to ⌈67 / 8⌉ = 9, plus one per zone for failure, about **12 pods**. Keep an HPA on requests per second for surprises, and scale down after 13:30 and again after dinner. Keep a warm node buffer, because node provisioning is slower than pod scheduling.",
+           "**Take work off the database:** menus from CDN and cache (a.ii), so reads are no longer on the primary. Status queries go to a replica or a read model. Only the order, payment state and outbox writes stay synchronous. Tickets, receipts and analytics are written by event consumers at a steady rate (queue-based load levelling).",
+           "**Protect the database from the scale-out:** a connection pooler, since 12 pods × 20 connections would exhaust it. Batch the ticket inserts. If writes are still too high, **partition orders by centre** across database nodes (120 centres spread the load evenly).",
+           "**Verify:** load-test the 67/s burst plus 30% headroom with production-like data, and re-test after each change."
+          ]
+         },
+         "**Side effects to monitor:** (1) **scale-out lag**, when the burst arrives before pods and nodes are ready (watch pod-ready time against the burst start, and queue depth at 12:00); (2) **connection storms or pool exhaustion** on the database as pods scale (active connections, pool wait time); (3) **consumer backlog** delaying tickets past 5 s (lag on the ticket consumer); (4) **cost** of the pre-scaled windows on low-traffic days such as public holidays."
+        ],
+        "points": [
+         {
+          "m": 2,
+          "t": "Correct rates (≈ 33/s, ≈ 67/s) vs capacity 48/s; identifies the database as a second bottleneck."
+         },
+         {
+          "m": 2,
+          "t": "Elastic design: scheduled plus reactive scaling with sizing, read offload or caching, async levelling, pooling or partitioning, load test."
+         },
+         {
+          "m": 2,
+          "t": "Two side effects with metrics (scale lag, connection storms, backlog, cost)."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "case": {
+  "label": "Appendix A",
+  "title": "HawkerHub",
+  "subtitle": "Case study for Mock paper 4 (fictitious)",
+  "intro": [
+   "Figures 2 and 3 were drafted by other team members and may contain mistakes."
+  ],
+  "sections": [
+   {
+    "id": "top",
+    "title": "Background",
+    "blocks": [
+     "Hawker centres are open-air food courts with dozens of independent stalls. At lunch, office workers queue at several stalls and wait at their tables for their queue numbers. *HawkerHub* lets diners order and pay from their phones for any stalls in a centre, sends tickets to each stall's tablet and shows queue numbers on screens in the centre.",
+     "Stall owners are small businesses with thin margins: they pay a small commission per order and expect next-day settlement that matches their sales to the cent. The platform's value grows with the number of stalls and diners on it.",
+     "You are the Lead Solution Architect. Two pilot centres ran on a prototype; Phase 1 rolls out to all 120 centres. Phase 2 adds delivery through partner riders and recommendations."
+    ]
+   },
+   {
+    "id": "s1",
+    "n": "1",
+    "title": "Phase 1 of the Platform",
+    "blocks": [
+     "Actors:",
+     {
+      "ol": [
+       "**Diner:** orders and pays through the HawkerHub PWA or app.",
+       "**Stall Owner:** receives tickets on a stall tablet, marks orders ready and manages the menu.",
+       "**Centre Manager:** oversees a centre's stalls and screens.",
+       "**Finance Officer:** reviews settlements and reconciliations.",
+       "**Queue Display:** a screen at the centre showing ready queue numbers.",
+       "**Payment Provider:** an external provider for national QR payments and cards."
+      ]
+     },
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Browse Menus",
+         "The Diner browses stalls and menus in a centre, including sold-out status."
+        ],
+        [
+         "Place Order",
+         "The Diner places one order with items from one or more stalls and pays; each stall gets a ticket; the Diner gets one queue number per stall."
+        ],
+        [
+         "Receive Ticket",
+         "The stall tablet shows new tickets."
+        ],
+        [
+         "Mark Ready / Collected",
+         "The Stall Owner marks a ticket ready; the queue number appears on the centre's displays; later collected."
+        ],
+        [
+         "Mark Sold Out",
+         "The Stall Owner marks an item sold out or available again."
+        ],
+        [
+         "Refund",
+         "The Stall Owner refunds an item that cannot be served."
+        ],
+        [
+         "Settle Stalls",
+         "Each night the platform computes each stall's takings minus commission and refunds, and pays out by 06:00 (T+1)."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s2",
+    "n": "2",
+    "title": "Phase 2 of the Platform",
+    "blocks": [
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Order for Delivery",
+         "Diners order for delivery; two external delivery partners accept and dispatch riders via their APIs."
+        ],
+        [
+         "Recommend",
+         "Diners see recommendations based on past orders and time of day."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s3",
+    "n": "3",
+    "title": "Extensibility of the Platform",
+    "blocks": [
+     "New delivery partners, payment methods and centre types (e.g. food courts in malls) must be addable without changing the order flow."
+    ]
+   },
+   {
+    "id": "s4",
+    "n": "4",
+    "title": "Performance, Scalability and Availability",
+    "blocks": [
+     {
+      "ul": [
+       "**120** centres, **6,000** stalls, **1.2 million** registered diners.",
+       "**400,000** orders per day; **45%** of them between **11:45 and 13:15**; between 12:00 and 12:10 the order rate is **double** the lunch-window average.",
+       "Place Order, including payment authorisation: under **3 s** for **95%** of orders.",
+       "A new ticket must appear on the stall tablet within **5 s** of payment for **99%** of tickets; queue displays update within **3 s**.",
+       "Menus are browsed about **10×** as often as orders are placed; sold-out changes must be visible to diners within **30 s**.",
+       "Stall tablets are on centre Wi-Fi, which drops for up to **10 minutes** at a time.",
+       "**99.9%** availability during meal peaks (11:00–14:00, 17:30–20:30)."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s5",
+    "n": "5",
+    "title": "Security",
+    "blocks": [
+     {
+      "ul": [
+       "Payments use provider tokens; HawkerHub never stores card numbers.",
+       "Diners' phone numbers and names are not shown to stalls; stalls see only a queue number and the items.",
+       "Stall tablets are bound to a stall and unlocked with the owner's PIN."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s6",
+    "n": "6",
+    "title": "Initial Architecture",
+    "blocks": [
+     {
+      "h": "6.1 Logical Architecture Overview",
+      "id": "s6-1"
+     },
+     {
+      "figure": "overview"
+     },
+     {
+      "h": "6.2 Deployment Options",
+      "id": "s6-2"
+     },
+     "The platform is to be cloud native with microservices in the internal zone; tablets and displays stay at the centres."
+    ]
+   },
+   {
+    "id": "s7",
+    "n": "7",
+    "title": "Domain Model for Phase 1",
+    "blocks": [
+     "A software architect has produced the following domain model.",
+     {
+      "figure": "domain"
+     }
+    ]
+   },
+   {
+    "id": "s8",
+    "n": "8",
+    "title": "Logical Packaging cum Deployment Model",
+    "blocks": [
+     "An **incomplete** and **potentially erroneous** packaging and deployment model for the *Place Order* use case.",
+     {
+      "figure": "packaging"
+     }
+    ]
+   }
+  ]
+ },
+ "figures": {
+  "overview": {
+   "title": "Figure 1: Logical Architecture Overview",
+   "caption": "Diners on the Internet, tablets and displays at the centres, gateways in the DMZ, services in the internal zone.",
+   "size": [
+    1000,
+    530
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 245,
+     "h": 300
+    },
+    {
+     "id": "centre",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Hawker Centre",
+     "tone": 5,
+     "x": 15,
+     "y": 332,
+     "w": 245,
+     "h": 185
+    },
+    {
+     "id": "dmz",
+     "kind": "zone",
+     "stereo": "zone",
+     "label": "DMZ",
+     "tone": 2,
+     "x": 280,
+     "y": 12,
+     "w": 185,
+     "h": 505
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internal Zone",
+     "tone": 0,
+     "x": 485,
+     "y": 12,
+     "w": 500,
+     "h": 505
+    },
+    {
+     "id": "svc",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Service Tier",
+     "tone": 0,
+     "x": 500,
+     "y": 66,
+     "w": 470,
+     "h": 210
+    },
+    {
+     "id": "sto",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Storage Tier",
+     "tone": 1,
+     "x": 500,
+     "y": 296,
+     "w": 225,
+     "h": 205,
+     "sub": "menus · orders · payments\nsettlements"
+    },
+    {
+     "id": "itg",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Integration Tier",
+     "tone": 5,
+     "x": 745,
+     "y": 296,
+     "w": 225,
+     "h": 205,
+     "sub": "payment provider\ndelivery partners (Phase 2)"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 40,
+     "y": 66,
+     "w": 95,
+     "h": 150,
+     "label": "Diner",
+     "sub": "PWA / app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 150,
+     "y": 70,
+     "w": 95,
+     "h": 140,
+     "label": "Portals",
+     "sub": "centre ·\nfinance"
+    },
+    {
+     "id": "tab",
+     "kind": "device",
+     "x": 40,
+     "y": 385,
+     "w": 95,
+     "h": 115,
+     "label": "Stall",
+     "sub": "tablet"
+    },
+    {
+     "id": "disp",
+     "kind": "iot",
+     "x": 150,
+     "y": 420,
+     "w": 95,
+     "h": 70,
+     "label": "Queue",
+     "sub": "display"
+    },
+    {
+     "id": "wp",
+     "kind": "service",
+     "tone": 4,
+     "x": 295,
+     "y": 80,
+     "w": 155,
+     "h": 70,
+     "label": "Web\nPresentation"
+    },
+    {
+     "id": "api",
+     "kind": "gateway",
+     "x": 295,
+     "y": 200,
+     "w": 155,
+     "h": 76,
+     "label": "API Gateway"
+    },
+    {
+     "id": "cgw",
+     "kind": "gateway",
+     "x": 295,
+     "y": 400,
+     "w": 155,
+     "h": 80,
+     "label": "Centre\nChannel"
+    },
+    {
+     "id": "c1",
+     "kind": "component",
+     "x": 515,
+     "y": 122,
+     "w": 140,
+     "h": 56,
+     "label": "Menu\nManager"
+    },
+    {
+     "id": "c2",
+     "kind": "component",
+     "x": 670,
+     "y": 122,
+     "w": 140,
+     "h": 56,
+     "label": "Order\nManager"
+    },
+    {
+     "id": "c3",
+     "kind": "component",
+     "x": 825,
+     "y": 122,
+     "w": 130,
+     "h": 56,
+     "label": "Payment\nManager"
+    },
+    {
+     "id": "c4",
+     "kind": "component",
+     "x": 590,
+     "y": 198,
+     "w": 140,
+     "h": 56,
+     "label": "Settlement\nManager"
+    },
+    {
+     "id": "c5",
+     "kind": "component",
+     "x": 745,
+     "y": 198,
+     "w": 140,
+     "h": 56,
+     "label": "Diner\nManager"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "api",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.9
+     ],
+     "via": [
+      [
+       150,
+       232
+      ]
+     ],
+     "toAt": [
+      0,
+      0.4
+     ]
+    },
+    {
+     "from": "web",
+     "to": "wp",
+     "style": "flow"
+    },
+    {
+     "from": "tab",
+     "to": "cgw",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.1
+     ],
+     "via": [
+      [
+       270,
+       396
+      ]
+     ],
+     "toAt": [
+      0,
+      0.2
+     ]
+    },
+    {
+     "from": "disp",
+     "to": "cgw",
+     "style": "flow"
+    },
+    {
+     "from": "wp",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.15
+     ]
+    },
+    {
+     "from": "api",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.7
+     ]
+    },
+    {
+     "from": "cgw",
+     "to": "svc",
+     "style": "flow",
+     "via": [
+      [
+       475,
+       440
+      ],
+      [
+       475,
+       262
+      ]
+     ],
+     "toAt": [
+      0,
+      0.93
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "sto",
+     "style": "flow",
+     "fromAt": [
+      0.24,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "itg",
+     "style": "flow",
+     "fromAt": [
+      0.76,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    }
+   ]
+  },
+  "domain": {
+   "title": "Figure 2: Domain Model for Phase 1",
+   "caption": "Entities by owning service, with key attributes and multiplicities. Filled diamond = composition (same aggregate).",
+   "size": [
+    1040,
+    640
+   ],
+   "groups": [
+    {
+     "id": "dm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "DinerManager",
+     "tone": 0,
+     "x": 20,
+     "y": 30,
+     "w": 250,
+     "h": 170
+    },
+    {
+     "id": "mm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "MenuManager",
+     "tone": 1,
+     "x": 300,
+     "y": 30,
+     "w": 420,
+     "h": 290
+    },
+    {
+     "id": "om",
+     "kind": "package",
+     "stereo": "service",
+     "label": "OrderManager",
+     "tone": 3,
+     "x": 20,
+     "y": 350,
+     "w": 470,
+     "h": 270
+    },
+    {
+     "id": "pm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "PaymentManager",
+     "tone": 2,
+     "x": 520,
+     "y": 350,
+     "w": 230,
+     "h": 190
+    },
+    {
+     "id": "sm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "SettlementManager",
+     "tone": 4,
+     "x": 770,
+     "y": 350,
+     "w": 250,
+     "h": 190
+    }
+   ],
+   "nodes": [
+    {
+     "id": "Diner",
+     "kind": "class",
+     "tone": 0,
+     "x": 45,
+     "y": 90,
+     "w": 150,
+     "label": "Diner",
+     "attrs": [
+      "dinerId",
+      "phone"
+     ]
+    },
+    {
+     "id": "Centre",
+     "kind": "class",
+     "tone": 1,
+     "x": 320,
+     "y": 90,
+     "w": 140,
+     "label": "Centre",
+     "attrs": [
+      "centreId",
+      "name"
+     ]
+    },
+    {
+     "id": "Stall",
+     "kind": "class",
+     "tone": 1,
+     "x": 490,
+     "y": 90,
+     "w": 200,
+     "label": "Stall",
+     "attrs": [
+      "stallNo",
+      "hygieneGrade"
+     ]
+    },
+    {
+     "id": "MenuItem",
+     "kind": "class",
+     "tone": 1,
+     "x": 490,
+     "y": 200,
+     "w": 200,
+     "label": "MenuItem",
+     "attrs": [
+      "name",
+      "price",
+      "stockCount",
+      "soldOut"
+     ]
+    },
+    {
+     "id": "Order",
+     "kind": "class",
+     "tone": 3,
+     "x": 40,
+     "y": 410,
+     "w": 170,
+     "label": "Order",
+     "attrs": [
+      "orderNo",
+      "total",
+      "status",
+      "queueNo"
+     ]
+    },
+    {
+     "id": "OrderItem",
+     "kind": "class",
+     "tone": 3,
+     "x": 260,
+     "y": 410,
+     "w": 210,
+     "label": "OrderItem",
+     "attrs": [
+      "qty",
+      "unitPrice",
+      "status",
+      "refundAmount"
+     ]
+    },
+    {
+     "id": "Txn",
+     "kind": "class",
+     "tone": 2,
+     "x": 545,
+     "y": 410,
+     "w": 185,
+     "label": "PaymentTransaction",
+     "attrs": [
+      "txnId",
+      "amount",
+      "status"
+     ]
+    },
+    {
+     "id": "Settlement",
+     "kind": "class",
+     "tone": 4,
+     "x": 790,
+     "y": 410,
+     "w": 200,
+     "label": "Settlement",
+     "attrs": [
+      "stallNo",
+      "date",
+      "amount"
+     ]
+    }
+   ],
+   "edges": [
+    {
+     "from": "Centre",
+     "to": "Stall",
+     "style": "comp",
+     "m2": "1..*"
+    },
+    {
+     "from": "Stall",
+     "to": "MenuItem",
+     "style": "comp",
+     "m2": "0..*"
+    },
+    {
+     "from": "Order",
+     "to": "OrderItem",
+     "style": "comp",
+     "fromAt": [
+      1,
+      0.45
+     ],
+     "toAt": [
+      0,
+      0.45
+     ],
+     "m2": "1..*"
+    },
+    {
+     "from": "Order",
+     "to": "Diner",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "OrderItem",
+     "to": "MenuItem",
+     "style": "assoc",
+     "fromAt": [
+      0.7,
+      0
+     ],
+     "toAt": [
+      0.3,
+      1
+     ],
+     "m1": "0..*",
+     "m2": "1",
+     "label": "reserves stock",
+     "labelDx": 50
+    },
+    {
+     "from": "Order",
+     "to": "Txn",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       125,
+       600
+      ],
+      [
+       637,
+       600
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "m1": "1",
+     "m2": "1",
+     "label": "paid by",
+     "labelAt": 0.5
+    },
+    {
+     "from": "Settlement",
+     "to": "OrderItem",
+     "style": "assoc",
+     "fromAt": [
+      0.75,
+      0
+     ],
+     "via": [
+      [
+       940,
+       335
+      ],
+      [
+       365,
+       335
+      ]
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "m1": "0..1",
+     "m2": "0..*",
+     "label": "sums",
+     "labelAt": 0.3
+    },
+    {
+     "from": "Settlement",
+     "to": "Stall",
+     "style": "assoc",
+     "fromAt": [
+      0.97,
+      0
+     ],
+     "via": [
+      [
+       984,
+       128
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "m1": "0..*",
+     "m2": "1",
+     "label": "for",
+     "labelAt": 0.75
+    }
+   ]
+  },
+  "packaging": {
+   "title": "Figure 3: Logical Packaging cum Deployment Model (Place Order)",
+   "caption": "Subsystems «manifest» elements and are «deploy»ed to nodes. Incomplete and potentially erroneous.",
+   "size": [
+    1060,
+    640
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 205,
+     "h": 290
+    },
+    {
+     "id": "browser",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Diner Browser\n(PWA)",
+     "x": 35,
+     "y": 70,
+     "w": 160,
+     "h": 210
+    },
+    {
+     "id": "centre",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Hawker Centre",
+     "tone": 5,
+     "x": 15,
+     "y": 322,
+     "w": 205,
+     "h": 302
+    },
+    {
+     "id": "tablet",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Stall Tablet",
+     "x": 35,
+     "y": 380,
+     "w": 160,
+     "h": 220
+    },
+    {
+     "id": "dmz",
+     "kind": "zone",
+     "stereo": "zone",
+     "label": "DMZ",
+     "tone": 2,
+     "x": 845,
+     "y": 12,
+     "w": 200,
+     "h": 290
+    },
+    {
+     "id": "webn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Web / API\nNode",
+     "x": 862,
+     "y": 70,
+     "w": 165,
+     "h": 210
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internal Zone",
+     "tone": 0,
+     "x": 845,
+     "y": 322,
+     "w": 200,
+     "h": 302
+    },
+    {
+     "id": "ordn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Order\nService",
+     "x": 862,
+     "y": 380,
+     "w": 165,
+     "h": 222
+    },
+    {
+     "id": "dpp",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Diner PWA Presentation",
+     "tone": 3,
+     "x": 240,
+     "y": 12,
+     "w": 170,
+     "h": 64
+    },
+    {
+     "id": "opc",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Order Pricing Control",
+     "tone": 3,
+     "x": 425,
+     "y": 12,
+     "w": 165,
+     "h": 64
+    },
+    {
+     "id": "occ",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Order Control",
+     "tone": 3,
+     "x": 605,
+     "y": 12,
+     "w": 170,
+     "h": 64
+    },
+    {
+     "id": "oda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Order Data Access",
+     "tone": 3,
+     "x": 300,
+     "y": 450,
+     "w": 220,
+     "h": 64
+    },
+    {
+     "id": "stp",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Stall Ticket Presentation",
+     "tone": 5,
+     "x": 560,
+     "y": 450,
+     "w": 220,
+     "h": 64
+    }
+   ],
+   "nodes": [
+    {
+     "id": "cart",
+     "kind": "class",
+     "stereo": "boundary",
+     "tone": 4,
+     "x": 245,
+     "y": 150,
+     "w": 150,
+     "label": "CartScreen"
+    },
+    {
+     "id": "pricer",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 425,
+     "y": 150,
+     "w": 160,
+     "label": "OrderPricer"
+    },
+    {
+     "id": "octl",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 610,
+     "y": 150,
+     "w": 170,
+     "label": "OrderController"
+    },
+    {
+     "id": "order",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 260,
+     "y": 300,
+     "w": 120,
+     "label": "Order"
+    },
+    {
+     "id": "item",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 400,
+     "y": 300,
+     "w": 130,
+     "label": "OrderItem"
+    },
+    {
+     "id": "menu",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 550,
+     "y": 300,
+     "w": 130,
+     "label": "MenuItem"
+    },
+    {
+     "id": "board",
+     "kind": "class",
+     "stereo": "boundary",
+     "tone": 4,
+     "x": 700,
+     "y": 300,
+     "w": 130,
+     "label": "TicketBoard"
+    }
+   ],
+   "edges": [
+    {
+     "from": "dpp",
+     "to": "browser",
+     "style": "dep",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "toAt": [
+      1,
+      0.12
+     ],
+     "label": "deploy",
+     "labelDy": -10
+    },
+    {
+     "from": "opc",
+     "to": "browser",
+     "style": "dep",
+     "fromAt": [
+      0.07,
+      1
+     ],
+     "via": [
+      [
+       437,
+       112
+      ]
+     ],
+     "toAt": [
+      1,
+      0.2
+     ],
+     "label": "deploy",
+     "labelAt": 0.88
+    },
+    {
+     "from": "occ",
+     "to": "webn",
+     "style": "dep",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.3
+     ],
+     "label": "deploy"
+    },
+    {
+     "from": "oda",
+     "to": "ordn",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       410,
+       590
+      ],
+      [
+       850,
+       590
+      ]
+     ],
+     "toAt": [
+      0,
+      0.95
+     ],
+     "label": "deploy",
+     "labelAt": 0.6
+    },
+    {
+     "from": "stp",
+     "to": "tablet",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       670,
+       545
+      ],
+      [
+       195,
+       545
+      ]
+     ],
+     "toAt": [
+      1,
+      0.75
+     ],
+     "label": "deploy",
+     "labelAt": 0.4
+    },
+    {
+     "from": "dpp",
+     "to": "cart",
+     "style": "dep",
+     "fromAt": [
+      0.48,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30,
+     "labelAt": 0.7
+    },
+    {
+     "from": "opc",
+     "to": "pricer",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30,
+     "labelAt": 0.65
+    },
+    {
+     "from": "occ",
+     "to": "octl",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30
+    },
+    {
+     "from": "cart",
+     "to": "pricer",
+     "style": "assoc"
+    },
+    {
+     "from": "pricer",
+     "to": "octl",
+     "style": "assoc"
+    },
+    {
+     "from": "octl",
+     "to": "order",
+     "style": "assoc",
+     "fromAt": [
+      0.1,
+      1
+     ]
+    },
+    {
+     "from": "octl",
+     "to": "item",
+     "style": "assoc",
+     "fromAt": [
+      0.3,
+      1
+     ]
+    },
+    {
+     "from": "octl",
+     "to": "menu",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "board",
+     "to": "octl",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "toAt": [
+      0.85,
+      1
+     ],
+     "label": "polls",
+     "labelDx": 18
+    },
+    {
+     "from": "oda",
+     "to": "order",
+     "style": "dep",
+     "fromAt": [
+      0.15,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": -32
+    },
+    {
+     "from": "oda",
+     "to": "item",
+     "style": "dep",
+     "fromAt": [
+      0.6,
+      0
+     ],
+     "toAt": [
+      0.4,
+      1
+     ],
+     "label": "manifest",
+     "labelDx": 30
+    },
+    {
+     "from": "oda",
+     "to": "menu",
+     "style": "dep",
+     "fromAt": [
+      0.95,
+      0
+     ],
+     "toAt": [
+      0.3,
+      1
+     ],
+     "label": "manifest",
+     "labelDx": 34,
+     "labelAt": 0.4
+    },
+    {
+     "from": "stp",
+     "to": "board",
+     "style": "dep",
+     "fromAt": [
+      0.75,
+      0
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "label": "manifest",
+     "labelDx": 32
+    }
+   ]
+  },
+  "mvp": {
+   "title": "Pilot architecture",
+   "caption": "Everything talks to one server; payment is called inside the order request.",
+   "size": [
+    880,
+    310
+   ],
+   "legend": false,
+   "groups": [
+    {
+     "id": "vm",
+     "kind": "tier",
+     "tone": 0,
+     "x": 225,
+     "y": 25,
+     "w": 470,
+     "h": 265,
+     "label": "Cloud VM"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 15,
+     "w": 105,
+     "h": 130,
+     "label": "Diner PWA"
+    },
+    {
+     "id": "tab",
+     "kind": "browser",
+     "x": 20,
+     "y": 160,
+     "w": 130,
+     "h": 60,
+     "label": "Stall tablets"
+    },
+    {
+     "id": "disp",
+     "kind": "iot",
+     "x": 20,
+     "y": 236,
+     "w": 130,
+     "h": 58,
+     "label": "Displays"
+    },
+    {
+     "id": "mono",
+     "kind": "component",
+     "x": 262,
+     "y": 110,
+     "w": 200,
+     "h": 86,
+     "label": "HawkerHub server",
+     "sub": "(monolith)"
+    },
+    {
+     "id": "db",
+     "kind": "db",
+     "x": 530,
+     "y": 105,
+     "w": 130,
+     "h": 96,
+     "label": "Single\ndatabase"
+    },
+    {
+     "id": "pay",
+     "kind": "external",
+     "x": 725,
+     "y": 120,
+     "w": 140,
+     "h": 64,
+     "label": "Payment",
+     "sub": "provider"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "tab",
+     "to": "mono",
+     "style": "sync",
+     "label": "polls 2 s",
+     "labelDy": -12
+    },
+    {
+     "from": "disp",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "mono",
+     "to": "db",
+     "style": "sync"
+    },
+    {
+     "from": "mono",
+     "to": "pay",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       362,
+       250
+      ],
+      [
+       795,
+       250
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "label": "inside the request",
+     "labelDy": 12
+    }
+   ]
+  },
+  "ans-ref": {
+   "title": "Model answer: elastic, event-driven reference architecture",
+   "caption": "Menus at the edge, a saga-driven order flow with an append-only payment ledger, pushed tickets, scheduled scaling for meal peaks and nightly settlement from the ledger.",
+   "size": [
+    1080,
+    760
+   ],
+   "groups": [
+    {
+     "id": "edge",
+     "kind": "zone",
+     "label": "Edge (DMZ)",
+     "tone": 2,
+     "x": 168,
+     "y": 20,
+     "w": 164,
+     "h": 720
+    },
+    {
+     "id": "cloud",
+     "kind": "cloud",
+     "label": "Cloud region (IaC)",
+     "tone": 0,
+     "x": 350,
+     "y": 20,
+     "w": 715,
+     "h": 720
+    },
+    {
+     "id": "k8s",
+     "kind": "cluster",
+     "label": "Managed Kubernetes · scheduled + reactive scaling",
+     "tone": 0,
+     "x": 365,
+     "y": 52,
+     "w": 460,
+     "h": 498
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 40,
+     "w": 110,
+     "h": 115,
+     "label": "Diner PWA"
+    },
+    {
+     "id": "tab",
+     "kind": "device",
+     "x": 30,
+     "y": 300,
+     "w": 110,
+     "h": 115,
+     "label": "Stall tablet",
+     "sub": "offline-first"
+    },
+    {
+     "id": "disp",
+     "kind": "iot",
+     "x": 20,
+     "y": 440,
+     "w": 130,
+     "h": 62,
+     "label": "Queue display"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 180,
+     "w": 130,
+     "h": 70,
+     "label": "Portals"
+    },
+    {
+     "id": "payx",
+     "kind": "external",
+     "x": 20,
+     "y": 560,
+     "w": 130,
+     "h": 60,
+     "label": "Payment",
+     "sub": "provider"
+    },
+    {
+     "id": "deliv",
+     "kind": "external",
+     "x": 20,
+     "y": 650,
+     "w": 130,
+     "h": 60,
+     "label": "Delivery",
+     "sub": "partners (Ph 2)"
+    },
+    {
+     "id": "cdn",
+     "kind": "security",
+     "x": 183,
+     "y": 60,
+     "w": 134,
+     "h": 60,
+     "label": "CDN + WAF",
+     "sub": "menus, PWA"
+    },
+    {
+     "id": "gw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 170,
+     "w": 134,
+     "h": 70,
+     "label": "API gateway",
+     "sub": "throttle, auth"
+    },
+    {
+     "id": "ws",
+     "kind": "gateway",
+     "x": 183,
+     "y": 315,
+     "w": 134,
+     "h": 76,
+     "label": "Centre channel",
+     "sub": "WebSocket + pub/sub"
+    },
+    {
+     "id": "menu",
+     "kind": "service",
+     "x": 380,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Menu",
+     "sub": "+ cache"
+    },
+    {
+     "id": "order",
+     "kind": "service",
+     "x": 530,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Order",
+     "sub": "saga owner",
+     "accent": true
+    },
+    {
+     "id": "pay",
+     "kind": "service",
+     "x": 680,
+     "y": 100,
+     "w": 130,
+     "h": 62,
+     "label": "Payment",
+     "sub": "ledger"
+    },
+    {
+     "id": "ticket",
+     "kind": "service",
+     "x": 380,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Ticket",
+     "sub": "push + catch-up"
+    },
+    {
+     "id": "queue",
+     "kind": "service",
+     "x": 530,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Queue display"
+    },
+    {
+     "id": "settle",
+     "kind": "job",
+     "x": 680,
+     "y": 185,
+     "w": 130,
+     "h": 62,
+     "label": "Settlement",
+     "sub": "CronJob 02:00"
+    },
+    {
+     "id": "stream",
+     "kind": "stream",
+     "x": 380,
+     "y": 278,
+     "w": 430,
+     "h": 64,
+     "label": "Event stream",
+     "sub": "OrderPlaced · PaymentCaptured · TicketReady · ItemSoldOut",
+     "accent": true
+    },
+    {
+     "id": "recv",
+     "kind": "service",
+     "x": 380,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Receipts"
+    },
+    {
+     "id": "reco",
+     "kind": "ai",
+     "x": 530,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Recommend",
+     "sub": "Phase 2"
+    },
+    {
+     "id": "dadapt",
+     "kind": "service",
+     "x": 680,
+     "y": 375,
+     "w": 130,
+     "h": 62,
+     "label": "Delivery",
+     "sub": "adapter (Ph 2)"
+    },
+    {
+     "id": "q",
+     "kind": "queue",
+     "x": 380,
+     "y": 465,
+     "w": 135,
+     "h": 56,
+     "label": "Receipt\nqueue"
+    },
+    {
+     "id": "receiptfn",
+     "kind": "function",
+     "x": 380,
+     "y": 575,
+     "w": 135,
+     "h": 56,
+     "label": "Send receipt",
+     "sub": "function"
+    },
+    {
+     "id": "stmtfn",
+     "kind": "function",
+     "x": 530,
+     "y": 575,
+     "w": 135,
+     "h": 56,
+     "label": "Statements",
+     "sub": "function"
+    },
+    {
+     "id": "menudb",
+     "kind": "db",
+     "x": 845,
+     "y": 56,
+     "w": 200,
+     "h": 70,
+     "label": "Menu DB"
+    },
+    {
+     "id": "orderdb",
+     "kind": "db",
+     "x": 845,
+     "y": 140,
+     "w": 200,
+     "h": 74,
+     "label": "Order DB",
+     "sub": "partitioned by centre"
+    },
+    {
+     "id": "ledger",
+     "kind": "db",
+     "x": 845,
+     "y": 228,
+     "w": 200,
+     "h": 74,
+     "label": "Payment ledger",
+     "sub": "append-only",
+     "accent": true
+    },
+    {
+     "id": "setdb",
+     "kind": "db",
+     "x": 845,
+     "y": 470,
+     "w": 200,
+     "h": 66,
+     "label": "Settlement DB"
+    },
+    {
+     "id": "pool",
+     "kind": "box",
+     "tone": 4,
+     "x": 845,
+     "y": 375,
+     "w": 200,
+     "h": 62,
+     "label": "Connection pooler"
+    },
+    {
+     "id": "plat",
+     "kind": "box",
+     "tone": 2,
+     "x": 365,
+     "y": 660,
+     "w": 680,
+     "h": 62,
+     "label": "Shared platform services",
+     "sub": "IaC + GitOps · secrets / KMS · logs, metrics, traces · peak change freeze"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "cdn",
+     "style": "sync"
+    },
+    {
+     "from": "app",
+     "to": "gw",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.9
+     ],
+     "toAt": [
+      0,
+      0.2
+     ]
+    },
+    {
+     "from": "web",
+     "to": "gw",
+     "style": "sync"
+    },
+    {
+     "from": "tab",
+     "to": "ws",
+     "style": "flow",
+     "label": "acks",
+     "labelDy": -12
+    },
+    {
+     "from": "disp",
+     "to": "ws",
+     "style": "event",
+     "fromAt": [
+      1,
+      0.3
+     ],
+     "toAt": [
+      0,
+      0.85
+     ]
+    },
+    {
+     "from": "gw",
+     "to": "k8s",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.27
+     ]
+    },
+    {
+     "from": "ws",
+     "to": "ticket",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.3
+     ],
+     "via": [
+      [
+       345,
+       338
+      ],
+      [
+       345,
+       216
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "menu",
+     "to": "menudb",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       447,
+       80
+      ],
+      [
+       835,
+       80
+      ]
+     ],
+     "toAt": [
+      0,
+      0.35
+     ]
+    },
+    {
+     "from": "order",
+     "to": "orderdb",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       597,
+       172
+      ],
+      [
+       835,
+       172
+      ]
+     ],
+     "toAt": [
+      0,
+      0.45
+     ]
+    },
+    {
+     "from": "pay",
+     "to": "ledger",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.8
+     ],
+     "via": [
+      [
+       828,
+       150
+      ],
+      [
+       828,
+       262
+      ]
+     ],
+     "toAt": [
+      0,
+      0.45
+     ]
+    },
+    {
+     "from": "order",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      1,
+      0.85
+     ],
+     "via": [
+      [
+       672,
+       153
+      ],
+      [
+       672,
+       268
+      ]
+     ],
+     "toAt": [
+      0.682,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "ticket",
+     "style": "event",
+     "fromAt": [
+      0.15,
+      0
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "queue",
+     "style": "event",
+     "fromAt": [
+      0.4,
+      0
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "settle",
+     "style": "event",
+     "fromAt": [
+      0.86,
+      0
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "recv",
+     "style": "event",
+     "fromAt": [
+      0.15,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "reco",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "dadapt",
+     "style": "event",
+     "fromAt": [
+      0.85,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "recv",
+     "to": "q",
+     "style": "async"
+    },
+    {
+     "from": "q",
+     "to": "receiptfn",
+     "style": "async"
+    },
+    {
+     "from": "settle",
+     "to": "stmtfn",
+     "style": "async",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       836,
+       216
+      ],
+      [
+       836,
+       603
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    },
+    {
+     "from": "pay",
+     "to": "payx",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       745,
+       10
+      ],
+      [
+       160,
+       10
+      ],
+      [
+       160,
+       590
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "tokens",
+     "labelAt": 0.45
+    },
+    {
+     "from": "dadapt",
+     "to": "deliv",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       745,
+       645
+      ],
+      [
+       340,
+       645
+      ],
+      [
+       340,
+       680
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    }
+   ]
+  }
+ }
+}

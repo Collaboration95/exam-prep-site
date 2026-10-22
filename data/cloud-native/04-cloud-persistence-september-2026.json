@@ -1,0 +1,552 @@
+{
+ "key": "04-cloud-persistence-september-2026",
+ "title": "Cloud Persistence",
+ "pages": 61,
+ "minutes": 40,
+ "overview": "Choose persistence from the data shape, access pattern, consistency requirement and scale. Trace relational and object databases into the four NoSQL families, then compare sharding, replication and eventual consistency. Map local, file, block, object and database storage to cloud services while accounting for the operating cost of multiple stores.",
+ "big_ideas": [
+  "Relational stores support integrity, joins and ACID transactions; distributing those guarantees has coordination costs.",
+  "Big data (the six V's: Volume, Velocity, Variety, Variability, Veracity, Value) pushed web giants to build NoSQL stores.",
+  "NoSQL is best read as **Not Only SQL**: a family of key-value, column-family, document and graph stores, each suited to a different data shape and access pattern.",
+  "**Polyglot persistence**: use the right storage technology for each use case, but weigh the gain against the extra programming and operational complexity.",
+  "Sharding divides records among nodes; replication copies records for availability or reads. Multi-writer replicas add coordination and conflict-handling work.",
+  "Some distributed workloads favour BASE and eventual consistency; distribution does not make ACID impossible.",
+  "Cloud storage: ephemeral instance disk, shared network files, persistent block volumes and API-accessed objects; check lifecycle and access semantics.",
+  "AWS examples: RDS/Aurora for relational transactions, DynamoDB for key-value/documents, Redshift for analytical columnar storage, ElastiCache for caching and Neptune for graphs."
+ ],
+ "sections": [
+  {
+   "id": "why-persistence",
+   "title": "Why persistence matters in the cloud",
+   "slides": [
+    2,
+    6
+   ],
+   "summary": "The basic question: can traditional data storage keep up as applications move from a single server and database to distributed cloud deployments?",
+   "notes": [
+    "**Cloud deployment makes data distribution an explicit design choice.** Multiple application instances may share one database or use several stores and regions. Identify which state must survive failures, how it is accessed, and whether it needs partitioning or replication; not every cloud app needs many databases.",
+    "Persistence technology keeps evolving with the nature of the data, so the recurring question is whether current designs still meet evolving needs. The aim is to understand the options, evaluate and recommend one, and design a strategy from requirements."
+   ],
+   "terms": [
+    {
+     "term": "Persistence",
+     "def": "Storing data so it survives beyond the process or request that created it."
+    }
+   ],
+   "check": [
+    {
+     "q": "An app moves from one server to 6 load-balanced instances in the cloud, and users start losing their shopping carts between requests. What changed in the persistence problem?",
+     "a": "Each instance was keeping cart state locally, which worked with one server but fails when requests land on different instances. In a distributed deployment you must decide which state is shared, where it lives and how it survives an instance failure. Moving carts to a shared store fixes it, at the cost of a network call per request and a new component that must be available."
+    },
+    {
+     "q": "A team starting a new cloud app with modest load plans four different databases from day one 'because that's cloud-native'. Do you agree?",
+     "a": "No. Cloud deployment makes data distribution an explicit choice, not a requirement to use many stores. A single managed relational database may be enough at first. Add stores, partitioning or replication when access patterns, scale or availability requirements justify the extra operational complexity."
+    }
+   ]
+  },
+  {
+   "id": "db-history",
+   "title": "Database history: navigational, relational, object",
+   "slides": [
+    8,
+    16
+   ],
+   "summary": "Database generations: hierarchical and network (1960s), relational with normalisation and ACID (1970s), and object databases (1990s), ending with RDBMS strengths and its scaling weakness.",
+   "notes": [
+    "**Each database generation fixed the previous one's pain.** Hierarchical (tree, one parent per child, e.g. IMS) and network (graph, many parents, e.g. IDMS) models of the 1960s tied access to the physical structure; the relational model (1970s, Codd) instead describes how data is presented, not stored, using tables joined on keys.",
+    "**RDBMS gives normalisation and ACID.** Normalisation splits data into smaller tables joined at query time to cut duplication, avoid insert/update/delete anomalies and stay neutral to changing queries. Transactions are atomic, consistent, isolated and durable, behind one uniform (declarative) language, SQL.",
+    "**Object databases (1990s) tried to remove the object-relational mismatch** by storing objects directly (identity, inheritance, no normalisation) but failed to win market share; ORM tools solved much of the mismatch on top of mature RDBMS instead (e.g. flattening an inheritance hierarchy into one table with a type column).",
+    "**RDBMS weakness to remember: it is mature and precise (star schemas, reporting) but expensive to scale.** This sets up why NoSQL appeared."
+   ],
+   "terms": [
+    {
+     "term": "Hierarchical model",
+     "def": "Tree-structured database where each child record has exactly one parent (e.g. IBM IMS)."
+    },
+    {
+     "term": "Network model",
+     "def": "Graph-structured database where records can have many parents and children (e.g. IDMS)."
+    },
+    {
+     "term": "Normalisation",
+     "def": "Splitting data into smaller related tables to remove duplication and update anomalies."
+    },
+    {
+     "term": "ACID",
+     "def": "Atomicity, Consistency, Isolation, Durability: guarantees of a reliable transaction."
+    },
+    {
+     "term": "OODBMS",
+     "def": "Object-oriented database that stores program objects directly, without normalising them."
+    },
+    {
+     "term": "ORM",
+     "def": "Object-Relational Mapping: a layer that maps program objects to relational tables."
+    }
+   ],
+   "check": [
+    {
+     "q": "A legacy hierarchical database makes a new 'all orders for product X across customers' report very slow, because data is reached from customer records down. Why does the relational model help here?",
+     "a": "Navigational models tie access to the physical tree, so a query that doesn't follow the parent-child path has to traverse everything. The relational model separates how data is presented from how it is stored, so the same normalised tables can be joined in whatever direction a new query needs. The cost is join work at query time."
+    },
+    {
+     "q": "A team wants an object database because 'mapping our class hierarchy to tables is painful'. What does history suggest, and what would you propose?",
+     "a": "Object databases did address the object-relational mismatch, but they never won market share, and ORM tools solved much of the mismatch on top of mature relational databases, for example by flattening an inheritance hierarchy into one table with a type column. Propose an ORM over a relational database, or a document store if the objects really are self-contained aggregates."
+    },
+    {
+     "q": "A finance system needs precise reporting, star schemas and strict integrity, and is expected to grow tenfold in 5 years. Is a relational database still a sound choice?",
+     "a": "Yes for the requirements: it is mature and precise, with normalisation, ACID and SQL for reporting. The risk is its main weakness, being expensive to scale for very large distributed workloads. Plan for that growth (bigger instances, read replicas, partitioning, or NewSQL later) rather than giving up integrity now."
+    }
+   ]
+  },
+  {
+   "id": "big-data-nosql",
+   "title": "Big data and the birth of NoSQL",
+   "slides": [
+    18,
+    26
+   ],
+   "summary": "How the six V's exposed RDBMS limits, how Google, Amazon, Facebook and others built their own stores, how NoSQL got its name, the three kinds of data structure, and polyglot persistence.",
+   "notes": [
+    "**Big data (six V's) exposed RDBMS limits.** Volume (scale-out on commodity/cloud, not one big server), Velocity (real-time performance via distributed persistence), Variety (non-static schemas for structured, semi-structured, unstructured data), Variability (agility: always-on services, frequent releases), Veracity (trustworthiness) and Value (turning data into value).",
+    "**Web-scale search exposed a mismatch in workload.** The lecture’s keyword-to-URL example needs huge distributed lookups rather than complex joins and multi-record transactions. Its timeline distinguishes Google File System (2003), MapReduce (2004) and Bigtable (2006), followed by other web-scale storage innovations. Bigtable belongs to the column-family lineage.",
+    "**What modern systems expect:** large volume across servers, low latency, very high availability, incremental scaling with no downtime, tolerance of network partitions and cheap commodity hardware without lock-in. Cloud technology is the answer.",
+    "**NoSQL means 'Not Only SQL':** several non-relational data models, not one guarantee set. Structured data has an explicit model; semi-structured data such as JSON/XML has flexible structure; unstructured text or media may need search, extraction or ML depending on the task.",
+    "**Polyglot persistence:** use different storage technologies for different needs, across an enterprise or within one application. Wrap data access in services to limit the impact of each choice, but remember every extra technology adds programming and operational complexity, so weigh the fit against that cost."
+   ],
+   "terms": [
+    {
+     "term": "Six V's",
+     "def": "Volume, Velocity, Variety, Variability, Veracity, Value: the characteristics of big data."
+    },
+    {
+     "term": "NoSQL",
+     "def": "'Not Only SQL': a family of non-relational databases (key-value, column, document, graph)."
+    },
+    {
+     "term": "Semi-structured data",
+     "def": "Data with a flexible schema such as JSON or XML."
+    },
+    {
+     "term": "Polyglot persistence",
+     "def": "Using multiple storage technologies, each chosen for how a particular component uses its data."
+    },
+    {
+     "term": "Scale-out",
+     "def": "Adding more commodity servers rather than buying a bigger single server (scale-up)."
+    }
+   ],
+   "check": [
+    {
+     "q": "Using the search example from the lecture, explain why a relational database was a poor fit for a keyword-to-URL lookup at web scale.",
+     "a": "The workload is a huge, read-mostly lookup spread across many servers, with no need for multi-record transactions, many entities or integrity constraints. A relational database would provide features the workload doesn't use while making the distribution it does need costly. Where joins and transactions matter, the balance reverses."
+    },
+    {
+     "q": "An IoT platform ingests 50,000 sensor readings a second, and each device type sends a different set of fields. Which of the V's are causing pressure, and what do they point to?",
+     "a": "Velocity (real-time ingestion needs distributed persistence for throughput), Volume (scale out on commodity or cloud servers, not one big server) and Variety (fields differ by device, so a non-static schema helps). Together they point to a distributed NoSQL store for the raw readings. Keep any transactional data, such as billing, wherever its integrity needs are best met."
+    },
+    {
+     "q": "A 5-person team proposes a graph database, a document store, a cache and a relational database for an app with 2,000 users. When is polyglot persistence a bad idea, and what would you do?",
+     "a": "When the gain from a better storage fit is smaller than the cost of programming and operating each extra technology, which is likely here given the team size and load. Start with fewer stores, add one only when an access pattern clearly needs it, and wrap data access in services so a later change has limited impact."
+    }
+   ]
+  },
+  {
+   "id": "nosql-patterns",
+   "title": "The four NoSQL data store patterns",
+   "slides": [
+    27,
+    31
+   ],
+   "summary": "The four NoSQL patterns (key-value, column family, document, graph): what each stores and typical uses.",
+   "notes": [
+    "**Four NoSQL patterns differ in what the unit of storage is.** Key-value: a value looked up by a single key (caches, lookup tables, file stores). Column family: sparse data keyed by row and column, with columns grouped into families read together (web crawling, large sparse tables). Document: a whole tree-structured object in one unit (orders, invoices, forms, web pages). Graph: nodes, edges and properties (social, friend-of-friend, pattern matching).",
+    "**Document stores group related object data.** An order and its line items can be read as one aggregate without reconstructing normalised tables. This simplifies object-shaped reads; cross-document relationships and constraints still need deliberate modelling.",
+    "**Column-family stores can be seen two ways:** row-oriented (each row an aggregate such as customer 1234, with families like profile and order history) or column-oriented (each family a record type, a row being the join across families).",
+    "**Graph stores emphasise traversal.** Nodes and edges express relationship-heavy questions such as friend-of-friend recommendations. Their advantage depends on the traversal workload, indexes and dataset, rather than being universally faster than joins."
+   ],
+   "terms": [
+    {
+     "term": "Key-value store",
+     "def": "Database that maps a unique key to a value, like a distributed dictionary or hash."
+    },
+    {
+     "term": "Column family",
+     "def": "A named group of columns stored and accessed together under a row key."
+    },
+    {
+     "term": "Document store",
+     "def": "Database that stores a self-contained document (e.g. JSON) per object."
+    },
+    {
+     "term": "Graph store",
+     "def": "Database that stores nodes and edges with properties for relationship traversal."
+    }
+   ],
+   "check": [
+    {
+     "q": "Invoices are always read and written as a whole, with header and line items together, and the format varies by country. Document store or normalised relational tables?",
+     "a": "A document store: each invoice is a natural aggregate that maps to one document, so reads need no joins and the varying fields don't need schema changes. You give up easy cross-invoice constraints and ad-hoc joins, for example reporting across customers and products, which may need a separate reporting store."
+    },
+    {
+     "q": "A social app's 'people you may know' query joins the friendships table to itself three levels deep and is slow. Which pattern fits, and what should you check before switching?",
+     "a": "A graph store, because the question is relationship traversal across nodes and edges rather than repeated joins. Check that the real workload is traversal-heavy and benchmark it with realistic data and indexes; graph stores are not universally faster than joins. Keep other data, such as profiles, in whatever store suits it."
+    },
+    {
+     "q": "In a column-family store, customer rows have a profile family and an order-history family. A screen reads only the profile. Why does the grouping matter?",
+     "a": "Columns in a family are assumed to be read together and are stored together, so reading the profile doesn't pull the large order history. Rows can stay sparse, since customers without orders cost nothing. Choose families from the access patterns, because a screen that needs both families in one read loses this benefit."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "cards",
+     "title": "Four NoSQL patterns",
+     "items": [
+      {
+       "label": "Key-value",
+       "sub": "lookup by one key",
+       "icon": "redis",
+       "detail": "Dictionary, image store, document/file store, query cache, lookup tables."
+      },
+      {
+       "label": "Column family",
+       "sub": "row key and column families",
+       "icon": "apachecassandra",
+       "detail": "Web crawling, large sparsely populated tables, highly adaptable systems. Columns grouped in families accessed together."
+      },
+      {
+       "label": "Document",
+       "sub": "nested object as one unit",
+       "icon": "mongodb",
+       "detail": "Sales orders, invoices, product descriptions, forms, web pages. Object model turns directly into a document."
+      },
+      {
+       "label": "Graph",
+       "sub": "nodes, edges, properties",
+       "icon": "neo4j",
+       "detail": "Social network and friend-of-friends queries, inference, rules systems, pattern matching."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "choosing-a-store",
+   "title": "Choosing a store: KV, column, document, graph, NewSQL",
+   "slides": [
+    33,
+    40
+   ],
+   "summary": "Decision criteria and product examples for each NoSQL type, ending with a SQL vs NoSQL vs NewSQL comparison.",
+   "notes": [
+    "**Start from access patterns.** Key-value for direct keyed reads, caching and suitable specialised structures such as Redis rankings. Column-family for large sparse records organised by row key and families. Documents for flexible nested aggregates. Graphs for relationship traversal. Data size alone does not decide the family; model the queries and update patterns.",
+    "**Check guarantees at the operation’s scope.** Relational stores are a natural fit for joins, constraints and ACID transactions. NoSQL capabilities vary by product and operation; some offer transactions. NewSQL aims to combine relational/SQL semantics with distributed scale, with coordination costs to evaluate.",
+    "**Read the lecture’s SQL/NoSQL/NewSQL table as a simplified comparison.** Traditional relational systems can be costly to scale out; this does not mean SQL is inherently slow or unable to distribute. NoSQL does not universally exclude schemas, SQL-like queries or ACID. A column-family store is also distinct from an analytical columnar warehouse such as Redshift.",
+    "The related class exercise practises deriving data elements and a schema for a shopping-cart page, i.e. applying these choices to a concrete scenario."
+   ],
+   "terms": [
+    {
+     "term": "Eventually consistent",
+     "def": "Replicas may differ briefly but converge to the same value once updates stop."
+    },
+    {
+     "term": "Schema-on-write",
+     "def": "Data must fit a defined schema when written (typical of RDBMS)."
+    },
+    {
+     "term": "NewSQL",
+     "def": "Relational, SQL and ACID databases that also scale horizontally like NoSQL."
+    }
+   ],
+   "check": [
+    {
+     "q": "A game needs a real-time global leaderboard updated thousands of times a second. Which store type fits, and what would you keep elsewhere?",
+     "a": "An in-memory key-value store with sorted structures such as rankings, because a leaderboard is direct keyed access that must be very fast. Keep durable data such as player accounts and purchases in a durable store, since a cache can lose data on failure unless persistence is configured."
+    },
+    {
+     "q": "A team picks a column-family store because 'we'll have terabytes of data'. Is size a good reason, and what should decide it?",
+     "a": "No. Data size alone doesn't decide the store family. Decide from the queries and update patterns: column-family for row-key access to large sparse records grouped into families, documents for nested aggregates, relational for joins and constraints. Model the access patterns, then benchmark the real queries."
+    },
+    {
+     "q": "A payments company needs SQL, strong ACID transactions and horizontal scale across regions. Is NewSQL the obvious answer?",
+     "a": "It is a candidate, because NewSQL aims to combine relational and SQL semantics with distributed scale. Evaluate the coordination cost: distributed guarantees add latency, especially across regions. Compare it with a sharded relational design and with NoSQL products that offer transactions at the scope you need."
+    },
+    {
+     "q": "An analyst asks to run sales reports on the operational column-family store 'because both are columnar, like the warehouse'. What is the misunderstanding?",
+     "a": "A column-family store groups sparse, row-keyed records for operational access. An analytical columnar warehouse is a SQL store built for large scans and aggregations. They solve different workloads, so heavy reports on the operational store would perform poorly and compete with live traffic. Feed a warehouse for analytics instead."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Database families: tendencies, not guarantees",
+     "columns": [
+      "Need",
+      "Traditional relational",
+      "NoSQL family",
+      "NewSQL"
+     ],
+     "rows": [
+      [
+       "Data model",
+       "Tables and relationships",
+       "Key-value, family, document or graph",
+       "Relational"
+      ],
+      [
+       "Query fit",
+       "Joins and constraints",
+       "Access patterns match the model",
+       "SQL with distributed execution"
+      ],
+      [
+       "Transactions",
+       "ACID within supported scope",
+       "Check product and transaction scope",
+       "Distributed ACID design goal"
+      ],
+      [
+       "Scale trade-off",
+       "Scale-out can require more work",
+       "Distribution and guarantees vary",
+       "Coordination cost across nodes"
+      ]
+     ],
+     "caption": "Select by workload and required guarantees; no database label guarantees high performance."
+    }
+   ]
+  },
+  {
+   "id": "scaling-consistency",
+   "title": "Sharding, replication and eventual consistency",
+   "slides": [
+    42,
+    45
+   ],
+   "summary": "The two ways to distribute data (sharding and replication), the two replication styles, and why distributed stores often settle for BASE instead of ACID.",
+   "notes": [
+    "**Two ways to distribute data, usable together.** Sharding (horizontal partitioning by hash or range) puts different data on different servers, each serving reads and writes for its subset, so volume, reads and writes all scale (e.g. Singapore orders on a Singapore node, Malaysia orders on a Malaysia node). Replication copies the same data to several servers (e.g. a global product list) for read capacity and availability.",
+    "**Replication style changes write coordination.** Single-leader (master-slave) sends writes to one leader and may serve reads from followers; failover must be designed. Peer-to-peer permits multiple writers, but conflict resolution and replication overhead matter. More writers do not guarantee linear write throughput.",
+    "**BASE is an option, not a consequence of distribution.** When stale reads are acceptable, asynchronous propagation can favour availability and lower coordination. BASE means Basically Available, Soft state and Eventually consistent: copies converge once updates stop and propagation completes. Distributed ACID remains possible when its coordination cost is justified.",
+    "**Decision rule:** keep ACID for money-critical data; accept eventual consistency where availability and scale matter more than instant agreement."
+   ],
+   "terms": [
+    {
+     "term": "Sharding",
+     "def": "Horizontal partitioning: different subsets of data stored on different servers."
+    },
+    {
+     "term": "Replication",
+     "def": "Keeping copies of the same data on multiple servers."
+    },
+    {
+     "term": "Master-slave replication",
+     "def": "One node accepts writes and copies them to slaves that may serve reads."
+    },
+    {
+     "term": "Peer-to-peer replication",
+     "def": "Any node accepts writes and nodes synchronise with each other."
+    },
+    {
+     "term": "BASE",
+     "def": "Basically Available, Soft state, Eventual consistency: the relaxed alternative to ACID."
+    }
+   ],
+   "check": [
+    {
+     "q": "An app is overwhelmed by writes. A teammate proposes adding read replicas with master-slave replication. Will it help? What would?",
+     "a": "No. Replicas add read capacity, but every write still goes to the single leader, so the write bottleneck stays. Shard by a suitable key so independent writes go to different servers. Peer-to-peer replication may help some workloads, but each update still has to propagate and may need conflict handling."
+    },
+    {
+     "q": "A regional retailer stores Singapore and Malaysia orders together and has one global product list. How would you distribute each kind of data?",
+     "a": "Shard orders by country so each node handles its own reads and writes, spreading both volume and write load. Replicate the product list to every node, because it is read-heavy and shared, and single-leader replication fits since writes are rare. Cross-country reports now need to query several shards."
+    },
+    {
+     "q": "A bank's product team wants eventual consistency 'everywhere, for scale'. Where would you allow it and where not?",
+     "a": "Keep authoritative balances and transfers transactional (ACID), because temporarily inconsistent balances are wrong and costly. Allow eventual consistency (BASE) for derived views such as an activity feed, analytics or a product listing, where a briefly stale read does little harm. State the consistency requirement per operation instead of setting one policy for the whole system."
+    },
+    {
+     "q": "After switching to peer-to-peer replication, two regions accept conflicting updates to the same customer record during a network split. What caused this, and what are the options?",
+     "a": "Multiple writers with asynchronous propagation favour availability, so both regions accepted writes and the copies diverged. Options are a conflict-resolution rule such as last-writer-wins or merging, routing each record's writes to a home region, or coordinated writes for that data, which cost latency and availability during a split."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Sharding vs replication",
+     "columns": [
+      "",
+      "Sharding",
+      "Replication"
+     ],
+     "rows": [
+      [
+       "Data per node",
+       "Different subset",
+       "Same copy"
+      ],
+      [
+       "Scales",
+       "Data volume; both reads and writes",
+       "Read capacity and availability; multi-writer throughput depends on coordination"
+      ],
+      [
+       "Example",
+       "Singapore orders on SG node",
+       "Global product list"
+      ],
+      [
+       "Styles",
+       "Hash or range",
+       "Master-slave, peer-to-peer"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cloud-storage-options",
+   "title": "Cloud persistence options: file storage types",
+   "slides": [
+    47,
+    51
+   ],
+   "summary": "The cloud persistence options (files and databases) and the four file storage types with durability, sharing, analogies and AWS examples.",
+   "notes": [
+    "**Cloud persistence splits into files and databases.** Files: local file system, network file system, mounted volume, object storage. Databases: RDBMS, document, column, key-value/in-memory cache, graph.",
+    "**Compare lifecycle and access semantics.** Instance-store disk is ephemeral and suits scratch data. EFS provides shared file access. EBS provides persistent block storage, normally used as a disk for an attached VM; retention settings determine whether it survives VM deletion. S3 stores objects through APIs rather than a normal mounted filesystem.",
+    "**Choosing:** temporary scratch -> local disk; shared files across instances -> network file system; fast durable disk for one VM (e.g. database files) -> mounted volume; data used by many apps and channels -> object storage, the most flexible and ubiquitous option."
+   ],
+   "terms": [
+    {
+     "term": "Block storage",
+     "def": "Storage exposed as disk blocks to an attached VM; concurrent sharing requires explicit storage and filesystem support."
+    },
+    {
+     "term": "Object storage",
+     "def": "Storage of files plus metadata accessed over a REST API (e.g. S3)."
+    },
+    {
+     "term": "Ephemeral storage",
+     "def": "Instance-local disk whose data is lost when the instance stops or terminates."
+    }
+   ],
+   "check": [
+    {
+     "q": "A load-balanced web fleet must share user-uploaded files between instances. Which storage fits, and why not a block volume attached to one VM?",
+     "a": "A network file system if the app needs shared file semantics, or object storage if it can use object APIs, which also lets web and mobile clients fetch the files. A block volume is normally a disk for one attached VM, not a shared filesystem, and concurrent writers need explicit support and coordination."
+    },
+    {
+     "q": "A team stores its database files on the VM's local instance disk because it is fastest. What is the risk, and what would you change?",
+     "a": "Instance-store disk is ephemeral: data can disappear on stop, termination or host failure. Put database files on a persistent block volume with suitable retention and backups, or use a managed database. Keep local disk for scratch data that can be regenerated."
+    },
+    {
+     "q": "Images must be served to a web app, a mobile app and a partner's batch job. Why is object storage the natural fit?",
+     "a": "Object storage is reached through a standard web API, so every channel and service model uses it the same way without mounting a disk. It is also the most flexible and widely used option. The trade-off is that it isn't a normal filesystem, so apps that expect file locking or in-place edits need changes."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "File storage options",
+     "columns": [
+      "Option",
+      "AWS example",
+      "Access",
+      "Ideal for"
+     ],
+     "rows": [
+      [
+       "Local file system",
+       "EC2 instance disks",
+       "Disks attached to host; IaaS only; data lost if drive fails or instance stops/terminates",
+       "Buffers, caches, scratch data"
+      ],
+      [
+       "Network file system",
+       "EFS",
+       "Simultaneous read-write from multiple instances",
+       "Sharing files across instances"
+      ],
+      [
+       "Mounted volume",
+       "EBS",
+       "Persistent block device; check attachment and deletion settings",
+       "Data needing quick access and long-term persistence"
+      ],
+      [
+       "Object storage",
+       "S3",
+       "Object (data + metadata) via REST/API",
+       "Data accessed from many different channels; most flexible"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "aws-examples-summary",
+   "title": "AWS storage services and summary",
+   "slides": [
+    53,
+    59
+   ],
+   "summary": "Mapping each persistence option to an AWS managed service, and the wrap-up on polyglot persistence.",
+   "notes": [
+    "**Map services to workload:** EC2 instance store for scratch, EFS for shared files, EBS for block volumes and S3 for objects. RDS/Aurora serve relational transactions; DynamoDB supports key-value and document access; Redshift is an analytical SQL warehouse, not a NoSQL column-family store. ElastiCache supplies in-memory caching and Neptune graph queries.",
+    "**Managed is a useful default, not the only valid choice.** It offloads much maintenance, backups and availability work. Self-host when compatibility, control or a missing capability justifies the operating burden; still design security, capacity and recovery.",
+    "**Takeaway:** options are unstructured (files) and structured (databases), and polyglot persistence means choosing the right tool for each use case."
+   ],
+   "terms": [
+    {
+     "term": "Amazon RDS",
+     "def": "AWS managed relational database service supporting several engines."
+    },
+    {
+     "term": "Amazon Aurora",
+     "def": "AWS cloud-built relational database."
+    },
+    {
+     "term": "Amazon ElastiCache",
+     "def": "AWS managed in-memory cache using Redis or Memcached."
+    },
+    {
+     "term": "Amazon Neptune",
+     "def": "AWS managed graph database."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team wants to install a database on a VM instead of using the provider's managed relational database 'to keep control'. When is that justified?",
+     "a": "When compatibility, a needed extension or version, or a capability missing from the managed option justifies the operating burden. Otherwise managed is the better default: it offloads much maintenance, patching, backup and availability work. Either way, the customer still designs access, schemas, capacity and recovery."
+    },
+    {
+     "q": "An e-commerce app needs a session cache, a catalogue with varying product attributes, sales analytics and 'customers who bought this also bought' recommendations. Match each to a store type and give the reason.",
+     "a": "Session cache: in-memory key-value, because it is fast keyed access to disposable data. Catalogue: document or key-value, because attributes vary per product and items are read whole. Analytics: a columnar SQL warehouse for scans and aggregations. Recommendations: a graph store for relationship traversal. Each extra store adds operational cost, so drop one if a simpler store meets the need."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "Design the persistence strategy for a cloud-native e-commerce platform with a catalogue (varying attributes), carts that must survive a cache failure, orders, recommendations and product images. Justify each store and say which one you would drop if the team were only 4 people.",
+   "a": "Orders: a managed relational database for ACID transactions. Catalogue: a document store for flexible attributes read as whole items. Carts: a durable key-value store, or the relational database, with a cache in front, since carts must survive cache loss. Recommendations: a graph store for traversal. Images: object storage served through a CDN. With 4 people, drop the graph store and compute recommendations in batch from the order database, and consider keeping the catalogue relational, because each extra store adds programming and operational complexity."
+  },
+  {
+   "q": "A regional retailer's single relational database can't keep up with growing order writes across Singapore and Malaysia. A teammate proposes read replicas. Evaluate that, then propose how to scale the data tier and name two side effects to monitor.",
+   "a": "Read replicas won't fix a write bottleneck, because all writes still go to one leader. Shard orders by country so each node serves its own reads and writes, and replicate the shared, read-heavy product list to both nodes with single-leader replication. Keep payment data under ACID and accept eventual consistency only where the business allows. Monitor replica lag on the product list (stale prices) and cross-shard query cost for regional reports."
+  },
+  {
+   "q": "Recommend data stores for a global banking ledger and for a social media status feed, and explain why the SQL versus NoSQL label alone doesn't settle the choice.",
+   "a": "The ledger needs transactional invariants and durability, so a relational or NewSQL store fits, weighing distributed coordination cost against scale needs. The feed tolerates briefly stale replicas and needs high write and read scale, so a distributed NoSQL store with eventual consistency fits. The label doesn't settle it, because NoSQL products vary in transaction scope and relational systems can distribute. Decide from per-operation consistency requirements, access patterns and coordination cost."
+  },
+  {
+   "q": "A manager says 'NoSQL replaced relational databases, so all new systems should be NoSQL.' Using the V's of big data and the web-search example, explain why NoSQL emerged and argue whether the claim holds.",
+   "a": "NoSQL emerged because variety needed flexible schemas, volume needed scale-out on commodity servers, and velocity needed distributed throughput. The web-search lookup needed none of the joins or multi-record transactions that relational systems provide. The claim doesn't hold: relational databases remain the natural fit for constraints, joins and ACID transactions. Polyglot persistence uses each model where it fits and accepts the complexity only when the benefit is larger."
+  },
+  {
+   "q": "An image-processing service has 10 worker VMs. Choose storage for temporary processing scratch space, the job database's data files, configuration shared by all workers, and finished images served to web and mobile apps. Then say what breaks if the shared configuration is put on one VM's block volume.",
+   "a": "Scratch: ephemeral instance disk, since it can be regenerated. Database files: a persistent block volume with retention and backups, or a managed database. Shared configuration: a network file system. Finished images: object storage reached through its API by both apps. A block volume is normally attached to one VM, so the other 9 workers couldn't read the configuration, and that VM's failure would take the configuration with it."
+  }
+ ]
+}

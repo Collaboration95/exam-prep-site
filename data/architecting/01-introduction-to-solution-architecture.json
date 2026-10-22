@@ -1,0 +1,404 @@
+{
+ "key": "01-introduction-to-solution-architecture",
+ "title": "Introduction to Solution Architecture",
+ "pages": 40,
+ "minutes": 21,
+ "overview": "Architecture sets the structure and principles that guide a system over time. This topic separates enterprise architecture, solution architecture and detailed design, and explains the architect’s responsibility for an implementable solution. Use the lecture’s ISO 25010:2011 model to name quality needs, then prioritise measurable scenarios with a utility tree.",
+ "big_ideas": [
+  "Architecture = the fundamental organisation of a system: its components, their relationships to each other and the environment, and the principles guiding design and evolution.",
+  "Architecture is shaped by stakeholders, organisation, the architect's experience and the technical environment, and in turn shapes the system.",
+  "Enterprise architecture (EA) gives strategic direction and constrains solution architecture (SA), which constrains software design.",
+  "The solution architect owns the solution's viability (implement and operate), leads technically and supports the project manager.",
+  "A good architect is trusted, produces an implementable optimum architecture, and is dispensable; bad ones build the wrong system, the unbuildable one, or live in an ivory tower / go absent.",
+  "Quality attributes can relate directly, neutrally or inversely, so architecture is about trade-offs.",
+  "The lecture uses **ISO 25010:2011**: Functional Suitability, Performance Efficiency, Compatibility, Usability, Reliability, Security, Maintainability and Portability.",
+  "A utility tree turns qualities into concrete scenarios (leaves) ranked by (Importance, Risk)."
+ ],
+ "sections": [
+  {
+   "id": "definition-influences",
+   "title": "What architecture is and why review it",
+   "slides": [
+    4,
+    6
+   ],
+   "summary": "The formal definition of architecture, the forces that shape it, and the practical value of reviewing an architecture.",
+   "notes": [
+    "**Architecture is structure plus principles.** It is the fundamental organisation of a system embodied in its components, their relationships to each other and to the environment, and the principles guiding its design and evolution (adapted from IEEE 1471 / ISO 42010). Note it covers the environment and evolution, not just boxes and lines.",
+    "**Four influences:** stakeholders’ needs, organisational goals and structure, the architect’s experience, and the technical environment. Architecture shapes the resulting system, which can then change those influences.",
+    "**Reviews find risk early.** In the lecture’s survey of 86 organisations, reported benefits included risk identification (88%), quality assessment (77%), reuse (72%), good design practice (64%) and avoiding costly design problems (63%). Reviews also capture rationale, uncover requirement conflicts and help stakeholders negotiate."
+   ],
+   "terms": [
+    {
+     "term": "Architecture",
+     "def": "Organisation of components, their relationships to each other and the environment, and the principles guiding design and evolution."
+    },
+    {
+     "term": "Architecture review",
+     "def": "Structured evaluation of a proposed architecture, chiefly to find risks and assess quality attributes."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team's architecture document is a single diagram of its internal services and their calls. A reviewer says it is not yet an architecture description. Do you agree?",
+     "a": "Agree. Architecture covers components and their relationships to each other **and to the environment**, plus the principles that guide design and evolution. The diagram shows no external users or systems and no principles telling future teams how the system may change. Add a context view and the guiding principles and decisions; the component diagram stays as one part."
+    },
+    {
+     "q": "A bank's new architect wants the event-streaming platform she used at her last job. The bank is heavily regulated and its operations team knows only relational databases. Which influences on the architecture conflict, and how should she proceed?",
+     "a": "The architect's own experience is pulling against the organisation (regulation, team skills) and the technical environment. Her preference alone is not a justification, because architecture is shaped by all four influences: stakeholders, organisation, architect's experience and technical environment. She should show which requirements the platform meets better and what the training and operating cost would be. If no quality requirement needs it, the familiar option is the safer choice."
+    },
+    {
+     "q": "A project manager wants to skip the architecture review to save two weeks because the design 'looks fine'. Argue for or against.",
+     "a": "Against skipping it, though the review can be scaled down. In the lecture's survey, the top reported benefit of reviews was early risk identification (88%), followed by quality assessment and avoiding costly design problems. Reviews also surface requirement conflicts and capture rationale while changes are still cheap. If the system closely repeats a proven design, a lighter review focused on the new parts may be enough."
+    }
+   ]
+  },
+  {
+   "id": "ea-vs-sa",
+   "title": "Enterprise vs solution architecture vs design",
+   "slides": [
+    7,
+    14
+   ],
+   "summary": "How enterprise architecture, solution architecture and detailed design nest, what each delivers, and the shared design principles (abstraction, encapsulation, cohesion, coupling).",
+   "notes": [
+    "**EA is the 'why and where' for the whole organisation; SA is the end-to-end design for one project.** EA is the organising logic for business processes and IT infrastructure and the source of strategic direction and guidance to solution architecture. SA brings multiple views together for one solution, shaped by business requirements, project constraints and technology options.",
+    "**Constraint chain: Enterprise Architecture constrains Solution Architecture, which constrains Software Design.** Business and ICT/digital strategy feed EA at the planning level; SA sits at design, implementation and delivery. SA itself breaks into software, data, integration and technology architecture (and more).",
+    "**EA deliverables** describe the enterprise landscape: business, data, application and technology models, gap and impact analysis, and transition architecture. **SA deliverables** describe one system: conceptual, logical and physical solution models. The solution architect handles product and technology details within EA guidance; TOGAF is the EA framework introduced here.",
+    "**SA (including high-level design) vs detailed design:** SA defines how components work together at a logical level, using guidelines, standards, patterns and policies, to meet business requirements and expected qualities. Detailed design defines how they work together at implementable detail and chooses methods and tools for implementation.",
+    "**Shared principles.** Abstraction (focus on significant detail) and encapsulation (hide unnecessary detail), plus **high cohesion** (components that belong together) and **low coupling** (little interdependence), which together reduce complexity and improve reusability and maintainability."
+   ],
+   "terms": [
+    {
+     "term": "Enterprise Architecture",
+     "def": "Organising logic for business processes and IT; the source of strategic direction for solution architecture."
+    },
+    {
+     "term": "Solution Architecture",
+     "def": "End-to-end architecture of one solution, combining multiple views."
+    },
+    {
+     "term": "TOGAF",
+     "def": "The Open Group Architecture Framework; guidance for enterprise architecture."
+    },
+    {
+     "term": "Cohesion",
+     "def": "How well a component's parts belong together; high is good."
+    },
+    {
+     "term": "Coupling",
+     "def": "Degree of interdependence between components; low is good."
+    }
+   ],
+   "check": [
+    {
+     "q": "Your claims-processing solution would benefit from a document database, but the enterprise architecture's technology standards approve only two relational databases. What do you do as solution architect?",
+     "a": "Work within the EA guidance by default, because EA constrains solution architecture. If a specific requirement really cannot be met with the approved options, make the case to the enterprise architect with that evidence rather than diverging quietly. The trade-off is landscape-wide: every exception adds technology variety that the enterprise must support."
+    },
+    {
+     "q": "A document titled 'Solution Architecture' lists class names, method signatures and the ORM library to use. What is it really, and what is missing?",
+     "a": "It is detailed design: implementable detail plus the choice of implementation tools. Solution architecture should first show, at a logical level, how components work together to meet the business requirements and expected qualities, within the EA's standards and patterns. Without that, nobody can check whether the classes add up to a solution that meets the quality targets."
+    },
+    {
+     "q": "A 'CustomerUtils' module does address formatting, credit scoring and email sending, and five other modules call it directly. Assess it and propose a change.",
+     "a": "It has low cohesion (unrelated jobs in one place) and high coupling (many modules depend on it), so a change to credit scoring can break the email callers. Split it into cohesive components, each behind an interface that hides its detail (encapsulation). The cost is more components and interfaces to manage, which pays off only if these parts change independently."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "layers",
+     "title": "What constrains what",
+     "layers": [
+      {
+       "label": "Enterprise Architecture",
+       "sub": "strategy, planning",
+       "detail": "Organising logic for business and IT, driven by business and ICT/digital strategy. Source of strategic direction and guidance to solution architecture.",
+       "accent": true
+      },
+      {
+       "label": "Solution Architecture",
+       "sub": "software, data, integration, technology",
+       "detail": "End-to-end architecture for one solution, includes high-level design. Constrained by EA, and constrains software design."
+      },
+      {
+       "label": "Software Design",
+       "sub": "detailed design, implementation",
+       "detail": "Guided by design strategies, which are themselves constrained by the solution architecture."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "architect-role",
+   "title": "The solution architect",
+   "slides": [
+    15,
+    17
+   ],
+   "summary": "Who the solution architect is, what they are responsible for, and what separates good from poor architects.",
+   "notes": [
+    "**A solution architect may be a person, team or organisation.** They design a blueprint spanning hardware, software and processes to meet current and future business needs. The work may also change IT services and operating processes.",
+    "**Responsibility is viability, not just a design document.** The architect is responsible for the solution's viability (can be implemented and operated), gives solution-related leadership and supports the project manager in delivery.",
+    "**Activities run end to end:** assess business requirements; evaluate feasible technical options and select the optimum; align with enterprise architecture; define and document the architecture; define integration with the rest of the enterprise; incorporate security, reliability and maintainability; support detailed design and construction; deliver functional and non-functional requirements.",
+    "**Good architects** earn trust, document a viable design, support implementation and share enough knowledge for the team to proceed without them. **Failure patterns:** solve the wrong problem, exceed cost or skill constraints, design in an ivory tower, or disappear during construction."
+   ],
+   "terms": [
+    {
+     "term": "Solution viability",
+     "def": "The solution can be implemented and operated, the architect's core responsibility."
+    },
+    {
+     "term": "Ivory tower syndrome",
+     "def": "Architect designs detached from the team and reality."
+    },
+    {
+     "term": "Absent architect syndrome",
+     "def": "Architect not available to support the team during build."
+    }
+   ],
+   "check": [
+    {
+     "q": "Halfway through construction the lead architect is moved to another project, yet the team keeps evolving the design confidently. What does this say about the architect?",
+     "a": "It is a sign of a good architect: one who is dispensable. They documented a viable architecture and shared enough knowledge for the team to proceed without them. Compare an architect who leaves before the team understands the design: that is the 'disappears during construction' failure, and the team stalls or erodes the design."
+    },
+    {
+     "q": "An architect delivers an elegant event-driven design. The team has no messaging experience and the budget allows one operations engineer. Critique it.",
+     "a": "The design fails on viability: the architect is responsible for a solution that can be implemented **and operated**, and this one exceeds the skill and cost constraints. Re-evaluate the feasible options against those constraints and pick the best one that fits, or include training and support costs in the plan. A simpler design may give up some scalability, so state that trade-off to the stakeholders."
+    },
+    {
+     "q": "To hit a deadline, the project manager wants to drop the security design work. How should the architect respond?",
+     "a": "The architect supports the project manager on delivery but is responsible for building security, reliability and maintainability into the solution. Make the risk and its later cost visible, then offer a scaled option such as covering only the highest-risk flows now. Quietly accepting the cut would trade a schedule gain for an unviable solution."
+    }
+   ]
+  },
+  {
+   "id": "quality-attributes-utility-tree",
+   "title": "Quality attributes and the utility tree",
+   "slides": [
+    18,
+    23
+   ],
+   "summary": "What quality attributes are, how they interact (direct, neutral, inverse), the ISO 25010 model as a vocabulary, and the utility tree for prioritising them.",
+   "notes": [
+    "**A quality attribute measures how well software is designed and how well it conforms to that design.** They are the non-functional drivers that largely determine architecture choices.",
+    "**Qualities can reinforce each other, be independent, or conflict.** An inverse relationship is a trade-off under stated conditions. For example, a richer GUI may improve operability while using more resources than a command line; the effect depends on the design and workload.",
+    "**Use the lecture’s ISO 25010:2011 vocabulary** to name product quality needs. The eight characteristics are detailed next; a name such as availability still needs a measurable scenario.",
+    "**The utility tree makes qualities testable.** Utility (overall usefulness) is broken into quality attributes, then refinements, down to concrete scenarios as leaves (e.g. 'power outage at site 1 requires traffic redirected to site 2 in under 3 seconds'). Each leaf is ranked by (Importance, Risk of achieving) using H/M/L, and the architecture is evaluated by how it makes the scenarios possible (from Clements, Kazman and Klein)."
+   ],
+   "terms": [
+    {
+     "term": "Quality attribute",
+     "def": "Measure of how well software is designed and conforms to its design."
+    },
+    {
+     "term": "Utility tree",
+     "def": "Tree from overall utility to quality attributes to scenario leaves, each ranked by importance and risk."
+    },
+    {
+     "term": "Inverse relationship",
+     "def": "Improving one quality tends to worsen another."
+    }
+   ],
+   "check": [
+    {
+     "q": "A ticketing team encrypts every database column. Checkout response time rises from 1.2 s to 2.8 s against a 2 s target. What kind of quality relationship is this, and how would you resolve it?",
+     "a": "It is an inverse relationship: security (confidentiality) against performance efficiency (time behaviour), for this design and workload. Rank the competing scenarios in the utility tree, then target the measure: encrypt the sensitive fields rather than everything, and remeasure against the 2 s target. The relationship depends on the design, so a narrower security measure may satisfy both."
+    },
+    {
+     "q": "Two utility-tree leaves: (a) 'catalogue page loads in under 2 s with 500 users', ranked (H,L); (b) 'if the payment provider fails, switch to the backup provider within 30 s', ranked (H,H). You have time to prototype one. Which, and why?",
+     "a": "Prototype (b). Both are important, but (b) is also high-risk to achieve, so it needs the most architectural attention and evidence. (a) is important but low-risk and can probably be met with known techniques. If load testing later shows (a) is harder than assumed, its rank should change."
+    },
+    {
+     "q": "A stakeholder writes 'the system must be highly available'. Turn it into a utility-tree leaf and explain what that gains.",
+     "a": "For example: 'When site 1 loses power during business hours, traffic is redirected to site 2 within 3 seconds and no confirmed bookings are lost.' Now the requirement is measurable, can be ranked by (importance, risk) and can be checked against the architecture. As a slogan, any design could claim to meet it."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Utility tree: from usefulness to scenarios",
+     "steps": [
+      {
+       "label": "Utility",
+       "sub": "overall usefulness",
+       "detail": "Root of the tree: how useful the system is overall."
+      },
+      {
+       "label": "Quality attribute",
+       "sub": "e.g. Availability",
+       "detail": "Top-level qualities such as Performance, Modifiability, Availability, Security."
+      },
+      {
+       "label": "Refinement",
+       "sub": "e.g. H/W failure",
+       "detail": "Narrows the quality into specific concerns, e.g. data latency, COTS change, data confidentiality."
+      },
+      {
+       "label": "Scenario leaf",
+       "sub": "ranked (Importance, Risk)",
+       "detail": "Example: after a site outage, redirect traffic to another site within 3 seconds. Rank importance and risk of achieving the target separately, then test whether the design supports it.",
+       "accent": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "iso25010",
+   "title": "ISO 25010 product quality model",
+   "slides": [
+    24,
+    37
+   ],
+   "summary": "The eight product quality characteristics in the lecture’s ISO 25010:2011 model, with short definitions for exam answers.",
+   "notes": [
+    "**Eight characteristics, each with sub-characteristics.** Learn the names; the definitions below are short hooks.",
+    "**Functional Suitability:** functions meet stated and implied needs. Completeness (covers all tasks), Correctness (right results, needed precision), Appropriateness (functions help accomplish the tasks).",
+    "**Performance Efficiency:** performance relative to resources used. Time Behaviour (response, processing time, throughput), Resource Utilization (amount and type of resources), Capacity (maximum limits meet requirements). **Compatibility:** Co-existence (share an environment without harming others), Interoperability (exchange and use information).",
+    "**Usability:** Appropriateness recognisability, Learnability, Operability, User error protection, User interface aesthetics, Accessibility (widest range of users). **Reliability:** Maturity (reliable in normal operation), Availability (operational and accessible when needed), Fault tolerance (works despite faults), Recoverability (recover data and re-establish state after failure).",
+    "**Security:** Confidentiality (only authorised access), Integrity (no unauthorised access or modification), Non-repudiation (actions provable, cannot be denied), Accountability (actions traced uniquely to an entity), Authenticity (identity proven to be as claimed).",
+    "**Maintainability:** Modularity (change to one component has minimal impact on others), Reusability, Analyzability (assess impact of change or diagnose faults), Modifiability (change without defects), Testability. **Portability:** Adaptability (to other environments), Installability, Replaceability (replace another product for the same purpose)."
+   ],
+   "terms": [
+    {
+     "term": "Non-repudiation",
+     "def": "Actions or events can be proven to have occurred so they cannot be denied later."
+    },
+    {
+     "term": "Accountability",
+     "def": "Actions can be traced uniquely to an entity."
+    },
+    {
+     "term": "Modularity",
+     "def": "Change to one component has minimal impact on others."
+    },
+    {
+     "term": "Recoverability",
+     "def": "Ability to recover affected data and restore the desired state after failure."
+    }
+   ],
+   "check": [
+    {
+     "q": "After a disk failure, an order system kept taking orders from a mirrored disk. A later power cut lost the last 10 minutes of orders, and recovery took 2 hours. Which reliability sub-characteristics held up and which did not?",
+     "a": "Fault tolerance held up: the system kept operating despite the disk fault. Recoverability fell short, because data was lost and re-establishing service took 2 hours, and availability suffered during that time. The fixes differ: recoverability needs protected, frequent recovery points and faster restore, not more disk mirroring."
+    },
+    {
+     "q": "An attacker logs in with a stolen password and changes another customer's delivery address. Which security sub-characteristics are broken?",
+     "a": "Authenticity, because the identity was not the one claimed, and integrity, because data was changed without authorisation. Accountability also suffers, since the logs attribute the action to the victim. Stronger authentication addresses authenticity; checking that a user may modify **that** record addresses integrity."
+    },
+    {
+     "q": "A change to the tax calculation breaks three unrelated screens, and nobody can tell from the logs why. Which maintainability sub-characteristics are weak, and what would you fix first?",
+     "a": "Modularity is weak, because a change in one component affected others, and so is analyzability, because the team cannot diagnose the fault or predict the impact of a change. Testability is probably weak too, since no test caught it. Isolate the tax logic behind an interface first to contain future changes, then improve logging to make faults diagnosable."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "cards",
+     "title": "ISO 25010 product quality: 8 characteristics",
+     "items": [
+      {
+       "label": "Functional Suitability",
+       "sub": "does the right things",
+       "detail": "Completeness, Correctness, Appropriateness."
+      },
+      {
+       "label": "Performance Efficiency",
+       "sub": "speed per resource",
+       "detail": "Time behaviour, Resource utilization, Capacity."
+      },
+      {
+       "label": "Compatibility",
+       "sub": "plays well with others",
+       "detail": "Co-existence, Interoperability."
+      },
+      {
+       "label": "Usability",
+       "sub": "easy and pleasant to use",
+       "detail": "Appropriateness recognisability, Learnability, Operability, User error protection, UI aesthetics, Accessibility."
+      },
+      {
+       "label": "Reliability",
+       "sub": "works when needed",
+       "detail": "Maturity, Availability, Fault tolerance, Recoverability."
+      },
+      {
+       "label": "Security",
+       "sub": "right access only",
+       "detail": "Confidentiality, Integrity, Non-repudiation, Accountability, Authenticity."
+      },
+      {
+       "label": "Maintainability",
+       "sub": "easy to change",
+       "detail": "Modularity, Reusability, Analyzability, Modifiability, Testability."
+      },
+      {
+       "label": "Portability",
+       "sub": "easy to move",
+       "detail": "Adaptability, Installability, Replaceability."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "other-quality-models",
+   "title": "Business qualities and quality in use",
+   "slides": [
+    38,
+    40
+   ],
+   "summary": "Two supplementary models: business qualities that constrain the architecture from the commercial side, and the ISO quality-in-use model.",
+   "notes": [
+    "**Business qualities** are commercial forces: Time to Market (competitive pressure, short window), Cost and Benefit (budget that cannot be exceeded), Projected Lifetime (a long life raises the need for modifiability, scalability and portability) and Targeted Market (mass vs specialised).",
+    "**Quality in use** judges the product when real users use it in context: Effectiveness (accuracy and completeness of goals), Efficiency (resources spent relative to that), Satisfaction, Freedom from Risk (mitigating risk to economic status, life, health, environment) and Context Coverage (works in specified and unforeseen contexts)."
+   ],
+   "terms": [
+    {
+     "term": "Time to market",
+     "def": "Business quality: speed of delivery under competitive pressure."
+    },
+    {
+     "term": "Quality in use",
+     "def": "Model of outcomes for users in context: effectiveness, efficiency, satisfaction, freedom from risk, context coverage."
+    }
+   ],
+   "check": [
+    {
+     "q": "A start-up has 3 months to launch before a competitor and expects to rewrite the product within 18 months. A teammate insists on a fully modular, horizontally scalable design. Do you agree?",
+     "a": "Mostly not. The business qualities here, a short time to market and a short projected lifetime, reduce the value of upfront investment in modifiability and scalability. Build the simplest design that meets the launch-critical qualities, keeping clean boundaries where they cost little. If the product is expected to live long or grow suddenly, the answer changes."
+    },
+    {
+     "q": "A government records system must run for 15 years across several hardware refreshes. Which product qualities gain priority, and what do you give up?",
+     "a": "A long projected lifetime raises the priority of modifiability, scalability and portability, so the system survives changes in platform and demand. You give up some time to market and spend more upfront on abstraction and standard interfaces. With a short lifetime, the same investment would be hard to justify."
+    },
+    {
+     "q": "A product installs in one click, but users cannot complete their main task. Which quality models explain this?",
+     "a": "Installability is a product quality under portability; completing the task is quality in use, especially effectiveness. Scoring well on one says nothing about the other. Evaluate both: product qualities describe the software, while quality in use judges it with real users in context."
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A hospital group's enterprise architecture mandates one identity provider and an approved set of hosting regions. You are solution architect for a new telemedicine app, and a developer has already produced class diagrams and picked libraries. (a) Which decisions here belong to EA, SA and detailed design? (b) The developer's design skips the identity provider to save time. What do you do?",
+   "a": "(a) The identity provider and hosting regions are EA decisions: strategic direction that constrains the solution. How the app's components collaborate to meet its qualities, and how it integrates with the identity provider, is solution architecture. Classes and libraries are detailed design, and they must fit inside the SA. (b) Align the design with EA. Bypassing the mandated identity provider breaks an enterprise constraint and creates a separate set of credentials to secure. Redesign the integration, or raise a justified exception with the enterprise architect if a requirement truly cannot be met. Record the decision either way."
+  },
+  {
+   "q": "A brilliant architect rarely attends team meetings. The team cannot build the design within budget and keeps asking him how two components should interact. Critique the situation and propose remedies.",
+   "a": "This combines several failure patterns: an ivory-tower architect, an absent architect during construction, and a 'perfect' architecture that exceeds cost constraints, so the solution is not viable. A good architect earns the team's trust, documents an implementable architecture and its rationale, supports detailed design and construction, and leaves the team able to proceed without him. Remedies: re-evaluate the options against the budget and skills, document the component interactions and decisions, and hold regular design sessions with the team."
+  },
+  {
+   "q": "A mobile banking app must show balances within 1 s for 95% of requests. Security wants step-up authentication on every screen. (a) Name the quality relationship. (b) Write two utility-tree leaves with plausible ranks. (c) Propose a resolution and say what you give up.",
+   "a": "(a) An inverse relationship between security (authenticity, confidentiality) and performance efficiency and usability, under this design. (b) For example: 'balance view returns within 1 s for 95% of requests at peak' (H,M), and 'a transfer above a set amount requires a second factor before it executes' (H,L). (c) Apply step-up authentication to risky operations such as transfers and payee changes, not to every screen, so balance views stay fast. You give up some protection on low-risk screens. The utility-tree ranking makes that trade-off explicit and reviewable."
+  },
+  {
+   "q": "A flash-sale platform expects 50,000 users in the first 10 minutes, takes payment through one external gateway, and changes its catalogue daily. Build a utility-tree fragment with three leaves, rank them, and say which drives the architecture first.",
+   "a": "Leaves, for example: Performance: 'product page under 2 s for 95% of requests at 50,000 users in 10 minutes' (H,H). Availability: 'if the payment gateway times out, orders are held and confirmed within 5 minutes without double charging' (H,H). Modifiability: 'a catalogue change is published in under 1 hour without a deployment' (M,L). The high-importance, high-risk leaves come first: peak performance and payment failure handling shape the structure. The catalogue leaf can be met with known techniques. Evaluate the architecture by whether it makes each high-ranked scenario achievable."
+  },
+  {
+   "q": "A teammate says the only security requirement for a payments system is confidentiality, so TLS plus encrypted storage is enough. Do you agree? Use the ISO 25010 security sub-characteristics.",
+   "a": "Disagree. TLS and encryption mainly address confidentiality and part of integrity. Payments also need integrity of stored amounts, authenticity (the payer is who they claim), non-repudiation (a customer cannot credibly deny a transfer they made) and accountability (each action is traced to one user). Each needs different mechanisms, such as strong authentication, signed or well-audited transactions, and per-user audit logs. Prioritise them with measurable scenarios rather than one blanket control."
+  }
+ ]
+}

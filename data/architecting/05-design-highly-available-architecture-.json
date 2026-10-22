@@ -1,0 +1,804 @@
+{
+ "key": "05-design-highly-available-architecture-",
+ "title": "Designing Highly Available Architecture",
+ "pages": 89,
+ "minutes": 42,
+ "overview": "This topic is about keeping a system usable: how availability is defined and calculated, why systems go down, and which tactics, redundancy schemes and reference architectures reduce downtime. It is the quantitative and tactical core of the course's availability theme, where you move from the numbers (series/parallel availability, MTBF/MTTR, nines) to design choices such as circuit breakers, bulkheads, active/active clusters, RAID, backups and multi-AZ deployments. For the exam, expect to compute availability for a set of components, explain a failure cause, and justify a redundancy or tactic choice against cost.",
+ "big_ideas": [
+  "**Availability = (AST - DT) / AST.** For average uptime T_up and recovery time T_down, A = T_up / (T_up + T_down). State whether a question’s MTBF means uptime or the whole failure-to-failure cycle.",
+  "For **independent** components, series availability multiplies required components; parallel availability is one minus the product of failure probabilities. Parallel modelling assumes any survivor can provide the required service.",
+  "**Yearly downtime:** 99.9% = 8.76 hours; 99.99% = 52.56 minutes; 99.999% = 5.256 minutes; 99.9999% = 31.536 seconds (365-day year). Each extra nine cuts downtime tenfold.",
+  "Focus on **unplanned downtime** (failures); planned downtime (deployments) is reduced by continuous delivery. Every redundancy decision is a cost trade-off, so classify components as critical or non-critical first.",
+  "In distributed systems everything can fail and failures **cascade**: chain reactions, slow responses, retry storms, unbounded fan-in and dogpiles on restart.",
+  "Tactics fall into **detect, recover (prepare/repair, reintroduce), prevent**, plus analysis (static fault trees, dynamic chaos engineering). Key stability patterns: timeout/retry, circuit breaker, bulkhead, load shedding, backpressure, decoupling via queues.",
+  "Use hardware, server, data and network redundancy to remove single points of failure; use backups for recovery. Active/active can share load, but surviving nodes still need capacity after a failure.",
+  "Patterns climb from basic web app to load balanced, hot standby, clustered HA and wide-area load balancing; modern platforms (Kubernetes ReplicaSets, multi-AZ AWS) automate the same ideas."
+ ],
+ "sections": [
+  {
+   "id": "availability-basics",
+   "title": "Availability, reliability and fault tolerance",
+   "slides": [
+    4,
+    6
+   ],
+   "summary": "Three related but different properties, the AST/DT availability formula, and the MTTR/MTTF/MTBF timing metrics.",
+   "notes": [
+    "**Three distinct ideas.** Availability is readiness for use (the probability the system works as required); reliability is the probability of performing its function without failure for a specified period under stated conditions; fault tolerance is the ability to keep normal service going even though a fault has occurred.",
+    "**Measure: Availability = ((AST - DT) / AST) x 100%**, where AST is the Agreed Service Time in hours for a timeframe (e.g. a month) and DT is the downtime in that timeframe. Example: a system agreed to run all of a 720-hour month and down for 0.72 hours is (720 - 0.72)/720 = 99.9% available. Key message: availability depends on failures and downtime.",
+    "**Use 8760 hours for a 365-day year.** The lecture’s 61,320-hour figure is an arithmetic error. Convert consistently: 365 x 24 = 8760 hours = 525,600 minutes.",
+    "**Timing terms need a stated convention.** MTTF is average uptime before failure; MTTR is average recovery duration. The lecture’s timeline calls the entire failure-to-failure cycle MTBF, but its later formula uses MTBF as uptime. To avoid mixing conventions, write A = uptime / (uptime + recovery), then map the given values."
+   ],
+   "terms": [
+    {
+     "term": "Availability",
+     "def": "Probability/readiness that the system works as required when needed."
+    },
+    {
+     "term": "Reliability",
+     "def": "Probability of failure-free operation for a specified period under stated conditions."
+    },
+    {
+     "term": "Fault tolerance",
+     "def": "Normal service continues even though a fault has occurred."
+    },
+    {
+     "term": "AST / DT",
+     "def": "Agreed Service Time and Down Time (hours) in the measured period."
+    },
+    {
+     "term": "MTTR / MTTF / MTBF",
+     "def": "Mean time to recover / to failure / between failures."
+    }
+   ],
+   "check": [
+    {
+     "q": "System A fails twice a year for 4 hours each time. System B fails every day for 3 seconds. Which is more available, which is more reliable, and which would you rather run a payment service on?",
+     "a": "B is more available: about 18 minutes down per year (99.997%) against A's 8 hours (99.91%). A is more reliable: it runs much longer between failures. For payments, B's daily failures could break transactions in progress, so choose by which failure the service tolerates. High availability does not imply high reliability."
+    },
+    {
+     "q": "A service is agreed to run 7 am to 7 pm on 22 working days a month. This month it was down for 2 hours at 3 am and 1 hour at noon. What is its availability?",
+     "a": "AST = 12 x 22 = 264 hours. Only the noon outage falls inside the agreed service time, so DT = 1 hour, and availability = (264 - 1) / 264 = 99.62%. The 3 am outage does not count against this measure, which is why the agreed service time must be stated with any availability figure."
+    },
+    {
+     "q": "A service has MTTF of 999 hours and MTTR of 1 hour. You can either halve how often it fails or halve its recovery time. Which raises availability more?",
+     "a": "Both give about the same result: 1998 / 1999 and 999 / 999.5 are both about 99.95%, up from 99.9%, because each halves the share of time spent recovering. Choose by cost and side effects: fewer failures also improves reliability, while faster recovery (monitoring, automated failover) is often cheaper to achieve."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Failure and recovery timeline",
+     "steps": [
+      {
+       "label": "System up",
+       "sub": "serving users",
+       "detail": "The system is available. The time from becoming available until the next failure is the MTTF."
+      },
+      {
+       "label": "Failure: system down",
+       "sub": "MTTF ends here",
+       "detail": "A fault stops service. Downtime now accumulates until recovery completes."
+      },
+      {
+       "label": "Recovery complete",
+       "sub": "MTTR spans the outage",
+       "detail": "MTTR is the time to recover, including repair, from the failure back to a working system.",
+       "accent": true
+      },
+      {
+       "label": "Next failure",
+       "sub": "one full outage-and-up cycle",
+       "detail": "The failure-to-failure interval includes both recovery and uptime. The lecture labels this interval MTBF; its later formula uses a different MTBF convention, so define your terms before substituting."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "availability-calculations",
+   "title": "Availability calculations: nines, series and parallel",
+   "slides": [
+    7,
+    12
+   ],
+   "summary": "The exam-critical arithmetic: MTBF/MTTR formula, downtime per year, and combining components in series and parallel.",
+   "notes": [
+    "**Calculate from uptime and recovery.** A = MTTF / (MTTF + MTTR). The lecture writes A = MTBF / (MTBF + MTTR), treating MTBF as average uptime: 999 hours up plus 1 hour recovery gives 99.9%. If MTBF instead means the full cycle, use A = (MTBF - MTTR) / MTBF. Do not add recovery twice.",
+    "**Downtime per year = (1 - A) x 525,600 minutes** for a 365-day year. Results: 90% gives 36.5 days; 99% gives 3.65 days; 99.9% gives 8.76 hours; 99.99% gives 52.56 minutes; 99.999% gives 5.256 minutes; 99.9999% gives 31.536 seconds. These correct rounding in the lecture table.",
+    "**Series: A = A1 x A2 x ...**, assuming independent component states and that every component is required. Two 99% components give 98.01%. The result is no greater than the weakest component; equality is possible if the other components are perfect.",
+    "**Parallel: A = 1 - product(1 - Ai)** for independent replicas when any one can meet the service requirement. Two 99% replicas give 99.99%. Shared power, storage, software faults, insufficient survivor capacity and failover delays can invalidate this ideal result.",
+    "**The lecture’s multi-tier exercise:** collapse each 99% redundant pair to 99.99%. Taking PC, internet, shared filesystem and LDAP as required 99% components, plus three 98% firewalls, one 98% network and four redundant pairs gives 0.99^4 x 0.98^4 x 0.9999^4 = **88.57%**. This independent-component model misses 95%; improve required unreplicated links and check whether every dependency is actually on the service path.",
+    "**A 15-minute outage in a 30-day, 24-hour service month:** A = (43,200 - 15) / 43,200 = 99.9653%. This meets 99.9%, but not 99.99%; a fraction such as “3.5 nines” is not a substitute for the actual result.",
+    "**Design beyond the calculation:** loosely couple critical services from non-critical ones. Fault tolerance can preserve normal service; graceful degradation keeps an agreed reduced service. Decide which outcomes count as available for the requirement being measured."
+   ],
+   "terms": [
+    {
+     "term": "Nines",
+     "def": "Availability expressed as the count of 9s (99.9% = three nines)."
+    },
+    {
+     "term": "Series availability",
+     "def": "For independent required components, multiply availability fractions; the result cannot exceed the weakest."
+    },
+    {
+     "term": "Parallel availability",
+     "def": "For independent replicas where any one suffices, one minus the product of their failure probabilities."
+    },
+    {
+     "term": "Separation of concerns",
+     "def": "Loosely couple critical components from non-critical ones."
+    },
+    {
+     "term": "Graceful (degraded) service",
+     "def": "Reduced but working service after an error instead of total outage."
+    }
+   ],
+   "check": [
+    {
+     "q": "A chain has a CDN at 99.99%, a web server pair at 99.99%, a single application server at 99% and a database pair at 99.99%. The budget covers one improvement: upgrade the CDN to 99.999%, or add a second application server. Which?",
+     "a": "Add the application server. Now the chain is 0.9999^3 x 0.99, about 98.97%. A second application server makes that tier 99.99%, giving about 99.96%. The CDN upgrade gives only about 98.98%. In series the weakest component dominates. This assumes independent failures and enough capacity in the surviving server."
+    },
+    {
+     "q": "A teammate says two 99% servers in parallel give 99.99%, so the service now meets four nines. What must be true for that claim to hold?",
+     "a": "Failures must be independent, failover must work and be fast, and either server must be able to carry the full load alone. The rest of the request path must also reach four nines, because everything in series multiplies. Shared power, storage or a common software bug break the independence assumption and make 99.99% optimistic."
+    },
+    {
+     "q": "Two replicas share one power supply. Can you apply the independent parallel formula to the whole service?",
+     "a": "Not without modelling the common dependency. Both replicas can fail together when power fails; put the required power supply in series with the replica group, or remove that shared failure domain."
+    },
+    {
+     "q": "An SLA promises 99.99% availability per year, and planned downtime counts. A database upgrade needs 2 hours offline. Can you do it without breaching the SLA?",
+     "a": "No. 99.99% allows (1 - 0.9999) x 525,600 = 52.56 minutes of downtime a year, and 2 hours alone exceeds that. Either do the upgrade without downtime (a rolling upgrade across redundant nodes) or agree a maintenance window outside the agreed service time. At 99.9% (8.76 hours a year), the 2-hour upgrade would fit."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Series vs parallel availability",
+     "columns": [
+      "",
+      "Series",
+      "Parallel"
+     ],
+     "rows": [
+      [
+       "Meaning",
+       "Every component must work",
+       "Any one component is enough"
+      ],
+      [
+       "Formula",
+       "A1 x A2 x A3",
+       "1 - ((1-A1) x (1-A2) x (1-A3))"
+      ],
+      [
+       "Effect",
+       "No greater than the weakest required component",
+       "No less than the best replica"
+      ],
+      [
+       "Example, two 99% parts",
+       "0.99 x 0.99 = 98.01%",
+       "1 - 0.01 x 0.01 = 99.99%"
+      ]
+     ],
+     "caption": "Assumes independent states. The parallel case also assumes sufficient survivor capacity and effective failover."
+    }
+   ]
+  },
+  {
+   "id": "improving-availability",
+   "title": "Improving availability: downtime causes and the architect's response",
+   "slides": [
+    13,
+    23
+   ],
+   "summary": "The approach to reducing downtime, planned vs unplanned downtime, the common causes at application, server and cloud level, and what an architect does about each.",
+   "notes": [
+    "**There are no fixed rules, so follow best practice and get the most from minimum resources.** The approach: chart the systems and IT resources, gather past downtime statistics and compute availability, identify causes (general and organisation-specific), classify them as controllable or not, classify functions as critical or non-critical, derive infrastructure and architecture plans, then weigh alternatives to optimise cost (an essential trade-off).",
+    "**Planned vs unplanned downtime.** Planned downtime is mostly caused by deployment and is attacked by continuous delivery/deployment; unplanned downtime is caused by system failure and is the focus of this topic.",
+    "**Application-level causes:** heterogeneous environments, multiple single points of failure, multiple application interfaces, inadequate monitoring, resource bottlenecks, team silos, job failures, network issues, password expiry/locked accounts, employee attrition. Responses: SOA/integration best practice and EA standardisation to control variety; hardware, data, server and network redundancy and backups; manual plus automated monitoring; criticality analysis with redundancy for critical sets. The people-related causes are non-technical and need a human-relations approach.",
+    "**Server-level causes:** human error, security flaws, OS bugs, understaffed IT, outdated or unstable hardware, OS too old. Responses: training plans and audits for crucial functions, secure infrastructure (firewalls, DMZ, protection against DoS and malware), backups and DR plans, regular patching and maintenance.",
+    "**Cloud-level causes and fixes:** Overload (redundancy, separation of concerns, load shedding with a threshold that balks further calls); Noisy neighbour (rate limits per user or IP); Retry spikes (a retry-control policy, since rejections cause retries); Bad dependency (load testing to find critical components); Scaling boundaries (sharding and clustering); Uneven sharding (split hot shards); Pets (hand-managed components: train, automate); Bad deployment (phased rollout, systematic rollback); Monitoring gaps (monitor user experience); Failure domains (geographic redundancy and off-site backups)."
+   ],
+   "terms": [
+    {
+     "term": "Planned downtime",
+     "def": "Scheduled outage, usually for deployment; reduced by continuous delivery."
+    },
+    {
+     "term": "Unplanned downtime",
+     "def": "Outage caused by system failure."
+    },
+    {
+     "term": "Load shedding",
+     "def": "Refusing calls above a defined threshold load to avoid a crash."
+    },
+    {
+     "term": "Noisy neighbour",
+     "def": "A greedy client or tenant consuming shared capacity; limit calls per user or IP."
+    },
+    {
+     "term": "Single point of failure",
+     "def": "A component whose failure takes the whole service down."
+    }
+   ],
+   "check": [
+    {
+     "q": "Leadership wants every system in the company engineered for 99.99% availability. Critique the directive.",
+     "a": "Each extra nine and each redundant component costs more, so apply it by criticality. Classify functions as critical or non-critical, give the critical ones redundancy and the higher target, and accept lower targets elsewhere. The architect's job is to meet the required availability at acceptable cost, not to maximise it everywhere."
+    },
+    {
+     "q": "After load shedding is enabled at 80% CPU, incoming traffic to a service doubles within a minute. What is happening, and what is the fix?",
+     "a": "Retry spikes: rejected clients retry immediately, adding load to a service that is already overloaded. Add a retry policy (limits and backoff on clients) alongside the shedding threshold, plus per-user rate limits for greedy clients. Shedding without retry control can make overload worse."
+    },
+    {
+     "q": "Last year's 14 hours of downtime came mostly from the monthly release process. What kind of downtime is this, and what would you change?",
+     "a": "Release windows are planned downtime, which continuous delivery and deployment reduce. Failed releases cause unplanned downtime, which phased rollouts and systematic rollback reduce. Changing the release process is likely to cut more downtime than adding hardware redundancy, which does not fix bad deployments."
+    },
+    {
+     "q": "One API client's nightly batch job floods a shared service and slows everyone else down. Which cloud-level cause is this, and how would you fix it?",
+     "a": "A noisy neighbour. Enforce rate limits per user or API key (or per IP address), sized so normal clients are unaffected. The cost is that the batch client must spread its load or negotiate a higher quota."
+    }
+   ]
+  },
+  {
+   "id": "distributed-failures",
+   "title": "Failure sources in distributed systems",
+   "slides": [
+    24,
+    31
+   ],
+   "summary": "Why distributed systems fail in chains: every component and connection can fail, and defects propagate through cascades, heavy users, fan-in and restarts.",
+   "notes": [
+    "**Failures come from hardware, network and software.** In a distributed system every component and every connection can fail, and a crack in one component can propagate to others.",
+    "**Chain reaction:** instances behind a load balancer run identical logic, so a bug such as a memory leak triggered by a specific operation crashes the instance that handles most of those operations first. The survivors take more load and fail faster, so the whole pool collapses.",
+    "**Cascading failures:** upstream services must handle errors from providers; slow responses propagate trouble upward; speculative retries make it worse; watch resource pools (threads, connections) that fill while waiting on a slow dependency.",
+    "**Impact of users:** heavy incoming requests (malicious users, a poorly communicated marketing campaign) and heavy operations (a special user such as a celebrity whose tweet fans out to many followers).",
+    "**Scaling effect and unbounded capacity:** a service with many fan-ins is hit hard when an upstream service scales out (e.g. a front end of 20 hosts, 75 instances, 3,000 threads calling a back end of 6 hosts, 6 instances, 450 threads). **Dogpile:** after a restart all services warm their in-memory caches by hitting the database at once."
+   ],
+   "terms": [
+    {
+     "term": "Cascading failure",
+     "def": "One component's failure or slowness spreads to its callers and peers."
+    },
+    {
+     "term": "Chain reaction",
+     "def": "Survivors fail faster as a crashed instance's load shifts onto them."
+    },
+    {
+     "term": "Dogpile",
+     "def": "Simultaneous cache warm-up hits on the database after a restart."
+    },
+    {
+     "term": "Fan-in",
+     "def": "Many upstream services calling one common service."
+    }
+   ],
+   "check": [
+    {
+     "q": "Behind a load balancer, instance 1 crashes, then instance 2 crashes 20 minutes later, then the rest go within 10 minutes. What is the likely cause, and how would you confirm it?",
+     "a": "A chain reaction: all instances run the same logic, so a bug such as a memory leak triggered by a particular operation kills the busiest instance first. The survivors take its load and fail faster. Confirm by checking memory growth and the request mix on each instance before it crashed. Adding instances only delays the collapse; fix or isolate the triggering operation."
+    },
+    {
+     "q": "For a marketing campaign the front end scales from 6 to 75 instances (3,000 threads), while the back end stays at 6 instances with 450 threads. What fails first, and what would you change?",
+     "a": "The back end: it has many fan-ins and bounded capacity, and now receives far more concurrent calls than its 450 threads can serve. Requests queue, time out and trigger retries. Scale the back end in step or cap calls with backpressure or rate limits, and load-test with the scaled-out front end."
+    },
+    {
+     "q": "After a full restart, the database hits 100% CPU and the system takes 40 minutes to recover, although normal load is 30% CPU. Diagnose it and suggest a fix.",
+     "a": "A dogpile: every service tries to warm its in-memory cache from the database at the same moment, just as the database is recovering. Bring services back gradually rather than all at once, and limit the rate of cache-fill queries so the database is not swamped."
+    },
+    {
+     "q": "A user with 30 million followers posts, and the notification service falls an hour behind. Which failure source is this, and what would you consider?",
+     "a": "A heavy operation from a special user: one action fans out to millions of deliveries. Handle such accounts differently, for example by fetching their posts when followers read rather than pushing to every follower, and isolate their processing so it cannot starve normal users."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "How a slow dependency spreads failure",
+     "steps": [
+      {
+       "label": "Dependency slows",
+       "sub": "responses arrive late",
+       "detail": "A fault or overload in a downstream service increases how long callers wait."
+      },
+      {
+       "label": "Pools fill",
+       "sub": "threads and connections held",
+       "detail": "Waiting requests occupy finite upstream resources, leaving fewer slots for new work.",
+       "accent": true
+      },
+      {
+       "label": "Retries multiply load",
+       "sub": "more calls to slow service",
+       "detail": "Unbounded retries add demand while the dependency is already struggling."
+      },
+      {
+       "label": "Callers fail",
+       "sub": "cascade reaches other services",
+       "detail": "Timeouts and bounded retries limit waiting; circuit breakers and bulkheads contain the spread."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "availability-tactics",
+   "title": "Availability tactics and stability patterns",
+   "slides": [
+    32,
+    47
+   ],
+   "summary": "The tactic taxonomy (analysis, detection, recovery, prevention) and the practical stability patterns: circuit breaker, bulkhead, load shedding, backpressure, decoupling and chaos engineering.",
+   "notes": [
+    "**Static analysis uses fault trees.** A cut set is a combination of basic events that causes the top failure. It is **minimal** when removing any event stops it causing that failure; minimal need not mean the smallest set in the whole tree. A singleton cut set identifies a single failure cause to address.",
+    "**Detection tactics:** ping/echo, heartbeat and monitor, exception tracking/detection, timestamps, sanity and condition checks, voting and self-test.",
+    "**Recovery tactics:** prepare and repair using active/passive redundancy, spares, exception handling, rollback, upgrade, bounded retry, ignoring safe faults, degradation or reconfiguration. Reintroduce components using shadow operation, state resynchronisation, escalating restart or non-stop forwarding.",
+    "**Prevention tactics:** remove suspect components from service, use transactions and process monitors, prevent exceptions through handling, and expand the conditions the system can handle (the lecture’s “increase competence sets”).",
+    "**Circuit breaker:** closed permits calls; repeated failures trip it open to fail fast; after a delay, half-open permits trial calls, returning to closed on success or open on failure. Choose an agreed fallback (cached value, generic response or explicit error), expose state to operators and log transitions. Timeouts bound waiting; retries must be limited.",
+    "**Steady state:** databases, in-memory caches and logs accumulate over time, so have a strategy and implementation to purge them. **Bulkheads** partition the system (redundant copies of services, middleware and databases, physical separation, availability-zone separation) and segregate critical components, e.g. giving component C two separate pools so one pool's failure is contained.",
+    "**Overload controls differ:** load shedding rejects or throttles excess requests; handshake checks whether a downstream instance can accept work; backpressure makes upstream producers slow down. A circuit breaker can stop calls to a failed dependency but does not itself make every producer reduce its rate. Queues decouple timing but still need capacity limits and failure handling.",
+    "**Dynamic analysis: chaos engineering** tests resilience through controlled fault experiments. Prepare tracing and monitoring, state a resilience hypothesis, inject a fault, analyse targeted cases, then automate and repeat. The lecture illustrates this with Netflix’s Simian Army. A meaningful experiment measures the agreed service outcome."
+   ],
+   "terms": [
+    {
+     "term": "Minimal cut set",
+     "def": "A failure-causing combination of basic events with no removable event; it need not have globally minimum size."
+    },
+    {
+     "term": "Circuit breaker",
+     "def": "Wrapper that fails fast when a dependency keeps failing (closed, open, half-open)."
+    },
+    {
+     "term": "Bulkhead",
+     "def": "Partition that contains a failure so it cannot spread to other parts."
+    },
+    {
+     "term": "Backpressure",
+     "def": "Moving overload pressure upstream instead of absorbing it downstream."
+    },
+    {
+     "term": "Chaos engineering",
+     "def": "Controlled fault experiments that test resilience hypotheses using observed system behaviour."
+    }
+   ],
+   "check": [
+    {
+     "q": "A product page calls a recommendations service that sometimes hangs for 30 s. Design the protection: timeout, circuit-breaker behaviour and fallback.",
+     "a": "Set a short timeout, well below the page's response target, with at most one retry. Wrap the call in a circuit breaker that opens after repeated failures and fails fast, then tests the service with trial calls while half-open, closing again on success. The fallback is a generic list such as best-sellers. Log state changes for operators. Customers see less personalised pages while the breaker is open."
+    },
+    {
+     "q": "Payments and report generation share one database connection pool of 50. A slow report query exhausts the pool, and payments fail. What would you change?",
+     "a": "Apply a bulkhead: give payments and reports separate connection pools, or separate instances, so a report cannot exhaust the resources payments need. The cost is less efficient sharing: one pool may sit idle while the other waits."
+    },
+    {
+     "q": "A fault tree for 'checkout unavailable' has minimal cut sets {DNS failure}, {primary database fails AND replica fails} and {payment gateway down}. Where do you focus first?",
+     "a": "On the singletons, DNS and the payment gateway: each alone takes checkout down. Add redundant DNS, and a second gateway or a degraded mode such as holding orders for later payment. The database needs two failures together, so it is already protected, provided the primary and replica really fail independently."
+    },
+    {
+     "q": "A team wants to start chaos engineering by randomly killing production database nodes next week. Critique the plan.",
+     "a": "Start with the prerequisites: tracing and monitoring that show the agreed service outcome, and a stated hypothesis ('losing one replica does not raise checkout errors'). Then inject a targeted, contained fault, analyse the result, and only then automate and repeat. Random destruction without monitoring and a hypothesis teaches nothing and risks real outages."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Circuit breaker states",
+     "steps": [
+      {
+       "label": "CLOSED",
+       "sub": "calls proceed",
+       "detail": "Normal operation: the protected call goes through and failures are counted."
+      },
+      {
+       "label": "OPEN",
+       "sub": "fail fast",
+       "detail": "After failures exceed the threshold the breaker trips. Calls are not attempted; return a cached value, a generic answer or a different exception.",
+       "accent": true
+      },
+      {
+       "label": "HALF OPEN",
+       "sub": "attempt reset after a period",
+       "detail": "After a certain period a trial call is allowed. If it succeeds the breaker resets to closed; if it fails it trips back to open."
+      }
+     ],
+     "caption": "After half-open, success returns to closed; failure returns to open. Agree fallbacks and log every transition."
+    }
+   ]
+  },
+  {
+   "id": "redundancy",
+   "title": "Redundancy: hardware, server, software and data",
+   "slides": [
+    48,
+    63
+   ],
+   "summary": "Eliminating single points of failure with hardware, server (active/passive, active/active), software clustering and data redundancy including RAID levels.",
+   "notes": [
+    "**Five strategies to avoid a single point of failure:** hardware redundancy, data redundancy, server redundancy, network redundancy and backup strategies.",
+    "**Hardware components:** redundant power (hot-swap a failed supply without downtime), redundant cooling (a fan failure can kill temperature-sensitive processor or memory), multiple processors (also load balancing and scalability), memory (hard errors are catastrophic failures; soft errors are random bit flips), network adapters in failover pairs, and RAID adapters as a failover pair.",
+    "**Server redundancy** replicates compute, applications and configuration to cover hardware or OS failures. A cold spare needs startup; a standby is already prepared. A cluster presents cooperating computers as a service. Failover transfers service after failure; failback returns it later. A backup server holding files does not by itself provide live compute failover.",
+    "**Active/passive** keeps a standby, detects failure with heartbeats and activates the replacement. **Active/active** shares work across live instances. In both, plan state handling, traffic switching and enough capacity after a loss; a floating IP can move the endpoint but does not transfer application state.",
+    "**Data redundancy:** RAID, SAN redundancy and duplicate data centres cover different failure domains; backups support recovery. RAID 0 stripes without protection; 1 mirrors; 2 uses ECC; 3 and 4 use dedicated parity (the lecture labels them bit- and block-interleaved); 5 distributes parity; 6 has two independent parities; 10 stripes mirrors, while 0+1 mirrors stripes.",
+    "**With four 3 TB disks:** RAID 0 gives 12 TB and no failure tolerance; RAID 10 gives 6 TB, surviving any one failure and some two-failure combinations; RAID 5 gives 9 TB and any one failure; RAID 6 gives 6 TB and any two failures. RAID 10 loses data if both members of the same mirror fail. Performance depends on workload, controller and rebuild activity, not just the RAID number."
+   ],
+   "terms": [
+    {
+     "term": "Hot-swapping",
+     "def": "Replacing a failed component (e.g. power supply) without shutting the system down."
+    },
+    {
+     "term": "Failover / failback",
+     "def": "Automatic switch to the backup on failure / the later return to the primary."
+    },
+    {
+     "term": "Active/active",
+     "def": "All nodes serve traffic, sharing the load behind a load balancer."
+    },
+    {
+     "term": "Floating IP",
+     "def": "An address that can be moved between nodes to switch to a standby quickly."
+    },
+    {
+     "term": "RAID",
+     "def": "Redundant Array of Independent Disks: striping, mirroring and parity for speed and fault tolerance."
+    }
+   ],
+   "check": [
+    {
+     "q": "A booking service keeps user sessions in local memory and must survive one server failure. Active/passive or active/active?",
+     "a": "Active/active spreads load across live servers and survives one loss only if sessions are moved out of local memory into a shared store. Active/passive is simpler, but sessions are lost at failover unless they are replicated, and the standby sits idle. In both, a floating IP moves the address, not the state. If you can externalise the sessions, active/active gives more capacity."
+    },
+    {
+     "q": "You have four 3 TB disks, must survive any two disk failures, and need at least 6 TB usable. Which RAID level, and why not RAID 10?",
+     "a": "RAID 6: two disks' worth of parity gives 6 TB usable and survives any two failures. RAID 10 also gives 6 TB but guarantees only one failure; two failures in the same mirror lose data. RAID 6 pays for this with parity overhead on writes."
+    },
+    {
+     "q": "Two disks fail in a four-disk RAID 10 array. Is the data necessarily lost?",
+     "a": "It depends on placement. One failure in each mirror leaves a working copy; both failures in the same mirror lose that stripe's copies. A failure count alone is insufficient."
+    },
+    {
+     "q": "A team says: 'We have a backup server with nightly copies of all files, so we have server redundancy.' Do you agree?",
+     "a": "No. A backup server supports recovery; it does not provide live compute failover. If the main server fails, the service is down until a restore and rebuild finish, so recovery time is long and up to a day of changes is lost. Server redundancy needs a prepared standby or active peers with current state."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Four 3 TB disks: capacity versus protection",
+     "columns": [
+      "RAID",
+      "Usable capacity",
+      "Failure tolerance",
+      "Space cost"
+     ],
+     "rows": [
+      [
+       "0",
+       "12 TB",
+       "None",
+       "No redundancy"
+      ],
+      [
+       "1 (two disks)",
+       "3 TB",
+       "Any one of the two",
+       "50% for a two-disk mirror"
+      ],
+      [
+       "5",
+       "9 TB",
+       "Any one disk",
+       "One disk equivalent"
+      ],
+      [
+       "6",
+       "6 TB",
+       "Any two disks",
+       "Two disk equivalents"
+      ],
+      [
+       "10",
+       "6 TB",
+       "Any one; two only in different mirrors",
+       "50%"
+      ]
+     ],
+     "caption": "RAID 1 row uses two disks; other rows use four. RAID handles disk failures, not accidental deletion or whole-site loss."
+    }
+   ]
+  },
+  {
+   "id": "backup-strategies",
+   "title": "Backup strategies: full, differential, incremental",
+   "slides": [
+    64,
+    69
+   ],
+   "summary": "Three backup types and their trade-off between backup effort and restore effort.",
+   "notes": [
+    "**Full backup** copies all files every time. Restore is easy from a single set, but it takes the longest and uses the most disk, tape or network space.",
+    "**Differential backup** copies files changed or new since the last full backup. It is faster and smaller than full, but a restore needs the last full plus the latest differential, so restoring everything or locating one file is slower. Example: Monday full; Tuesday and Wednesday each back up everything changed since Monday's full, so Wednesday's set includes Tuesday's changes too.",
+    "**Incremental backup** copies changes since the last backup in the chain. Start with a full base, then take only new changes each time. Restore requires the base plus every needed incremental in order, making the chain more complex than a full-plus-latest-differential restore.",
+    "**Choose by trade-off:** full = slow backup, fast restore; differential = middle; incremental = fast backup, slow restore. Backups protect against data loss and disasters but are a recovery measure (they affect MTTR), not a substitute for live redundancy."
+   ],
+   "terms": [
+    {
+     "term": "Full backup",
+     "def": "Copies every file in the set each time."
+    },
+    {
+     "term": "Differential backup",
+     "def": "Copies changes since the last full backup."
+    },
+    {
+     "term": "Incremental backup",
+     "def": "Copies changes since the previous backup in the chain; restoration needs a full base and the required increments."
+    }
+   ],
+   "check": [
+    {
+     "q": "A full backup runs Sunday night and incrementals run Monday to Friday nights. The disk fails on Saturday afternoon. What must you restore, and how would differential backups compare?",
+     "a": "With incrementals, restore Sunday's full and then all five incrementals (Monday to Friday) in order; losing any one breaks the chain. With differentials, restore Sunday's full and only Friday's differential, which is simpler and faster. Either way, Saturday's changes since Friday night are lost."
+    },
+    {
+     "q": "A full backup takes 6 hours, the nightly window is 2 hours, and a full restore must finish within 4 hours. Which backup scheme fits?",
+     "a": "A nightly full backup doesn't fit the window. Take the full backup at the weekend and differentials on weeknights: each differential is smaller than a full, and a restore needs only two sets. Check that late-week differentials still fit the 2-hour window and that full plus differential restores within 4 hours. Incrementals fit the window best but make restores slower and more fragile."
+    },
+    {
+     "q": "A manager wants to remove the standby database because 'we already take hourly incremental backups'. Do you agree?",
+     "a": "No. Backups are a recovery measure that affects MTTR, not live redundancy. A restore from a full plus many incrementals takes hours and loses up to an hour of data, while a standby takes over in minutes. Keep both, or accept the much longer outage explicitly."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Backup types",
+     "columns": [
+      "",
+      "Full",
+      "Differential",
+      "Incremental"
+     ],
+     "rows": [
+      [
+       "Copies",
+       "All files every time",
+       "Changes since last full",
+       "Changes since previous backup"
+      ],
+      [
+       "Backup time",
+       "Longest",
+       "Faster than full",
+       "**Fastest**"
+      ],
+      [
+       "Space",
+       "Most",
+       "Less than full",
+       "Least"
+      ],
+      [
+       "Restore needs",
+       "One set",
+       "Last full + last differential",
+       "Full base + each needed incremental"
+      ],
+      [
+       "Restore speed",
+       "**Easiest, fastest**",
+       "Slower",
+       "Slowest"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "availability-patterns",
+   "title": "Availability patterns for web applications",
+   "slides": [
+    70,
+    75
+   ],
+   "summary": "A progression of web-app topologies, each removing more single points of failure at higher cost.",
+   "notes": [
+    "**Basic web app:** one web application server in the DMZ between the protocol firewall (from the outside world) and the domain firewall (to the internal network with directory/security services, database and shared file system). Every box is a single point of failure.",
+    "**Load balanced web app:** a load balancer in front of a cluster of web application servers, so a failed server is bypassed and capacity grows. **With hot standby:** a standby load balancer or node is kept ready to take over, so the load balancer itself stops being a single point of failure.",
+    "**High-availability topology** duplicates load balancers and web clusters. Check all required dependencies, including storage, directory services, firewalls and networks: redundancy drawn at the web tier does not establish redundancy for the whole service.",
+    "**Wide area load balancing:** a global load balancer spreads traffic across entire sites (Site A and Site B), each with its own firewalls, load balancer, web application servers, database and file system, protecting against whole-site (failure-domain) failure. Each step up buys availability and costs more, so match the pattern to the required nines."
+   ],
+   "terms": [
+    {
+     "term": "DMZ",
+     "def": "Demilitarised zone: network segment between outside world and internal network holding public-facing servers."
+    },
+    {
+     "term": "Hot standby",
+     "def": "A ready, running spare; takeover still requires detection, switching and any state recovery."
+    },
+    {
+     "term": "Wide area load balancing",
+     "def": "Distributing traffic across geographically separate sites."
+    }
+   ],
+   "check": [
+    {
+     "q": "A design has two load-balanced web servers behind one load balancer, with one database and one shared file system. Where are the single points of failure?",
+     "a": "The load balancer (fix it with a hot standby), the database, the shared file system, and any single firewall or network link on the path. Redundancy at the web tier does not make the whole service redundant. Check every required dependency."
+    },
+    {
+     "q": "The requirement is to survive the loss of an entire data centre and recover within 5 minutes. The current design is a high-availability topology at one site. What must change?",
+     "a": "Add wide area load balancing across a second site that has its own firewalls, load balancers, web servers, database and file system, with data replicated between the sites. This removes the single-site failure domain, at roughly double the infrastructure cost plus the complexity of cross-site data replication."
+    },
+    {
+     "q": "An internal HR tool needs 99% availability, and a payments API needs 99.99%. Which availability patterns would you pick for each?",
+     "a": "HR: a basic or load-balanced web application is likely enough, since 99% allows about 3.65 days of downtime a year. Payments: a full high-availability topology with redundant load balancers, clusters and data tier, and possibly a second site, with end-to-end availability calculated and failover tested. Each step up costs more, so match the pattern to the required nines."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Availability pattern progression",
+     "steps": [
+      {
+       "label": "Basic web app",
+       "sub": "one server in the DMZ",
+       "detail": "Single web application server between two firewalls; every component is a single point of failure."
+      },
+      {
+       "label": "Load balanced",
+       "sub": "cluster behind a balancer",
+       "detail": "Several web application servers behind a load balancer; failed servers are bypassed."
+      },
+      {
+       "label": "Hot standby",
+       "sub": "standby takes over",
+       "detail": "A ready spare removes the single load balancer or node as a single point of failure."
+      },
+      {
+       "label": "High availability",
+       "sub": "redundant balancers and clusters",
+       "detail": "Redundant balancers and clusters protect the front end. Inspect internal storage, directory, network and firewall dependencies before claiming end-to-end availability."
+      },
+      {
+       "label": "Wide area load balancing",
+       "sub": "Site A and Site B",
+       "detail": "A global load balancer spreads traffic across two full sites, surviving a whole-site failure.",
+       "accent": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "reference-architectures",
+   "title": "Reference architectures: Kubernetes, databases and AWS",
+   "slides": [
+    76,
+    89
+   ],
+   "summary": "How Kubernetes self-heals, how database servers achieve redundancy across the active/passive and shared disk/shared nothing models, and the multi-AZ AWS reference.",
+   "notes": [
+    "**Kubernetes reconciles declared state.** A ReplicaSet replaces terminated pods to maintain the replica count; liveness probes can trigger container restart. Replacement takes time and needs working capacity. These mechanisms shorten recovery but do not establish data redundancy or prevent a shared-node failure.",
+    "**Database redundancy must cover two things:** the database server process (handles queries) and the storage (data). The two axes are Active/Active vs Active/Passive and Shared Disk vs Shared Nothing.",
+    "**Database examples in the lecture:** Oracle RAC is active/active with shared disk; SQL Server failover clustering is active/passive with shared disk; database mirroring is active/passive with separate storage. MySQL primary/replica serves writes on one primary and can serve reads on replicas: its “active/active” label does not mean multiple write leaders. Cassandra replicates across ring nodes with configurable replica counts.",
+    "**AWS example:** spread application instances across Availability Zones and direct traffic to healthy instances with a load balancer. Replacing a host or remapping an address restores reachability, not lost data. The lecture distinguishes live storage replication within a zone from point-in-time snapshots; cross-zone recovery also requires an explicit data and restore plan.",
+    "**Summary:** understand components and failure causes to build the plan; the key concepts are availability, reliability and fault tolerance; the key decisions are redundancy, backup and patterns."
+   ],
+   "terms": [
+    {
+     "term": "ReplicaSet",
+     "def": "Kubernetes controller that keeps a set number of pod copies running."
+    },
+    {
+     "term": "Liveness probe",
+     "def": "Health check that lets Kubernetes restart an unhealthy container."
+    },
+    {
+     "term": "Shared disk",
+     "def": "Database nodes share one storage; disk redundancy is handled by hardware."
+    },
+    {
+     "term": "Shared nothing",
+     "def": "Each node has its own storage; data is replicated between nodes."
+    },
+    {
+     "term": "Availability Zone",
+     "def": "An isolated location within a cloud region used to survive single-location failure."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team says Kubernetes will make their single-instance database highly available because it restarts failed pods. Do you agree?",
+     "a": "Only partly. Restarting or rescheduling the pod shortens recovery, but the database is still down while it restarts, and a restart does not give the data a redundant copy. A node or storage failure can still lose service or data. Add replication across nodes, or a managed redundant database, and test recovery."
+    },
+    {
+     "q": "A two-node active/passive database cluster uses one shared storage array, and the array fails. What happens, and what alternative avoids it?",
+     "a": "Both nodes lose the data, because shared disk delegates redundancy to the storage and the array is a single point of failure. A shared-nothing design, where each node owns its storage and data is replicated, avoids that, at the cost of managing replication and promotion."
+    },
+    {
+     "q": "A primary/replica database loses its primary at peak time. What happens to reads and writes, and what does recovery involve?",
+     "a": "Reads can continue on the replica, but writes stop until a replica is promoted to primary, because only the primary accepts writes. Promotion takes time, and writes not yet replicated may be lost. Read replicas provide read capacity and redundancy, not independent write leaders."
+    },
+    {
+     "q": "Application instances are spread across two availability zones, but the database runs in one zone and is protected by periodic snapshots. That zone fails. What happens?",
+     "a": "The compute survives, but the service loses its data tier. Restoring from a snapshot takes time and loses every change since the snapshot. Spreading compute alone is not enough: replicate the database across zones, or plan an explicit data recovery that meets the recovery target."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Database redundancy models",
+     "columns": [
+      "Product",
+      "Active mode",
+      "Storage",
+      "Note"
+     ],
+     "rows": [
+      [
+       "Oracle RAC",
+       "Active/Active",
+       "Shared disk",
+       "Redundant nodes for the process; disk redundancy delegated to hardware"
+      ],
+      [
+       "SQL Server Always On failover clustering",
+       "Active/Passive",
+       "Shared disk",
+       "Only one node uses the storage at a time"
+      ],
+      [
+       "SQL Server database mirroring",
+       "Active/Passive",
+       "Shared nothing",
+       "Mirror copy on separate storage"
+      ],
+      [
+       "MySQL master-slave",
+       "Primary writes; replicas can read",
+       "Shared nothing",
+       "Lecture calls this active/active; write failover still needs promotion"
+      ],
+      [
+       "Cassandra ring",
+       "Active/Active",
+       "Shared nothing",
+       "Configurable replicas; virtual nodes rebalance automatically"
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A web system has an active/passive load balancer pair (99% each), two web servers in parallel (99% each), one application server (99%), an active/passive database pair (99% each) and one firewall (98%). The target is 99.9%. Calculate end-to-end availability, say whether it meets the target, and recommend improvements with their assumptions.",
+   "a": "Each pair gives 1 - 0.01^2 = 0.9999. In series: 0.9999^3 x 0.99 x 0.98 = 96.99%, which misses 99.9% badly because of the single application server and firewall. Replicating both gives 0.9999^4 x (1 - 0.02^2) = 99.92%, which just meets the target. This assumes independent failures, working failover and enough capacity in the survivors. Shared power, storage or a common software fault would lower the real figure, so test failover and check for shared failure domains."
+  },
+  {
+   "q": "A monthly SLA promises 99.95% over a 30-day, 24-hour service month. This month had a 15-minute unplanned outage and a 20-minute planned maintenance window. Does the service meet the SLA? What changes the answer, and what would you change in the design?",
+   "a": "The month has 43,200 minutes, so 99.95% allows 21.6 minutes of downtime. The outage alone is 15 minutes (99.965%), which passes. If planned maintenance counts, the total is 35 minutes (99.919%), which fails. The answer depends on whether the agreed service time excludes the maintenance window. Design changes: rolling or blue/green deployments, so maintenance needs no downtime, and faster detection and failover to shorten unplanned outages."
+  },
+  {
+   "q": "Service A receives 100 requests/s and has 200 worker threads. Each request calls service B with a 30 s timeout. B slows from 50 ms to 10 s per call. Explain what happens to A, and design the containment.",
+   "a": "By Little's Law, A needs 100 x 10 = 1,000 requests in flight but has 200 threads, so the pool is exhausted within about 2 seconds. A stops responding and its own callers fail: a cascading failure, made worse by retries. Containment: a short timeout (1 s would keep about 100 requests in flight), a circuit breaker that fails fast with a fallback once B is unhealthy, a bulkhead so calls to B use their own limited pool and cannot take every thread, and bounded retries with backoff. Validate it by injecting latency into B in a chaos experiment."
+  },
+  {
+   "q": "An e-commerce site needs 99.99% availability for checkout. The data tier is the weak point. Compare two database redundancy models and recommend one, stating what you would monitor.",
+   "a": "Active/passive with shared disk is simple failover, but the shared storage is a single point of failure unless the array itself is redundant. Shared-nothing replication (a primary with replicas, or multi-node replication) gives each node its own storage, avoiding that, but needs promotion rules and risks losing unreplicated writes at failover. For 99.99%, prefer shared-nothing replication across failure domains, with automated, tested promotion and enough capacity in the survivors, plus RAID and tested backups for recovery. Monitor replication lag, failover time and data loss in failover tests, and calculate end-to-end availability rather than trusting the topology label."
+  },
+  {
+   "q": "A database holds 2 TB. A full backup takes 5 hours, the nightly window is 2 hours, daily changes are about 50 GB, and the recovery-time target is 3 hours. Compare full, differential and incremental backup and recommend a scheme.",
+   "a": "A nightly full backup is impossible (5 hours against a 2-hour window). Weekly full plus nightly incrementals copies only about 50 GB a night, but a restore late in the week needs the full plus up to six incrementals in order, which is the slowest and most fragile option. Weekly full plus nightly differentials grows to about 300 GB by day six, which must still fit the window, and a restore needs only the full plus one differential. Recommend the differential scheme if day-six differentials fit the window. Then test whether a 2 TB full restore can finish within 3 hours. If it cannot, backups alone cannot meet the target, and you need a standby replica."
+  },
+  {
+   "q": "Choose a RAID level for an array of four 3 TB disks that must tolerate any two simultaneous disk failures, and state its cost against the alternatives.",
+   "a": "RAID 6 guarantees any two disk failures with at least four disks. Two disks' worth of capacity holds parity, so four 3 TB disks provide 6 TB usable. Parity updates add write overhead, and actual speed depends on workload and implementation. RAID 10 gives the same 6 TB but guarantees only one failure (two only if they are in different mirrors). RAID 5 gives 9 TB with one-failure tolerance, and RAID 0 has no protection."
+  }
+ ]
+}

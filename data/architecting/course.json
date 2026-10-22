@@ -1,0 +1,722 @@
+{
+ "id": "architecting",
+ "title": "Architecting Software Solutions",
+ "days": [
+  {
+   "n": 1,
+   "date": "Mon 14 Sep",
+   "title": "Architecture foundations",
+   "intro": "What solution architecture is and what an architect is responsible for, with quality attributes (ISO 25010) and the utility tree used to prioritise them. Then the architect's reusable toolbox: architecture styles, reference architectures and how to describe an architecture with views (4+1).",
+   "topics": [
+    {
+     "key": "01-introduction-to-solution-architecture",
+     "title": "Introduction to Solution Architecture",
+     "overview": "Architecture sets the structure and principles that guide a system over time. This topic separates enterprise architecture, solution architecture and detailed design, and explains the architect’s responsibility for an implementable solution. Use the lecture’s ISO 25010:2011 model to name quality needs, then prioritise measurable scenarios with a utility tree.",
+     "sections": [
+      {
+       "id": "definition-influences",
+       "title": "What architecture is and why review it",
+       "slides": [
+        4,
+        6
+       ]
+      },
+      {
+       "id": "ea-vs-sa",
+       "title": "Enterprise vs solution architecture vs design",
+       "slides": [
+        7,
+        14
+       ]
+      },
+      {
+       "id": "architect-role",
+       "title": "The solution architect",
+       "slides": [
+        15,
+        17
+       ]
+      },
+      {
+       "id": "quality-attributes-utility-tree",
+       "title": "Quality attributes and the utility tree",
+       "slides": [
+        18,
+        23
+       ]
+      },
+      {
+       "id": "iso25010",
+       "title": "ISO 25010 product quality model",
+       "slides": [
+        24,
+        37
+       ]
+      },
+      {
+       "id": "other-quality-models",
+       "title": "Business qualities and quality in use",
+       "slides": [
+        38,
+        40
+       ]
+      }
+     ]
+    },
+    {
+     "key": "02-architect-the-solution-architecture-a",
+     "title": "Architect the Solution Architecture (Assets)",
+     "overview": "This topic is the architect's toolbox of reusable assets: architecture styles (structural and communication), reference architectures (web, mobile, broker, SOA, microservices, cloud, serverless) and the way an architecture is described through views and viewpoints (IEEE 42010, UML, 4+1). The idea is that you rarely start from a blank page; you reuse proven patterns and choose among them by quality attributes. For the exam, expect to pick and justify styles and reference architectures for a scenario and to describe the architecture with the right views.",
+     "sections": [
+      {
+       "id": "assets-metamodel",
+       "title": "Architectural assets and the metamodel",
+       "slides": [
+        2,
+        7
+       ]
+      },
+      {
+       "id": "structural-styles",
+       "title": "Structural styles and deployment components",
+       "slides": [
+        9,
+        14
+       ]
+      },
+      {
+       "id": "data-cap-p2p",
+       "title": "SQL vs NoSQL, CAP, ACID vs BASE, peer-to-peer",
+       "slides": [
+        15,
+        20
+       ]
+      },
+      {
+       "id": "communication-styles",
+       "title": "Communication styles and integration levels",
+       "slides": [
+        21,
+        36
+       ]
+      },
+      {
+       "id": "web-mobile-ref",
+       "title": "Reference architectures: web and mobile",
+       "slides": [
+        39,
+        49
+       ]
+      },
+      {
+       "id": "broker-soa-microservices",
+       "title": "Broker, SOA and microservices",
+       "slides": [
+        50,
+        60
+       ]
+      },
+      {
+       "id": "cloud-serverless-reactive",
+       "title": "Cloud, serverless and reactive",
+       "slides": [
+        61,
+        69
+       ]
+      },
+      {
+       "id": "architectural-description",
+       "title": "Architectural description: views and viewpoints",
+       "slides": [
+        71,
+        88
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Exercise 1 (group): case study templates",
+     "path": "03-projects-set-aside/S-ARCHSS Project Assignment (Case Study Templates Exercise 1) v2.0.docx",
+     "note": "Project exercise applying the architecture assets to the case study. Optional application practice."
+    }
+   ]
+  },
+  {
+   "n": 2,
+   "date": "Tue 15 Sep",
+   "title": "Architecture method",
+   "intro": "The method for producing a solution architecture, in order: define requirements, then the logical architecture, then the physical architecture. Each step has tasks, roles and work products, illustrated with the IROne resort reservation case.",
+   "topics": [
+    {
+     "key": "03-architect-the-solution-architecture-m",
+     "title": "Architect the Solution Architecture (Method)",
+     "overview": "The method develops requirements, logical architecture and physical architecture through repeated outline, detail and review work. Each activity has ten tasks with named roles and work products. The IROne reservation example shows how requirements lead to components, deployment choices and documented decisions; revisit earlier assumptions when validation exposes a problem.",
+     "sections": [
+      {
+       "id": "method-fundamentals",
+       "title": "Fundamentals of the method",
+       "slides": [
+        2,
+        7
+       ]
+      },
+      {
+       "id": "requirements-context",
+       "title": "Requirements I: stakeholders, vocabulary and system context",
+       "slides": [
+        9,
+        19
+       ]
+      },
+      {
+       "id": "requirements-functional-nfr",
+       "title": "Requirements II: outlining functional and non-functional requirements",
+       "slides": [
+        20,
+        24
+       ]
+      },
+      {
+       "id": "requirements-prioritise-detail",
+       "title": "Requirements III: prioritise, detail, document and review",
+       "slides": [
+        25,
+        37
+       ]
+      },
+      {
+       "id": "logical-overview-assets",
+       "title": "Logical architecture: the ten tasks and surveying assets",
+       "slides": [
+        38,
+        45
+       ]
+      },
+      {
+       "id": "logical-functional",
+       "title": "Logical architecture: overview and functional elements",
+       "slides": [
+        46,
+        51
+       ]
+      },
+      {
+       "id": "logical-deployment-verify",
+       "title": "Logical architecture: deployment, verify, validate, review",
+       "slides": [
+        52,
+        60
+       ]
+      },
+      {
+       "id": "physical-overview-mapping",
+       "title": "Physical architecture: assets, overview and mapping to technology",
+       "slides": [
+        61,
+        70
+       ]
+      },
+      {
+       "id": "physical-deployment",
+       "title": "Physical architecture: deployment, sizing and integration",
+       "slides": [
+        71,
+        78
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Exercise 2 (individual): case study templates",
+     "path": "03-projects-set-aside/S-ARCHSS Project Assignment (Case Study Templates Exercise 2) v2.1.docx",
+     "note": "Apply the architecture method to the case study."
+    }
+   ]
+  },
+  {
+   "n": 3,
+   "date": "Wed 16 Sep",
+   "title": "Secure architecture",
+   "intro": "Security as an architecture quality: the CIA triad, the risk management process (assets, threats, vulnerabilities, likelihood × impact, treatment), how controls are classified, and the technical controls and design principles that secure a system. The five Canvas security quizzes map onto this day.",
+   "topics": [
+    {
+     "key": "04-design-secure-architecture-v4-7",
+     "title": "Design Secure Architecture",
+     "overview": "This topic shows how to build security into a software architecture. It starts with the CIA triad and a risk management process (identify assets, threats and vulnerabilities, estimate likelihood and impact, then mitigate, avoid, transfer or accept), then moves to security controls, how they are classified, and the technical controls for resisting, detecting, reacting to and recovering from attacks. It closes with secure design principles and reference architectures. For the exam, expect to assess risk for a scenario, prescribe and classify controls, and justify them with the principles.",
+     "sections": [
+      {
+       "id": "security-concepts-cia",
+       "title": "Security concepts: the CIA triad",
+       "slides": [
+        2,
+        12
+       ]
+      },
+      {
+       "id": "risk-process",
+       "title": "Risk management process and TVR",
+       "slides": [
+        13,
+        18
+       ]
+      },
+      {
+       "id": "assets-threats-vulns",
+       "title": "Assets, threats, vulnerabilities and risk scenarios",
+       "slides": [
+        19,
+        31
+       ]
+      },
+      {
+       "id": "risk-analysis",
+       "title": "Risk analysis and evaluation: DREAD and the matrix",
+       "slides": [
+        32,
+        38
+       ]
+      },
+      {
+       "id": "risk-treatment",
+       "title": "Risk treatment: mitigate, avoid, transfer, accept",
+       "slides": [
+        39,
+        49
+       ]
+      },
+      {
+       "id": "security-controls",
+       "title": "Security controls: definition, hygiene and baselines",
+       "slides": [
+        50,
+        79
+       ]
+      },
+      {
+       "id": "control-classification",
+       "title": "Classifying controls: types and categories",
+       "slides": [
+        80,
+        89
+       ]
+      },
+      {
+       "id": "cryptography",
+       "title": "Technical controls: cryptography primitives",
+       "slides": [
+        90,
+        121
+       ]
+      },
+      {
+       "id": "key-management-motion",
+       "title": "Key management and protecting data in motion",
+       "slides": [
+        122,
+        156
+       ]
+      },
+      {
+       "id": "access-control-segregation",
+       "title": "Access control and network segregation",
+       "slides": [
+        157,
+        166
+       ]
+      },
+      {
+       "id": "detect-react-recover",
+       "title": "Detecting, reacting and recovering",
+       "slides": [
+        167,
+        179
+       ]
+      },
+      {
+       "id": "secure-design-principles",
+       "title": "Secure design principles and reference architectures",
+       "slides": [
+        180,
+        195
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "IROne security scenario",
+     "path": "02-homework-and-practice/security-activities/IROne Scenario.pdf",
+     "note": "Identify threats, risks and controls for a scenario. Closest to an exam security question."
+    },
+    {
+     "title": "Activity: risk management",
+     "path": "02-homework-and-practice/security-activities/Activity-RM.docx",
+     "note": "Risk assessment practice (likelihood, impact, treatment)."
+    },
+    {
+     "title": "Security quiz answer key",
+     "path": "02-homework-and-practice/quiz-answers/ArchSS Security Quiz Answer Key - Instructor.pdf",
+     "note": "Answers to the five Canvas security quizzes (CIA, risk, controls, technical controls, principles)."
+    },
+    {
+     "title": "Activity: TLS",
+     "path": "02-homework-and-practice/security-activities/Activity-TLS.pdf",
+     "note": "Hands-on certificate/TLS lab. Skim for vocabulary only."
+    },
+    {
+     "title": "Exercise 3 (individual): case study templates",
+     "path": "03-projects-set-aside/S-ARCHSS Project Assignment (Case Study Templates Exercise 3) v2.2.docx",
+     "note": "Security design for the case study."
+    }
+   ]
+  },
+  {
+   "n": 4,
+   "date": "Thu 17 Sep",
+   "title": "Availability and performance",
+   "intro": "The two numbers-heavy quality attributes. Availability: how to calculate it (series/parallel, MTBF/MTTR, nines), why systems fail, and redundancy tactics. Performance: response time, throughput and utilisation, the queueing laws (Little's law, M/M/1) and tactics like load balancing and caching. Practise the calculations.",
+   "topics": [
+    {
+     "key": "05-design-highly-available-architecture-",
+     "title": "Designing Highly Available Architecture",
+     "overview": "This topic is about keeping a system usable: how availability is defined and calculated, why systems go down, and which tactics, redundancy schemes and reference architectures reduce downtime. It is the quantitative and tactical core of the course's availability theme, where you move from the numbers (series/parallel availability, MTBF/MTTR, nines) to design choices such as circuit breakers, bulkheads, active/active clusters, RAID, backups and multi-AZ deployments. For the exam, expect to compute availability for a set of components, explain a failure cause, and justify a redundancy or tactic choice against cost.",
+     "sections": [
+      {
+       "id": "availability-basics",
+       "title": "Availability, reliability and fault tolerance",
+       "slides": [
+        4,
+        6
+       ]
+      },
+      {
+       "id": "availability-calculations",
+       "title": "Availability calculations: nines, series and parallel",
+       "slides": [
+        7,
+        12
+       ]
+      },
+      {
+       "id": "improving-availability",
+       "title": "Improving availability: downtime causes and the architect's response",
+       "slides": [
+        13,
+        23
+       ]
+      },
+      {
+       "id": "distributed-failures",
+       "title": "Failure sources in distributed systems",
+       "slides": [
+        24,
+        31
+       ]
+      },
+      {
+       "id": "availability-tactics",
+       "title": "Availability tactics and stability patterns",
+       "slides": [
+        32,
+        47
+       ]
+      },
+      {
+       "id": "redundancy",
+       "title": "Redundancy: hardware, server, software and data",
+       "slides": [
+        48,
+        63
+       ]
+      },
+      {
+       "id": "backup-strategies",
+       "title": "Backup strategies: full, differential, incremental",
+       "slides": [
+        64,
+        69
+       ]
+      },
+      {
+       "id": "availability-patterns",
+       "title": "Availability patterns for web applications",
+       "slides": [
+        70,
+        75
+       ]
+      },
+      {
+       "id": "reference-architectures",
+       "title": "Reference architectures: Kubernetes, databases and AWS",
+       "slides": [
+        76,
+        89
+       ]
+      }
+     ]
+    },
+    {
+     "key": "06-design-for-performance-in-architectur",
+     "title": "Design for Performance in Architecture",
+     "overview": "This topic covers how to define, measure and design for performance in an architecture. It builds from the core metrics (response time, throughput, utilization, load) through queueing theory and its laws (utilization, forced flow, Little's, general response time, M/M/1 and multi-server models) to tactics such as load balancing, caching, precomputation and flow control, and finally validation by modelling, prototyping and documentation. In the exam expect numeric questions using these formulas plus scenarios asking you to find bottlenecks and justify tactics.",
+     "sections": [
+      {
+       "id": "metrics",
+       "title": "What performance means: the core metrics",
+       "slides": [
+        2,
+        9
+       ]
+      },
+      {
+       "id": "serial-parallel",
+       "title": "Combining components: serial vs parallel, load vs throughput",
+       "slides": [
+        10,
+        26
+       ]
+      },
+      {
+       "id": "operational-laws",
+       "title": "Queueing theory notation and the operational laws",
+       "slides": [
+        27,
+        41
+       ]
+      },
+      {
+       "id": "littles-law",
+       "title": "Little's Law and the General Response Time Law",
+       "slides": [
+        42,
+        46
+       ]
+      },
+      {
+       "id": "mm1",
+       "title": "Queues and the M/M/1 response time curve",
+       "slides": [
+        47,
+        56
+       ]
+      },
+      {
+       "id": "multi-server",
+       "title": "Multiple servers, queue layouts and price/performance",
+       "slides": [
+        57,
+        69
+       ]
+      },
+      {
+       "id": "tactics-load-balancing",
+       "title": "Performance tactics and load balancing",
+       "slides": [
+        70,
+        77
+       ]
+      },
+      {
+       "id": "caching",
+       "title": "Caching and precomputation",
+       "slides": [
+        78,
+        87
+       ]
+      },
+      {
+       "id": "complexity-data-flow",
+       "title": "Algorithmic complexity, data placement and flow control",
+       "slides": [
+        88,
+        94
+       ]
+      },
+      {
+       "id": "validate-document",
+       "title": "Validating the design and documenting performance",
+       "slides": [
+        95,
+        107
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": []
+  },
+  {
+   "n": 5,
+   "date": "Fri 18 Sep",
+   "title": "Capacity and maintainability",
+   "intro": "Capacity planning forecasts how much extra capacity is needed and when: predict the workload, relate it to resource use, derive the resources (trend lines for disk, peak load for servers). Maintainability covers designing for change: modifiability, analysability, deferred binding, logging and monitoring.",
+   "topics": [
+    {
+     "key": "07-perform-capacity-planning-for-archite",
+     "title": "Capacity Planning for Architecture",
+     "overview": "Capacity planning answers two questions: how much extra capacity will the system need, and when must it be in place. The deck gives one three-part recipe (predict the workload, relate workload to resource use, derive the resources needed) and applies it to disk, which is cumulative and trend driven, and to servers, which are peak driven and sized with benchmarks. It adds the forecasting formulas (linear regression, moving average, exponential smoothing), the scalability laws (Amdahl, USL), a worked benchmark-to-throughput example, procurement lead time and cloud elasticity. For the exam, expect to compute a forecast or a sizing figure and justify the method.",
+     "sections": [
+      {
+       "id": "approach",
+       "title": "Why and how to plan capacity",
+       "slides": [
+        2,
+        9
+       ]
+      },
+      {
+       "id": "disk",
+       "title": "Planning disk capacity",
+       "slides": [
+        10,
+        16
+       ]
+      },
+      {
+       "id": "trend",
+       "title": "Trend analysis and forecasting methods",
+       "slides": [
+        17,
+        22
+       ]
+      },
+      {
+       "id": "servers-benchmark",
+       "title": "Server sizing: benchmarks and mapping",
+       "slides": [
+        23,
+        29
+       ]
+      },
+      {
+       "id": "scalability-laws",
+       "title": "Non-linearity: Amdahl's law and USL",
+       "slides": [
+        30,
+        37
+       ]
+      },
+      {
+       "id": "benchmark-sizing",
+       "title": "Sizing a system from a benchmark",
+       "slides": [
+        38,
+        44
+       ]
+      },
+      {
+       "id": "time-metrics",
+       "title": "Using existing data and measurement time",
+       "slides": [
+        45,
+        48
+       ]
+      },
+      {
+       "id": "procurement-elasticity",
+       "title": "Procurement lead time and elasticity",
+       "slides": [
+        49,
+        54
+       ]
+      }
+     ]
+    },
+    {
+     "key": "08-ensure-maintainable-architecture-v3-1",
+     "title": "Ensuring Maintainable Architecture",
+     "overview": "Maintainability is the ease with which software can be corrected, enhanced, adapted or have its performance improved, and it usually dominates lifecycle cost. The deck splits it into changeability (modifiability) and analyzability, then covers how architecture style, code-level tactics, defer-binding techniques, logging and monitoring, and automated safeguards such as fitness functions make change cheap and safe. For the exam, expect to pick tactics for a change scenario and compare how monolith, microservices and event-driven styles support change.",
+     "sections": [
+      {
+       "id": "definition",
+       "title": "What maintainability is and why it matters",
+       "slides": [
+        2,
+        6
+       ]
+      },
+      {
+       "id": "change",
+       "title": "Sources of change and how to incorporate it",
+       "slides": [
+        7,
+        9
+       ]
+      },
+      {
+       "id": "architecture-styles",
+       "title": "Architecture styles and modifiability",
+       "slides": [
+        10,
+        19
+       ]
+      },
+      {
+       "id": "code-tactics",
+       "title": "Code-level maintainability tactics",
+       "slides": [
+        20,
+        26
+       ]
+      },
+      {
+       "id": "defer-binding",
+       "title": "Defer binding: customisation and workflow engines",
+       "slides": [
+        27,
+        29
+       ]
+      },
+      {
+       "id": "analyzability",
+       "title": "Analyzability: detecting and diagnosing problems",
+       "slides": [
+        30,
+        34
+       ]
+      },
+      {
+       "id": "reliable-change",
+       "title": "Reliable change and fitness functions",
+       "slides": [
+        35,
+        37
+       ]
+      },
+      {
+       "id": "code-quality-tools",
+       "title": "Code quality tools",
+       "slides": [
+        38,
+        41
+       ]
+      }
+     ]
+    }
+   ],
+   "practice": [
+    {
+     "title": "Capacity planning: linear regression example",
+     "path": "01-study/capacity-planning-examples/linear regression example.xlsx",
+     "note": "Worked forecasting spreadsheet (ignore the unrelated NBA sheet)."
+    },
+    {
+     "title": "Capacity planning: storage trendline example",
+     "path": "01-study/capacity-planning-examples/Storage estimation Trendline Example.xlsx",
+     "note": "Worked storage-growth estimate."
+    },
+    {
+     "title": "Exercise 4 (individual): case study templates",
+     "path": "03-projects-set-aside/S-ARCHSS Project Assignment (Case Study Templates Exercise 4) v2.0.docx",
+     "note": "Availability/performance/capacity for the case study."
+    }
+   ]
+  }
+ ],
+ "extras": []
+}

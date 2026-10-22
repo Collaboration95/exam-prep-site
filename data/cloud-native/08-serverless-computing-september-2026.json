@@ -1,0 +1,401 @@
+{
+ "key": "08-serverless-computing-september-2026",
+ "title": "Serverless Architecture",
+ "pages": 36,
+ "minutes": 25,
+ "overview": "Serverless shifts function-server operations to a provider while the application still needs sound state, error and security design. Choose it for suitable event-driven work, and compare function, gateway, queue, stream and legacy-proxy patterns. Learn the Lambda configuration and invocation model without treating the lecture’s pricing details as permanent limits.",
+ "big_ideas": [
+  "Serverless offloads server operations and supports usage-based scaling; application resilience still needs failure and dependency design.",
+  "Monolith/microservices describe application boundaries; FaaS describes execution. A microservice may use one or more functions.",
+  "Serverless designs can compose events, streams and elastic compute; configure application timeouts, retries and failure handling explicitly.",
+  "Design with single-purpose stateless functions, push-based event pipelines, thicker front ends and third-party services.",
+  "Best fits: application back ends, data processing, real-time analytics, legacy API proxies, scheduled jobs and bots.",
+  "Functions, events, tasks, scheduling and services are the compute building blocks; storage, key-value, query and pipelines are the data blocks.",
+  "An API Gateway exposes Lambda functions as a RESTful web API and can hide legacy services behind it.",
+  "A Lambda function is configured with memory, timeout and an IAM role; billing is per invocation and execution time scaled by memory."
+ ],
+ "sections": [
+  {
+   "id": "what-is-serverless",
+   "title": "What serverless is",
+   "slides": [
+    3,
+    8
+   ],
+   "summary": "The definition, the monolith to FaaS progression, and the platform features that define serverless.",
+   "notes": [
+    "**Serverless means you stop managing servers, not that servers vanish.** It is an architectural approach using small independent functions on transient servers in an elastic runtime. Platforms share four traits: no OS to configure, pay-per-invocation billing, automatic scaling, and built-in availability and fault tolerance.",
+    "**Decomposition and hosting are separate choices.** The lecture contrasts one application API, separate domain APIs and individual action functions. A microservice can be implemented with functions; moving to FaaS is not a compulsory next maturity stage or a promise that more functions mean a better design.",
+    "**Serverless supports event-driven composition and elastic compute.** Streams provide ordered processing within their supported ordering scope and may retain events for replay. Configure queues, retries, timeouts and circuit breakers as needed; a function platform does not automatically protect every downstream dependency.",
+    "**Why it matters**: a well-planned serverless design reduces and organises complexity and makes future change easier, which matters for long-lived applications."
+   ],
+   "terms": [
+    {
+     "term": "FaaS",
+     "def": "Functions as a Service: deploy individual functions that run on demand."
+    },
+    {
+     "term": "Event-driven",
+     "def": "Components react to published events rather than direct calls."
+    },
+    {
+     "term": "Stream",
+     "def": "Ordered sequence of events that can be processed later, replayed and fanned out."
+    }
+   ],
+   "check": [
+    {
+     "q": "A manager says 'we went serverless, so we no longer need to think about failures or state'. Correct this.",
+     "a": "Serverless means the provider operates the servers, OS and scaling, not that servers or failures vanish. The team still designs durable state in external stores, retries, timeouts and protection for downstream dependencies, and configures each function's access and limits. Built-in availability covers the platform, not the application's own logic or the services it calls."
+    },
+    {
+     "q": "A team plans to turn its 8 microservices into 120 single-action functions 'because FaaS is the next maturity stage'. Do you agree?",
+     "a": "No. Decomposition (one app, domain services, individual actions) and hosting (servers, containers, functions) are separate choices, and moving to FaaS is not a required next stage. A microservice can be implemented with one or a few functions behind its API. 120 functions add deployment, monitoring and coordination overhead. Split further only where an action has different scaling, timing or ownership needs."
+    },
+    {
+     "q": "A function processes a stream of account events and must apply each account's events in order. What should the team check, and what doesn't the platform guarantee?",
+     "a": "Check the stream's ordering scope: streams usually keep order within a partition or shard, so events must be partitioned by account ID. Check retry behaviour too, because a failing batch can block or reorder processing. The platform doesn't automatically protect downstream dependencies, so configure retries, timeouts and failure handling as needed."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Choose boundaries separately from execution",
+     "columns": [
+      "Concept",
+      "Main decision",
+      "Order-system example"
+     ],
+     "rows": [
+      [
+       "Monolith",
+       "One deployable application",
+       "Orders and payments released together"
+      ],
+      [
+       "Microservices",
+       "Independent service boundaries",
+       "Order and Payment have separate APIs and releases"
+      ],
+      [
+       "FaaS",
+       "Provider runs functions on demand",
+       "Create-order handler implements part of Order"
+      ]
+     ],
+     "caption": "A function-based service is still responsible for state, contracts and failure handling."
+    }
+   ]
+  },
+  {
+   "id": "principles-use-cases",
+   "title": "Design principles and when to use serverless",
+   "slides": [
+    9,
+    11
+   ],
+   "summary": "The guiding design principles, the situations where serverless pays off, and typical use cases.",
+   "notes": [
+    "**Five principles**: run code on demand in a stateless compute service; write single-purpose stateless functions (more testable, robust, fewer side effects); design push-based, event-driven pipelines (the most flexible designs); create thicker, more powerful front ends (fewer hops, lower latency, better perceived performance); and embrace third-party services rather than building everything.",
+    "**When to use it**: you want to focus on code and design rather than infrastructure, reduce layers and code, get easier scalability and high availability with fairer pricing, or solve problems that benefit from parallel processing using stateless scalable compute.",
+    "**Typical use cases**: application back end (web, mobile, IoT: authentication, device registry, shadowing, rules engine), data processing and transcoding, real-time analytics on logs, events and clicks, legacy API proxy (gateway plus functions translating formats), scheduled services, and bots and skills.",
+    "**Prefer a fit, not a blanket rule.** Short event-triggered work is a natural function fit. Long-running processes, in-memory durable state and tight latency budgets may need a different runtime or extra design. Stateful applications can still use stateless functions with durable external stores; steady high load needs a cost comparison."
+   ],
+   "terms": [
+    {
+     "term": "Stateless function",
+     "def": "Function keeping no state between invocations; state lives in external stores."
+    },
+    {
+     "term": "Device shadow",
+     "def": "Persistent copy of a device's state kept in the cloud."
+    },
+    {
+     "term": "Thick front end",
+     "def": "Client does more work and calls services directly, reducing hops."
+    }
+   ],
+   "check": [
+    {
+     "q": "A single function validates an order, charges the card, updates stock and sends an email. What principle does this break, and what would you change?",
+     "a": "Single-purpose functions: one function doing four things is harder to test, fails as a unit, and its side effects (a charge without an email) are hard to reason about. Split it into a push-based pipeline in which each step triggers the next through events. The cost is coordinating the steps and handling a failure part-way through."
+    },
+    {
+     "q": "A video platform transcodes uploads that arrive in bursts of hundreds after events, with nothing in between. Is serverless a good fit, and why?",
+     "a": "Yes. Data processing and transcoding is a typical use case: work is triggered by events, can run in parallel on stateless compute, and you pay only during bursts. Check the platform's execution time and memory limits against the longest video. Very long transcodes may need a container or batch service instead."
+    },
+    {
+     "q": "An order workflow can take hours while waiting for warehouse confirmation. Must one function stay running throughout?",
+     "a": "No. Persist workflow state in a durable store and use events or scheduled steps to invoke short functions as each piece of work becomes ready. A long-running service is justified only if the work truly needs continuous execution or the orchestration overhead outweighs its benefit."
+    },
+    {
+     "q": "A latency-critical API runs at a steady 3,000 requests a second all day. A teammate argues serverless will be cheaper and faster. Evaluate this.",
+     "a": "Doubtful on both counts. With steady high load, the pay-per-invocation advantage shrinks, so compare sustained-use cost against always-on containers. Cold starts and runtime restrictions can also threaten tight latency budgets. Serverless still fits the sporadic parts around this API, such as scheduled reports or file processing."
+    }
+   ]
+  },
+  {
+   "id": "layers-services",
+   "title": "Layers of abstraction and serverless compute and data services",
+   "slides": [
+    12,
+    16
+   ],
+   "summary": "Where serverless sits in the stack and the types of service it is composed from.",
+   "notes": [
+    "**Four layers of increasing abstraction**: physical infrastructure (actual servers, networks), virtual infrastructure (virtualised servers and networking), serverless infrastructure (compute and data services) and serverless applications (websites, API/RPC services, simple data pipelines) on top. Each layer hides the one beneath.",
+    "**Serverless compute services**: functions (small code handling a cloud event or HTTP request), services (like functions but containerised and reachable by HTTP), events (broadcast information to one or more components), tasks (reliably send a message to a single component) and scheduling (repeating jobs triggered by other components).",
+    "**Serverless data services**: blob storage, key-value database, big-data query engine and big-data transform pipeline, so storage and analytics also need no server management.",
+    "**Compare provider categories, not one-to-one APIs**: AWS (Lambda, DynamoDB, S3, Athena, Kinesis), Google (Cloud Functions, Cloud Run, Firestore, BigQuery, Dataflow) and Azure (Azure Functions, Table Storage, Event Hub) offer examples in these categories; check each product’s execution and delivery semantics."
+   ],
+   "terms": [
+    {
+     "term": "Event vs task",
+     "def": "Event broadcasts to many consumers; task reliably delivers to one."
+    },
+    {
+     "term": "Blob storage",
+     "def": "Object storage for unstructured files."
+    },
+    {
+     "term": "Key-value database",
+     "def": "Simple store for lookup by key (e.g. DynamoDB)."
+    }
+   ],
+   "check": [
+    {
+     "q": "When an order is placed, three components must react (email, analytics, loyalty), and one invoice job must be handed to exactly one worker reliably. Which serverless compute services fit each?",
+     "a": "Events for the order notification, because they broadcast information to one or more interested components. Tasks for the invoice job, because they reliably deliver a message to a single component. Using events for the invoice risks several workers processing it, and using tasks for the notification would mean sending one task per consumer."
+    },
+    {
+     "q": "A team needs a containerised HTTP service with a library that won't run in the function runtime, but it doesn't want to manage servers. What serverless compute option fits?",
+     "a": "Serverless services: like functions, but containerised and reachable over HTTP, so the team controls the runtime in the image while the platform handles servers and scaling. The trade-off is a larger deployable and possibly slower starts than a function."
+    },
+    {
+     "q": "A small analytics team wants to run SQL over files in object storage once a week without running any servers. How do serverless data services help, and what should they check?",
+     "a": "Use blob storage for the files and a serverless big-data query engine to run SQL over them, so nothing runs between queries and billing follows usage. Check the cost model and file formats, and compare providers by category and semantics, not by one-to-one product names."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "layers",
+     "title": "Layers of abstraction",
+     "layers": [
+      {
+       "label": "Serverless applications",
+       "sub": "websites, APIs, data pipelines",
+       "detail": "Built on top of serverless infrastructure.",
+       "accent": true
+      },
+      {
+       "label": "Serverless infrastructure",
+       "sub": "compute and data services",
+       "detail": "Functions, events, tasks, scheduling; blob, key-value, query and transform services."
+      },
+      {
+       "label": "Virtual infrastructure",
+       "sub": "virtual servers and networks",
+       "detail": "Virtualised hardware providing servers, networking, etc."
+      },
+      {
+       "label": "Physical infrastructure",
+       "sub": "real servers and networks",
+       "detail": "Actual servers, networking, load balancers and disks."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "example-architectures",
+   "title": "Serverless architecture patterns",
+   "slides": [
+    17,
+    23
+   ],
+   "summary": "Four reusable patterns showing how functions combine with gateways, queues, streams and servers.",
+   "notes": [
+    "**Application back end**: an API Gateway presents a RESTful interface and hides functions (e.g. save profile, calculate cost, submit job, process job) that talk to storage, databases and a message pipeline. Clients can often call services such as authentication or search directly instead of relaying through the gateway.",
+    "**API proxy for legacy systems**: the gateway fronts legacy SOAP or XML services, with a convert-and-invoke function per route translating request and response formats. This lets modern clients use legacy systems without changing them.",
+    "**Real-time streams**: events flow into a stream service (e.g. Kinesis) and functions pull batches and write to storage or a database. Suited to data-intensive real-time reporting and analytics.",
+    "**Hybrid serverless and server-based**: a design may fan out through notification topics into queues consumed by both functions and EC2 instances, with a database behind. Serverless need not be all-or-nothing; mix it where it fits.",
+    "**Assess the whole path.** Functions may be triggered by objects, queues, HTTP or data changes. Their operational savings can be substantial, but account for downstream capacity, retry behaviour, latency, data durability and integration cost before concluding they are cheaper."
+   ],
+   "terms": [
+    {
+     "term": "API proxy",
+     "def": "Gateway plus functions translating between modern clients and legacy services."
+    },
+    {
+     "term": "Fan-out",
+     "def": "One message distributed to many queues or consumers."
+    },
+    {
+     "term": "Kinesis",
+     "def": "AWS streaming ingestion service, a canonical example."
+    }
+   ],
+   "check": [
+    {
+     "q": "A mobile app must use a legacy SOAP service that can't be changed. How would you expose it with serverless components, and what remains a risk?",
+     "a": "Put an API gateway in front to present a REST interface, with a function per route that converts the request to SOAP/XML, calls the legacy service and converts the response. The legacy system stays unchanged. Its capacity and latency now limit the mobile app, because functions scale far faster than it can, so add throttling or caching at the gateway."
+    },
+    {
+     "q": "Clickstream events arrive at 20,000 a second for real-time dashboards. Sketch a serverless pipeline and name one thing to monitor.",
+     "a": "Events go into a stream service; functions pull batches, transform them and write to storage or a database that the dashboards query. It scales with event volume without servers. Monitor consumer lag and the write capacity of the target store, because fast-scaling functions can overwhelm a database downstream."
+    },
+    {
+     "q": "An architect insists the whole system must be serverless, including a steady, stateful matching engine. What would you propose instead?",
+     "a": "A hybrid: fan out events through notification topics into queues consumed by functions for spiky, event-driven work and by server-based instances for the steady, stateful matching engine, with a shared database behind. Serverless doesn't have to be all or nothing. Put each part where it is cheapest and fits best."
+    },
+    {
+     "q": "A business case claims moving an upload workflow to functions will 'cut costs by 60%' based only on compute prices. What is missing from the assessment?",
+     "a": "The whole path: downstream capacity (can the database absorb the scaled-out writes?), retry behaviour and duplicate processing, added latency, data durability, and integration cost. Operational savings can be real, but compute price alone can't establish them. Model the full request path at expected and peak load."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "API proxy for a legacy system",
+     "steps": [
+      {
+       "label": "Modern client",
+       "sub": "RESTful",
+       "detail": "Calls a RESTful interface."
+      },
+      {
+       "label": "API Gateway",
+       "sub": "REST interface",
+       "detail": "Creates the RESTful interface and hides the Lambda functions and other services behind it.",
+       "accent": true
+      },
+      {
+       "label": "Convert-and-invoke",
+       "sub": "Lambda function",
+       "detail": "Most legacy services need a Lambda function to convert data and correctly invoke them."
+      },
+      {
+       "label": "Legacy service",
+       "sub": "SOAP / XML",
+       "detail": "Unchanged legacy system."
+      }
+     ],
+     "caption": "Modern clients reach legacy systems without changing them."
+    }
+   ]
+  },
+  {
+   "id": "aws-lambda",
+   "title": "AWS Lambda in practice",
+   "slides": [
+    26,
+    36
+   ],
+   "summary": "How Lambda functions are configured, invoked and exposed as a web API.",
+   "notes": [
+    "**Configure code/handler, memory, timeout and execution role.** The timeout bounds execution; the IAM role limits accessible resources. Network configuration can provide access to private resources. The lecture’s billing model combines invocation count and duration weighted by memory; its 100 ms example is historical, so use the model rather than memorising a billing increment.",
+    "**Invocation has more than one dimension.** A function receives event input and runtime context. Synchronous invocation waits for a result; asynchronous invocation accepts an event for later processing. Event sources may push events or be polled by platform mappings, so event-triggered is not a synonym for asynchronous invocation.",
+    "**Lambda as a web API**: integrate a function with an API Gateway method, pass HTTP parameters through, and format the function output as the HTTP response. A URL combines a domain, a stage (prod, test, dev) and resource paths, with each HTTP verb mapped to a function.",
+    "**Request flow** for a call such as GET /greeting: client request, method request (auth), integration request to Lambda, function execution, integration response, method response (HTTP 200 with JSON). Logs (print output) go to CloudWatch Logs, and testing uses a query string to inspect response, latency and logs.",
+    "**Exam tip**: be ready to name the tuning knobs (memory, timeout, IAM role) and explain that memory also determines cost and CPU share."
+   ],
+   "terms": [
+    {
+     "term": "Event (Lambda)",
+     "def": "JSON input passed to the function."
+    },
+    {
+     "term": "Context (Lambda)",
+     "def": "Runtime information about the execution environment."
+    },
+    {
+     "term": "IAM role",
+     "def": "Permissions the function has on resources."
+    },
+    {
+     "term": "Stage",
+     "def": "Named deployment of an API (prod, test, dev)."
+    }
+   ],
+   "check": [
+    {
+     "q": "A function that resizes images runs at 128 MB memory and takes 8 seconds, often timing out. A teammate says raising memory will only raise cost. Do you agree?",
+     "a": "Not necessarily. On function platforms memory also sets the CPU share, so more memory can make the function finish much faster. Billing combines invocations and duration weighted by memory, so a shorter run at higher memory may cost about the same or less. Test a few memory sizes, and set the timeout from the measured duration."
+    },
+    {
+     "q": "A function's execution role has full access to every storage bucket and database 'to avoid permission errors'. What is the risk, and what should the role grant?",
+     "a": "If the function's code or a dependency is compromised, the attacker gets all of that access. The execution role should grant only the resources and actions the function needs, for example read from one bucket and write to one table. The role and the timeout are the main controls on what a function can touch and how long it can run."
+    },
+    {
+     "q": "A function is triggered by messages from a queue, and a teammate calls it 'asynchronous, so the caller never waits'. Is that the right way to classify it?",
+     "a": "Not quite. With a queue, the platform often polls the source and invokes the function in batches, which is a different contract from both a synchronous call (the caller waits for the result) and an asynchronous call (an event is accepted for later execution). Classify the invocation by its actual delivery and retry contract, because that decides error handling and duplicate processing."
+    },
+    {
+     "q": "A function exposed through an API gateway logs a successful run, but clients still get an error response. Using the request flow, where would you look?",
+     "a": "The flow runs: method request, integration request, function execution, integration response, method response. The function ran, so the likely fault is in the integration response or method response: the function's output wasn't mapped to a valid HTTP response, for example a missing status code or wrong body format. Check the function's logs and output format, and test the stage endpoint directly."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Lambda behind API Gateway: GET /greeting (slide 35)",
+     "steps": [
+      {
+       "label": "Client request",
+       "sub": "1",
+       "detail": "HTTP call to the API stage URL (e.g. prod, test, dev, v1)."
+      },
+      {
+       "label": "Method request",
+       "sub": "2: auth",
+       "detail": "Checks the call (auth: none in the example)."
+      },
+      {
+       "label": "Integration request",
+       "sub": "3: type Lambda",
+       "detail": "HTTP parameters are passed to the function."
+      },
+      {
+       "label": "Lambda function",
+       "sub": "4: event + context",
+       "detail": "Receives a JSON event and a context describing the execution environment.",
+       "accent": true
+      },
+      {
+       "label": "Integration response",
+       "sub": "5",
+       "detail": "Function result passed through."
+      },
+      {
+       "label": "Method response",
+       "sub": "6: HTTP 200",
+       "detail": "Result formatted as the web API response (application/json)."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A startup's image-upload service is idle at night and gets bursts of 5,000 uploads a minute during campaigns. Should it use serverless? Design it and name two limits or side effects to plan for.",
+   "a": "Yes. An upload to object storage triggers a stateless function that resizes the image and writes results back to object storage, with metadata in a key-value database. It scales with bursts, bills per invocation and has no idle servers at night. Plan for execution time and memory limits for large images, and for the burst of concurrent writes to the metadata store. Also plan for retries producing duplicate work, so make writes idempotent."
+  },
+  {
+   "q": "An order system is being designed. A teammate argues for 'pure FaaS, one function per operation'; another wants microservices on containers. Compare the options, recommend one, and explain how they could combine.",
+   "a": "Microservices choose deployment boundaries (Order, Payment, Inventory as independently deployed capabilities). FaaS chooses how handlers execute. One function per operation maximises granularity but adds deployment, monitoring and coordination overhead, and cold starts on latency-sensitive paths. Recommend capability-sized services, implemented as a few functions where load is spiky and event-driven (notifications, receipts) and as containers where load is steady or latency-critical (checkout). Assess state, latency, limits and coordination cost, not function count."
+  },
+  {
+   "q": "Design a serverless back end that lets a mobile app use a legacy SOAP order system that handles at most 50 requests a second. Explain how you would protect the legacy system and secure the functions.",
+   "a": "Put an API gateway in front of the mobile app with REST routes, each invoking a function that translates to SOAP/XML and back. Handle authentication at the gateway or through a managed identity service. To protect the legacy system, throttle at the gateway, cache read responses, and send non-urgent writes through a queue that a function drains at a controlled rate. Give each function an execution role limited to what it calls. The trade-off is that queued writes are confirmed later, not immediately."
+  },
+  {
+   "q": "A team asks when serverless is the wrong choice. Give three workload characteristics that argue against it, and for each say whether a redesign could still make functions work.",
+   "a": "Continuous long-running processing beyond execution limits: functions still work if the work can be split into short steps with state persisted between them, otherwise use containers. Tight latency budgets that cold starts would break: a long-running service is usually the simpler answer. Steady high load where sustained-use cost exceeds always-on compute: compare costs, and the honest answer is often containers. Stateful work that depends on one instance's memory can be redesigned with external durable state."
+  },
+  {
+   "q": "Design a serverless real-time analytics pipeline for 20,000 click events a second with dashboards updated within 10 seconds, and say what happens when a downstream database slows down.",
+   "a": "Events enter a stream service partitioned for throughput. Functions consume batches, transform and aggregate them, and write to a database or storage that the dashboards query, while raw events also go to object storage for later reprocessing. It scales with volume without servers. If the database slows, function retries and consumer lag grow and the dashboards fall behind. Cap function concurrency, batch writes, and monitor lag, accepting that the dashboards may briefly exceed 10 seconds rather than overloading the database."
+  }
+ ]
+}

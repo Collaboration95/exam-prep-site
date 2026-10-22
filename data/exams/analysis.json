@@ -1,0 +1,787 @@
+{
+ "title": "What the exam tests",
+ "lede": "What the SWE5001 paper is built from, the seven question shapes it reuses, what each one is really checking, and how to write answers that collect the marks.",
+ "intro": [
+  "Everything here is inferred from the one official sample paper and its case study. No marking scheme is published, so read the mark-allocation notes as informed guesses. Links marked *sample* go to the converted paper; *Mock* links go to the practice papers."
+ ],
+ "sections": [
+  {
+   "id": "at-a-glance",
+   "title": "The paper at a glance",
+   "blocks": [
+    {
+     "table": {
+      "columns": [
+       "Section",
+       "Question",
+       "Marks",
+       "Share",
+       "Course focus",
+       "Built on (case study)",
+       "Sub-parts (marks)"
+      ],
+      "rows": [
+       [
+        "A",
+        "Q1",
+        "25",
+        "50%",
+        "Architecting + Platform",
+        "Use cases (§1), NFR numbers (§4), domain model (§7), an API table in the question",
+        "a.i 2 · a.ii 2 · b.i 5 · b.ii 4 · c 6 · d 2 · e 4"
+       ],
+       [
+        "B",
+        "Q2",
+        "13",
+        "26%",
+        "Cloud native",
+        "An MVP diagram in the question, logical architecture (§6.2), Phase 2 (§2)",
+        "a 10 (four sub-asks i–iv) · b 3"
+       ],
+       [
+        "C",
+        "Q3",
+        "12",
+        "24%",
+        "Architecting",
+        "Initial architecture (§6), domain model (§7), packaging and deployment model (§8)",
+        "c 6 · d 6"
+       ]
+      ]
+     }
+    },
+    {
+     "ul": [
+      "**One case study runs through all three sections.** Every question points at a specific part of Appendix A: a number in §4, an entity in §7 or a decision in §8. Answers that ignore the case read as generic and score low.",
+      "**Small, dense units of marks.** Eleven marked parts, most worth 2 to 6 marks. Only Q2 a is large (10), and it splits into four sub-asks. Expect about one mark per *distinct, justified* point.",
+      "**No recall questions.** Nothing asks for a definition, a list or a vendor product. The vocabulary (RMM Level 2, event streaming, aggregate, read replica) appears in the questions; you are asked to *apply* it.",
+      "**Two artefacts are deliberately flawed.** The case says the packaging model is ‘incomplete and potentially erroneous’, and the domain model has design smells that Q1 b asks you to find. Reading the case critically before the exam pays off directly."
+     ]
+    },
+    {
+     "figure": "map"
+    }
+   ]
+  },
+  {
+   "id": "course-map",
+   "title": "Where the marks come from",
+   "blocks": [
+    "The table maps each part of the sample paper to the course topics it relies on. Topic links open the explainer pages, and the question pages tag every question with its topics.",
+    {
+     "table": {
+      "columns": [
+       "Topic area",
+       "Course decks",
+       "Sample paper",
+       "Marks"
+      ],
+      "rows": [
+       [
+        "Cloud-native reference architecture: decomposition, communication, state, Kubernetes, serverless",
+        "[Cloud reference architecture](topic:cloud-native/02-cloud-reference-architecture-august-2), [Architecting a cloud native app](topic:cloud-native/05-architecting-a-cloud-native-applicati), [Kubernetes](topic:cloud-native/05a-kubernetes-september-2026), [Microservices](topic:cloud-native/07-microservices-design-september-2026), [Serverless](topic:cloud-native/08-serverless-computing-september-2026)",
+        "[Q2 a](paper#q2a)",
+        "10"
+       ],
+       [
+        "Domain modelling: bounded contexts, reuse, aggregates, domain events",
+        "[Reusable assets](topic:platform/02-reusable-assets-and-frameworks-v2-1), [Reusable services](topic:platform/04-reusable-services-and-api-gateway-v2-)",
+        "[Q1 b.i](paper#q1b-i), [Q1 b.ii](paper#q1b-ii)",
+        "9"
+       ],
+       [
+        "API design: REST, RMM, verbs, versioning",
+        "[API design](topic:platform/03-api-design-v2-2)",
+        "[Q1 c](paper#q1c)",
+        "6"
+       ],
+       [
+        "Logical architecture: packaging, deployment, trust boundaries",
+        "[Method](topic:architecting/03-architect-the-solution-architecture-m), [Secure architecture](topic:architecting/04-design-secure-architecture-v4-7)",
+        "[Q3 c](paper#q3c)",
+        "6"
+       ],
+       [
+        "Data scaling: replication, sharding, CQRS, load levelling",
+        "[Data management](topic:platform/06-data-management-v2-1), [Cloud persistence](topic:cloud-native/04-cloud-persistence-september-2026), [Cloud patterns](topic:cloud-native/10-appendix-cloud-patterns-and-practices)",
+        "[Q3 d](paper#q3d)",
+        "6"
+       ],
+       [
+        "Quality attributes, NFR priority and metrics",
+        "[Intro to solution architecture](topic:architecting/01-introduction-to-solution-architecture), [Platform management](topic:platform/05-platform-management-v2-1), [Performance](topic:architecting/06-design-for-performance-in-architectur)",
+        "[Q1 d](paper#q1d), [Q1 e](paper#q1e)",
+        "6"
+       ],
+       [
+        "Front-end archetypes (PWA vs native) and IoT",
+        "[Architecture styles](topic:cloud-native/06-application-architecture-styles-septe)",
+        "[Q2 b](paper#q2b)",
+        "3"
+       ],
+       [
+        "Performance testing and measurement",
+        "[Performance](topic:architecting/06-design-for-performance-in-architectur), [Capacity planning](topic:architecting/07-perform-capacity-planning-for-archite)",
+        "[Q1 a.i](paper#q1a-i)",
+        "2"
+       ],
+       [
+        "Communication styles: queues vs event streams",
+        "[Assets](topic:architecting/02-architect-the-solution-architecture-a), [Architecture styles](topic:cloud-native/06-application-architecture-styles-septe)",
+        "[Q1 a.ii](paper#q1a-ii)",
+        "2"
+       ]
+      ]
+     }
+    },
+    "Roughly, a third of the marks each come from Architecting, Platform Engineering and Cloud Native. The sections mix courses on purpose: Q3 d, for example, is a data-scaling question (Platform, Cloud Native) inside the Architecting section. Expect the real paper to rotate the topics within each area, for example availability arithmetic or capacity sizing instead of write scaling, but to keep these areas and question shapes. The mock papers rotate them the same way."
+   ]
+  },
+  {
+   "id": "case-study",
+   "title": "How the paper uses the case study",
+   "blocks": [
+    "The case study is not background reading. It is the answer key you have to argue from. Each kind of content in it has a job:",
+    {
+     "table": {
+      "columns": [
+       "Case content",
+       "What the paper does with it",
+       "What to prepare"
+      ],
+      "rows": [
+       [
+        "Use cases and phases (§1–2)",
+        "Supplies the behaviour an API, a packaging model or a Phase 2 extension must support",
+        "Note which use cases are interactive (a user waits), which are background, and which arrive in Phase 2"
+       ],
+       [
+        "NFR numbers (§4)",
+        "The ammunition for justifying choices: 100,000 voters, < 3 s for 90%, 1 and 3 minutes, a 5-minute window",
+        "List every number with its unit and the use case it belongs to. Do the arithmetic once (per second, per minute) before the exam"
+       ],
+       [
+        "Security and compliance (§5)",
+        "Seeds trust-boundary critiques: what may run on a device, who may see what",
+        "Mark every ‘must not’ and every data-protection rule"
+       ],
+       [
+        "Initial architecture (§6)",
+        "The baseline that Section B asks you to transform, and Section C to evaluate",
+        "Note what each tier and location may host, and what is missing (gateways, queues, local storage)"
+       ],
+       [
+        "Domain model (§7)",
+        "The source of the ‘issue → cause → fix’ questions",
+        "Mark associations that cross service boundaries, entities two services write, oversized aggregates, type hierarchies that hard-code variation, and data stored far from the service that needs it"
+       ],
+       [
+        "Packaging and deployment model (§8)",
+        "Explicitly ‘potentially erroneous’: Section C asks you to find two bad decisions",
+        "Check what is deployed to untrusted devices, which data access subsystem manifests which entity, cross-service data access, and missing elements"
+       ]
+      ]
+     }
+    },
+    {
+     "note": "Open-book tip: annotate your printed case study before the exam. Most of the marks for b.i, b.ii and Q3 c come from naming specific entities and lines in the figures. Having them marked saves minutes per question."
+    }
+   ]
+  },
+  {
+   "id": "marks",
+   "title": "How marks seem to be allocated",
+   "blocks": [
+    "Inferred from the marks printed on each part and what each part asks for:",
+    {
+     "table": {
+      "columns": [
+       "Marks on the part",
+       "What probably earns them",
+       "Rough length"
+      ],
+      "rows": [
+       [
+        "2",
+        "Exactly what is asked: one reason plus one proposal (a.i), two reasons (a.ii), or a verdict plus one justification tied to the case (d)",
+        "3–5 sentences"
+       ],
+       [
+        "3",
+        "A decision, the trade-off, and the knock-on effects (Q2 b)",
+        "One paragraph each for choice and implications"
+       ],
+       [
+        "4",
+        "Three or four separate points: cause + fix + drawback, or verdict + one rebuttal per claimed property + a better alternative (e)",
+        "About half a page"
+       ],
+       [
+        "5",
+        "Cause (1–2, naming entities in the figure) + revised model (about 2) + drawback (1)",
+        "Half a page plus a small sketch or list of changed entities"
+       ],
+       [
+        "6",
+        "Three sub-asks of about 2 each (Q1 c), or two findings of about 3 each (Q3 c: decision, consequence, correction), or plan + side effects (Q3 d: about 4 + 2)",
+        "A table or diagram plus short paragraphs"
+       ],
+       [
+        "10",
+        "Split across i–iv: the diagram and components carry the most (about 3–4), the other sub-asks about 2 each",
+        "One diagram plus four short paragraphs"
+       ]
+      ]
+     }
+    },
+    {
+     "ul": [
+      "**A verdict alone scores little.** ‘Disagree’ is worth nothing without the reason *in this case*.",
+      "**Repetition doesn't score.** Two reasons that are the same reason in different words count once.",
+      "**‘If any’ still expects an answer.** ‘Suggest the major drawback(s), if any’: every countermeasure in these papers has a cost. Name it.",
+      "**Asked for one, give one good one.** ‘Provide one possible reason’: a second weaker reason doesn't add marks and can dilute the first.",
+      "**Diagrams count when asked for.** Q2 a i asks for a diagram, and the hint in Q3 c invites one. A neat labelled sketch scores more efficiently than paragraphs."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "time",
+   "title": "Budgeting your time",
+   "blocks": [
+    "The sample paper does not state its duration. Work from marks: **minutes per mark = (paper minutes − 10 min to read the case) ÷ 50**. For a 2-hour paper that is about 2.2 min per mark: about 4–5 minutes for a 2-mark part, 13 for a 6-mark part and 22 for Q2 a.",
+    {
+     "ul": [
+      "Read the case study first, with the annotation checklist above, if you haven't already done so before the exam.",
+      "Do Section C's figure critique early if diagrams are your strength. It is 6 marks of mostly spotting.",
+      "Don't let Q2 a (10 marks) eat more than its share: draw the diagram first, then write i–iv as short labelled paragraphs.",
+      "Open book is a trap for time: look up only what you have already located. The topic tags on each question point to the right page."
+     ]
+    }
+   ]
+  },
+  {
+   "id": "answer-craft",
+   "title": "Writing answers that score",
+   "after": true,
+   "blocks": [
+    {
+     "ol": [
+      "**Lead with the verdict or decision** in the first sentence: agree or disagree, A or B, the cause.",
+      "**Tie every reason to the case:** a number, an actor, an entity name or a figure element. ‘100,000 voters in 5 minutes is about 333 writes/s’ beats ‘high load’.",
+      "**Name the mechanism,** not just the technology: ‘replayable ordered log’ rather than ‘use streaming’; ‘aggregate boundary’ rather than ‘split the class’.",
+      "**State the cost:** what the fix or choice gives up, and what you would monitor.",
+      "**Stay vendor-neutral:** ‘managed Kubernetes’, ‘object store’, ‘event streaming platform’. Product names earn nothing and can sound like recall.",
+      "**Use small structures:** a corrected table row, three labelled boxes and arrows, or a numbered plan. They are faster to write and easier to mark."
+     ]
+    },
+    {
+     "code": "Verdict:   <decision>.\nBecause:   <mechanism> — in this case <number / entity / constraint>.\nTrade-off: <what it costs> — watch <metric>."
+    }
+   ]
+  },
+  {
+   "id": "practise",
+   "title": "How to use the mock papers",
+   "after": true,
+   "blocks": [
+    {
+     "ol": [
+      "Sit one mock **timed**, closed to the model answers, with the case study printed or open in a second tab.",
+      "Mark yourself against the **marking points**: one point per distinct justified idea, as in the tables above.",
+      "Note which **pattern** cost you marks. Each pattern card above lists the same pattern in all five mocks for targeted practice.",
+      "Use the **topic tags** on the questions you missed to reread just those sections, then try the next mock."
+     ]
+    }
+   ]
+  }
+ ],
+ "patterns_intro": [
+  "Every part of the sample paper fits one of seven shapes. The cards below show where each appears, what the examiner is really checking, how the marks seem to split and how to structure your answer. Every mock paper uses the same shapes in the same places, so the practice links work as targeted drills."
+ ],
+ "patterns": [
+  {
+   "id": "defend",
+   "name": "Defend a choice against an alternative",
+   "looks_like": "‘Someone chose X. You recommend Y instead. Provide two reasons.’",
+   "seen": "Sample [Q1 a.ii](swe5001-sample#q1a-ii): message queue vs event streaming for results that must be ‘deterministic and repeatable’ within 1 and 3 minutes.",
+   "tests": "Whether you know the **property that separates X from Y** and can connect it to the requirement words in the question. The answer (Y) is given to you, so the marks are for the discriminating property, not for praising Y.",
+   "marks": "About 1 per reason, if the reason is (a) a real difference between X and Y and (b) linked to a stated requirement. Two reasons that both amount to ‘faster’ probably score 1.",
+   "how": [
+    {
+     "ol": [
+      "Underline the requirement words and numbers (deterministic, repeatable, 1 minute, 100,000).",
+      "For each, find the property where Y beats X (replay, ordering, fan-out, partitioned throughput, locality).",
+      "Write: property → why X lacks it → how that meets the requirement.",
+      "Optionally, one clause on Y's cost, to show judgement."
+     ]
+    }
+   ],
+   "template": "Y provides <property>, which X lacks because <mechanism>.\nThat matters here because <requirement + number from the case>.",
+   "trap": "Listing generic benefits of Y, arguing for a third option, or ignoring the requirement words the question hands you.",
+   "practice": "Q1 a.ii in every mock: [1](mock-1-parcelpath#q1a-ii) · [2](mock-2-carelink#q1a-ii) · [3](mock-3-chargegrid#q1a-ii) · [4](mock-4-hawkerhub#q1a-ii) · [5](mock-5-claimsure#q1a-ii)"
+  },
+  {
+   "id": "agree",
+   "name": "Agree or disagree with a teammate",
+   "looks_like": "‘A team member suggests / argues that … Do you agree? If so, why? If not, what are your reasons?’",
+   "seen": "Sample [Q1 d](swe5001-sample#q1d): usability as the most crucial NFR ‘because of the high volume of voters’. Sample [Q1 e](swe5001-sample#q1e): daily number of voters as a metric of scalability and usability.",
+   "tests": "Spotting a **category error**: the proposal measures or prioritises the wrong thing. Volume is not scalability; usability does not address load; a count is not a quality. The expected verdict is usually ‘disagree’ or ‘partly’. The marks are for explaining what the proposal confuses and what would be right.",
+   "marks": "About 1 for the verdict with its core reason. The rest for rebutting each property the proposal claims (Q1 e claims two, so two rebuttals) and for the better alternative.",
+   "how": [
+    {
+     "ol": [
+      "Restate the proposal's logic in one line: X shows Y because Z.",
+      "Test it: does X actually vary with Y? Find a counter-example in the case.",
+      "Concede what is true (the metric is still useful for something).",
+      "Propose what does show Y, using the case's numbers."
+     ]
+    }
+   ],
+   "template": "Disagree. <X> measures <what it really measures>, not <claimed property>: <counter-example>.\n<Claimed property> is shown by <better metric or NFR>, e.g. <case numbers>.\n<X> is still useful for <its real use>.",
+   "trap": "Agreeing because ‘a high number means it scales’; rebutting only one of two claimed properties; giving no alternative.",
+   "practice": "Q1 d and e in every mock: [1d](mock-1-parcelpath#q1d) [1e](mock-1-parcelpath#q1e) · [2d](mock-2-carelink#q1d) [2e](mock-2-carelink#q1e) · [3d](mock-3-chargegrid#q1d) [3e](mock-3-chargegrid#q1e) · [4d](mock-4-hawkerhub#q1d) [4e](mock-4-hawkerhub#q1e) · [5d](mock-5-claimsure#q1d) [5e](mock-5-claimsure#q1e)"
+  },
+  {
+   "id": "diagnose",
+   "name": "Diagnose an observation",
+   "looks_like": "‘Testers or operators observed <symptom>. Provide one possible reason, and propose a more reliable way or a fix.’",
+   "seen": "Sample [Q1 a.i](swe5001-sample#q1a-i): Postman test results ‘varied and indeterministic’ for a 100,000-voter, 30-second test.",
+   "tests": "Reasoning from a **symptom to its mechanism** with performance and reliability concepts: load generation, percentiles, bottlenecks and utilisation, queueing, retries, rate limits, coupling to a slow dependency.",
+   "marks": "About 1 for a plausible cause that explains *this* symptom, and about 1 for a fix that removes that cause, with specifics.",
+   "how": [
+    {
+     "ol": [
+      "Name the mechanism that produces exactly this symptom: why it varies, why it collapses at N, why it duplicates.",
+      "Show why it invalidates the measurement or causes the behaviour.",
+      "Fix the mechanism, not the symptom, with parameters (ramp profile, percentile, idempotency key, backoff)."
+     ]
+    }
+   ],
+   "template": "Likely cause: <mechanism>, which produces <symptom> because <why>.\nInstead: <method or fix> with <specific parameters from the case>, measured by <the stated criterion>.",
+   "trap": "Several vague causes, a fix unrelated to the cause you named, or ‘use a better tool’.",
+   "practice": "Q1 a.i in every mock: [1](mock-1-parcelpath#q1a-i) · [2](mock-2-carelink#q1a-i) · [3](mock-3-chargegrid#q1a-i) · [4](mock-4-hawkerhub#q1a-i) · [5](mock-5-claimsure#q1a-i)"
+  },
+  {
+   "id": "fix-cost",
+   "name": "Issue → cause → countermeasure → drawback",
+   "looks_like": "‘For each issue, identify the most likely cause, propose an effective countermeasure (by revising the domain model) and suggest the major drawback(s) of the countermeasure, if any.’",
+   "seen": "Sample [Q1 b.i](swe5001-sample#q1b-i): NotificationManager cannot be reused. Sample [Q1 b.ii](swe5001-sample#q1b-ii): Observers cannot view updated results promptly. Both refer to the domain model in [§7](swe5001-sample-case#s7).",
+   "tests": "Reading a domain model as an architect: **ownership** (who writes what), **coupling** across bounded contexts, **aggregate boundaries**, hard-coded variation, and data that lives far from the service that needs it. And knowing that every fix costs something.",
+   "marks": "For 4–5 marks: cause 1–2 (point at specific entities and associations), revised model about 2 (which entities move, which associations go, what replaces them: events, read models, snapshots, generic entities), drawback 1.",
+   "how": [
+    {
+     "ol": [
+      "Trace the symptom in the figure: name the classes and lines responsible.",
+      "Name the principle broken: high cohesion and low coupling, aggregate as a consistency boundary, data owned by its context, defer binding.",
+      "Revise the model: list or sketch the new entities, associations and the mechanism (domain events, CQRS read model, value-object snapshot, anti-corruption layer).",
+      "Give a real drawback of *your* fix: eventual consistency, duplication, more infrastructure, migration, governance."
+     ]
+    }
+   ],
+   "template": "Cause: <entity> in <service> is associated with <entities> owned by <services>, so <consequence>.\nCountermeasure: <move / replace / introduce>, giving <revised associations>; <mechanism>.\nDrawback: <cost>.",
+   "trap": "Fixing the code instead of the model, answering ‘no drawback’, or answering without naming a single entity from the figure.",
+   "practice": "Q1 b.i and b.ii in every mock: [1](mock-1-parcelpath#q1b) · [2](mock-2-carelink#q1b) · [3](mock-3-chargegrid#q1b) · [4](mock-4-hawkerhub#q1b) · [5](mock-5-claimsure#q1b)"
+  },
+  {
+   "id": "critique",
+   "name": "Critique and correct an artefact",
+   "looks_like": "An API table, a packaging or deployment model, a diagram: ‘Does it comply? Why not? Reconstruct it’ or ‘Identify two undesirable architectural decisions and propose corrective actions’.",
+   "seen": "Sample [Q1 c](swe5001-sample#q1c): two APIs against RMM Level 2, versioning and corrected table. Sample [Q3 c](swe5001-sample#q3c): the logical packaging cum deployment model of [§8](swe5001-sample-case#s8).",
+   "tests": "Applying a **standard** (REST and RMM, layering, trust boundaries, service ownership, least privilege) systematically to an artefact, and producing a **corrected artefact**.",
+   "marks": "About 1 per defect with its reason, and the larger share for the corrected artefact (the table rows, the redrawn fragment). In Q3 c, about 3 per decision: decision, consequence, correction.",
+   "how": [
+    {
+     "ol": [
+      "Check systematically. APIs: resource naming, verbs (safe and idempotent), status codes, versioning, inputs and outputs (missing or redundant), identity from the token, data minimisation. Packaging: what runs on untrusted devices, which data access owns which entity, cross-service access, missing elements.",
+      "For each defect, say what goes wrong *in this case* (caching or retries trigger state changes, tampering, coupling, data leaks).",
+      "Produce the corrected artefact: a table, or a partial diagram."
+     ]
+    }
+   ],
+   "template": "Decision: <what is in the figure>.\nWhy undesirable: <consequence in this case>.\nCorrection: <what moves or changes>, because <principle>.",
+   "trap": "Describing a fix in words when a table or diagram was asked for; listing defects without corrections; picking two findings that are really the same.",
+   "practice": "Q1 c and Q3 a in every mock: [1c](mock-1-parcelpath#q1c) [1 Q3a](mock-1-parcelpath#q3a) · [2c](mock-2-carelink#q1c) [2 Q3a](mock-2-carelink#q3a) · [3c](mock-3-chargegrid#q1c) [3 Q3a](mock-3-chargegrid#q3a) · [4c](mock-4-hawkerhub#q1c) [4 Q3a](mock-4-hawkerhub#q3a) · [5c](mock-5-claimsure#q1c) [5 Q3a](mock-5-claimsure#q3a)"
+  },
+  {
+   "id": "a-or-b",
+   "name": "A or B, with knock-on effects",
+   "looks_like": "‘Would you use A or B? What are the design implications on <the rest of the system>?’",
+   "seen": "Sample [Q2 b](swe5001-sample#q2b): a native client or a progressive web app for voters, given native local storage and future IoT voting booths, and what that means for the backend.",
+   "tests": "Deciding from the case's **hard constraints** (native storage, IoT devices, offline, data residency) and following the decision through to its **consequences** elsewhere.",
+   "marks": "About 1 for the decision tied to a constraint, 1 for the trade-off, and 1 for the knock-on effects.",
+   "how": [
+    {
+     "ol": [
+      "Find the deciding constraint in the case.",
+      "Choose, and say what you give up.",
+      "List concrete consequences for the other side: API versioning or BFFs, sync and idempotency, device identity, ingestion, data stores."
+     ]
+    }
+   ],
+   "template": "<A>, because <constraint from the case>. We give up <cost>.\nFor <the other side> this means: <1>, <2>, <3>.",
+   "trap": "Fence-sitting (‘both have pros and cons’) with no decision, or a decision with no implications.",
+   "practice": "Q2 b in every mock: [1](mock-1-parcelpath#q2b) · [2](mock-2-carelink#q2b) · [3](mock-3-chargegrid#q2b) · [4](mock-4-hawkerhub#q2b) · [5](mock-5-claimsure#q2b)"
+  },
+  {
+   "id": "design",
+   "name": "Design under constraints, then side effects",
+   "looks_like": "‘Transform this into a reference architecture; how do services communicate; which service needs state; describe the deployment.’ Or: ‘Propose a comprehensive plan for <requirement with numbers>, and identify at least two side effects to monitor.’",
+   "seen": "Sample [Q2 a](swe5001-sample#q2a): monolith to hybrid reference architecture (10 marks, four sub-asks). Sample [Q3 d](swe5001-sample#q3d): scale database writes for 100,000 votes in 5 minutes, then the side effects.",
+   "tests": "Synthesis: **quantify** the problem from the numbers, find the **bottleneck**, choose a coherent set of tactics, show them in a **diagram**, and anticipate what your design **breaks**.",
+   "marks": "Spread across the sub-asks: diagram and components about 3–4, communication about 2, state about 2, deployment about 2. For a plan: steps about 3–4, and about 1 per relevant side effect.",
+   "how": [
+    {
+     "ol": [
+      "Quantify: per second, per minute, at peak (100,000 / 300 s ≈ 333 writes/s).",
+      "Name the bottleneck and why the current design hits it.",
+      "Pick tactics in layers: decouple (queue or stream), partition, separate reads (cache, CQRS), tune, then scale.",
+      "Say what changes in software and in infrastructure.",
+      "Side effects: what each tactic costs, and the metric that would reveal it (lag, duplicates, hot shards, cost)."
+     ]
+    }
+   ],
+   "template": "Load: <numbers>. Bottleneck: <x> because <y>.\nPlan: 1 … 2 … 3 …   Changes: software <…>; infrastructure <…>.\nWatch: <side effect> → <metric>; <side effect> → <metric>.",
+   "trap": "A list of technologies unconnected to the bottleneck, side effects your design doesn't actually cause, or vendor product names in place of mechanisms.",
+   "practice": "Q2 a and Q3 b in every mock: [1](mock-1-parcelpath#q2a) [1 Q3b](mock-1-parcelpath#q3b) · [2](mock-2-carelink#q2a) [2 Q3b](mock-2-carelink#q3b) · [3](mock-3-chargegrid#q2a) [3 Q3b](mock-3-chargegrid#q3b) · [4](mock-4-hawkerhub#q2a) [4 Q3b](mock-4-hawkerhub#q3b) · [5](mock-5-claimsure#q2a) [5 Q3b](mock-5-claimsure#q3b)"
+  }
+ ],
+ "figures": {
+  "map": {
+   "title": "How the sample paper draws on its case study",
+   "caption": "Each part of the paper, coloured by question pattern, and the part of Appendix A it is built on.",
+   "size": [
+    1000,
+    600
+   ],
+   "legend": [
+    {
+     "tone": 2,
+     "label": "Diagnose"
+    },
+    {
+     "tone": 0,
+     "label": "Defend a choice"
+    },
+    {
+     "tone": 3,
+     "label": "Issue → cause → fix → cost"
+    },
+    {
+     "tone": 5,
+     "label": "Critique an artefact"
+    },
+    {
+     "tone": 1,
+     "label": "Agree / disagree"
+    },
+    {
+     "tone": 4,
+     "label": "A or B"
+    },
+    {
+     "accent": true,
+     "label": "Design under constraints"
+    }
+   ],
+   "groups": [
+    {
+     "id": "case",
+     "kind": "package",
+     "stereo": "appendix",
+     "label": "Case study",
+     "tone": 3,
+     "x": 15,
+     "y": 15,
+     "w": 250,
+     "h": 570
+    },
+    {
+     "id": "A",
+     "kind": "package",
+     "stereo": "section",
+     "label": "Section A · 25 marks",
+     "tone": 0,
+     "x": 330,
+     "y": 15,
+     "w": 655,
+     "h": 290
+    },
+    {
+     "id": "B",
+     "kind": "package",
+     "stereo": "section",
+     "label": "Section B · 13 marks",
+     "tone": 4,
+     "x": 330,
+     "y": 320,
+     "w": 655,
+     "h": 130
+    },
+    {
+     "id": "C",
+     "kind": "package",
+     "stereo": "section",
+     "label": "Section C · 12 marks",
+     "tone": 1,
+     "x": 330,
+     "y": 465,
+     "w": 655,
+     "h": 120
+    }
+   ],
+   "nodes": [
+    {
+     "id": "c12",
+     "kind": "box",
+     "tone": null,
+     "x": 30,
+     "y": 75,
+     "w": 220,
+     "h": 56,
+     "label": "§1–2 Use cases, phases"
+    },
+    {
+     "id": "c4",
+     "kind": "box",
+     "tone": null,
+     "x": 30,
+     "y": 160,
+     "w": 220,
+     "h": 56,
+     "label": "§4 NFR numbers"
+    },
+    {
+     "id": "c6",
+     "kind": "box",
+     "tone": null,
+     "x": 30,
+     "y": 245,
+     "w": 220,
+     "h": 56,
+     "label": "§6 Initial architecture"
+    },
+    {
+     "id": "c7",
+     "kind": "box",
+     "tone": null,
+     "x": 30,
+     "y": 330,
+     "w": 220,
+     "h": 56,
+     "label": "§7 Domain model"
+    },
+    {
+     "id": "c8",
+     "kind": "box",
+     "tone": null,
+     "x": 30,
+     "y": 415,
+     "w": 220,
+     "h": 56,
+     "label": "§8 Packaging model"
+    },
+    {
+     "id": "cq",
+     "kind": "box",
+     "tone": null,
+     "x": 30,
+     "y": 500,
+     "w": 220,
+     "h": 64,
+     "label": "In the question",
+     "sub": "API table, MVP diagram"
+    },
+    {
+     "id": "ai",
+     "kind": "box",
+     "tone": 2,
+     "x": 345,
+     "y": 75,
+     "w": 145,
+     "h": 66,
+     "label": "Q1 a.i · 2",
+     "sub": "Postman varies"
+    },
+    {
+     "id": "aii",
+     "kind": "box",
+     "tone": 0,
+     "x": 505,
+     "y": 75,
+     "w": 145,
+     "h": 66,
+     "label": "Q1 a.ii · 2",
+     "sub": "queue vs stream"
+    },
+    {
+     "id": "bi",
+     "kind": "box",
+     "tone": 3,
+     "x": 665,
+     "y": 75,
+     "w": 145,
+     "h": 66,
+     "label": "Q1 b.i · 5",
+     "sub": "reusable notifs"
+    },
+    {
+     "id": "bii",
+     "kind": "box",
+     "tone": 3,
+     "x": 825,
+     "y": 75,
+     "w": 145,
+     "h": 66,
+     "label": "Q1 b.ii · 4",
+     "sub": "slow results"
+    },
+    {
+     "id": "c",
+     "kind": "box",
+     "tone": 5,
+     "x": 345,
+     "y": 200,
+     "w": 145,
+     "h": 66,
+     "label": "Q1 c · 6",
+     "sub": "API vs RMM"
+    },
+    {
+     "id": "d",
+     "kind": "box",
+     "tone": 1,
+     "x": 505,
+     "y": 200,
+     "w": 145,
+     "h": 66,
+     "label": "Q1 d · 2",
+     "sub": "usability first?"
+    },
+    {
+     "id": "e",
+     "kind": "box",
+     "tone": 1,
+     "x": 665,
+     "y": 200,
+     "w": 145,
+     "h": 66,
+     "label": "Q1 e · 4",
+     "sub": "daily voters metric"
+    },
+    {
+     "id": "q2a",
+     "kind": "box",
+     "accent": true,
+     "x": 345,
+     "y": 372,
+     "w": 300,
+     "h": 60,
+     "label": "Q2 a · 10",
+     "sub": "monolith → hybrid reference architecture"
+    },
+    {
+     "id": "q2b",
+     "kind": "box",
+     "tone": 4,
+     "x": 665,
+     "y": 372,
+     "w": 300,
+     "h": 60,
+     "label": "Q2 b · 3",
+     "sub": "native client vs PWA"
+    },
+    {
+     "id": "q3c",
+     "kind": "box",
+     "tone": 5,
+     "x": 345,
+     "y": 512,
+     "w": 300,
+     "h": 60,
+     "label": "Q3 c · 6",
+     "sub": "two bad packaging decisions"
+    },
+    {
+     "id": "q3d",
+     "kind": "box",
+     "accent": true,
+     "x": 665,
+     "y": 512,
+     "w": 300,
+     "h": 60,
+     "label": "Q3 d · 6",
+     "sub": "scale DB writes + side effects"
+    }
+   ],
+   "edges": [
+    {
+     "from": "c4",
+     "to": "ai",
+     "style": "dep"
+    },
+    {
+     "from": "c4",
+     "to": "aii",
+     "style": "dep"
+    },
+    {
+     "from": "c7",
+     "to": "bi",
+     "style": "dep"
+    },
+    {
+     "from": "c7",
+     "to": "bii",
+     "style": "dep"
+    },
+    {
+     "from": "cq",
+     "to": "c",
+     "style": "dep"
+    },
+    {
+     "from": "c4",
+     "to": "d",
+     "style": "dep"
+    },
+    {
+     "from": "c4",
+     "to": "e",
+     "style": "dep"
+    },
+    {
+     "from": "cq",
+     "to": "q2a",
+     "style": "dep"
+    },
+    {
+     "from": "c12",
+     "to": "q2a",
+     "style": "dep"
+    },
+    {
+     "from": "c6",
+     "to": "q2b",
+     "style": "dep"
+    },
+    {
+     "from": "c7",
+     "to": "q3c",
+     "style": "dep"
+    },
+    {
+     "from": "c8",
+     "to": "q3c",
+     "style": "dep"
+    },
+    {
+     "from": "c4",
+     "to": "q3d",
+     "style": "dep"
+    }
+   ]
+  }
+ }
+}

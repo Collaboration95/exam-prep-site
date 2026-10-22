@@ -1,0 +1,14 @@
+{
+ "title": "Exams",
+ "analysis": "exams/analysis.json",
+ "papers": [
+  "exams/swe5001-sample.json"
+ ],
+ "mocks": [
+  "exams/mock-1-parcelpath.json",
+  "exams/mock-2-carelink.json",
+  "exams/mock-3-chargegrid.json",
+  "exams/mock-4-hawkerhub.json",
+  "exams/mock-5-claimsure.json"
+ ]
+}

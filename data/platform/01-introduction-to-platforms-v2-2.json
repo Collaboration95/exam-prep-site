@@ -1,0 +1,637 @@
+{
+ "key": "01-introduction-to-platforms-v2-2",
+ "title": "Introduction to Platforms",
+ "pages": 52,
+ "minutes": 26,
+ "overview": "A platform provides shared services and interfaces on which applications and complementary products are built. This topic connects the internal developer platform (IDP), its architecture and adoption journey to platform thinking: enabling interactions between producers and consumers. Practise explaining both the developer experience and the engineering work behind a platform business.",
+ "big_ideas": [
+  "A platform is a foundation of shared services and interfaces on which outside (and inside) parties build complementary products; you work ON a platform, USE a framework and CALL a library.",
+  "Platform engineering designs, builds and operates internal platforms so application teams get **self-service**, lower **cognitive load** and no ticket-ops.",
+  "Platform Eng, DevOps and SRE are complementary: DevOps is culture and CI/CD, SRE is reliability (SLOs, error budgets, toil), platform engineering builds the internal product (IDP, golden paths).",
+  "The IDP reference model has planes: Developer Control, Integration and Delivery, Resource, Monitoring and Logging (observability), Security, plus a Data and Model plane for AI/ML.",
+  "Build a platform like a product: start with an MVP, backend (CI/CD + IaC) before portal, measure from day one (DORA metrics, developer NPS).",
+  "Platform thinking: think **roles not markets**. A platform enables interactions between Producers and Consumers around a Seed; technology is only an enabler.",
+  "Three components make a platform business work: **Magnet** (attract and retain both roles), **Toolbox** (APIs and tools to produce and consume), **Matchmaker** (accurate matching, curation, trust, data analytics).",
+  "Platforms enable business ecosystems of externally produced complements; each business aspect maps to an engineering aspect (e.g. Toolbox = SDK and API design, Matchmaker = curation and algorithms)."
+ ],
+ "sections": [
+  {
+   "id": "what-is-a-platform",
+   "title": "What is a software platform?",
+   "slides": [
+    3,
+    6
+   ],
+   "summary": "Two complementary definitions of a platform (foundation for third-party complements; a set of services applications are built and run on) and the kinds of platform you already use.",
+   "notes": [
+    "**Business view:** a software platform is an extensible foundation on which others build complementary products or services. It supplies shared core functionality and interfaces for internal applications and external complements.",
+    "**Engineering view:** a platform provides services on which applications are built and run. Because it combines reusable application capabilities with hosting infrastructure, it must handle discovery, resource coordination, orchestration and usage reporting.",
+    "**Platform vs application structure:** a platform packages reusable services and domain components behind interfaces, and several applications sit on top of the same platform and share them. An application, by contrast, is one product built for its own users.",
+    "**Platforms come in many forms:** services (Airbnb, Uber, Grab), marketplace (eBay, Amazon, Carousell), payment (PayPal, Stripe, PayNow), social networking, communication (WhatsApp, WeChat), content (YouTube, Kindle) and software development platforms (Linux, Android). The common thread is that outside parties build or exchange value on top of a shared foundation."
+   ],
+   "terms": [
+    {
+     "term": "Software platform",
+     "def": "Extensible software foundation providing shared core services and interfaces on which others build complementary products."
+    },
+    {
+     "term": "Platform engineering",
+     "def": "Designing, building and operating platforms for application development teams to leverage."
+    }
+   ],
+   "check": [
+    {
+     "q": "A bank's account and payment services are used only by its own mobile app; no outside party can build on them. A colleague calls this a platform. Do you agree?",
+     "a": "Only partly. It fits the engineering definition, a set of services that applications are built and run on, but not the business one: no outside parties build complementary products through its interfaces, so it has no ecosystem yet. The lecture expects both internal consumption and external complements. To get there the bank would need published, extensible interfaces that partners can build against."
+    },
+    {
+     "q": "A company hosts its reusable services on a shared cluster but leaves service discovery, resource coordination and usage reporting to each application team. What is missing compared with the lecture's definition of a modern platform, and why does it matter?",
+     "a": "A modern platform is both an application architecture and the infrastructure that hosts it, so it must solve discovery, resource coordination, orchestration and usage reporting itself. Left to each team, these concerns get solved differently and repeatedly, and the company is sharing components rather than offering a platform. Taking them on makes the platform team responsible for infrastructure, which is the work platform engineering exists to do."
+    }
+   ]
+  },
+  {
+   "id": "characteristics-benefits",
+   "title": "Characteristics and benefits of a platform",
+   "slides": [
+    7,
+    13
+   ],
+   "summary": "What makes something a good platform and what an organisation gains by building one, illustrated with Google Pay.",
+   "notes": [
+    "**Characteristics of a platform (the checklist):** composable (discrete services and components usable independently); quick and cheap to start using (easy on-ramp: quick-start guides, documentation, code samples); rich user community for sharing; promotes interaction among partners; secure and compliant by default; extensible and enables business agility; stays up to date and data-driven, with a feedback loop from collecting and analysing data.",
+    "**Benefits of building a platform:** interoperability with disparate systems; intra-platform change can move at a different pace from inter-platform change without disrupting each other; quicker response to opportunities through new ways of working; agile governance and risk management that still protects stakeholders; teams, skills and culture re-imagined; data available for decision making; and a service model that fits into the value chain instead of being strictly sequential.",
+    "**Google Pay in the lecture example:** agility (easy to embed payments in e-commerce and mobile apps), interaction among partners (merchants and buyers), rich community (high Android adoption), composable and quick to start (setup guides, tutorials, test card suite), data-driven (AI analysis of spending, ML to spot phishing and fraud), secure and compliant (virtual account number instead of the real card number, encrypted exchange, privacy controls, PCI compliance).",
+    "**Value-chain point:** Google Pay evolved from merchant-to-buyer card payment into peer-to-peer payment, PayNow transfers, GrabPay top-ups, expense management and promo offers. A platform lets new services slot into the value chain rather than being a fixed linear process."
+   ],
+   "terms": [
+    {
+     "term": "Composable",
+     "def": "Built from discrete services and components that can be used independently."
+    },
+    {
+     "term": "On-ramp",
+     "def": "Quick-start guides, documentation and code samples that make a platform easy and cheap to begin using."
+    }
+   ],
+   "check": [
+    {
+     "q": "A payments API is PCI-compliant and encrypts every transaction, but partners need three weeks of contracts and manual key exchange before their first test call, and there is no sandbox. Which platform characteristic is weakest, and what would you change?",
+     "a": "**Quick to start using** is weakest: the on-ramp is slow and costly, which discourages producers and consumers from joining. Add quick-start guides, code samples, self-service test credentials and a test card suite, as Google Pay does. Security and compliance should stay the default, so the sandbox must not expose real card data."
+    },
+    {
+     "q": "A platform team wants to replace its internal database and messaging stack. Dozens of partner apps call its published APIs. Which platform benefit lets the team do this without a partner release, and what would break it?",
+     "a": "The separation of intra-platform from inter-platform change: stable interfaces let the inside evolve at its own pace without overly impacting the outside. It breaks if the change leaks through the interface, for example by altering response fields or meanings. Then the team needs a new API version and a migration period for partners."
+    },
+    {
+     "q": "A platform logs every transaction, but nobody analyses the logs and its service catalogue has not changed in two years. Which characteristic is it failing, and why is collecting data not enough?",
+     "a": "It is failing **stays relevant and data-driven**. That characteristic needs a feedback loop, data collected and then analysed to improve the services, as with Google Pay's analysis of spending or ML fraud detection. Logs nobody reads support no decisions, so the platform drifts away from what its users need."
+    }
+   ]
+  },
+  {
+   "id": "platform-framework-library",
+   "title": "Platform vs framework vs library",
+   "slides": [
+    14,
+    15
+   ],
+   "summary": "Three levels of reuse that are often confused, distinguished by how you relate to them.",
+   "notes": [
+    "**The one-line test:** work on a platform, structure an application with a framework, call a library. Focus on the role each plays; size or hosting alone does not define the category.",
+    "**Platform:** the environment software is designed to run in. It provides services and reusable components, lets applications extend features by consuming and exposing services to external parties, supplies the software and hardware tools needed to run an application, is typically part of a hosted service accessed by APIs, and collects data and offers analytics to monitor and improve services.",
+    "**Framework:** a reusable application skeleton with predefined functions and classes, supporting a particular architecture or design patterns. It runs in a specific environment and may be one component of a platform.",
+    "**Library:** reusable code that your application calls at the appropriate point. You stay in control of the flow."
+   ],
+   "terms": [
+    {
+     "term": "Framework",
+     "def": "Pre-defined skeleton with abstract classes that guides how an application is architected."
+    },
+    {
+     "term": "Library",
+     "def": "Reusable code your application calls where needed."
+    }
+   ],
+   "check": [
+    {
+     "q": "Your team adopts a toolkit that supplies abstract classes, dictates how the application is structured and calls your code at points it defines. A teammate calls it a library. Do you agree?",
+     "a": "No, it is a framework: a predefined skeleton that imposes a way of architecting the application and supports certain design patterns. A library is code you call from your own application at points you choose. The distinction matters because a framework shapes the whole design, so replacing it later costs far more than swapping a library."
+    },
+    {
+     "q": "An internal team announces 'we are building a platform', but its deliverable is a downloadable code skeleton that each app team installs and runs on its own servers. Is that a platform?",
+     "a": "No, it is a framework, which can be part of a platform but is not one. A platform is the environment software runs in: it provides hosted services and reusable components accessed by APIs, lets applications extend features by consuming and exposing services, and collects data for analytics. To become a platform the team would need to host and operate shared services, not just distribute code."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Platform vs framework vs library",
+     "columns": [
+      "",
+      "Platform",
+      "Framework",
+      "Library"
+     ],
+     "rows": [
+      [
+       "Your relationship",
+       "You work on it",
+       "You use it",
+       "You call it"
+      ],
+      [
+       "What it is",
+       "Environment with services and components, often a hosted service via APIs",
+       "Pre-defined skeleton with abstract classes and design-pattern guidance",
+       "Reusable code invoked at the right point"
+      ],
+      [
+       "Where it lives",
+       "Hosted services or a computing environment",
+       "Used within the application environment",
+       "Called from application code"
+      ],
+      [
+       "Examples",
+       "AWS, Azure, iOS, Android, WeChat",
+       "Spring, Django, Flask, ReactJS, Angular",
+       "jQuery, NumPy, Keras, PyTorch, Matplotlib"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "platform-engineering-discipline",
+   "title": "Platform engineering and its place beside DevOps and SRE",
+   "slides": [
+    16,
+    18
+   ],
+   "summary": "What platform engineering is, which pain points drove it, and how it complements DevOps and SRE.",
+   "notes": [
+    "**Definition:** platform engineering is the practice of designing and building toolchains and workflows that enable self-service capabilities for software engineering organisations. Its three verbs: Build (toolchains and workflows that let dev teams move faster without bottlenecks), Enable (self-service so developers do not wait on ops or tickets) and Scale (manage complexity across hundreds of teams and thousands of services consistently).",
+    "**Pain points that drove it (State of Platform Engineering survey of 281 professionals):** lack of automation and repetitive manual tasks (49%), no standardisation in DevOps setups (48%), developer cognitive overload (47%), no self-service, i.e. pure ticket ops (44%). Others cited: security and compliance gaps, slow onboarding, runaway cloud costs and IaC sprawl.",
+    "**DevOps vs SRE vs Platform Eng:** these are complementary, not replacements. DevOps is culture and practice: it bridges dev and ops, focuses on CI/CD, shared responsibility, mostly process-oriented. SRE is reliability engineering (from Google): applies software engineering to ops problems with SLOs, error budgets and toil reduction, both reactive and proactive. Platform engineering runs internal product teams: builds internal developer platforms, treats dev teams as customers, offers self-service golden paths and reduces cognitive load at scale.",
+    "**Why this matters for the course:** the deck's focus is the platform engineering role, i.e. treating the platform as a product whose customers are internal developers."
+   ],
+   "terms": [
+    {
+     "term": "Toil",
+     "def": "Repetitive manual operational work that SRE and platform automation aim to reduce."
+    },
+    {
+     "term": "SLO / error budget",
+     "def": "SRE reliability target and the allowed amount of unreliability before change must slow."
+    }
+   ],
+   "check": [
+    {
+     "q": "A company's developers wait several days for an ops ticket to be approved before they get a test database. Which pain point is this, and what is the platform engineering answer?",
+     "a": "It is ticket ops: no self-service, so developers queue on operations for routine provisioning. Platform engineering replaces the ticket with a self-service capability, a portal, CLI or workload spec that provisions the database through an automated, standardised workflow. The platform team must then own and maintain that automation as a product."
+    },
+    {
+     "q": "A CTO says: 'We already have a DevOps culture and an SRE team, so a platform team would be redundant.' Do you agree?",
+     "a": "No. The lecture presents them as complementary: DevOps is culture and CI/CD with shared responsibility, and SRE applies software engineering to reliability through SLOs, error budgets and toil reduction. Neither builds an internal developer platform that treats developers as customers and offers self-service golden paths. If the organisation has only a few teams and services, though, the scale problem a platform team solves may not exist yet."
+    },
+    {
+     "q": "Thirty application teams each maintain their own copied-and-edited pipeline scripts and infrastructure code. Which pain points does this show, and what would a platform offer?",
+     "a": "It shows no standardisation, lack of automation through repeated manual work, and developer cognitive overload, three of the top drivers in the survey. A platform would provide a golden path: a supported, opinionated pipeline and provisioning route that every team can reuse. The cost is less freedom for teams with unusual needs, so the platform team has to gather feedback and evolve the path."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "DevOps vs SRE vs Platform Engineering",
+     "columns": [
+      "",
+      "DevOps",
+      "SRE",
+      "Platform Eng"
+     ],
+     "rows": [
+      [
+       "Nature",
+       "Culture and practice",
+       "Reliability engineering",
+       "Internal product teams"
+      ],
+      [
+       "Focus",
+       "CI/CD pipelines, shared responsibility, mostly process",
+       "SLOs, error budgets, toil reduction",
+       "Internal developer platforms, self-service golden paths"
+      ],
+      [
+       "Origin or stance",
+       "Bridges dev and ops through culture",
+       "Originated at Google; applies software engineering to ops problems",
+       "Treats dev teams as customers; reduces cognitive load at scale"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "key-terminology",
+   "title": "Platform engineering vocabulary",
+   "slides": [
+    19,
+    21
+   ],
+   "summary": "The terms the course uses constantly: IDP, golden path, orchestrator, IaC, GitOps, DORA, MVPlatform and more.",
+   "notes": [
+    "**Core product terms:** IDP (Internal Developer Platform) is the entire self-service infrastructure platform built for developers, the product the platform team ships. DevEx (developer experience) is how easy, fast and pleasant developers find their work. A golden path is the paved, opinionated, supported route to build, deploy and run services, reducing decision fatigue and cognitive load. Ticket ops is the anti-pattern where devs open tickets for every infra change.",
+    "**Mechanism terms:** a Platform Orchestrator is the backend engine of an IDP that dynamically generates app and infra configs as a resource graph on every deployment. IaC (Infrastructure as Code) treats provisioning like software: version-controlled, testable, repeatable (Terraform, Crossplane, Pulumi). Score is the CNCF workload specification: platform-agnostic YAML in which developers describe what a workload needs without infra knowledge. CDE (Cloud Development Environment) is an automated, standardised dev environment in the cloud.",
+    "**Practices and measures:** GitOps keeps desired application and infrastructure configuration in Git; delivery tooling reconciles running systems with that desired state. The lecture uses four DORA metrics: deployment frequency, lead time, recovery time (MTTR) and change failure rate. MVPlatform means Minimum Viable Platform: the smallest platform delivering real value.",
+    "**Organisation:** cognitive load is the mental effort demanded of developers. Platform as a Product gives the IDP a roadmap, feedback, SLOs and an owning team. The lecture uses Team Topologies to contrast the platform team supporting developers with application teams aligned to business streams."
+   ],
+   "terms": [
+    {
+     "term": "IDP",
+     "def": "Internal Developer Platform: the self-service platform that is the platform team's product."
+    },
+    {
+     "term": "Golden path",
+     "def": "Opinionated, supported route for building, deploying and running services."
+    },
+    {
+     "term": "GitOps",
+     "def": "Versioned desired configuration in Git, with delivery tooling reconciling running systems to it."
+    },
+    {
+     "term": "DORA metrics",
+     "def": "Deployment Frequency, Lead Time, MTTR, Change Failure Rate."
+    },
+    {
+     "term": "MVPlatform",
+     "def": "Minimum Viable Platform: smallest platform that delivers real value."
+    }
+   ],
+   "check": [
+    {
+     "q": "Six months after launch, a platform team wants to prove ROI and proposes reporting the number of portal logins per week. Does that metric show the platform's value?",
+     "a": "No. Logins measure activity, not delivery performance, and they can rise simply because teams are forced onto the portal. Compare the DORA metrics (deployment frequency, lead time, MTTR, change failure rate) against the baseline measured before launch, together with developer NPS. Logins are useful only as a secondary adoption signal."
+    },
+    {
+     "q": "After a platform launch, deployment frequency rises but change failure rate also rises. Has the platform clearly improved delivery?",
+     "a": "No. Delivery is faster but less reliable, so the evidence is mixed. Check lead time and MTTR as well, and look at whether the golden path is missing tests or guardrails that teams used to apply by hand. Developer feedback shows whether the automation reduces or just moves the effort."
+    },
+    {
+     "q": "In a GitOps setup, an engineer fixes a production configuration by editing the cluster directly. What happens next, and what should they have done?",
+     "a": "Git is the single source of truth, so the CD tool keeps syncing the cluster to Git and will overwrite the manual change, or leave it as unrecorded drift. The change should go through a pull request, so it is reviewed, versioned and reproducible. GitOps trades the speed of a direct edit for auditability and repeatability."
+    }
+   ]
+  },
+  {
+   "id": "five-plane-reference",
+   "title": "IDP reference architecture: the planes",
+   "slides": [
+    22,
+    31
+   ],
+   "summary": "An IDP separates developer intent, delivery automation and running resources. Observability, security and AI/ML support apply across that path.",
+   "notes": [
+    "**The reference model is layered into planes.** The deck calls it the 5-plane model: Developer Control Plane, Integration and Delivery Plane, Resource Plane, Monitoring and Logging Plane (observability) and Security Plane. It also lists a Data and Model Management Plane, new in v2.0, for ML lifecycle support (feature engineering, experiment tracking, metadata, lineage, model registry), so in practice there are five core planes plus this AI/ML plane.",
+    "**Developer Control Plane** is what a developer touches: developer portals (Backstage, Port) for discovery, scaffolding, dashboards and docs; workload specifications (Score) saying WHAT a workload needs, not HOW; CLI tooling; declarative config (KubeVela/OAM, Helm values) that hides infra complexity. **Integration and Delivery Plane** builds and ships: CI pipeline (GitHub Actions, Jenkins, GitLab CI), image registry (Docker Hub, ECR), platform orchestrator (the intelligence layer generating resource graphs and managing progression between environments) and a CD system (ArgoCD or Flux) that syncs cluster state to Git.",
+    "**Resource Plane** is the real infrastructure: Kubernetes clusters (managed K8s dominant: EKS, AKS, GKE), databases (RDS, Cloud SQL), storage (S3, Blob, GCS), DNS and networking (service meshes such as Istio, ingress) and cloud services (queues, Pub/Sub, Redis, AI APIs). **Monitoring and Logging** (Prometheus, ELK, Grafana, OpenTelemetry, Datadog) and **Security** (Vault, AWS/Azure secret managers, OPA, Snyk) are cross-cutting: observability collects metrics, logs, traces and SLOs from every plane, and security embeds secrets, policies, RBAC, compliance and AI-agent guardrails everywhere.",
+    "**End-to-end flow:** developer (portal, IDE, CLI, CDE) submits a Score workload spec; the control plane (Backstage, workload API) passes it to the orchestrator (platform API, resource graph), which drives the resource plane (K8s, GPU, DB, cloud services) and CD/GitOps (ArgoCD, Flux) deploys to the environment, with observability, security and data/model planes active throughout.",
+    "**Government translation:** the deck maps this to Singapore agencies via SHIP-HATS, a DevSecOps maturity model with seven steps (ad hoc practice, source code management, continuous integration, artifact management, continuous delivery, continuous monitoring, continuous improvement). SHIP-HATS provides managed tooling for steps 2 to 5, with SaaS (GitLab) and self-hosted tools (SonarQube, Nexus) deploying into agencies' own AWS or Azure environments."
+   ],
+   "terms": [
+    {
+     "term": "Developer portal",
+     "def": "Self-service UI (e.g. Backstage) for service discovery, scaffolding, dashboards and docs."
+    },
+    {
+     "term": "Resource graph",
+     "def": "Dependency graph of app and infra resources generated by the orchestrator at each deployment."
+    },
+    {
+     "term": "SHIP-HATS",
+     "def": "Singapore government DevSecOps platform covering source management through continuous delivery."
+    }
+   ],
+   "check": [
+    {
+     "q": "Developers on your platform currently write raw cluster manifests and infrastructure code for every service. A teammate proposes a workload spec in the developer control plane with an orchestrator behind it. What does this buy, and what does it cost?",
+     "a": "Developers would declare **what** a workload needs, such as a database or a port, without infrastructure knowledge, and the orchestrator would decide **how** by generating app and infrastructure configs as a resource graph on each deployment. That lowers cognitive load and keeps standards and security consistent across teams. The cost is that the platform team must build and maintain the orchestrator rules, and developers lose direct control of details."
+    },
+    {
+     "q": "A security lead proposes one security scan as the final stage before production. Where does the reference architecture put security, and why does that matter?",
+     "a": "Security is a cross-cutting plane, embedded everywhere: secrets management, identity, access control, policies and compliance apply to every plane, not just the last step. A single final gate finds problems late and leaves secrets and access in earlier stages unmanaged. Embedding it costs more platform work up front but makes the secure path the default."
+    },
+    {
+     "q": "A developer's workload spec is accepted, but the service fails in staging because no database exists there. Using the planes, where would you look first?",
+     "a": "The orchestrator in the integration and delivery plane turns the spec into a resource graph for each environment, and the resource plane provisions what that graph asks for. So check whether the staging resource graph includes the database and whether provisioning ran. The observability plane should give logs from every plane, which shows why cross-cutting monitoring matters."
+    },
+    {
+     "q": "A data science team wants to train and deploy models through the existing IDP. What does the reference model add for them, and why is the resource plane alone not enough?",
+     "a": "It adds the data and model management plane: feature engineering, experiment tracking, metadata, lineage and a model registry, covering the ML lifecycle up to production governance. The resource plane can supply GPU nodes, but it does not track which data and experiment produced which model. Without that plane the platform can run ML workloads but cannot govern them."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "Intent becomes a running workload",
+     "steps": [
+      {
+       "label": "Describe workload",
+       "sub": "control plane",
+       "detail": "A portal, CLI or Score specification expresses what the application needs without prescribing infrastructure."
+      },
+      {
+       "label": "Build and configure",
+       "sub": "integration and delivery",
+       "detail": "CI builds and tests artifacts. The orchestrator generates application and infrastructure configuration.",
+       "accent": true
+      },
+      {
+       "label": "Provision and deploy",
+       "sub": "resource plane and CD",
+       "detail": "Provision clusters, databases and other dependencies; CD deploys the application to its environment."
+      }
+     ],
+     "caption": "Observability and security apply across every step; the data and model plane supports AI/ML workloads across the same path."
+    }
+   ]
+  },
+  {
+   "id": "adoption-and-journey",
+   "title": "Adoption, trends and the platform journey",
+   "slides": [
+    32,
+    39
+   ],
+   "summary": "Why organisations adopt platform engineering, where they are on maturity, where the discipline is heading (shifting down, AI) and the five-step journey to a mature IDP.",
+   "notes": [
+    "**Adoption drivers:** the lecture survey highlights missing automation (49%), inconsistent DevOps setups (48%), cognitive overload (47%) and ticket ops (44%). Security gaps, delivery speed and onboarding also matter. Most teams are in the Operational maturity band; measurement is weakest, with 43% still provisional.",
+    "**Shift down:** put repeatable infrastructure, security, compliance, observability and cost controls into platform automation. Shifting left moves checks earlier in delivery; shifting down supplies the shared capability so earlier checks do not become extra manual work for each developer.",
+    "**AI has a dual mandate:** platform teams both build AI-powered platforms (intelligent troubleshooting, AI-assisted code generation and review, LLM security scanning, predictive scaling, copilots) and platforms for AI (GPU orchestration, ML pipeline automation, model registry and experiment tracking, LLMOps governance, self-service for data scientists). The deck reports 94% of organisations see AI as critical or important to platform engineering's future.",
+    "**Artisan to industrial:** the artisan model (individual 10x coders, bespoke undocumented processes, uneven cognitive load, key-person risk) is replaced by an industrial model (platform as the competitive advantage, standardised automated auditable pipelines, load absorbed by the platform, success driven by system design). The Grab super-app (ride-hailing, food, grocery, payments, logistics, financial services) illustrates one platform growing many services on shared foundations.",
+    "**Five-step journey:** identify pain and its cost; define the smallest useful platform; build provisioning, CI/CD and IaC automation; add portal or CLI interfaces; measure and expand. The final step does not mean waiting to measure: establish delivery and satisfaction baselines from day one."
+   ],
+   "terms": [
+    {
+     "term": "Shifting down",
+     "def": "Embedding toil (security, compliance, reliability) into the platform instead of pushing it onto developers."
+    },
+    {
+     "term": "Developer NPS",
+     "def": "Net promoter score from developers, used to measure platform satisfaction and prove value."
+    },
+    {
+     "term": "Dual mandate",
+     "def": "Platform teams both use AI to improve the platform and build platforms for AI workloads."
+    }
+   ],
+   "check": [
+    {
+     "q": "A platform team's first deliverable is a polished developer portal, while provisioning behind it is still done by ticket. Do you support the plan?",
+     "a": "No. The lecture's principle is backend before portal: a portal is only an interface, and with ticket-driven provisioning behind it nothing self-service happens. Build the automation for the top pain first, typically CI/CD and IaC, golden paths and an orchestrator, then put a portal or CLI on top. A portal can come early only as a thin front for automation that already works."
+    },
+    {
+     "q": "A security lead wants every developer to run three extra scanning tools by hand before each merge. Is this shifting left or shifting down, and what would you suggest?",
+     "a": "It is shifting left: it moves checks earlier but dumps the toil on developers. Shifting down would embed the scans in the platform as automated guardrails and secure defaults on the golden path, so the safe route is also the easiest. The checks can still run early; what changes is who does the work."
+    },
+    {
+     "q": "A platform team plans an 18-month build covering every plane before any application team uses it. What would you change?",
+     "a": "Start with a minimum viable platform that solves the most costly pain, then expand. A long build with no users delays value and gets no feedback, so the team may build the wrong things, against the 'treat it as a product' principle. Measure from day one so each step's impact is visible."
+    },
+    {
+     "q": "A maturity survey shows most organisations stuck at 'Operational', with measurement the weakest dimension. Your new platform team has no baseline numbers. What do you do first, and why?",
+     "a": "Document the current cost of the pain, such as ticket wait times, lead time and failure rates, before building anything. A platform is a product that must prove ROI, and without a baseline no later DORA or NPS figure can show improvement. It is cheap to do at the start and almost impossible to reconstruct later."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "End-to-end platform engineering journey",
+     "steps": [
+      {
+       "label": "Identify pain",
+       "sub": "document the cost",
+       "detail": "Ticket ops, cognitive overload and no standards are the starting problems; record their cost to justify the platform."
+      },
+      {
+       "label": "Define MVP",
+       "sub": "smallest platform, backend first",
+       "detail": "Build the smallest platform that solves the top pain, starting with CI/CD and IaC rather than a portal."
+      },
+      {
+       "label": "Build backend",
+       "sub": "automate, golden paths",
+       "detail": "Automate provisioning and create golden paths using an orchestrator or pipelines."
+      },
+      {
+       "label": "Add interfaces",
+       "sub": "portal, self-service, CLI",
+       "detail": "Put a portal and CLI on top so developers self-serve common workflows."
+      },
+      {
+       "label": "Measure and grow",
+       "sub": "DORA, NPS, ROI",
+       "detail": "Compare DORA metrics and developer NPS with the baseline collected from day one, then expand where evidence shows value.",
+       "accent": true
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "platform-thinking",
+   "title": "Platform thinking: the network business model",
+   "slides": [
+    40,
+    46
+   ],
+   "summary": "A platform as a business that enables interactions between producers and consumers, and the three components (Magnet, Toolbox, Matchmaker) that make it work and scale.",
+   "notes": [
+    "**Core idea:** platforms are where users create and exchange value in an ecosystem. A platform is infrastructure that enables interactions between Producers and Consumers via information (the Seed). Think roles, not markets: the same person can be a consumer and a producer.",
+    "**Linear vs network business model:** a linear (pipeline) business focuses on process (production, assembly, distribution). A network business focuses on interactions between producers and consumers through the platform. Platforms of this kind have disrupted accommodation, transportation, telecommunication, news and computing.",
+    "**Design one interaction first:** identify the seed, producer, consumer and exchange before selecting technology. For YouTube, a worked application is video, creator, viewer, then publish, discover and watch. The same person can occupy both roles.",
+    "**Three components.** Magnet: get both roles onto the platform, convert consumers into producers over time (saves marketing spend) and get producers to produce more seeds (scales production). Toolbox: tools that enable interaction and let producers create and consumers consume, via well-designed APIs; remove barriers, use the co-design principle and get external parties to contribute. Matchmaker: accurate matching (minimise false positives), curation that separates high- and low-quality seeds (voting, ratings), trust mechanisms and machine learning.",
+    "**Scaling the business:** build one interaction at a time (LinkedIn: professional to professional first for adoption, then discussion groups and posts, then recruiters and job seekers for monetisation, and following thought leaders). Decide who moderates content: employees (in-house), algorithms (automation with intelligence) or users."
+   ],
+   "terms": [
+    {
+     "term": "Seed",
+     "def": "The unit of value or information (e.g. a video, listing) that producers create and consumers seek."
+    },
+    {
+     "term": "Magnet",
+     "def": "Component that attracts and retains producers and consumers."
+    },
+    {
+     "term": "Toolbox",
+     "def": "Tools, APIs and SDKs that let producers create and consumers consume value."
+    },
+    {
+     "term": "Matchmaker",
+     "def": "Component that matches, curates and builds trust, using data analytics and ML."
+    },
+    {
+     "term": "Network business model",
+     "def": "Business centred on interactions between roles rather than a linear production process."
+    }
+   ],
+   "check": [
+    {
+     "q": "A video site runs separate marketing budgets for creators and for viewers, treating them as two markets. What does 'think roles not markets' suggest instead?",
+     "a": "Users can play both roles, and viewers can become creators. The magnet strategy converts consumers into producers over time, which saves marketing spend and scales production of seeds. So invest in lowering the barrier to producing, such as simple upload tools, rather than buying two separate audiences."
+    },
+    {
+     "q": "A tutoring marketplace has plenty of registered tutors, but students complain that matches are poor and some tutors are low quality. Which platform component is weak, and what would you build?",
+     "a": "The matchmaker, not the magnet: supply exists, but matching and curation fail. Improve matching accuracy to cut false positives, curate tutors using ratings and reviews, add trust mechanisms, and apply ML to matching. In engineering terms that means curation components and matching algorithms."
+    },
+    {
+     "q": "A furniture maker sells only its own products through its web shop and calls itself a platform because the shop has a public API. Is this a linear or a network business?",
+     "a": "Linear: its focus is the process of production, assembly and distribution of its own goods. A network business focuses on enabling interactions between independent producers and consumers, and the lecture stresses that technology is only an enabler, so an API alone does not make a platform. It would move towards a network model if other makers could list and sell through it."
+    },
+    {
+     "q": "A start-up wants to launch professional networking, messaging, job listings and content publishing all at once. What does the LinkedIn example advise?",
+     "a": "Build one interaction at a time. LinkedIn started with professional-to-professional connections, then added discussions, recruiters and job seekers, and later thought-leader content, each one building adoption before monetisation. Launching everything at once spreads the magnet thin, with too few producers for any single interaction."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "hub",
+     "title": "What a platform business needs",
+     "center": {
+      "label": "Platform",
+      "sub": "connects producers and consumers",
+      "detail": "Starts from one seed and the producer and consumer roles; technology is only an enabler of the interaction.",
+      "accent": true
+     },
+     "items": [
+      {
+       "label": "Magnet",
+       "sub": "attract and retain",
+       "detail": "Get both roles on board, convert consumers to producers over time and get producers to create more seeds."
+      },
+      {
+       "label": "Toolbox",
+       "sub": "APIs and tools",
+       "detail": "Tools that let producers create and consumers consume; design the right APIs, remove barriers, co-design and let external parties contribute."
+      },
+      {
+       "label": "Matchmaker",
+       "sub": "match, curate, trust",
+       "detail": "Accurate matching with few false positives, curation of high- versus low-quality seeds, trust mechanisms and ML, driven by data analytics."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ecosystems-and-engineering",
+   "title": "Business ecosystems and the engineering perspective",
+   "slides": [
+    47,
+    52
+   ],
+   "summary": "Platforms as enablers of business ecosystems, and how each platform-business aspect translates into an engineering concern.",
+   "notes": [
+    "**Platform ecosystem:** it is composed of externally produced complements that augment the platform. The platform and all apps interoperating through its interfaces together form its ecosystem. A business ecosystem is the wider network of organisations (suppliers, distributors, customers, competitors, government agencies) involved in delivering a product or service through both competition and cooperation.",
+    "**Engineering follows the interaction:** choose functionality and technology to help producers and consumers exchange value. A feature is useful when it improves that exchange or the ecosystem around it.",
+    "**Business to engineering mapping:** Seed = domain entities. Producers and consumers = domain entities, scalability and performance. Interactions = service design, architecting and exposing services, business process, scalability, performance. Magnet = service usability design, incentive components, data analytics components. Toolbox = service usability, SDK design, API design, integration with other services. Matchmaker = curation components and algorithms. Scaling the business = modular, extensible components and agile architecture. Ecosystem = architecting for availability, security and scalability.",
+    "**Summary of the topic:** platforms provide composable components, services and infrastructure to build and host applications; enable business ecosystems; provide extensibility, innovation and co-creation; include data analytics to improve the business; and platform thinking is needed to engineer a platform as a business."
+   ],
+   "terms": [
+    {
+     "term": "Platform ecosystem",
+     "def": "The platform plus the externally produced complements that interoperate through its interfaces."
+    },
+    {
+     "term": "Business ecosystem",
+     "def": "Network of suppliers, distributors, customers, competitors and agencies delivering a product through competition and cooperation."
+    }
+   ],
+   "check": [
+    {
+     "q": "Partners praise a platform's matching algorithm but say its SDK is confusing and integration takes weeks. Which platform aspect is weak, and which engineering concerns does it map to?",
+     "a": "The toolbox: the tools producers and consumers use to interact. In engineering terms that is service usability design, SDK and API design, and integration with other services. A strong matchmaker cannot make up for a toolbox that keeps partners from joining."
+    },
+    {
+     "q": "Hundreds of third-party apps now depend on a platform's interfaces. A product manager proposes putting all of this quarter's effort into new features and deferring availability and security work. Do you agree?",
+     "a": "Mostly no. Architecting for the ecosystem means availability, security and scalability, because an outage or breach now hits every complement built on the platform, not just one app. Features still matter for growth, so the answer depends on whether current availability and security already meet partners' needs."
+    },
+    {
+     "q": "A platform plans to add a new kind of interaction every quarter, as the sample paper's ecosystem-growth question describes. Which engineering aspect must the design support, and what goes wrong without it?",
+     "a": "Scaling the platform business needs modular, extensible components and an agile architecture. Each new interaction should plug in as new services that reuse existing domain entities and interfaces. Without that, every addition means changing the core, so each release slows down and risks breaking existing interactions."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Platform aspect to engineering aspect",
+     "columns": [
+      "Platform aspect",
+      "Engineering aspect"
+     ],
+     "rows": [
+      [
+       "Seed",
+       "Domain entities"
+      ],
+      [
+       "Producers and consumers",
+       "Domain entities, scalability, performance"
+      ],
+      [
+       "Interactions",
+       "Service design, architecting and exposing services, business process, scalability, performance"
+      ],
+      [
+       "Magnet",
+       "Service usability design, incentive components, data analytics components"
+      ],
+      [
+       "Toolbox",
+       "Service usability design, SDK design, API design, integration with other services"
+      ],
+      [
+       "Matchmaker",
+       "Curation components, algorithms"
+      ],
+      [
+       "Scaling the business",
+       "Modular and extensible components; agile architecture and engineering"
+      ],
+      [
+       "Platform ecosystem",
+       "Architecting for availability, security, scalability"
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A food-delivery company wants to open its ordering, delivery-tracking and payment capabilities to independent restaurants and couriers. (a) Identify the seed, producers, consumers and core interaction. (b) The CEO wants to launch restaurant booking, grocery delivery and a courier marketplace in the same release. Advise. (c) Give two engineering concerns that follow from opening the APIs to outside parties.",
+   "a": "(a) Seed: a menu item or order; producers: restaurants and couriers; consumers: diners; interaction: browse, order, match a courier, deliver, pay. (b) Build one interaction at a time, as LinkedIn did: get food ordering adopted and growing producers through the magnet before adding new interactions, and design modular, extensible components so later ones plug in. (c) The toolbox needs usable APIs and SDKs, and because many outside parties now depend on the platform it must be architected for availability, security and scalability. The trade-off is slower initial scope in exchange for a stable core."
+  },
+  {
+   "q": "A company with 40 application teams has a five-day ticket wait for databases, each team maintains its own pipeline scripts, and leadership wants evidence of value within six months. Propose the first steps of an IDP, the measures you would use, and one thing you would deliberately not build first.",
+   "a": "First document the cost of the pain (ticket wait, lead time, failure rates) as a baseline. Define a minimum viable platform aimed at the top pain: automated database provisioning through IaC and a shared CI/CD golden path, with an orchestrator or pipeline behind it. Measure DORA metrics and developer NPS against the baseline, and expand scope only where they improve. Do not start with a full developer portal: backend comes before portal, and a portal over ticket-driven provisioning would show nothing in six months."
+  },
+  {
+   "q": "On an IDP, developers submit workload specs. Staging deployments work, but production sometimes gets a different database size and nobody can explain why. Using the reference architecture and GitOps, diagnose where to look and what to change.",
+   "a": "The orchestrator in the integration and delivery plane generates environment-specific configuration as a resource graph, so compare the production and staging graphs and the rules that produce them. Check whether production state was changed outside Git: with GitOps, Git should be the single source of truth and every infra change should go through a reviewed PR. Fix by moving environment differences into versioned config and letting CD sync from Git. The observability plane should record what was deployed, so the next difference is visible without detective work."
+  },
+  {
+   "q": "An organisation with 300 developers has a DevOps culture and an SRE team that owns SLOs and error budgets, but onboarding a new service still takes three weeks. The CIO asks whether to grow the SRE team or create a platform team. Advise, and say what would change your answer.",
+   "a": "Create a platform team. The symptom is slow onboarding and missing self-service, which are platform engineering's concerns: golden paths, standardised provisioning and lower cognitive load, with developers treated as customers. SRE keeps owning reliability, and the platform can make SLO monitoring a default for every new service. If the main problem were frequent outages or missed SLOs instead of slow onboarding, growing SRE would be the better answer."
+  },
+  {
+   "q": "A regulated firm requires secret scanning, dependency checks and policy checks for every service. Option A gives each team a checklist to run before release. Option B builds the checks into the platform's golden path. Choose one and give the trade-off.",
+   "a": "Choose B, shifting down. Embedding the checks as automated guardrails and secure defaults removes repeated manual toil, applies the rules consistently, and makes the compliant path the easiest one, which fits the security plane being cross-cutting. Option A is shifting left: checks happen early, but every team carries the work and compliance depends on each team's discipline. B costs platform investment up front, and teams that leave the golden path still need a way to show compliance."
+  },
+  {
+   "q": "A bank's architecture group plans to give its teams (a) a shared code skeleton with abstract classes, (b) a utility code package for date and currency handling, and (c) a hosted environment exposing identity and payment services through APIs, which partners may also use. Classify each, and explain which one creates an ecosystem and what that obliges the bank to do.",
+   "a": "(a) is a framework: teams use it and it dictates structure. (b) is a library: teams call it where they choose. (c) is a platform: hosted, accessed by APIs, and extensible by outside parties. Only (c) creates an ecosystem, because partners can build complementary products through its interfaces. That obliges the bank to keep those interfaces stable so internal change does not break partners, and to architect for availability, security and scalability."
+  }
+ ]
+}

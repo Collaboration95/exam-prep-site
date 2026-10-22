@@ -1,0 +1,629 @@
+{
+ "key": "07-perform-capacity-planning-for-archite",
+ "title": "Capacity Planning for Architecture",
+ "pages": 54,
+ "minutes": 27,
+ "overview": "Capacity planning answers two questions: how much extra capacity will the system need, and when must it be in place. The deck gives one three-part recipe (predict the workload, relate workload to resource use, derive the resources needed) and applies it to disk, which is cumulative and trend driven, and to servers, which are peak driven and sized with benchmarks. It adds the forecasting formulas (linear regression, moving average, exponential smoothing), the scalability laws (Amdahl, USL), a worked benchmark-to-throughput example, procurement lead time and cloud elasticity. For the exam, expect to compute a forecast or a sizing figure and justify the method.",
+ "big_ideas": [
+  "Capacity planning combines a **workload forecast** with a measured **workload-to-resource relationship** to predict how much capacity is needed and when.",
+  "**Disk is cumulative-driven; servers are peak-driven.** Disk is forecast with trend analysis; servers are sized from benchmarks, load tests and monitoring.",
+  "Linear regression: **Y = a + bX**. Moving average: **M_t = (X_t + X_t-1 + ... + X_t-N+1) / N**. Exponential smoothing: **s_t = alpha x_(t-1) + (1 - alpha) s_(t-1)**, s_0 = x_0.",
+  "Scaling is **non-linear**: doubling machines does not double throughput. Amdahl's law: **S(N) = 1 / ((1 - P) + P/N)**; USL adds a crosstalk term so throughput can fall as N grows.",
+  "The lecture’s simplified benchmark estimate divides reference throughput by scenario slowness, then weights those values by the mix to obtain **38.8 tps**. Validate that estimate with representative mixed-load testing.",
+  "Real data beats guesses: use vendor benchmarks, self-benchmarking, or historical monitoring, and measure over enough time to catch patterns, seasonality and time zones.",
+  "**Procurement lead time** (7 weeks in the deck's template, plus downtime approval) must go in the project plan: too late means no capacity, too early means paying more because prices fall.",
+  "Elasticity: scale up **aggressively**, scale down **conservatively**, and avoid the ping-pong effect by keeping the thresholds apart."
+ ],
+ "sections": [
+  {
+   "id": "approach",
+   "title": "Why and how to plan capacity",
+   "slides": [
+    2,
+    9
+   ],
+   "summary": "The goal, the three-part prediction model, where the data comes from and what to measure.",
+   "notes": [
+    "**Goal:** make sure enough computing resources exist for the expected workload to run at an acceptable service level. It is needed for a new system and for an existing one facing user growth, cumulative growth from usage, and new features.",
+    "**Tasks:** predict the required resources from the expected workload; decide how much extra capacity to buy and when it is needed (servers, storage); and let the system scale automatically with workload (elasticity).",
+    "**Core model:** forecast workload, apply the workload-to-resource relationship, then derive capacity. For storage this may be record count x bytes/record; for servers use measured workload and resource demand. The relationship is not literally addition of unlike units.",
+    "**Sources of data:** published vendor benchmarks, self-benchmarking, and historical monitoring of metrics. Monitoring is the best source when a system is already running.",
+    "**What to collect:** web/app server (requests/sec, active sessions, busy threads); system (disk utilisation, I/O wait, RAM, CPU, used storage); database (queries/sec, open connections, cache hit rate, master/slave lag); plus application-level metrics such as Flickr's photos uploaded per day (daily and cumulative), average photo size, registrations, API requests per key."
+   ],
+   "terms": [
+    {
+     "term": "Capacity planning",
+     "def": "Ensuring enough resources for the expected workload at an acceptable service level."
+    },
+    {
+     "term": "Application metric",
+     "def": "Business-level measure (e.g. photos uploaded per hour) that drives resource demand."
+    }
+   ],
+   "check": [
+    {
+     "q": "A photo app expects 50,000 uploads a day at an average of 3 MB, and keeps 3 copies of each photo. Apply the capacity-planning model to estimate storage growth.",
+     "a": "Forecast workload: 50,000 uploads a day. Workload-to-resource relationship: 3 MB x 3 copies = 9 MB per upload. Derived capacity: about 450 GB a day (decimal units), or roughly 164 TB a year, plus indexes, logs, overhead and headroom. Each input is an assumption to monitor: if the upload rate or photo size grows, the estimate scales with it."
+    },
+    {
+     "q": "CPU graphs have risen steadily for months. The business asks what happens if sign-ups double. Can you answer from the system metrics alone?",
+     "a": "No. CPU shows the symptom, not the driver. You need application-level metrics (sign-ups, uploads, API calls per key) and how each relates to resource use, so you can turn a business forecast into a resource forecast. Start collecting them alongside the system metrics, and fit the relationship from history."
+    },
+    {
+     "q": "A new system has no production data yet, and the vendor publishes a benchmark for similar hardware. Which data source would you use, and what is the risk?",
+     "a": "Use the vendor benchmark as a starting point, and self-benchmark the significant scenarios if you can. The risk is that the vendor's workload and configuration differ from yours, so its numbers may not transfer. Once the system runs, switch to monitoring data, which is the best source."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "flow",
+     "title": "The capacity planning model",
+     "steps": [
+      {
+       "label": "Predict workload",
+       "sub": "expected demand",
+       "detail": "Forecast users, transactions or requests, e.g. transactions growing from 1 million to 20 million."
+      },
+      {
+       "label": "Workload-to-resource relation",
+       "sub": "cost per unit of work",
+       "detail": "How much disk, CPU or servers one unit of workload consumes, obtained from benchmark, load test or monitoring.",
+       "accent": true
+      },
+      {
+       "label": "Expected resources",
+       "sub": "how much, and when",
+       "detail": "The disk, servers and lead time to procure, with a buffer for estimation error."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "disk",
+   "title": "Planning disk capacity",
+   "slides": [
+    10,
+    16
+   ],
+   "summary": "Disk grows cumulatively, so work out data feeds and growth over the retention period and add fixed overhead.",
+   "notes": [
+    "**Disk analysis is cumulative driven.** Measure by back-of-the-envelope estimate, monitoring or logging, then forecast data volume over the retention period.",
+    "**Size data feeds separately:** customer, transaction and other data each have their own count and average size. Add a baseline for OS and database software; allow separately for logs, indexes and any replicated copies that grow with usage. State whether MB/TB are decimal units.",
+    "**Deck example 1:** transactions grow from 1 million to 20 million at 1 MB per record, so 20 million x 1 MB = 20 TB, plus fixed overhead (and a buffer).",
+    "**24-month growth example:** month k has 1M x 1.1^(k-1) transactions. Starting with month 1 at 1M, the first 24 months total 1M x (1.1^24 - 1)/0.1 = 88.50M transactions, or 88.50 TB at 1 MB each using decimal units. This is a first-24-month accumulation, not a lifetime limit; revisit the rolling retention window as arrivals grow.",
+    "**Deck example 3 (only a history chart):** when you only know the past monthly transaction counts, extrapolate with trend analysis from historical data (next section)."
+   ],
+   "terms": [
+    {
+     "term": "Fixed overhead",
+     "def": "Baseline storage independent of workload; growing logs, indexes and replicas require separate allowances."
+    },
+    {
+     "term": "Data feed",
+     "def": "One source of stored data (customers, transactions...) sized separately."
+    }
+   ],
+   "check": [
+    {
+     "q": "An application writes 20 GB of logs a day and must keep them for 90 days. The busiest day so far produced 35 GB. How much log storage do you plan for?",
+     "a": "Disk is cumulative: plan for everything retained over 90 days, not the peak day. At the average, 20 x 90 = 1.8 TB. Since some days reach 35 GB, add headroom or forecast growth in the daily rate, plus overhead for indexes and any replicas."
+    },
+    {
+     "q": "Transactions start at 1M a month and grow 10% a month, with 24-month retention and 1 MB per record. A teammate estimates 24 x 1M x 1 MB = 24 TB. Do you agree?",
+     "a": "No. That ignores growth. Monthly volume is a geometric series: 1M x (1.1^24 - 1) / 0.1, about 88.5M transactions, or about 88.5 TB, so the teammate's figure is less than a third of the need. Add fixed overhead, indexes and replicas, and revisit the forecast as actual growth is observed."
+    },
+    {
+     "q": "After two years, does 24-month retention mean a growing system's storage stops growing?",
+     "a": "Not necessarily. Old records expire, but newer months may contain more records than the months removed. Forecast the sum within the moving 24-month window using the expected arrival growth."
+    },
+    {
+     "q": "Your 88.5 TB data estimate covers records only. The database adds indexes of about 30% of data size and keeps one full replica. What is the real storage need?",
+     "a": "88.5 x 1.3 for indexes is about 115 TB; doubled for the replica, about 230 TB, plus the fixed OS and database baseline and a buffer. Size data feeds and overheads separately and state the assumptions, so each can be revised."
+    }
+   ]
+  },
+  {
+   "id": "trend",
+   "title": "Trend analysis and forecasting methods",
+   "slides": [
+    17,
+    22
+   ],
+   "summary": "Classify the demand pattern, then forecast with regression, moving average or exponential smoothing, and answer 'when do we run out?'.",
+   "notes": [
+    "**Historical demand has three patterns:** random, trending (steady rise or fall) and seasonal (repeating cycles). Choose the method to match.",
+    "**Linear regression: Y = a + bX (+ error term).** With n points: b = [n(Sum xy) - (Sum x)(Sum y)] / [n(Sum x^2) - (Sum x)^2] and a = [(Sum y)(Sum x^2) - (Sum x)(Sum xy)] / [n(Sum x^2) - (Sum x)^2]. a is the intercept and b the growth per period.",
+    "**Moving average** uses the latest N periods to smooth variation. **Simple exponential smoothing** weights the latest observation against the previous forecast: s_t = alpha x_(t-1) + (1-alpha)s_(t-1), with s_0 = x_0 in the lecture’s notation. Neither simple method alone models recurring seasonality or an ongoing trend; examine those patterns explicitly.",
+    "**Excel tools:** FORECAST/TREND fit linear growth; GROWTH fits exponential growth. The lecture gives 20 daily consumption readings, from 202 to 280.7 GB, with 500 GB capacity. Fit a model and solve for when predicted use reaches 500 GB, keeping the day index and units explicit.",
+    "**Extrapolation is uncertain.** A linear fit to those readings gives roughly Y = 194.1 + 4.35X, reaching 500 GB near day 70 when day 1 is the first observation. An exponential fit predicts an earlier crossing. Compare fits and recent behaviour, allow forecast error and revise with new observations; neither extrapolation reveals the actual future date."
+   ],
+   "terms": [
+    {
+     "term": "Trending / seasonal / random",
+     "def": "The three historical demand patterns."
+    },
+    {
+     "term": "Moving average",
+     "def": "Mean of the last N periods."
+    },
+    {
+     "term": "Exponential smoothing",
+     "def": "Forecast weighting recent data by alpha, older data by (1 - alpha)."
+    }
+   ],
+   "check": [
+    {
+     "q": "Storage use rises steadily month by month. A different metric, order volume, spikes every December. Which forecasting approach suits each?",
+     "a": "Storage is trending, so fit a regression (linear or exponential) and extrapolate. Orders are seasonal, so model the yearly cycle explicitly, for example by comparing each December with previous ones. A simple moving average or exponential smoothing would smooth out the December spike rather than predict it."
+    },
+    {
+     "q": "After a merger, traffic stepped up permanently by 40%. Your exponential-smoothing forecast with alpha = 0.1 still lags far behind. Why, and what would you change?",
+     "a": "A low alpha gives little weight to the latest observation, so the forecast adjusts slowly to a real level change. Raise alpha so it reacts faster, or refit from the post-merger data. A high alpha also chases noise, so choose it for how quickly real change happens."
+    },
+    {
+     "q": "A linear fit says the disk fills on day 70 and an exponential fit says day 55. Today is day 20, and procurement takes 7 weeks. When do you order?",
+     "a": "Now. Seven weeks is 49 days. The linear forecast leaves 50 days, with almost no margin, and the exponential one leaves 35, which is already too late. Both are extrapolations with error, so plan on the earlier date plus a buffer, and keep comparing the fits with new readings."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Forecasting methods",
+     "columns": [
+      "Method",
+      "Formula",
+      "Use when"
+     ],
+     "rows": [
+      [
+       "Linear regression",
+       "Y = a + bX",
+       "Steady linear **trend**"
+      ],
+      [
+       "Moving average",
+       "M_t = (X_t + ... + X_t-N+1) / N",
+       "Smooth variation; N = periods averaged"
+      ],
+      [
+       "Exponential smoothing",
+       "s_t = alpha x_(t-1) + (1-alpha) s_(t-1)",
+       "Weight recent data; 0 < alpha < 1"
+      ],
+      [
+       "Excel",
+       "FORECAST/TREND; GROWTH",
+       "Linear; exponential"
+      ]
+     ],
+     "caption": "Simple smoothing does not itself forecast seasonal cycles or continuing growth. Validate the pattern before extrapolating."
+    }
+   ]
+  },
+  {
+   "id": "servers-benchmark",
+   "title": "Server sizing: benchmarks and mapping",
+   "slides": [
+    23,
+    29
+   ],
+   "summary": "Server capacity is peak driven and sized from benchmarks; the key skill is scaling a reference benchmark to your scenarios.",
+   "notes": [
+    "**Server analysis is peak driven.** Measure with benchmarks, load testing, monitoring and logging. A benchmark runs standard tests to assess relative performance: requests/sec, latency (ms per connection or request) and throughput (bytes/sec), under a varying load of clients and requests per client.",
+    "**Reference benchmark:** ideally run it on the same machine type for each significant scenario (much easier on cloud than buying hardware). If not possible, estimate a slowness factor: a scenario twice as slow as the reference gets roughly half the reference throughput.",
+    "**The lecture introduces TPC-C**, an OLTP benchmark with five concurrent transaction types over nine table types, measured in tpmC. Treat a published result as evidence for its tested workload and configuration; it is not automatically the capacity of your application.",
+    "**Non-linearity:** in the deck's benchmark, max TPS is 17.04 on 1 machine, 30.81 on 2 and 55.76 on 4, so doubling machines gives about 1.8x and not 2x. The app server CPU stays at 95-98% at max TPS while the DB server stays almost idle (under 1% to 2.25% CPU), so the app tier is the bottleneck. Never assume capacity scales linearly with servers."
+   ],
+   "terms": [
+    {
+     "term": "Benchmark",
+     "def": "Running standard tests to assess relative performance of a server."
+    },
+    {
+     "term": "TPC-C",
+     "def": "Industry OLTP benchmark, measured in transactions per minute (tpmC)."
+    },
+    {
+     "term": "Slowness factor",
+     "def": "How many times slower a scenario is than the reference benchmark."
+    }
+   ],
+   "check": [
+    {
+     "q": "A service averages 200 requests/s, peaks at 900 requests/s on Monday mornings, and its data grows by 5 GB a day. How do you size the servers and the disk?",
+     "a": "Servers are peak-driven: size for 900 requests/s at the response target, plus headroom for a node failure. Average load is irrelevant to that. Disk is cumulative: size for 5 GB a day over the retention period, plus overhead. Using the average for servers, or the peak for disk, would get both wrong."
+    },
+    {
+     "q": "The benchmark shows 17.04 tps on 1 machine, 30.81 on 2 and 55.76 on 4. A teammate plans 8 machines for 136 tps. Do you agree?",
+     "a": "No. Each doubling has given about 1.8x, not 2x, so 8 machines might give about 101 tps if the trend holds, and it may get worse. The application servers' CPU was already at 95-98% at maximum load. Benchmark 8 machines, or fit a scalability model, before committing."
+    },
+    {
+     "q": "A reporting scenario is 4 times slower than the reference benchmark of 55.76 tps on 4 machines, and the business needs 30 report requests/s. Is 4 machines enough?",
+     "a": "No. Estimated throughput is 55.76 / 4, about 13.9 tps, less than half the need. Adding machines will not scale linearly, so reduce the scenario's cost (precompute, cache, optimise queries) as well as adding capacity, and benchmark the actual report."
+    },
+    {
+     "q": "At maximum TPS, the application servers' CPU sits at 97% and the database server's at 2%. A teammate proposes a bigger database server. Respond.",
+     "a": "Disagree. The application tier is the bottleneck, and the database is almost idle. A bigger database adds nothing until the application tier is scaled out or made cheaper per request. Re-measure afterwards, because the bottleneck may then move to the database."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Deck benchmark (max TPS)",
+     "columns": [
+      "",
+      "1 machine",
+      "2 machines",
+      "4 machines"
+     ],
+     "rows": [
+      [
+       "Max TPS",
+       "17.04",
+       "30.81",
+       "55.76"
+      ],
+      [
+       "App server CPU at max TPS",
+       "98%",
+       "97%",
+       "95%"
+      ],
+      [
+       "DB server CPU",
+       "<1%",
+       "1.3%",
+       "2.25%"
+      ],
+      [
+       "DB server disk",
+       "6%",
+       "12%",
+       "19%"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scalability-laws",
+   "title": "Non-linearity: Amdahl's law and USL",
+   "slides": [
+    30,
+    37
+   ],
+   "summary": "Two models explain why adding servers gives diminishing (or negative) returns and let you predict scaling from a few measurements.",
+   "notes": [
+    "**Amdahl's law: S(N) = 1 / ((1 - P) + P/N).** S(N) is speedup with N processors, P the parallel proportion of the program (0 < P < 1), N the number of processors. It also applies to machine scalability generally. Worked check: P = 0.9, N = 10 gives S = 1 / (0.1 + 0.09) = 5.26.",
+    "**Interpretation:** 100% parallel gives linear scalability; 100% serial cannot scale; more parallelism improves scalability. Serial sources: accessing or updating the same data, quotas on resources, inefficient algorithms. The ceiling is 1 / (1 - P) however many servers you add.",
+    "**Two ways to use it:** measure P by load testing with increasing numbers of servers then predict, or guesstimate P and refine it later. Load-test results are very sensitive to workload mix, so the test must mimic real usage.",
+    "**USL: X(N) = gamma N / (1 + sigma(N-1) + kappa N(N-1)).** Gamma scales one-node performance; sigma represents serialisation/contention; kappa represents crosstalk/coherency cost. With crosstalk, throughput may peak and decline. Fit coefficients to measurements; do not infer them from the technology name.",
+    "**Lecture case study:** fitted Java results have lower serialisation but higher crosstalk than the Node.js implementation, with different peaks. Possible explanations include concurrency design or implementation quality. These measurements compare those systems and do not establish a general language ranking."
+   ],
+   "terms": [
+    {
+     "term": "Amdahl's law",
+     "def": "Speedup limit set by the serial fraction of work: S(N) = 1/((1-P)+P/N)."
+    },
+    {
+     "term": "Serialisation (sigma)",
+     "def": "USL coefficient for contention; sets the throughput ceiling."
+    },
+    {
+     "term": "Crosstalk (kappa)",
+     "def": "USL coefficient for coherency cost; makes throughput decline beyond a peak."
+    }
+   ],
+   "check": [
+    {
+     "q": "A workload is 90% parallel. Going from 10 to 20 servers, how much speedup do you gain, and what is the ceiling?",
+     "a": "Amdahl's law: S(10) = 1 / (0.1 + 0.09), about 5.26; S(20) = 1 / (0.1 + 0.045), about 6.90. Doubling the servers gives only about 31% more speedup, and the ceiling is 1 / (1 - 0.9) = 10, however many you add. Reducing the serial part pays more than adding servers."
+    },
+    {
+     "q": "Throughput rises up to 8 nodes, then falls at 12. Which model explains this, and what does it say about the cause?",
+     "a": "USL, not Amdahl: Amdahl's speedup flattens but never falls. The decline comes from the crosstalk (coherency) term, kappa: nodes spend more and more effort coordinating with each other. Fit sigma and kappa to the measurements to find the peak, and reduce cross-node coordination if you need to scale further."
+    },
+    {
+     "q": "The parallel fraction P was measured with a load test that sent only login requests. Should you trust the resulting scaling prediction?",
+     "a": "No. P depends on the workload mix: logins may parallelise well, while checkouts update shared data serially. An unrepresentative test gives the wrong P and the wrong server count. Repeat the test with a production-like mix."
+    },
+    {
+     "q": "Load tests show that a single shared stock-count row is updated on every order. How does that affect scaling, and what would you change?",
+     "a": "Every order serialises on that row, which lowers the parallel fraction P and caps speedup at 1 / (1 - P). Reduce the serial part, for example by partitioning the stock count or updating it asynchronously, and accept the trade-off in exactness or consistency of the count."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Amdahl vs USL",
+     "columns": [
+      "",
+      "Amdahl's law",
+      "USL"
+     ],
+     "rows": [
+      [
+       "Formula",
+       "S(N) = 1 / ((1 - P) + P/N)",
+       "X(N) = gamma N / (1 + sigma(N - 1) + kappa N(N - 1))"
+      ],
+      [
+       "Parameters",
+       "P = parallel proportion",
+       "gamma slope, sigma serialisation, kappa crosstalk"
+      ],
+      [
+       "Behaviour at large N",
+       "Flattens at 1/(1 - P)",
+       "Peaks, then **declines** if kappa > 0"
+      ],
+      [
+       "Get parameters by",
+       "Load test or guess P",
+       "Regression on measured data points"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "id": "benchmark-sizing",
+   "title": "Sizing a system from a benchmark",
+   "slides": [
+    38,
+    44
+   ],
+   "summary": "Reproduce the lecture’s simplified weighted benchmark estimate, state its assumptions and validate the production mix with load testing.",
+   "notes": [
+    "**Step 1, slowness factors:** each scenario gets a factor against the 4-machine reference of 55.76 tps; estimated throughput = 55.76 / slowness. Login 1.0 = 55.76; Search 2.0 = 27.88; Item Details 1.5 = 37.17; Add to cart 1.5 = 37.17; Checkout 2.0 = 27.88; Payment 4.0 = 13.94.",
+    "**Lecture estimate:** multiply each scenario’s estimated throughput by its workload share. Login 30%, Search 20%, Details 15%, Add to cart 20%, Checkout 10%, Payment 5% produce 16.73 + 5.576 + 5.576 + 7.434 + 2.788 + 0.697 ≈ **38.8 tps**. This is the deck’s simplified sizing procedure, not a general law for combining mixed-workload capacities.",
+    "**State and test assumptions:** four machines of the benchmark specification, the stated mix and slowness factors, and a uniform slowness factor across application and database tiers. A production mix may stress resources differently; benchmark it directly before treating 38.8 tps as deployable capacity.",
+    "**No benchmark?** With no production server, run simulated load tests (JMeter, configured by UI, or Artillery.io, declarative; both let you define scenarios and arrival rates and give response time and throughput). With a production server, analyse your monitoring data, which is the best source."
+   ],
+   "terms": [
+    {
+     "term": "Workload mix",
+     "def": "Percentage of traffic made up of each scenario."
+    },
+    {
+     "term": "Load testing",
+     "def": "Simulating client traffic to measure response time and throughput."
+    }
+   ],
+   "check": [
+    {
+     "q": "With the lecture's mix, 4 machines give an estimated 38.8 tps. The forecast peak is 50 tps. How many machines would you plan for?",
+     "a": "50 / 38.8 is about 1.29 times the capacity, so a linear estimate says about 5.2 machines. Scaling has been sub-linear (about 1.8x per doubling), so plan to benchmark 6 or more with the production mix, then add headroom for a node failure. The weighted estimate is a simplified starting point, not deployable capacity."
+    },
+    {
+     "q": "If Payment's share rose from 5% to 10% (taking 5% from Login), what happens to overall throughput?",
+     "a": "Within the lecture's weighted estimate, replacing 5% Login with Payment changes the total by 0.05 x (13.94 - 55.76) = -2.091 tps, giving about 36.7 tps. The actual production effect requires mixed-load measurement."
+    },
+    {
+     "q": "You have neither a reference benchmark nor a production system. How do you get sizing data?",
+     "a": "Run simulated load tests (for example with JMeter or Artillery): define the scenarios, the mix and the arrival rates, then measure response time and throughput as load increases. Once a production system exists, switch to its monitoring data, which is the best source."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Lecture’s simplified mixed-workload estimate",
+     "columns": [
+      "Scenario",
+      "Slowness",
+      "Throughput (tps)",
+      "Mix",
+      "Weighted"
+     ],
+     "rows": [
+      [
+       "Login",
+       "1.0",
+       "55.76",
+       "30%",
+       "16.73"
+      ],
+      [
+       "Search",
+       "2.0",
+       "27.88",
+       "20%",
+       "5.576"
+      ],
+      [
+       "Item Details",
+       "1.5",
+       "37.17",
+       "15%",
+       "5.576"
+      ],
+      [
+       "Add to cart",
+       "1.5",
+       "37.17",
+       "20%",
+       "7.434"
+      ],
+      [
+       "Checkout",
+       "2.0",
+       "27.88",
+       "10%",
+       "2.788"
+      ],
+      [
+       "Payment",
+       "4.0",
+       "13.94",
+       "5%",
+       "0.697"
+      ],
+      [
+       "**Overall**",
+       "",
+       "",
+       "100%",
+       "**38.8**"
+      ]
+     ],
+     "caption": "Reproduce this method for the lecture exercise; measure representative mixed traffic before relying on the result for deployment."
+    }
+   ]
+  },
+  {
+   "id": "time-metrics",
+   "title": "Using existing data and measurement time",
+   "slides": [
+    45,
+    48
+   ],
+   "summary": "Existing monitoring gives the best data, but only if you measure across long enough windows to see patterns.",
+   "notes": [
+    "**Time matters:** patterns, seasonality and time zones all shape load. A one-hour view looks flat; a daily view reveals the day cycle; a weekly view reveals weekday peaks. Looking at the wrong window gives the wrong peak.",
+    "**Time zones** shift the peak, e.g. US West and East usage curves are offset, so a global service sees blended peaks.",
+    "**Flickr example:** peak usage (busy Apache processes) falls on Monday every week and the peak slowly trends upward (the weekly trendline is y = 42.75x + 726). Take the weekly peaks and apply the same trend analysis as for storage to forecast when more servers are needed."
+   ],
+   "terms": [
+    {
+     "term": "Seasonality",
+     "def": "Repeating demand pattern tied to time (week, month, year)."
+    }
+   ],
+   "check": [
+    {
+     "q": "A team sized its servers from a one-hour sample taken on a Tuesday afternoon. What is the risk?",
+     "a": "The sample hides daily and weekly cycles. If the real peak is Monday morning, as in the Flickr example, the servers will be undersized exactly when demand is highest. Measure over weeks, identify the recurring peak, and size for it."
+    },
+    {
+     "q": "A service used only in Asia expands to Europe. How might the load pattern change?",
+     "a": "Time zones shift and blend the peaks: the European peak arrives hours after the Asian one, so the service is busy for more hours each day, and the peaks may overlap. Re-measure after the launch, and size for the combined peak, not either region alone."
+    },
+    {
+     "q": "Monday peak busy processes follow the trend y = 42.75x + 726, where x is weeks. Your servers handle 1,600 busy processes in total, and procurement takes 7 weeks. When do you run out, and when must you order?",
+     "a": "Solve 42.75x + 726 = 1,600: x is about 20.4, so capacity runs out around week 20. With a 7-week lead time plus a buffer, order by about week 12 or 13. Check the trend against new weekly peaks, since a steeper trend moves the date earlier."
+    }
+   ]
+  },
+  {
+   "id": "procurement-elasticity",
+   "title": "Procurement lead time and elasticity",
+   "slides": [
+    49,
+    54
+   ],
+   "summary": "Buying capacity takes time that must be planned; the cloud shortens it with auto-scaling governed by sensible policies.",
+   "notes": [
+    "**Procurement steps to plan for:** internal procurement procedure, hardware lead time, hardware installation, software installation, integration into production, testing, downtime needed and lead time to get downtime approved. All of this goes into the project plan; cloud and automation can cut much of it.",
+    "**Deck template (extra application server):** internal procurement 3 working days, PO to delivery 4 weeks, hardware installation 3-5 days, software installation 0.5 day, production setup 1 day, testing 0.5 day, planning buffer 1 week, total about **7 weeks**. Estimated downtime or reduced SLA is 4 hours, with 1 week lead time for downtime approval.",
+    "**Timing trade-off:** late procurement risks insufficient capacity; early procurement ties up money and may miss later price reductions. Use the forecast, uncertainty, actual lead times and failure headroom to plan a safe date.",
+    "**Elasticity:** cloud providers auto-scale instances using a policy of scaling adjustment, adjustment type and cooldown period. If you have historical data, scheduled scaling is an alternative.",
+    "**Design guidelines:** be proactive (allow for application startup time); scale up aggressively and down conservatively; set thresholds from scalability analysis; avoid ping-pong (requests per second per node after scaling up must stay above the scale-down threshold, and after scaling down must stay below the scale-up threshold).",
+    "**Summary:** capacity planning rests on assumptions, so simplify, add a buffer for errors, and be systematic so it is easy to communicate and to revise."
+   ],
+   "terms": [
+    {
+     "term": "Cooldown period",
+     "def": "Time after a scaling action before another is allowed."
+    },
+    {
+     "term": "Ping-pong effect",
+     "def": "Repeated scale up then scale down caused by thresholds set too close."
+    },
+    {
+     "term": "Scheduled scaling",
+     "def": "Scaling at planned times based on historical patterns."
+    }
+   ],
+   "check": [
+    {
+     "q": "New instances take 5 minutes to start, and traffic doubles within 3 minutes at 9 am every weekday. How should the scaling work?",
+     "a": "Reactive scaling will always be late, because demand doubles before new instances are ready. Use scheduled scaling from the historical pattern, adding capacity shortly before 9 am, and scale up aggressively for unexpected surges. Scale down conservatively afterwards, since briefly holding spare capacity costs little compared with failing users."
+    },
+    {
+     "q": "Two nodes handle 120 requests/s. Scale-out triggers above 55/node and scale-in below 45/node. Why might adding one node cause ping-pong?",
+     "a": "Before scale-out each handles 60/s; after adding a third, each handles 40/s, below the 45/s scale-in threshold. Removing one returns to 60/s. Set thresholds and adjustments so the new state does not immediately trigger the opposite action; use cooldown as well."
+    },
+    {
+     "q": "The forecast says capacity runs out in 6 weeks. The procurement template totals about 7 weeks, plus 1 week to get downtime approved. What do you do now, and what do you change for next time?",
+     "a": "You are already late for the normal process. Look for interim capacity (temporary cloud capacity, expedited delivery, or reducing or throttling demand), and start procurement immediately, running the downtime approval in parallel. Next time, trigger procurement from the forecast with the full lead time plus a buffer. Buying very early has its own cost, tying up money and missing price drops, so plan the date rather than stockpiling."
+    }
+   ],
+   "visuals": [
+    {
+     "type": "compare",
+     "title": "Procurement plan: extra app server",
+     "columns": [
+      "Step",
+      "Source",
+      "Time"
+     ],
+     "rows": [
+      [
+       "Internal procurement (raise request to PO)",
+       "Internal organisation",
+       "3 working days"
+      ],
+      [
+       "PO to delivery",
+       "Hardware vendor",
+       "4 weeks"
+      ],
+      [
+       "Hardware installation",
+       "Hardware vendor",
+       "3-5 days"
+      ],
+      [
+       "Software installation",
+       "Vendor / in-house IT",
+       "0.5 day"
+      ],
+      [
+       "Production setup",
+       "In-house IT",
+       "1 day"
+      ],
+      [
+       "Testing",
+       "In-house IT / user",
+       "0.5 day"
+      ],
+      [
+       "Planning buffer",
+       "",
+       "1 week"
+      ],
+      [
+       "**Total**",
+       "",
+       "**7 weeks**"
+      ]
+     ]
+    }
+   ]
+  }
+ ],
+ "exam_angles": [
+  {
+   "q": "A database disk has 280 GB used of 500 GB, and the last 20 days of readings fit a linear trend of about 4.35 GB a day. Procurement takes about 7 weeks, plus 1 week for downtime approval. When does the disk fill, and when must you act? What could make the forecast wrong?",
+   "a": "(500 - 280) / 4.35 is about 51 days, roughly 7 weeks, so the disk fills at about the point a normal 7-week procurement would deliver. With a buffer, and possibly the extra week for downtime approval, you must act now. What could go wrong: growth may be exponential rather than linear, which brings the date forward; logs and indexes may grow faster than the data; and 20 days of history is short. Compare linear and exponential fits, keep revising with new readings, and plan from the earlier date."
+  },
+  {
+   "q": "Estimate storage for 1 million transactions a month growing 10% a month, retained for 2 years, at 1 MB per record, with indexes adding 30% and one replica. Then explain what happens to storage in year 3.",
+   "a": "The first 24 months hold 1M x (1.1^24 - 1) / 0.1, about 88.5M records, or 88.5 TB. With 30% for indexes that is about 115 TB, and with the replica about 230 TB, plus the fixed OS and database baseline and a buffer. In year 3, the oldest months expire, but each new month (about 9.8M records by month 25) is far larger than the month it replaces (1M), so storage keeps growing. Forecast the moving 24-month window, not a one-off total."
+  },
+  {
+   "q": "The 4-machine reference benchmark gives 55.76 tps. Slowness factors are Login 1.0, Search 2.0, Details 1.5, Cart 1.5, Checkout 2.0 and Payment 4.0, and the mix is 30/20/15/20/10/5%. The forecast peak is 45 tps, and the business wants to survive one machine failure. Estimate the capacity and recommend a machine count.",
+   "a": "Weighted estimate: 16.73 + 5.58 + 5.58 + 7.43 + 2.79 + 0.70, about 38.8 tps on 4 machines, short of 45 tps. Scaling has been sub-linear (about 1.8x per doubling), so 45 tps needs more than a proportional 4.6 machines; and to survive one failure, the survivors must still deliver 45 tps. If the 1.8x-per-doubling trend holds, 5 machines give about 47 tps, so plan for 6 (5 survivors after a failure), and confirm it by benchmarking with the production mix. The estimate assumes uniform slowness across tiers and the benchmark's configuration, so validate it with a mixed load test."
+  },
+  {
+   "q": "Load tests measure 1,000 req/s on 1 node, 1,800 on 2, 3,000 on 4 and 3,200 on 8. Explain the pattern, estimate what 16 nodes would give, and recommend what to do.",
+   "a": "Returns diminish quickly: 4 to 8 nodes adds only 7%. That suggests a large serial part (shared data, quotas) and possibly crosstalk. Amdahl caps speedup at 1 / (1 - P), and USL allows throughput to fall past a peak, so 16 nodes may give little or even less than 3,200 req/s. Fit USL's sigma and kappa to these points to find the peak, and don't buy 16 nodes without testing. Better value comes from reducing the serial work, such as shared-row updates or cross-node coordination, and rerunning the tests with a production-like mix."
+  },
+  {
+   "q": "Design an auto-scaling policy for a web tier with a Monday 9 am peak of 900 requests/s, nodes that handle 100 requests/s at the response target, and a 3-minute start-up time. Include thresholds that avoid ping-pong.",
+   "a": "Use scheduled scaling from the weekly trend to reach about 10 nodes before 9 am: 9 for the load, plus 1 for headroom. React to surprises by scaling up aggressively, since start-up takes 3 minutes, and scale down conservatively with a cooldown. Thresholds, for example: scale out above 80 requests/s per node, scale in below 50. Check them: 4 nodes at 80 is 320 requests/s, which spread over 5 nodes gives 64, above the scale-in threshold; 5 nodes at 50 is 250, which over 4 nodes gives 62.5, below the scale-out threshold. So neither action immediately triggers the other. Revisit the thresholds as the Monday trend grows."
+  }
+ ]
+}

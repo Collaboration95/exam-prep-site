@@ -1,0 +1,3655 @@
+{
+ "key": "swe5001-sample",
+ "kind": "sample",
+ "short": "SWE5001 sample paper",
+ "title": "SWE5001 Architecting Scalable Systems: sample paper (Nov 2026)",
+ "module": "NUS-ISS MTech SE Graduate Certificate Examination · Architecting Scalable Systems",
+ "domain": "Official sample paper · e-voting platform",
+ "blurb": "Sections A, B and C (50 marks) with the Vote Anywhere case study. All six figures redrawn.",
+ "source": [
+  "reference/exam-and-certificate/sample-papers-nov-2026/SWE5001 Architecting Scalable Systems sample paper (Nov 2026).pdf",
+  "reference/exam-and-certificate/sample-papers-nov-2026/SWE5001 Architecting Scalable Systems sample paper- Appendix  A (Nov 2026).pdf"
+ ],
+ "intro": [
+  "Converted from the sample paper PDF. The wording, numbering and marks are the paper's. The topic tags, pattern tags and suggested answers are ours: they are **not** the official marking scheme. Section C's parts are labelled c and d in the original, and that is kept here.",
+  "Open the [case study](case#top) in a second tab before you start."
+ ],
+ "sections": [
+  {
+   "id": "A",
+   "title": "Section A",
+   "focus": "Architecting + Platform: performance testing, messaging choice, domain-model critique, REST/RMM, NFR priority, metrics.",
+   "questions": [
+    {
+     "n": 1,
+     "marks": 25,
+     "intro": [
+      "Refer to the case study in Appendix A and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "body": [
+        "One of the measures of success of a platform is how it grows its ecosystem by growing its reach with new types of interactions and number of users."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 2,
+         "pattern": "diagnose",
+         "topics": [
+          "platform/03-api-design-v2-2#performance-testing-maturity",
+          "architecting/06-design-for-performance-in-architectur#validate-document",
+          "architecting/07-perform-capacity-planning-for-archite#benchmark-sizing"
+         ],
+         "body": [
+          "During the testing of Phase 1 API request-response type of interactions for the ‘Verify Identity’ use case, the response time is expected to be less than 3 seconds for 90% of the requests for 100,000 voters.",
+          "Additional parameters of performance testing:",
+          {
+           "ol": [
+            "API calls time frame: 30 seconds",
+            "Maximum response time: < 5 seconds"
+           ]
+          },
+          "A few testers had used some performance testing tools, e.g., Postman, to conduct the above test. It was however found that test results were varied and indeterministic, hence not a good proxy for the above performance criteria. Provide one possible reason for this observation. Propose one more reliable way to perform the test."
+         ],
+         "answer": {
+          "text": [
+           "**Reason:** an API client run from each tester's laptop cannot generate or control the specified load. It sends requests from one machine, mostly in sequence, over whatever network the tester is on. The client, its network and its warm-up state become the bottleneck, and every run has a different arrival pattern. The measurements describe the tester's set-up, not the system under 100,000 voters in 30 s.",
+           "**More reliable test:** a scripted load test run from distributed load generators placed near the system, against a production-like environment and data. Ramp to 100,000 virtual voters issuing Verify Identity inside the 30 s window and record the **90th percentile** (< 3 s) and the **maximum** (< 5 s), not the average. Warm up first, repeat the run several times and compare."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "A credible cause tied to the observation: uncontrolled or insufficient load from single client machines, network and cache noise, or no defined arrival profile."
+           },
+           {
+            "m": 1,
+            "t": "A reliable method with specifics: a load-generation tool with a scripted ramp and concurrency, distributed generators, a production-like environment, percentile measurement and repeated runs."
+           }
+          ],
+          "trap": "Saying ‘use a better tool’ with no reason. The mark is for explaining why the measurement was not a proxy for 100,000 concurrent voters."
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 2,
+         "pattern": "defend",
+         "topics": [
+          "architecting/02-architect-the-solution-architecture-a#communication-styles",
+          "cloud-native/06-application-architecture-styles-septe#data-event-ai-archetypes",
+          "cloud-native/10-appendix-cloud-patterns-and-practices#event-sourcing-resilience",
+          "platform/04-reusable-services-and-api-gateway-v2-#domain-events"
+         ],
+         "body": [
+          "The following interaction ‘Update Current Simplified/Detailed Results’ use case requires update of current simplified results should be completed within 1 minute on average while update of current detailed results should be completed within 3 minutes on average for the 100,000 concurrent voters planned for Phases 1 and 2. Furthermore, the results produced by the use case have to be deterministic and repeatable.",
+          "An aspiring Solution Architect had chosen to make use the message queue mechanism for triggering the above use case whenever a vote is concluded in the Conduct Vote use case. As the Lead Solution Architect, you strongly recommend the use of the event streaming mechanism instead. Provide two reasons to justify your recommendation."
+         ],
+         "answer": {
+          "text": [
+           "1. **Deterministic and repeatable:** an event stream is a durable, ordered log, ordered per partition, so partition by poll. Consumers can replay it from any offset, and recomputing the tally from the same log always gives the same result. A queue deletes a message once it is consumed and gives no replay. With competing consumers it also gives no ordering guarantee, so a lost or failed tally cannot be rebuilt exactly.",
+           "2. **One event, several independent consumers:** the same VoteConcluded event must feed the simplified results (1-minute target), the detailed results (3-minute target) and, in Phase 2, Predict Trends. Each reads the stream at its own pace with its own offset, and the producer is unchanged. On a queue, consumers compete for messages: each vote reaches only one of them unless you add a queue per consumer. Partitions also let 100,000 voters be processed in parallel with windowed aggregation."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Replay and retention with per-partition ordering give deterministic, repeatable results (tied to the stated requirement)."
+           },
+           {
+            "m": 1,
+            "t": "Publish/subscribe fan-out to multiple consumers with different latency targets, or partitioned throughput for 100,000 voters."
+           }
+          ],
+          "trap": "Generic ‘streaming is faster’. The paper hands you the requirement words (deterministic, repeatable, 1 and 3 minutes), so use them."
+         }
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "body": [
+        "With reference to the domain model found in [Section 7](case#s7) of the case study, analyze the following issues. For each issue, identify the most likely cause, propose an effective countermeasure (by revising the domain model) and suggest the major drawback(s) of the countermeasure, if any."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 5,
+         "pattern": "fix-cost",
+         "topics": [
+          "platform/02-reusable-assets-and-frameworks-v2-1#reusable-assets",
+          "platform/02-reusable-assets-and-frameworks-v2-1#bounded-contexts-ubiquitous-language",
+          "platform/04-reusable-services-and-api-gateway-v2-#context-mapping",
+          "architecting/08-ensure-maintainable-architecture-v3-1#architecture-styles"
+         ],
+         "body": [
+          "The NotificationManager service is responsible for defining all kinds of notification used by the platform. The various kinds of notification are rather specific to the responsibilities of the other services of the platform. As the Lead Solution Architect, you are of the opinion that the current domain design does not facilitate the potential reuse of the NotificationManager service in other platforms. Significant cost saving could be realized if the NotificationManager service can be easily reused in other platforms without drastic adaptation."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** NotificationManager holds the domain-specific subclasses PollingNotif, ProctoringNotif, ObservationNotif, VotingCompletionNotif, RejectionNotif and VerificationNotif. Each is associated with entities owned by other services (Poll, Voter, PollingRoom, Observer, User). The service speaks every other bounded context's language, so it is coupled to them. A new notification kind or a change to Poll forces a change in NotificationManager, and another platform would inherit e-voting concepts.",
+           "**Countermeasure (revised model):** make NotificationManager a generic, domain-agnostic context. Replace the subclasses with Notification (recipientRef, channel, templateId, parameters, status) and NotificationTemplate (owner, channel, body with placeholders). Add Channel (email now, SMS or push later) and DeliveryAttempt. Remove every association to Poll, Voter, PollingRoom and Observer, and refer to recipients by an opaque id or address. The owning services (VotingManager, ProctoringManager, PollManager) decide *what* to say: they register templates and either call a generic Send Notification API or publish domain events that a thin translator maps to notification requests (a published language or anti-corruption layer).",
+           "**Drawbacks:** the calling services take on composing content and managing templates. The payload loses type safety, so a wrong parameter is found at run time. Recipient data is copied into payloads, which spreads personal data and matters under GDPR. Existing code needs migrating."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: notification subclasses encode other contexts' concepts; associations to Poll, Voter, PollingRoom and others create tight coupling."
+           },
+           {
+            "m": 1,
+            "t": "Why that blocks reuse: changes ripple into NotificationManager, and another platform would need e-voting entities."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: generic Notification, Template and Channel entities, no cross-context associations, owners supply templates and parameters or publish events."
+           },
+           {
+            "m": 1,
+            "t": "A real drawback: work moves to the callers, weaker validation, template governance, or PII spread in payloads."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 4,
+         "pattern": "fix-cost",
+         "topics": [
+          "platform/04-reusable-services-and-api-gateway-v2-#aggregates",
+          "platform/04-reusable-services-and-api-gateway-v2-#domain-events",
+          "cloud-native/10-appendix-cloud-patterns-and-practices#data-patterns",
+          "architecting/06-design-for-performance-in-architectur#caching"
+         ],
+         "body": [
+          "As the Lead Solution Architect, you are pessimistic of the ability of the implemented platform in allowing the Observers in promptly viewing the updated CurrentSimplifiedResults of the Poll he/she is monitoring."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** CurrentSimplifiedResults sits in ObservationManager but is aggregated by Poll in PollManager, while the votes (CastVote) live in VotingManager. Producing up-to-date results means ObservationManager queries or joins across PollManager and VotingManager on each view, or recounts votes. Nothing pushes changes to the observer either. With 100,000 voters and 1,000 observers this cannot meet ‘within 1 minute’.",
+           "**Countermeasure:** model the results as their own aggregate, for example PollResults with CandidateTally, owned by ObservationManager and referring to the poll by PollId only. Remove Poll's aggregation of the results. VotingManager publishes a VoteCast domain event, and ObservationManager updates the tally incrementally as a CQRS read model or materialised view. Observers subscribe to their poll's results, and changes are pushed to them (WebSocket or server-sent events).",
+           "**Drawback:** the results are eventually consistent: they lag by the processing window. Exact counts need idempotent, duplicate-safe event handling and a way to rebuild by replaying events. There is also extra infrastructure: the event stream and a read store."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: results are separated from the votes and owned through Poll in another service, so each view needs cross-service queries or recomputation, and there is no push."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: a results aggregate in ObservationManager, updated from VoteCast events (read model), referencing Poll by id, with observers subscribed and pushed."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: eventual consistency, idempotency and replay complexity, or more infrastructure."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "platform/03-api-design-v2-2#richardson-maturity",
+        "platform/03-api-design-v2-2#resource-design-http",
+        "platform/03-api-design-v2-2#versioning-security-basics",
+        "cloud-native/07-microservices-design-september-2026#gateway-and-discovery"
+       ],
+       "body": [
+        "An API framework provides the tools to build, expose and consume web APIs to enable the integration of different functionalities in this Vote Anywhere platform. It is important to be compliant with the Richardson Maturity Model when designing REST APIs.",
+        "During the first phase, development of the following APIs for the platform were selected; and your team designed the APIs for these two use cases: (i) Invite Next Voter and (ii) Start Vote.",
+        "The following interfaces illustrate the current design of the two APIs based on the RESTful approach (c.f., Richardson Maturity Model - Level 2).",
+        {
+         "table": {
+          "columns": [
+           "URI",
+           "Service",
+           "Inputs",
+           "Outputs",
+           "Explanation",
+           "HTTP Action"
+          ],
+          "rows": [
+           [
+            "`/v1.1/votes/{voter-id}/invite`",
+            "ProctoringManager",
+            "Voter identifier",
+            "List of voters in the polling room",
+            "Invite the next voter to the polling room for verification",
+            "GET"
+           ],
+           [
+            "`/v1.1/votes/{voter-id}/start`",
+            "ProctoringManager",
+            "Voter Identifier",
+            "List of candidates of the poll, list of voters in the polling room",
+            "Put a voter to voting mode",
+            "GET"
+           ]
+          ]
+         }
+        },
+        "It is essential for API design to conform to the standard model for ease of understanding, usage and audit purposes.",
+        "With reference to the interfaces provided above, answer the following questions:",
+        {
+         "ol": [
+          "Do the above API interfaces comply with RMM Level 2? Provide the likely reason(s).",
+          "Propose a better versioning solution/strategy to ensure API consumers are less implicated by API upgrades.",
+          "There are redundant and/or missing inputs, outputs and possibly wrong HTTP verbs in the API interfaces. Reconstruct the above table to depict the corrected interfaces."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         "**1. Not Level 2.** Level 2 means resources plus correct HTTP verbs and status codes. Both calls change state (admit a voter, switch a voter into voting mode) using GET, which must be safe and idempotent: caches, prefetchers and automatic retries could trigger admissions. The URIs also end in verbs (/invite, /start), which is RPC over HTTP, and they hang a voter's actions under *votes*, which is the wrong resource.",
+         "**2. Versioning.** Do not put minor versions in the URI: /v1.1 makes every consumer change URLs on each minor release. Use semantic versioning with only the **major** version exposed, in the path (/v1/) or in a header or media type (`Accept: application/vnd.voteanywhere.v1+json`). Make compatible changes additively within v1, run v1 and v2 side by side behind the gateway, and publish a deprecation window.",
+         "**3. Corrected interfaces:**",
+         {
+          "table": {
+           "columns": [
+            "URI",
+            "Service",
+            "Inputs",
+            "Outputs",
+            "Explanation",
+            "HTTP"
+           ],
+           "rows": [
+            [
+             "`/v1/polling-rooms/{room-id}/admissions`",
+             "ProctoringManager",
+             "room-id (path); proctor identity from the access token. No voter id: the platform takes the next voter from the queue",
+             "201 Created + Location of the admission; the admitted voter's id and video session details",
+             "Admit the next queued voter into the polling room for verification",
+             "POST"
+            ],
+            [
+             "`/v1/polls/{poll-id}/voters/{voter-id}/ballot` (or `PATCH …/voters/{voter-id}` with `status: voting`)",
+             "ProctoringManager → VotingManager",
+             "poll-id and voter-id (path); proctor identity from the token",
+             "201 Created; the ballot: list of candidates of the poll and ballot id. No list of voters in the room",
+             "Put a verified voter into voting mode",
+             "POST (or PATCH)"
+            ]
+           ]
+          }
+         },
+         "Removed: the list of voters in the polling room, which is redundant and leaks other voters' personal data. Added: room-id and poll-id, which were missing context. Corrected: GET becomes POST/PATCH, with meaningful status codes (201, 409 if the voter is not verified or already voted)."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: not Level 2, because GET changes state (not safe or idempotent)."
+         },
+         {
+          "m": 1,
+          "t": "Second reason: verbs in URIs and the wrong resource (votes vs polling rooms, voters, ballots)."
+         },
+         {
+          "m": 1,
+          "t": "Versioning: major version only (path or header or media type), semantic versioning, backward-compatible evolution and deprecation."
+         },
+         {
+          "m": 3,
+          "t": "Corrected table: resource-style URIs, POST/PATCH, missing inputs added (room or poll id), redundant ones removed (voter list, voter id for invite), useful outputs and status codes."
+         }
+        ]
+       }
+      },
+      {
+       "label": "d",
+       "marks": 2,
+       "pattern": "agree",
+       "topics": [
+        "architecting/01-introduction-to-solution-architecture#quality-attributes-utility-tree",
+        "architecting/03-architect-the-solution-architecture-m#requirements-prioritise-detail"
+       ],
+       "body": [
+        "A team member has suggested that the usability of the system, particularly in enabling proctors to manage voting sessions effectively, is the most crucial non-functional requirement, especially considering the high volume of voters. Do you agree with this proposal, and if so, why? If not, what are your reasons for disagreement?"
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** The argument rests on ‘the high volume of voters’, and volume is a performance and scalability concern, not a usability one. The case's architecturally significant requirements are 100,000 concurrent voters, < 3 s for 90% of requests and results within 1 and 3 minutes. Beside them are security and integrity, given public mistrust of e-voting, and availability during the poll window. An easy-to-use proctor screen does not help if the platform cannot carry the load or cannot be trusted. Proctor usability still matters, since 1,000 proctors run the queues, but it ranks lower in the utility tree because it carries less architectural risk."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict, with the volume argument reframed as scalability and performance (or security), using the case's numbers."
+         },
+         {
+          "m": 1,
+          "t": "Positions usability correctly: valid but lower priority in a utility tree because of lower risk and impact on the architecture."
+         }
+        ]
+       }
+      },
+      {
+       "label": "e",
+       "marks": 4,
+       "pattern": "agree",
+       "topics": [
+        "platform/05-platform-management-v2-1#metrics",
+        "architecting/06-design-for-performance-in-architectur#metrics",
+        "architecting/07-perform-capacity-planning-for-archite#scalability-laws"
+       ],
+       "body": [
+        "A team member has suggested monitoring the daily number of voters processed by the system as an application metric. The proposal argues that tracking this metric will help assess system scalability and usability, especially when the number is high. Do you agree with this proposal, and if so, why? If not, what are your reasons for disagreement?"
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** A daily count of voters is a volume or business metric. A high number shows that demand happened, not how the system behaved under it.",
+         "**Not scalability:** scalability is how throughput and response time hold up as load and resources grow. A daily total hides the peak (a poll is a short, bursty window) and says nothing about latency, saturation or the cost of extra capacity. Measure throughput (votes per second) against concurrency, p90/p99 response time at each load level, utilisation of the bottleneck, scaling efficiency as instances are added, and queue or consumer lag.",
+         "**Not usability:** many voters processed can coexist with confusing screens, long queues and abandoned sessions. Measure task success and completion time for Verify Identity and Conduct Vote, drop-off from the virtual queue, error rates and user satisfaction.",
+         "Keep the daily count for capacity trend planning and business reporting."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: it is a volume or business metric, and a high value does not demonstrate either quality."
+         },
+         {
+          "m": 1,
+          "t": "Why it fails as a scalability measure: daily granularity hides peaks, and it has no latency, throughput or resource dimension."
+         },
+         {
+          "m": 1,
+          "t": "Why it fails as a usability measure: it ignores task success, time, errors and abandonment."
+         },
+         {
+          "m": 1,
+          "t": "Better metrics for each property (p90 latency vs load, votes/s, scaling efficiency; completion rate, drop-off)."
+         }
+        ],
+        "trap": "Agreeing because ‘more voters means it scales’. This is the paper's classic metric trap."
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Section B",
+   "focus": "Cloud native: hybrid reference architecture, internal communication, state, Kubernetes deployment, PWA vs native.",
+   "questions": [
+    {
+     "n": 2,
+     "marks": 13,
+     "intro": [
+      "With reference to the case study in Appendix A, answer the following questions based on the following context:",
+      "The cloud native engineering team decided to develop a smart frontend *(Hinted but not limited to Phase 2 in the case study)* and these improvements will be part of *Vote Anywhere* platform products. As a cloud native architect, you are responsible for a few architectural and design decisions involved in both Phases 1 and 2. Answer the following questions with the above-mentioned backdrop:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 10,
+       "pattern": "design",
+       "topics": [
+        "cloud-native/02-cloud-reference-architecture-august-2#hybrid-multicloud",
+        "cloud-native/06-application-architecture-styles-septe#monolith-vs-microservices",
+        "cloud-native/07-microservices-design-september-2026#inter-process-communication",
+        "cloud-native/08-serverless-computing-september-2026#example-architectures",
+        "cloud-native/05-architecting-a-cloud-native-applicati#state-pets-vs-cattle",
+        "cloud-native/05a-kubernetes-september-2026#cloud-native-on-k8s"
+       ],
+       "body": [
+        "Initially, your team created an initial architecture for its minimal viable product prototype as below.",
+        {
+         "figure": "mvp"
+        },
+        "Improve the above architecture by transforming the monolithic architecture into a hybrid reference architecture hosting relevant backend services needed by the voting platform *(hint: you can consider using microservices, scheduled tasks, event/stream-driven services and serverless).*"
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "body": [
+          "Capture the essential components and their interactions from a cloud perspective in a reference **architectural diagram**. What are the additional components or managed services that are essential for such a multi-cloud environment?"
+         ]
+        },
+        {
+         "label": "ii",
+         "body": [
+          "In addition to external communication via API Gateway, how will the internal services communicate? Label the communication components in the diagram and explain the communication patterns preferred."
+         ]
+        },
+        {
+         "label": "iii",
+         "body": [
+          "Identify any **one** out of the designed services that may need to remember state. Which state-management mechanism would suit the service you have identified?"
+         ]
+        },
+        {
+         "label": "iv",
+         "body": [
+          "Describe an overall deployment plan in terms of Kubernates cluster either using the k8s deployment diagram or as a paragraph."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         {
+          "figure": "ans-ref"
+         },
+         "**i. Components.** Clients (voter mobile app, web PWAs) reach the platform through global DNS/traffic management, then CDN + WAF, then the API gateway, which handles authentication with SingPass OIDC, throttling and routing. Behind it are microservices per bounded context: User, Poll, Proctoring, Voting, Results and Notification. A managed real-time video service carries the polling rooms. An **event stream** carries VoteCast and PollClosed. **Scheduled tasks** open and close polls and build reports. **Serverless functions** handle the bursty edges: bulk voter import triggered by a file upload, and sending email from a queue. Each service owns its database, and the results are an in-memory read model. **Multi-cloud essentials:** the same IaC and GitOps for each cloud's managed Kubernetes; global DNS/traffic manager; cross-cloud networking with a service mesh (mTLS); central identity, secrets and key management; central logs, metrics and traces; a replicated container registry; and a replication plan for the event stream and data.",
+         "**ii. Internal communication.** Synchronous REST/gRPC only where a caller needs an immediate answer (Proctoring checks a voter's eligibility with Poll), through Kubernetes service discovery and the mesh sidecars (mTLS, timeouts, retries, circuit breaking). Everything on the voting path is **asynchronous**: Voting publishes VoteCast to the stream (publish/subscribe, choreography). Results, Notification and Phase 2 Prediction subscribe independently. Point-to-point commands such as ‘send this email’ go on a queue with retries and a dead-letter queue. Async absorbs the burst and decouples the voting path from slow consumers.",
+         "**iii. State.** ProctoringManager has to remember each voter's place in the virtual queue and the live polling-room sessions. Keep its pods stateless (no sticky sessions) and **externalise** that state to a replicated in-memory key-value store with TTLs (a sorted set per room). Any replica can then serve the next request, and a pod restart loses nothing. Alternative: Results is a stateful stream processor whose running tallies sit in a checkpointed state store, rebuilt by replay.",
+         "**iv. Kubernetes plan.** One managed cluster per cloud and region, nodes spread across three zones, namespaces per domain (voting, proctoring, results, platform). Each service is a Deployment with at least 3 replicas, a PodDisruptionBudget and an HPA on requests per second or consumer lag, exposed through Services and an Ingress behind the API gateway. The stream runs as a StatefulSet with persistent volumes, or as a managed service. Config and secrets come from ConfigMaps and Secrets, network policies apply between namespaces, and GitOps handles delivery with canary releases. The cluster autoscaler is pre-scaled before each poll opens."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "i. Diagram decomposes the monolith into services per bounded context and shows gateway, event stream, scheduled jobs, serverless functions and data stores with interactions."
+         },
+         {
+          "m": 1,
+          "t": "i. Multi-cloud essentials named with purpose: IaC/GitOps, global traffic management, cross-cloud networking and mesh, central identity, secrets and observability."
+         },
+         {
+          "m": 2,
+          "t": "ii. Sync for immediate queries via discovery and mesh; async pub/sub for the vote flow and queues for commands, with the reason (decoupling, burst absorption)."
+         },
+         {
+          "m": 2,
+          "t": "iii. A genuinely stateful service and a fitting mechanism: externalised replicated store, StatefulSet or checkpointed stream state, with why the pods stay stateless."
+         },
+         {
+          "m": 2,
+          "t": "iv. A coherent cluster plan: zones, namespaces, Deployments/StatefulSets, replicas, HPA, ingress, config, rollout."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "pattern": "a-or-b",
+       "topics": [
+        "cloud-native/06-application-architecture-styles-septe#pwa-vs-native",
+        "cloud-native/06-application-architecture-styles-septe#data-event-ai-archetypes",
+        "cloud-native/07-microservices-design-september-2026#gateway-and-discovery"
+       ],
+       "body": [
+        "Observe the logical architecture diagram provided in [Section 6.2](case#s6-2) of the case study. As mentioned, the voters front end app needs native local storage back up facility. In the near future, the platform plans to expand in other countries with provision for physical voting booths involving additional IoT sensors and actuators. In such context, would you develop the proposed front-end using a native client or as a progressive web app? What are the design implications on the backend services."
+       ],
+       "answer": {
+        "text": [
+         "**Native (or cross-platform native) client for voters and booths.** The proof-of-voting backup needs dependable native local storage: PWA storage can be evicted and is sandboxed. Physical booths need IoT sensors and actuators over Bluetooth, NFC or USB, secure key storage and kiosk mode, which a PWA reaches poorly or not at all. Proctoring video also benefits from native camera control. The cost is separate builds, app-store releases and slower fixes. The web apps for admins, observers and the public can stay PWAs for reach.",
+         "**Backend implications:** versioned, backward-compatible APIs, because old app versions stay in the field, ideally with a backend-for-frontend per client type (mobile, booth, web). Idempotent vote submission with client-generated keys, so offline retries cannot double-vote. Device registration and attestation (device certificates, mTLS) for booths. An IoT ingestion path (device gateway or broker, telemetry stream, device management). Push notifications. Plan for per-country data residency, since multitenancy is out of scope today but will be needed."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "A choice justified by the case: native local storage and IoT device access point to native."
+         },
+         {
+          "m": 1,
+          "t": "The trade-off acknowledged: release overhead, multiple code bases, or reach."
+         },
+         {
+          "m": 1,
+          "t": "Backend implications: API versioning or BFFs, idempotent sync, device identity, IoT ingestion, push."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "title": "Section C",
+   "focus": "Architecting: logical packaging and deployment critique, scaling database writes.",
+   "questions": [
+    {
+     "n": 3,
+     "marks": 12,
+     "intro": [
+      "Refer to the initial architecture specified in [Section 6](case#s6), the domain model in [Section 7](case#s7) and the logical packaging cum deployment model for Phase 1 in [Section 8](case#s8) of the case study in Appendix A and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "c",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "architecting/03-architect-the-solution-architecture-m#logical-functional",
+        "architecting/03-architect-the-solution-architecture-m#logical-deployment-verify",
+        "architecting/04-design-secure-architecture-v4-7#secure-design-principles",
+        "cloud-native/10-appendix-cloud-patterns-and-practices#data-patterns"
+       ],
+       "body": [
+        "With reference to the domain model in Section 7 and the incomplete and potentially erroneous logical packaging cum deployment model in Figure 6 in Section 8, as the Lead Solution Architect, evaluate the logical architecture and identify **two undesirable architectural decisions** and propose the corrective actions. Justify your answer by explaining how the undesirable architectural decisions lead to the proposed corrective actions.",
+        "*Hint: You may draw just the necessary parts of the diagram to illustrate your answers.*"
+       ],
+       "answer": {
+        "text": [
+         "Any two of the following, each as decision → why it is undesirable → correction:",
+         "1. **Voting Manager Control (VoteController) and Notification Manager Control are deployed to the voter's mobile device.** The device is untrusted and sits on the Internet. Vote validation, the one-vote-per-voter rule, the update of results and email sending would all run where a tampered app can bypass them, and NotificationController would need Email Gateway credentials on every phone. This breaks complete mediation and least privilege. **Correction:** deploy only Voting Manager Presentation (VoteCastingScreen) and a local proof-of-voting store to the device. Move VoteController into the Voting service and NotificationController into the Notification service in the internal zone, reached through the API gateway.",
+         "2. **Packaging crosses service boundaries.** VotingCompletionNotif, a NotificationManager entity, is manifested by Voting Manager Data Access, and VoteController talks directly to Poll Manager Data Access. Two services sharing each other's data creates coupling and breaks database-per-service. **Correction:** VotingCompletionNotif moves to Notification Manager Data Access. VoteController gets poll and candidate data through PollManager's API (or a cached copy kept up to date by events) and publishes VoteCast. Notification reacts to that event.",
+         "3. **The device lacks the local storage element the case requires**, which keeps details of voting excluding the choice of candidate. Instead, server-side entities like CastVote (which contains the choice) and Voter are packaged with the device-side subsystems. **Correction:** add a device-side Local Proof-of-Voting Data Access holding only receipt details, and keep CastVote server-side so the choice never rests on the device."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "First undesirable decision identified, its consequence explained (security, integrity, coupling), and a concrete corrective packaging or deployment."
+         },
+         {
+          "m": 3,
+          "t": "Second undesirable decision, consequence and correction, with justification linking the problem to the fix."
+         }
+        ]
+       }
+      },
+      {
+       "label": "d",
+       "marks": 6,
+       "pattern": "design",
+       "topics": [
+        "platform/06-data-management-v2-1#scaling-databases",
+        "cloud-native/04-cloud-persistence-september-2026#scaling-consistency",
+        "cloud-native/10-appendix-cloud-patterns-and-practices#sharding",
+        "architecting/06-design-for-performance-in-architectur#tactics-load-balancing",
+        "architecting/07-perform-capacity-planning-for-archite#scalability-laws"
+       ],
+       "body": [
+        "During performance testing, it was discovered that the system cannot handle the required 100,000 concurrent voters casting their votes within a 5-minute window due to a bottleneck in database write throughput. The current database setup includes one primary replica and one read replica. Please propose a comprehensive plan to scale up the database write throughput, including any necessary changes or impacts on software and infrastructure components. Additionally, identify at least two potential side effects of implementing this new design that the team should monitor closely."
+       ],
+       "answer": {
+        "text": [
+         "**Size it first:** 100,000 votes in 300 s is about 333 writes/s on average. Bursts will be several times higher, and each vote also writes audit and notification rows. A read replica adds no write capacity: every write still lands on the one primary.",
+         "**Plan:**",
+         {
+          "ol": [
+           "**Level the load:** Voting validates and appends each vote to a durable stream or queue and acknowledges with a receipt. Consumers batch-insert into the database at a rate it can sustain (queue-based load levelling). An outbox makes the vote write and its event atomic.",
+           "**Partition the writes:** shard the vote store by hash of voter id (or poll and constituency) across N primaries, or move votes to a write-optimised distributed store (wide-column or NewSQL). Votes are append-only and keyed by voter, so the one-vote rule is a unique key within each shard.",
+           "**Take reads off the primaries:** results come from the stream as a CQRS read model, so the write store serves almost no reads.",
+           "**Tune the write path:** batch inserts, minimal indexes on the hot table, connection pooling, no shared counter row updated per vote, idempotency keys on every insert.",
+           "**Software and infrastructure changes:** a shard-aware data access layer, idempotent consumers, ‘vote recorded’ receipts in the UX, more database nodes plus the stream cluster, per-shard monitoring, then repeat the 100,000-voter load test."
+          ]
+         },
+         "**Side effects to monitor:** (1) consumer and replication lag, which delays results against the 1-minute and 3-minute targets; (2) duplicate or lost votes from at-least-once delivery, so reconcile counts against receipts; (3) shard skew or hot partitions; (4) slower cross-shard queries for detailed results and reports; (5) more operational complexity and cost, and harder resharding."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Diagnosis: a single primary is the write bottleneck; replicas don't scale writes; rough sizing."
+         },
+         {
+          "m": 3,
+          "t": "Plan elements: async load levelling, sharding or a write-scalable store, CQRS for reads, write-path tuning, with the software and infrastructure changes."
+         },
+         {
+          "m": 2,
+          "t": "At least two relevant side effects with what to watch (lag vs SLA, duplicates or consistency, hot shards, cross-shard queries, complexity)."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "case": {
+  "label": "Appendix A",
+  "title": "Vote Anywhere",
+  "subtitle": "Case study for the SWE5001 sample paper (the content of this case study is fictitious)",
+  "intro": [
+   "Converted from Appendix A. Figures 1 to 6 are redrawn from the PDF with the same elements and relationships. In Figure 5 the service packages are colour-coded; the original is all one colour."
+  ],
+  "sections": [
+   {
+    "id": "top",
+    "title": "Background",
+    "blocks": [
+     "Around 5th century BCE, ancient Athens in ancient Greece were conducting voting among eligible citizens for various communal issues like electing officials, passing laws, and making policy decisions. The practice continues till today in many countries and regions especially for electing government leaders, representatives, etc.",
+     "While there were several instances of small-scaled voting being conducted using electronic systems, most of the instances of voting are still conducted using paper ballots and tallied manually despite many inconveniences like the following:",
+     {
+      "ul": [
+       "Need to travel to potentially faraway and hard-to-access polling stations.",
+       "Potentially long waiting time during peak voting periods.",
+       "Potential inaccuracies and delays in counting and tabulation of paper ballots.",
+       "Potentially long wait for the finalised results."
+      ]
+     },
+     "Electronic voting (i.e., e-voting) is ideal and desirable but faces a variety of challenges against its widespread adoption; the following are some of the challenges:",
+     {
+      "ul": [
+       "Scepticism on the security of the systems against various security threats.",
+       "Mistrust of the public on the integrity of the systems.",
+       "Difficulties in developing robust systems and deploying them to meet the expected reliability, capacity, timeliness, etc."
+      ]
+     },
+     "*You Vote* is a local start-up whose founders are passionate and optimistic with the adoption of e-voting in smaller countries or regions having good digital infrastructure. The company has already planned the product roadmap for its e-voting platform named *Vote Anywhere*. Being a small island nation with highly developed digital infrastructure, Singapore naturally becomes the first strategic testbed for the MVP of *Vote Anywhere*.",
+     "*Voting Anywhere* would be developed over multiple phases. At present, only the initial two phases are planned. The first phase targets to implement the MVP that includes the features that provides some essential functions and a few select differentiated functions (e.g., near real-time update of results) for off-site virtual e-voting. The second phase targets to add more select differentiated functions (e.g., prediction of results).",
+     "You are the Lead Solution Architect assigned to the project. You are responsible for the technical delivery of the platform that includes the architecture, design, development and deployment of the platform and three pilot applications in the first phase. After the first phase completes successfully, the platform should allow for expansion of new services and inclusion of new actors. There are 6 pilot applications: 1 mobile application for the voters; and 5 web applications for the election admins, proctors, observers, public users and platform admins respectively."
+    ]
+   },
+   {
+    "id": "s1",
+    "n": "1",
+    "title": "Phase 1 of the Platform",
+    "blocks": [
+     "The new platform supports the following actors:",
+     {
+      "ol": [
+       "**Public User:** Anyone may access the platform via its web frontend. He/she would normally register him/herself with the platform. Voters are an exception as they are pre-registered.",
+       "**Platform User:** Anyone, except for voters, may register as a user of the platform. An authenticated Platform User may act as an Election Admin, Proctor, Observer or Platform Admin. A new registration is to be reviewed and approved by a Platform Admin.",
+       "**Election Admin:** A Platform User who manages the polls to be conducted on the platform.",
+       "**Proctor:** A Platform User who verifies authenticated Voters via live video sessions.",
+       "**Observer:** A Platform User who are granted access to more detailed results and the poll report. He/she could be a candidate of the poll or a representative from a political party.",
+       "**Voter:** A Platform User who is pre-registered for a poll and would cast his/her vote via the platform.",
+       "**Platform Admin:** Member of the platform provider who administers the Platform Users.",
+       "**SingPass Authenticator:** The external system of SingPass that serves as an OpenID Connect provider. It helps the platform to verify a Platform User via his/her SingPass credentials.",
+       "**Email Gateway:** The external third party system for sending emails to the users."
+      ]
+     },
+     "Figure 1 below illustrates the high-level functionality of Phase 1.",
+     {
+      "figure": "fig1"
+     },
+     "Here is a brief description of the use cases for Phase 1:",
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Register as Election Admin",
+         "The Public User registers him/herself with the system as an Election Admin by providing his/her particulars. The platform verifies his/her identity by sending a verification email."
+        ],
+        [
+         "Register as Proctor",
+         "The Public User registers him/herself with the system as a Proctor by providing his/her particulars. The platform verifies his/her identity by sending a verification email."
+        ],
+        [
+         "Register as Observer",
+         "The Public User registers him/herself with the system as an Observer by providing his/her particulars. The platform verifies his/her identity by sending a verification email."
+        ],
+        [
+         "Authenticate User",
+         "The Platform User logs in to the platform to start to use the platform features that require authentication."
+        ],
+        [
+         "Request Cancellation of User",
+         "The Platform User requests so that his/her account is removed from the platform. This does not apply to Voters."
+        ],
+        [
+         "Approve User Registration & Cancellation",
+         "The Platform Admin reviews the request by a Public User to register as a Platform User. The Platform Admin reviews the request by a Platform User to be removed from the platform. The system create/remove the user account accordingly."
+        ],
+        [
+         "Manage Polls",
+         "The Election Admin manages the polls that are administered by him/her. A poll includes details like poll type, date/time range, detailed description, eligible Voters, assigned Proctors, assigned Observers, etc. At present, only one kind of poll is supported:\n1. Presidential Election. This is the simplest kind of poll where the president of the country is elected among two or more individual candidates. Each eligible Voter is entitled to cast one vote for any one of the candidates. The candidate with the highest number of votes would be the winner."
+        ],
+        [
+         "Register Voters for a Poll",
+         "The Election Admin registers all the eligible Voters by importing them in bulk from a file provided by the election commission of the country/region. The platform notifies the registered Voters by sending every Voter a polling notification email."
+        ],
+        [
+         "Assign Proctors for a Poll",
+         "The Election Admin assigns one or more registered Proctors to verify the Voters of a poll. The assignment includes the “polling room” as well. The platform notifies the assigned Proctors by sending every Proctor a proctoring notification email."
+        ],
+        [
+         "Assign Observers for a Poll",
+         "The Election Admin assigns one or more registered Observers to monitor the results of a poll. The platform notifies the assigned Observers by sending every Observer an observation notification email."
+        ],
+        [
+         "Generate Poll Report",
+         "The Election Admin generates the poll report after the conclusion of a poll. The poll report is the formal deliverable of a poll; it contains all the details of the poll as well as the simplified and detailed results."
+        ],
+        [
+         "View Polling Card",
+         "The Voter views his/her polling card containing the details of the upcoming poll as well as his/her registered particulars."
+        ],
+        [
+         "Verify Identity",
+         "During the valid duration of the poll, the Voter starts his/her voting process by selecting to verify his/her identity. He/she would be put on a virtual queue, waiting to be verified by one of the assigned Proctors. Upon his/her turn for verification, he/she would be admitted into the “polling room” where he/she would be in a video conference session with a Proctor; he/she would have to answer a few questions verbally to verify his/her identity. He/she would then be automatically transitioned to the Conduct Vote use case."
+        ],
+        [
+         "Conduct Vote",
+         "While in the “polling room”, the Voter selects his/her choice of candidate from the list of candidates for the poll. Upon the confirmation of his/her choice, the Voter is removed from the “polling room” by the Proctor. The platform notifies the Voter by sending a voting completion notification email. The platform would also update the current simplified/detailed results by invoking the Update Current Simplified/Detailed Results use case.\nNote that this use case also captures the details of voting, excluding the choice of candidate, and stores them locally on the Voter device. The locally stored details can be used in future as a proof of voting where relevant."
+        ],
+        [
+         "Enter Verification Room",
+         "During the valid duration of the poll, the Proctor starts his/her proctoring session by selecting to enter his/her assigned “verification room”. He/she is admitted into the “polling room” where he/she would be in a video conference with Voters, one at a time."
+        ],
+        [
+         "Invite Next Voter",
+         "While in the “polling room”, the Proctor selects to admit the next Voter to be verified whenever he/she is ready. Upon admitting a Voter, he/she would verify the Voter’s identity by asking the latter a few verification questions verbally. If the Proctor is satisfied with the responses, he/she would select to allow the Voter to start voting by invoking the Start Vote use case. However, if the Proctor is not satisfied with the responses; he/she would select to reject the Voter by invoking the Reject Voter use case."
+        ],
+        [
+         "Reject Voter",
+         "The platform removes the current Voter from the “polling room” and sends a rejection notification email to the Voter."
+        ],
+        [
+         "Start Vote",
+         "The platform displays the list of candidates of the poll for the Voter to make his/her choice. Upon confirming his/her choice, the platform removes the Voter from the “polling room”."
+        ],
+        [
+         "Leave Verification Room",
+         "During the valid duration of the poll, when not actively verifying a Voter, the Proctor may terminate his/her proctoring session by selecting to leave his/her assigned “polling room”."
+        ],
+        [
+         "View Current Simplified Results",
+         "During the valid duration of the poll and a configurable period after the conclusion of the poll, the Public User or Observer may view the current simplified results of the poll. It contains the current tallied results including the counts and percentages of votes for each candidate. If the user stays in the same screen, the results would be automatically updated whenever there are new changes."
+        ],
+        [
+         "View Current Detailed Results",
+         "During the valid duration of the poll, the Observer may view the current detailed results of the poll. It contains the current tallied results (as presented as current simplified results) as well as other details including the breakdown of vote counts by voter constituencies, by voter age groups, etc."
+        ],
+        [
+         "View Poll Report",
+         "After the conclusion of the poll, the poll report is made available to the Observer for a configurable period. The Observer may view the poll report which contains all the details of the poll as well as the simplified and detailed results."
+        ],
+        [
+         "Send Notification",
+         "When an use case needs to send an email notification, this use case in invoked to send the email to the recipient(s) via the Email Gateway."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s2",
+    "n": "2",
+    "title": "Phase 2 of the Platform",
+    "blocks": [
+     "In addition to the Phase 1 functionality, this platform is being extended with features that cater to accessibility as well as prediction of the trends of results.",
+     "There are no new actors.",
+     "Figures 2 below illustrates the high-level functionality of Phase 2.",
+     {
+      "figure": "fig2"
+     },
+     "Here is a brief description of the use cases for Phase 2:",
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Allocate Voter to Suitable Polling Room",
+         "As some of the Voters may have specific special needs like the use of sign language, limited language options, etc., the platform should optimally allocate the Voters to the “verification room” that is manned by a Proctor of suitable profile. This use case is invoked whenever the Voter invokes the *Verify Identity* use case."
+        ],
+        [
+         "Predict Trends of Results",
+         "The platform allows the Observer to predict the trends of results based on some parameters that can be configured based on the preferences and assumptions of the Observer. These parameters include voter turnout (i.e., some voters may turn up later), voter demographic (i.e., voters of some demographic may turn up later), etc."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s3",
+    "n": "3",
+    "title": "Extensibility of the Platform",
+    "blocks": [
+     "The platform is designed to use common services and libraries that support and speed up the development of future services provided by the platform."
+    ]
+   },
+   {
+    "id": "s4",
+    "n": "4",
+    "title": "Performance and Scalability of the Platform",
+    "blocks": [
+     "The platform is designed for the following performance and scalability:",
+     {
+      "ul": [
+       "For phases 1 and 2, the platform supports up to **10** concurrent Election Admins; **1,000** concurrent Proctors; **1,000** concurrent Observers; **100,000** concurrent Voters and **5** concurrent Platform Admins.",
+       "For interactive request-response type of operation (e.g., Verify Identity), the expected response time is **less than 3 seconds for 90%** of the requests.",
+       "The platform is currently not expected to handle multitenancy (i.e., multiple countries or regions).",
+       "The platform handles increasing amount of data while maintaining the response time of the application.",
+       "The platform handles near real-time update of current simplified/detailed results. Update of current simplified results should be completed within **1 minute** on average while update of current detailed results should be completed within **3 minutes** on average.",
+       "The platform should ensure isolation of data without sacrificing the consistency of the update and retrieval of data processed in real-time."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s5",
+    "n": "5",
+    "title": "Security Architecture of the Platform",
+    "blocks": [
+     "The platform is designed with the following security considerations:",
+     {
+      "ul": [
+       "The system follows general security best practices in infrastructure and application security e.g., reverse proxy in DMZ, etc.",
+       "Personal information is stored in encrypted form and the platform is able to find all information stored about an individual. According to GDPR, the actors should allow users to request access to user’s data and the platform should be able to facilitate the compliance."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s6",
+    "n": "6",
+    "title": "Initial Architecture of the Platform",
+    "blocks": [
+     "As the Lead Solution Architect, you have provided the following architectural guidelines for the platform and the applications.",
+     {
+      "h": "6.1 Architecture Layers",
+      "id": "s6-1"
+     },
+     {
+      "figure": "fig3"
+     },
+     "The above layered architecture illustrates the desirable layering of a typical application on the platform. The Presentation layer handles the user interaction of the application. The Control layer handles the flow logics of the application use cases. The Data Access layer handles the access to persistent storages. The External Integration layer handles the integration with external systems. The Shared Library layer hosts the shared/reusable libraries.",
+     {
+      "h": "6.2 Logical Architecture Overview",
+      "id": "s6-2"
+     },
+     {
+      "figure": "fig4"
+     },
+     "The above logical architecture overview illustrates the desirable tiering of the platform. The frontend tiers are in the form of Web Browser (for the Election Admins, Proctors, Observers, Public Users and Platform Admins), Mobile Device with Local Storage (for Voters). The backend tiers are Web Presentation, Service, Storage and Integration.",
+     {
+      "h": "6.3 Deployment Options",
+      "id": "s6-3"
+     },
+     "The platform is to be designed as a cloud native solution. The services should be implemented as microservices."
+    ]
+   },
+   {
+    "id": "s7",
+    "n": "7",
+    "title": "Domain Model for Phase 1",
+    "blocks": [
+     "A Software Architect has analyzed the requirements for Phase 1 and identified the following domain entities and services. The Development team would implement the platform according to this domain model.",
+     {
+      "figure": "fig5"
+     }
+    ]
+   },
+   {
+    "id": "s8",
+    "n": "8",
+    "title": "Logical Packaging cum Deployment Model for Phase 1",
+    "blocks": [
+     "A Solution Architect has crafted an **incomplete** and **potentially erroneous** logical architecture for the *Conduct Vote* use case. The emphasis is on the packaging of the associated functional elements into subsystems as well as on the deployment of the subsystems to the mobile devices of Voters. Do take note that the diagram intentionally omits the deployment for the backend of the platform.",
+     {
+      "figure": "fig6"
+     }
+    ]
+   }
+  ]
+ },
+ "figures": {
+  "mvp": {
+   "title": "Initial architecture of the MVP prototype",
+   "caption": "The monolith the question asks you to transform: one app talking to one backend and one database.",
+   "size": [
+    720,
+    250
+   ],
+   "legend": false,
+   "groups": [
+    {
+     "id": "be",
+     "kind": "tier",
+     "tone": 0,
+     "x": 220,
+     "y": 20,
+     "w": 470,
+     "h": 210,
+     "label": "Voting Backend Services"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 40,
+     "y": 55,
+     "w": 112,
+     "h": 150,
+     "label": "Voting App",
+     "sub": "(Front End)"
+    },
+    {
+     "id": "mono",
+     "kind": "component",
+     "x": 262,
+     "y": 88,
+     "w": 200,
+     "h": 84,
+     "label": "Voting backend",
+     "sub": "(monolith)"
+    },
+    {
+     "id": "db",
+     "kind": "db",
+     "x": 532,
+     "y": 84,
+     "w": 120,
+     "h": 92,
+     "label": "Database"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "mono",
+     "to": "db",
+     "style": "sync"
+    }
+   ]
+  },
+  "fig1": {
+   "title": "Figure 1: System Context for Phase 1",
+   "caption": "Use-case view. Hollow triangles: actor generalisation (Election Admin, Proctor, Platform Admin, Voter and Observer are Platform Users; an Election Admin is also an Observer). Dashed arrows are «include».",
+   "size": [
+    1000,
+    975
+   ],
+   "groups": [
+    {
+     "id": "sys",
+     "kind": "boundary",
+     "x": 210,
+     "y": 130,
+     "w": 580,
+     "h": 805,
+     "label": "Vote Anywhere Platform Phase 1"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "pu",
+     "kind": "actor",
+     "x": 70,
+     "y": 10,
+     "w": 60,
+     "label": "Platform User"
+    },
+    {
+     "id": "sp",
+     "kind": "actor",
+     "x": 230,
+     "y": 10,
+     "w": 60,
+     "label": "SingPass\nAuthenticator"
+    },
+    {
+     "id": "eg",
+     "kind": "actor",
+     "x": 465,
+     "y": 10,
+     "w": 60,
+     "label": "Email\nGateway"
+    },
+    {
+     "id": "ea",
+     "kind": "actor",
+     "x": 70,
+     "y": 360,
+     "w": 60,
+     "label": "Election\nAdmin"
+    },
+    {
+     "id": "pr",
+     "kind": "actor",
+     "x": 70,
+     "y": 700,
+     "w": 60,
+     "label": "Proctor"
+    },
+    {
+     "id": "pa",
+     "kind": "actor",
+     "x": 850,
+     "y": 140,
+     "w": 60,
+     "label": "Platform\nAdmin"
+    },
+    {
+     "id": "pub",
+     "kind": "actor",
+     "x": 850,
+     "y": 300,
+     "w": 60,
+     "label": "Public\nUser"
+    },
+    {
+     "id": "vo",
+     "kind": "actor",
+     "x": 850,
+     "y": 500,
+     "w": 60,
+     "label": "Voter"
+    },
+    {
+     "id": "ob",
+     "kind": "actor",
+     "x": 850,
+     "y": 740,
+     "w": 60,
+     "label": "Observer"
+    },
+    {
+     "id": "u_auth",
+     "kind": "usecase",
+     "x": 222,
+     "y": 165,
+     "w": 196,
+     "h": 46,
+     "label": "Authenticate User"
+    },
+    {
+     "id": "u_cancel",
+     "kind": "usecase",
+     "x": 222,
+     "y": 220,
+     "w": 196,
+     "h": 56,
+     "label": "Request Cancellation\nof User"
+    },
+    {
+     "id": "u_polls",
+     "kind": "usecase",
+     "x": 222,
+     "y": 290,
+     "w": 196,
+     "h": 46,
+     "label": "Manage Polls"
+    },
+    {
+     "id": "u_regvot",
+     "kind": "usecase",
+     "x": 222,
+     "y": 345,
+     "w": 196,
+     "h": 56,
+     "label": "Register Voters\nfor a Poll"
+    },
+    {
+     "id": "u_aproc",
+     "kind": "usecase",
+     "x": 222,
+     "y": 410,
+     "w": 196,
+     "h": 56,
+     "label": "Assign Proctors\nfor a Poll"
+    },
+    {
+     "id": "u_aobs",
+     "kind": "usecase",
+     "x": 222,
+     "y": 475,
+     "w": 196,
+     "h": 56,
+     "label": "Assign Observers\nfor a Poll"
+    },
+    {
+     "id": "u_report",
+     "kind": "usecase",
+     "x": 222,
+     "y": 540,
+     "w": 196,
+     "h": 56,
+     "label": "Generate Poll\nReport"
+    },
+    {
+     "id": "u_enter",
+     "kind": "usecase",
+     "x": 222,
+     "y": 625,
+     "w": 196,
+     "h": 56,
+     "label": "Enter Verification\nRoom"
+    },
+    {
+     "id": "u_invite",
+     "kind": "usecase",
+     "x": 222,
+     "y": 690,
+     "w": 196,
+     "h": 46,
+     "label": "Invite Next Voter"
+    },
+    {
+     "id": "u_reject",
+     "kind": "usecase",
+     "x": 222,
+     "y": 745,
+     "w": 196,
+     "h": 46,
+     "label": "Reject Voter"
+    },
+    {
+     "id": "u_start",
+     "kind": "usecase",
+     "x": 222,
+     "y": 800,
+     "w": 196,
+     "h": 46,
+     "label": "Start Vote"
+    },
+    {
+     "id": "u_leave",
+     "kind": "usecase",
+     "x": 222,
+     "y": 855,
+     "w": 196,
+     "h": 56,
+     "label": "Leave Verification\nRoom"
+    },
+    {
+     "id": "u_notify",
+     "kind": "usecase",
+     "x": 420,
+     "y": 445,
+     "w": 150,
+     "h": 52,
+     "label": "Send\nNotification",
+     "tone": 3
+    },
+    {
+     "id": "u_update",
+     "kind": "usecase",
+     "x": 415,
+     "y": 600,
+     "w": 160,
+     "h": 84,
+     "label": "Update Current\nSimplified/\nDetailed Results",
+     "tone": 3
+    },
+    {
+     "id": "u_approve",
+     "kind": "usecase",
+     "x": 605,
+     "y": 165,
+     "w": 180,
+     "h": 66,
+     "label": "Approve User\nRegistration &\nCancellation"
+    },
+    {
+     "id": "u_regea",
+     "kind": "usecase",
+     "x": 605,
+     "y": 245,
+     "w": 180,
+     "h": 56,
+     "label": "Register as\nElection Admin"
+    },
+    {
+     "id": "u_regpr",
+     "kind": "usecase",
+     "x": 605,
+     "y": 312,
+     "w": 180,
+     "h": 50,
+     "label": "Register as\nProctor"
+    },
+    {
+     "id": "u_regob",
+     "kind": "usecase",
+     "x": 605,
+     "y": 372,
+     "w": 180,
+     "h": 50,
+     "label": "Register as\nObserver"
+    },
+    {
+     "id": "u_card",
+     "kind": "usecase",
+     "x": 605,
+     "y": 480,
+     "w": 180,
+     "h": 46,
+     "label": "View Polling Card"
+    },
+    {
+     "id": "u_verify",
+     "kind": "usecase",
+     "x": 605,
+     "y": 535,
+     "w": 180,
+     "h": 46,
+     "label": "Verify Identity"
+    },
+    {
+     "id": "u_vote",
+     "kind": "usecase",
+     "x": 605,
+     "y": 615,
+     "w": 180,
+     "h": 46,
+     "label": "Conduct Vote"
+    },
+    {
+     "id": "u_simple",
+     "kind": "usecase",
+     "x": 605,
+     "y": 715,
+     "w": 180,
+     "h": 56,
+     "label": "View Current\nSimplified Results"
+    },
+    {
+     "id": "u_detail",
+     "kind": "usecase",
+     "x": 605,
+     "y": 785,
+     "w": 180,
+     "h": 56,
+     "label": "View Current\nDetailed Results"
+    },
+    {
+     "id": "u_preport",
+     "kind": "usecase",
+     "x": 605,
+     "y": 860,
+     "w": 180,
+     "h": 46,
+     "label": "View Poll Report"
+    }
+   ],
+   "edges": [
+    {
+     "from": "ea",
+     "to": "pu",
+     "style": "gen",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "pr",
+     "to": "pu",
+     "style": "gen",
+     "fromAt": [
+      0,
+      0.4
+     ],
+     "via": [
+      [
+       30,
+       734
+      ],
+      [
+       30,
+       115
+      ],
+      [
+       100,
+       115
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "pa",
+     "to": "pu",
+     "style": "gen",
+     "fromAt": [
+      1,
+      0.4
+     ],
+     "via": [
+      [
+       975,
+       174
+      ],
+      [
+       975,
+       115
+      ],
+      [
+       100,
+       115
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "vo",
+     "to": "pu",
+     "style": "gen",
+     "fromAt": [
+      1,
+      0.4
+     ],
+     "via": [
+      [
+       975,
+       534
+      ],
+      [
+       975,
+       115
+      ],
+      [
+       100,
+       115
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "ob",
+     "to": "pu",
+     "style": "gen",
+     "fromAt": [
+      1,
+      0.4
+     ],
+     "via": [
+      [
+       975,
+       774
+      ],
+      [
+       975,
+       115
+      ],
+      [
+       100,
+       115
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "ea",
+     "to": "ob",
+     "style": "gen",
+     "fromAt": [
+      0,
+      0.6
+     ],
+     "via": [
+      [
+       14,
+       412
+      ],
+      [
+       14,
+       955
+      ],
+      [
+       880,
+       955
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "pu",
+     "to": "u_auth",
+     "style": "assoc",
+     "fromAt": [
+      0.75,
+      1.05
+     ]
+    },
+    {
+     "from": "pu",
+     "to": "u_cancel",
+     "style": "assoc",
+     "fromAt": [
+      0.75,
+      1.05
+     ]
+    },
+    {
+     "from": "sp",
+     "to": "u_auth",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      1.25
+     ]
+    },
+    {
+     "from": "ea",
+     "to": "u_polls",
+     "style": "assoc"
+    },
+    {
+     "from": "ea",
+     "to": "u_regvot",
+     "style": "assoc"
+    },
+    {
+     "from": "ea",
+     "to": "u_aproc",
+     "style": "assoc"
+    },
+    {
+     "from": "ea",
+     "to": "u_aobs",
+     "style": "assoc"
+    },
+    {
+     "from": "ea",
+     "to": "u_report",
+     "style": "assoc"
+    },
+    {
+     "from": "pr",
+     "to": "u_enter",
+     "style": "assoc"
+    },
+    {
+     "from": "pr",
+     "to": "u_invite",
+     "style": "assoc"
+    },
+    {
+     "from": "pr",
+     "to": "u_reject",
+     "style": "assoc"
+    },
+    {
+     "from": "pr",
+     "to": "u_start",
+     "style": "assoc"
+    },
+    {
+     "from": "pr",
+     "to": "u_leave",
+     "style": "assoc"
+    },
+    {
+     "from": "eg",
+     "to": "u_notify",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      1.25
+     ]
+    },
+    {
+     "from": "pa",
+     "to": "u_approve",
+     "style": "assoc"
+    },
+    {
+     "from": "pub",
+     "to": "u_regea",
+     "style": "assoc"
+    },
+    {
+     "from": "pub",
+     "to": "u_regpr",
+     "style": "assoc"
+    },
+    {
+     "from": "pub",
+     "to": "u_regob",
+     "style": "assoc"
+    },
+    {
+     "from": "pub",
+     "to": "u_simple",
+     "style": "assoc",
+     "via": [
+      [
+       822,
+       690
+      ]
+     ]
+    },
+    {
+     "from": "vo",
+     "to": "u_card",
+     "style": "assoc"
+    },
+    {
+     "from": "vo",
+     "to": "u_verify",
+     "style": "assoc"
+    },
+    {
+     "from": "vo",
+     "to": "u_vote",
+     "style": "assoc"
+    },
+    {
+     "from": "ob",
+     "to": "u_simple",
+     "style": "assoc"
+    },
+    {
+     "from": "ob",
+     "to": "u_detail",
+     "style": "assoc"
+    },
+    {
+     "from": "ob",
+     "to": "u_preport",
+     "style": "assoc"
+    },
+    {
+     "from": "u_regvot",
+     "to": "u_notify",
+     "style": "include",
+     "label": ""
+    },
+    {
+     "from": "u_aproc",
+     "to": "u_notify",
+     "style": "include",
+     "label": ""
+    },
+    {
+     "from": "u_aobs",
+     "to": "u_notify",
+     "style": "include",
+     "label": ""
+    },
+    {
+     "from": "u_reject",
+     "to": "u_notify",
+     "style": "include",
+     "label": ""
+    },
+    {
+     "from": "u_regea",
+     "to": "u_notify",
+     "style": "include",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "label": ""
+    },
+    {
+     "from": "u_regpr",
+     "to": "u_notify",
+     "style": "include",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "label": ""
+    },
+    {
+     "from": "u_regob",
+     "to": "u_notify",
+     "style": "include",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "label": ""
+    },
+    {
+     "from": "u_vote",
+     "to": "u_notify",
+     "style": "include",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "label": ""
+    },
+    {
+     "from": "u_vote",
+     "to": "u_update",
+     "style": "include",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "label": ""
+    }
+   ]
+  },
+  "fig2": {
+   "title": "Figure 2: System Context for Phase 2",
+   "caption": "Phase 2 adds two use cases and no new actors. Verify Identity is the Phase 1 use case.",
+   "size": [
+    820,
+    300
+   ],
+   "groups": [
+    {
+     "id": "sys",
+     "kind": "boundary",
+     "x": 290,
+     "y": 20,
+     "w": 360,
+     "h": 262,
+     "label": "Vote Anywhere Platform Phase 2"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "vi",
+     "kind": "usecase",
+     "x": 30,
+     "y": 82,
+     "w": 160,
+     "h": 48,
+     "label": "Verify Identity"
+    },
+    {
+     "id": "note",
+     "kind": "note",
+     "x": 45,
+     "y": 190,
+     "w": 130,
+     "h": 40,
+     "label": "Of Phase 1"
+    },
+    {
+     "id": "alloc",
+     "kind": "usecase",
+     "x": 318,
+     "y": 76,
+     "w": 304,
+     "h": 60,
+     "label": "Allocate Voter to\nSuitable Polling Room",
+     "tone": 2
+    },
+    {
+     "id": "pred",
+     "kind": "usecase",
+     "x": 345,
+     "y": 182,
+     "w": 250,
+     "h": 50,
+     "label": "Predict Trends of Results",
+     "tone": 2
+    },
+    {
+     "id": "ob",
+     "kind": "actor",
+     "x": 715,
+     "y": 160,
+     "w": 70,
+     "label": "Observer"
+    }
+   ],
+   "edges": [
+    {
+     "from": "vi",
+     "to": "alloc",
+     "style": "include"
+    },
+    {
+     "from": "note",
+     "to": "vi",
+     "style": "anchor"
+    },
+    {
+     "from": "ob",
+     "to": "pred",
+     "style": "assoc"
+    }
+   ]
+  },
+  "fig3": {
+   "title": "Figure 3: Architecture Layers",
+   "caption": "The desirable layering of a typical application on the platform. Shared Library spans all layers.",
+   "size": [
+    900,
+    300
+   ],
+   "groups": [
+    {
+     "id": "pres",
+     "kind": "package",
+     "stereo": "layer",
+     "tone": 4,
+     "x": 20,
+     "y": 14,
+     "w": 700,
+     "h": 78,
+     "label": "Presentation",
+     "sub": "user interaction"
+    },
+    {
+     "id": "ctrl",
+     "kind": "package",
+     "stereo": "layer",
+     "tone": 0,
+     "x": 20,
+     "y": 106,
+     "w": 700,
+     "h": 78,
+     "label": "Control",
+     "sub": "flow logic of the use cases"
+    },
+    {
+     "id": "da",
+     "kind": "package",
+     "stereo": "layer",
+     "tone": 1,
+     "x": 20,
+     "y": 198,
+     "w": 342,
+     "h": 84,
+     "label": "Data Access",
+     "sub": "access to persistent storage"
+    },
+    {
+     "id": "ext",
+     "kind": "package",
+     "stereo": "layer",
+     "tone": 5,
+     "x": 378,
+     "y": 198,
+     "w": 342,
+     "h": 84,
+     "label": "External Integration",
+     "sub": "integration with external systems"
+    },
+    {
+     "id": "lib",
+     "kind": "package",
+     "stereo": "layer",
+     "tone": 2,
+     "x": 740,
+     "y": 14,
+     "w": 140,
+     "h": 268,
+     "label": "Shared\nLibrary",
+     "sub": "shared /\nreusable\nlibraries"
+    }
+   ],
+   "nodes": [],
+   "edges": []
+  },
+  "fig4": {
+   "title": "Figure 4: Architecture Overview",
+   "caption": "Frontend tiers on the Internet (web browser; mobile device with local storage); backend tiers in the internal zone (web presentation, service, storage, integration). Packages are subsystems.",
+   "size": [
+    1000,
+    540
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 340,
+     "h": 515
+    },
+    {
+     "id": "web",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Web Browser",
+     "tone": 4,
+     "x": 35,
+     "y": 70,
+     "w": 300,
+     "h": 80
+    },
+    {
+     "id": "mob",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Mobile Device with Local Storage",
+     "tone": 4,
+     "x": 35,
+     "y": 172,
+     "w": 300,
+     "h": 338
+    },
+    {
+     "id": "m_pres",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Presentation",
+     "x": 52,
+     "y": 238,
+     "w": 150,
+     "h": 70
+    },
+    {
+     "id": "m_ctrl",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Control",
+     "x": 52,
+     "y": 326,
+     "w": 150,
+     "h": 70
+    },
+    {
+     "id": "m_da",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Data Access",
+     "x": 52,
+     "y": 414,
+     "w": 150,
+     "h": 70
+    },
+    {
+     "id": "m_lib",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Shared\nLibrary",
+     "x": 218,
+     "y": 238,
+     "w": 100,
+     "h": 246
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internal Zone",
+     "tone": 0,
+     "x": 380,
+     "y": 12,
+     "w": 605,
+     "h": 515
+    },
+    {
+     "id": "wpt",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Web Presentation Tier",
+     "tone": 4,
+     "x": 400,
+     "y": 70,
+     "w": 215,
+     "h": 170
+    },
+    {
+     "id": "w_pres",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Web Presentation",
+     "x": 418,
+     "y": 138,
+     "w": 180,
+     "h": 76
+    },
+    {
+     "id": "svc",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Service Tier",
+     "tone": 0,
+     "x": 635,
+     "y": 70,
+     "w": 330,
+     "h": 250
+    },
+    {
+     "id": "s_ctrl",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Control",
+     "x": 652,
+     "y": 138,
+     "w": 140,
+     "h": 70
+    },
+    {
+     "id": "s_lib",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Shared Library",
+     "x": 806,
+     "y": 138,
+     "w": 142,
+     "h": 70
+    },
+    {
+     "id": "s_da",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Data Access",
+     "x": 652,
+     "y": 228,
+     "w": 140,
+     "h": 70
+    },
+    {
+     "id": "sto",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Storage",
+     "tone": 1,
+     "x": 400,
+     "y": 342,
+     "w": 215,
+     "h": 165
+    },
+    {
+     "id": "st_da",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Data Access",
+     "x": 418,
+     "y": 410,
+     "w": 180,
+     "h": 76
+    },
+    {
+     "id": "intg",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Integration Tier",
+     "tone": 5,
+     "x": 635,
+     "y": 342,
+     "w": 330,
+     "h": 165
+    },
+    {
+     "id": "i_ext",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "External Integration",
+     "x": 652,
+     "y": 410,
+     "w": 230,
+     "h": 76
+    }
+   ],
+   "nodes": [],
+   "edges": []
+  },
+  "fig5": {
+   "title": "Figure 5: Domain Model for Phase 1",
+   "caption": "Entities grouped by the service that owns them. Hollow triangle = generalisation, hollow diamond = aggregation (at the whole), plain line = association. No multiplicities are given in the original.",
+   "size": [
+    1060,
+    880
+   ],
+   "groups": [
+    {
+     "id": "um",
+     "kind": "package",
+     "stereo": "service",
+     "label": "UserManager",
+     "tone": 0,
+     "x": 28,
+     "y": 40,
+     "w": 290,
+     "h": 130
+    },
+    {
+     "id": "pm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "PollManager",
+     "tone": 2,
+     "x": 345,
+     "y": 40,
+     "w": 420,
+     "h": 200
+    },
+    {
+     "id": "om",
+     "kind": "package",
+     "stereo": "service",
+     "label": "ObservationManager",
+     "tone": 4,
+     "x": 790,
+     "y": 40,
+     "w": 230,
+     "h": 270
+    },
+    {
+     "id": "prm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "ProctoringManager",
+     "tone": 1,
+     "x": 28,
+     "y": 215,
+     "w": 260,
+     "h": 290
+    },
+    {
+     "id": "vm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "VotingManager",
+     "tone": 3,
+     "x": 28,
+     "y": 545,
+     "w": 280,
+     "h": 300
+    },
+    {
+     "id": "nm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "NotificationManager",
+     "tone": 5,
+     "x": 335,
+     "y": 480,
+     "w": 685,
+     "h": 365
+    }
+   ],
+   "nodes": [
+    {
+     "id": "PlatformAdmin",
+     "kind": "class",
+     "tone": 0,
+     "x": 45,
+     "y": 108,
+     "w": 125,
+     "label": "PlatformAdmin"
+    },
+    {
+     "id": "User",
+     "kind": "class",
+     "tone": 0,
+     "x": 195,
+     "y": 108,
+     "w": 105,
+     "label": "User"
+    },
+    {
+     "id": "ElectionAdmin",
+     "kind": "class",
+     "tone": 2,
+     "x": 365,
+     "y": 100,
+     "w": 140,
+     "label": "ElectionAdmin"
+    },
+    {
+     "id": "PollReport",
+     "kind": "class",
+     "tone": 2,
+     "x": 610,
+     "y": 100,
+     "w": 125,
+     "label": "PollReport"
+    },
+    {
+     "id": "Candidate",
+     "kind": "class",
+     "tone": 2,
+     "x": 365,
+     "y": 180,
+     "w": 125,
+     "label": "Candidate"
+    },
+    {
+     "id": "Poll",
+     "kind": "class",
+     "tone": 2,
+     "x": 530,
+     "y": 175,
+     "w": 170,
+     "h": 46,
+     "label": "Poll"
+    },
+    {
+     "id": "CDR",
+     "kind": "class",
+     "tone": 4,
+     "x": 805,
+     "y": 100,
+     "w": 205,
+     "label": "CurrentDetailedResults"
+    },
+    {
+     "id": "CSR",
+     "kind": "class",
+     "tone": 4,
+     "x": 805,
+     "y": 165,
+     "w": 205,
+     "label": "CurrentSimplifiedResults"
+    },
+    {
+     "id": "Observer",
+     "kind": "class",
+     "tone": 4,
+     "x": 850,
+     "y": 240,
+     "w": 120,
+     "label": "Observer"
+    },
+    {
+     "id": "Proctor",
+     "kind": "class",
+     "tone": 1,
+     "x": 60,
+     "y": 275,
+     "w": 140,
+     "label": "Proctor"
+    },
+    {
+     "id": "PollingRoom",
+     "kind": "class",
+     "tone": 1,
+     "x": 60,
+     "y": 350,
+     "w": 140,
+     "label": "PollingRoom"
+    },
+    {
+     "id": "ProofOfIdentity",
+     "kind": "class",
+     "tone": 1,
+     "x": 50,
+     "y": 425,
+     "w": 170,
+     "label": "ProofOfIdentity"
+    },
+    {
+     "id": "Voter",
+     "kind": "class",
+     "tone": 3,
+     "x": 50,
+     "y": 605,
+     "w": 120,
+     "label": "Voter"
+    },
+    {
+     "id": "CastVote",
+     "kind": "class",
+     "tone": 3,
+     "x": 150,
+     "y": 760,
+     "w": 130,
+     "label": "CastVote"
+    },
+    {
+     "id": "RejectionNotif",
+     "kind": "class",
+     "tone": 5,
+     "x": 355,
+     "y": 540,
+     "w": 150,
+     "label": "RejectionNotif"
+    },
+    {
+     "id": "PollingNotif",
+     "kind": "class",
+     "tone": 5,
+     "x": 535,
+     "y": 540,
+     "w": 140,
+     "label": "PollingNotif"
+    },
+    {
+     "id": "ObservationNotif",
+     "kind": "class",
+     "tone": 5,
+     "x": 845,
+     "y": 540,
+     "w": 165,
+     "label": "ObservationNotif"
+    },
+    {
+     "id": "ProctoringNotif",
+     "kind": "class",
+     "tone": 5,
+     "x": 355,
+     "y": 640,
+     "w": 160,
+     "label": "ProctoringNotif"
+    },
+    {
+     "id": "NotificationEmail",
+     "kind": "class",
+     "tone": 5,
+     "x": 610,
+     "y": 640,
+     "w": 185,
+     "label": "NotificationEmail"
+    },
+    {
+     "id": "VCN",
+     "kind": "class",
+     "tone": 5,
+     "x": 355,
+     "y": 760,
+     "w": 210,
+     "label": "VotingCompletionNotif"
+    },
+    {
+     "id": "VerificationNotif",
+     "kind": "class",
+     "tone": 5,
+     "x": 830,
+     "y": 760,
+     "w": 165,
+     "label": "VerificationNotif"
+    }
+   ],
+   "edges": [
+    {
+     "from": "PlatformAdmin",
+     "to": "User",
+     "style": "gen"
+    },
+    {
+     "from": "ElectionAdmin",
+     "to": "User",
+     "style": "gen"
+    },
+    {
+     "from": "Proctor",
+     "to": "User",
+     "style": "gen",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       130,
+       192
+      ],
+      [
+       247,
+       192
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "Voter",
+     "to": "User",
+     "style": "gen",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "via": [
+      [
+       20,
+       626
+      ],
+      [
+       20,
+       192
+      ],
+      [
+       247,
+       192
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "Observer",
+     "to": "User",
+     "style": "gen",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       1040,
+       261
+      ],
+      [
+       1040,
+       20
+      ],
+      [
+       247,
+       20
+      ]
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "User",
+     "to": "VerificationNotif",
+     "style": "assoc",
+     "fromAt": [
+      0.2,
+      1
+     ],
+     "via": [
+      [
+       216,
+       160
+      ],
+      [
+       12,
+       160
+      ],
+      [
+       12,
+       862
+      ],
+      [
+       912,
+       862
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "ElectionAdmin",
+     "to": "Poll",
+     "style": "assoc",
+     "label": "manages",
+     "labelDy": -10
+    },
+    {
+     "from": "Poll",
+     "to": "PollReport",
+     "style": "agg",
+     "fromAt": [
+      0.7,
+      0
+     ],
+     "label": "has",
+     "labelDx": 18
+    },
+    {
+     "from": "Poll",
+     "to": "Candidate",
+     "style": "assoc",
+     "fromAt": [
+      0,
+      0.3
+     ],
+     "toAt": [
+      1,
+      0.4
+     ],
+     "label": "contends",
+     "labelDy": -12
+    },
+    {
+     "from": "Poll",
+     "to": "CDR",
+     "style": "agg",
+     "fromAt": [
+      1,
+      0.15
+     ],
+     "toAt": [
+      0,
+      0.6
+     ]
+    },
+    {
+     "from": "Poll",
+     "to": "CSR",
+     "style": "agg",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "Poll",
+     "to": "Observer",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.85
+     ],
+     "label": "observes",
+     "labelDy": 12
+    },
+    {
+     "from": "Poll",
+     "to": "Proctor",
+     "style": "assoc",
+     "fromAt": [
+      0,
+      1
+     ],
+     "label": "proctors",
+     "labelAt": 0.55,
+     "labelDy": -10
+    },
+    {
+     "from": "Poll",
+     "to": "PollingRoom",
+     "style": "assoc",
+     "fromAt": [
+      0.05,
+      1
+     ]
+    },
+    {
+     "from": "Poll",
+     "to": "ProofOfIdentity",
+     "style": "assoc",
+     "fromAt": [
+      0.1,
+      1
+     ]
+    },
+    {
+     "from": "Poll",
+     "to": "Voter",
+     "style": "assoc",
+     "fromAt": [
+      0.15,
+      1
+     ],
+     "label": "votes",
+     "labelAt": 0.62
+    },
+    {
+     "from": "Poll",
+     "to": "CastVote",
+     "style": "assoc",
+     "fromAt": [
+      0.2,
+      1
+     ],
+     "via": [
+      [
+       322,
+       520
+      ],
+      [
+       322,
+       735
+      ]
+     ],
+     "toAt": [
+      0.85,
+      0
+     ],
+     "label": "for",
+     "labelAt": 0.3
+    },
+    {
+     "from": "CastVote",
+     "to": "Candidate",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "label": "for",
+     "labelAt": 0.7
+    },
+    {
+     "from": "Poll",
+     "to": "RejectionNotif",
+     "style": "assoc",
+     "fromAt": [
+      0.3,
+      1
+     ],
+     "toAt": [
+      0.6,
+      0
+     ]
+    },
+    {
+     "from": "Poll",
+     "to": "PollingNotif",
+     "style": "assoc",
+     "fromAt": [
+      0.45,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "Poll",
+     "to": "ObservationNotif",
+     "style": "assoc",
+     "fromAt": [
+      0.9,
+      1
+     ],
+     "toAt": [
+      0.4,
+      0
+     ]
+    },
+    {
+     "from": "Proctor",
+     "to": "PollingRoom",
+     "style": "assoc"
+    },
+    {
+     "from": "PollingRoom",
+     "to": "ProofOfIdentity",
+     "style": "assoc"
+    },
+    {
+     "from": "ProofOfIdentity",
+     "to": "Voter",
+     "style": "assoc"
+    },
+    {
+     "from": "PollingRoom",
+     "to": "ProctoringNotif",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "Voter",
+     "to": "RejectionNotif",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.3
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "Voter",
+     "to": "PollingNotif",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.6
+     ],
+     "via": [
+      [
+       520,
+       612
+      ]
+     ],
+     "toAt": [
+      0.2,
+      1
+     ]
+    },
+    {
+     "from": "Voter",
+     "to": "VCN",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.9
+     ],
+     "toAt": [
+      0,
+      0.3
+     ]
+    },
+    {
+     "from": "CastVote",
+     "to": "VCN",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.6
+     ],
+     "toAt": [
+      0,
+      0.6
+     ]
+    },
+    {
+     "from": "Observer",
+     "to": "ObservationNotif",
+     "style": "assoc"
+    },
+    {
+     "from": "RejectionNotif",
+     "to": "NotificationEmail",
+     "style": "gen",
+     "fromAt": [
+      0.8,
+      1
+     ],
+     "toAt": [
+      0,
+      0.2
+     ]
+    },
+    {
+     "from": "PollingNotif",
+     "to": "NotificationEmail",
+     "style": "gen",
+     "toAt": [
+      0.3,
+      0
+     ]
+    },
+    {
+     "from": "ObservationNotif",
+     "to": "NotificationEmail",
+     "style": "gen",
+     "toAt": [
+      0.85,
+      0
+     ]
+    },
+    {
+     "from": "ProctoringNotif",
+     "to": "NotificationEmail",
+     "style": "gen",
+     "fromAt": [
+      1,
+      0.6
+     ],
+     "toAt": [
+      0,
+      0.6
+     ]
+    },
+    {
+     "from": "VCN",
+     "to": "NotificationEmail",
+     "style": "gen",
+     "toAt": [
+      0.3,
+      1
+     ]
+    },
+    {
+     "from": "VerificationNotif",
+     "to": "NotificationEmail",
+     "style": "gen",
+     "toAt": [
+      0.8,
+      1
+     ]
+    }
+   ]
+  },
+  "fig6": {
+   "title": "Figure 6: Logical Packaging cum Deployment Model for Phase 1",
+   "caption": "For the Conduct Vote use case. Subsystems «manifest» the boundary, control and entity elements; three subsystems are «deploy»ed to the voter's mobile device. The backend deployment is intentionally not shown. Incomplete and potentially erroneous by design.",
+   "size": [
+    1000,
+    600
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 190,
+     "h": 370
+    },
+    {
+     "id": "dev",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Mobile Device\nwith Local Storage",
+     "x": 35,
+     "y": 80,
+     "w": 150,
+     "h": 200
+    },
+    {
+     "id": "vmp",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Voting Manager Presentation",
+     "tone": 3,
+     "x": 285,
+     "y": 12,
+     "w": 215,
+     "h": 70
+    },
+    {
+     "id": "vmc",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Voting Manager Control",
+     "tone": 3,
+     "x": 520,
+     "y": 12,
+     "w": 200,
+     "h": 70
+    },
+    {
+     "id": "nmc",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Notification Manager Control",
+     "tone": 5,
+     "x": 745,
+     "y": 12,
+     "w": 235,
+     "h": 70
+    },
+    {
+     "id": "vmda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Voting Manager Data Access",
+     "tone": 3,
+     "x": 300,
+     "y": 505,
+     "w": 230,
+     "h": 70
+    },
+    {
+     "id": "pmda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Poll Manager Data Access",
+     "tone": 2,
+     "x": 760,
+     "y": 505,
+     "w": 220,
+     "h": 70
+    }
+   ],
+   "nodes": [
+    {
+     "id": "vcs",
+     "kind": "class",
+     "stereo": "boundary",
+     "tone": 4,
+     "x": 300,
+     "y": 200,
+     "w": 185,
+     "label": "VoteCastingScreen"
+    },
+    {
+     "id": "vc",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 535,
+     "y": 200,
+     "w": 170,
+     "label": "VoteController"
+    },
+    {
+     "id": "nc",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 760,
+     "y": 200,
+     "w": 205,
+     "label": "NotificationController"
+    },
+    {
+     "id": "cv",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 250,
+     "y": 365,
+     "w": 120,
+     "label": "CastVote"
+    },
+    {
+     "id": "vo",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 400,
+     "y": 365,
+     "w": 110,
+     "label": "Voter"
+    },
+    {
+     "id": "vcn",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 545,
+     "y": 365,
+     "w": 210,
+     "label": "VotingCompletionNotif"
+    },
+    {
+     "id": "poll",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 815,
+     "y": 365,
+     "w": 110,
+     "label": "Poll"
+    },
+    {
+     "id": "note",
+     "kind": "note",
+     "x": 15,
+     "y": 415,
+     "w": 190,
+     "h": 86,
+     "label": "Note: The deployment\nfor the backend of\nthe platform is\nnot shown."
+    }
+   ],
+   "edges": [
+    {
+     "from": "vmp",
+     "to": "dev",
+     "style": "dep",
+     "fromAt": [
+      0.08,
+      1
+     ],
+     "via": [
+      [
+       302,
+       108
+      ]
+     ],
+     "toAt": [
+      1,
+      0.14
+     ],
+     "label": "deploy",
+     "labelAt": 0.75
+    },
+    {
+     "from": "vmc",
+     "to": "dev",
+     "style": "dep",
+     "fromAt": [
+      0.05,
+      1
+     ],
+     "via": [
+      [
+       530,
+       126
+      ]
+     ],
+     "toAt": [
+      1,
+      0.23
+     ],
+     "label": "deploy",
+     "labelAt": 0.45
+    },
+    {
+     "from": "nmc",
+     "to": "dev",
+     "style": "dep",
+     "fromAt": [
+      0.03,
+      1
+     ],
+     "via": [
+      [
+       752,
+       144
+      ]
+     ],
+     "toAt": [
+      1,
+      0.32
+     ],
+     "label": "deploy",
+     "labelAt": 0.2
+    },
+    {
+     "from": "vmp",
+     "to": "vcs",
+     "style": "dep",
+     "fromAt": [
+      0.48,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32,
+     "labelAt": 0.82
+    },
+    {
+     "from": "vmc",
+     "to": "vc",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32,
+     "labelAt": 0.82
+    },
+    {
+     "from": "nmc",
+     "to": "nc",
+     "style": "dep",
+     "fromAt": [
+      0.53,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32,
+     "labelAt": 0.82
+    },
+    {
+     "from": "vcs",
+     "to": "vc",
+     "style": "assoc"
+    },
+    {
+     "from": "vc",
+     "to": "nc",
+     "style": "assoc"
+    },
+    {
+     "from": "vc",
+     "to": "cv",
+     "style": "assoc"
+    },
+    {
+     "from": "vc",
+     "to": "vo",
+     "style": "assoc"
+    },
+    {
+     "from": "vc",
+     "to": "vcn",
+     "style": "assoc"
+    },
+    {
+     "from": "vc",
+     "to": "poll",
+     "style": "assoc"
+    },
+    {
+     "from": "vmda",
+     "to": "cv",
+     "style": "dep",
+     "fromAt": [
+      0.15,
+      0
+     ],
+     "label": "manifest",
+     "labelAt": 0.4
+    },
+    {
+     "from": "vmda",
+     "to": "vo",
+     "style": "dep",
+     "fromAt": [
+      0.45,
+      0
+     ],
+     "label": "manifest",
+     "labelAt": 0.6
+    },
+    {
+     "from": "vmda",
+     "to": "vcn",
+     "style": "dep",
+     "fromAt": [
+      0.8,
+      0
+     ],
+     "label": "manifest",
+     "labelAt": 0.45
+    },
+    {
+     "from": "pmda",
+     "to": "poll",
+     "style": "dep",
+     "fromAt": [
+      0.42,
+      0
+     ],
+     "label": "manifest"
+    }
+   ]
+  },
+  "ans-ref": {
+   "title": "Suggested answer: hybrid reference architecture (per cloud)",
+   "caption": "Microservices for request-response work, an event stream for the vote flow, CronJobs for scheduled work, functions for bursty triggers. Each service owns its data. The same IaC builds the stack in each cloud.",
+   "size": [
+    1080,
+    760
+   ],
+   "groups": [
+    {
+     "id": "edge",
+     "kind": "zone",
+     "label": "Edge (DMZ)",
+     "tone": 2,
+     "x": 168,
+     "y": 20,
+     "w": 164,
+     "h": 720
+    },
+    {
+     "id": "cloud",
+     "kind": "cloud",
+     "label": "Each cloud: same IaC + GitOps",
+     "tone": 0,
+     "x": 350,
+     "y": 20,
+     "w": 715,
+     "h": 720
+    },
+    {
+     "id": "k8s",
+     "kind": "cluster",
+     "label": "Managed Kubernetes · service mesh (mTLS, retries, discovery)",
+     "tone": 0,
+     "x": 365,
+     "y": 52,
+     "w": 460,
+     "h": 498
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 60,
+     "w": 110,
+     "h": 130,
+     "label": "Voter app",
+     "sub": "native +\nlocal store"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 230,
+     "w": 130,
+     "h": 86,
+     "label": "Web apps",
+     "sub": "PWA"
+    },
+    {
+     "id": "idp",
+     "kind": "external",
+     "x": 20,
+     "y": 398,
+     "w": 130,
+     "h": 62,
+     "label": "SingPass",
+     "sub": "OIDC provider"
+    },
+    {
+     "id": "mail",
+     "kind": "external",
+     "x": 20,
+     "y": 640,
+     "w": 130,
+     "h": 60,
+     "label": "Email",
+     "sub": "gateway"
+    },
+    {
+     "id": "dns",
+     "kind": "lb",
+     "x": 183,
+     "y": 60,
+     "w": 134,
+     "h": 60,
+     "label": "Global DNS",
+     "sub": "traffic manager"
+    },
+    {
+     "id": "waf",
+     "kind": "security",
+     "x": 183,
+     "y": 150,
+     "w": 134,
+     "h": 56,
+     "label": "CDN + WAF"
+    },
+    {
+     "id": "gw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 240,
+     "w": 134,
+     "h": 76,
+     "label": "API gateway",
+     "sub": "auth, throttle,\nroute"
+    },
+    {
+     "id": "video",
+     "kind": "service",
+     "tone": 2,
+     "x": 183,
+     "y": 398,
+     "w": 134,
+     "h": 66,
+     "label": "Real-time video",
+     "sub": "managed"
+    },
+    {
+     "id": "proc",
+     "kind": "service",
+     "x": 380,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Proctoring",
+     "sub": "queue + rooms"
+    },
+    {
+     "id": "user",
+     "kind": "service",
+     "x": 530,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "User"
+    },
+    {
+     "id": "poll",
+     "kind": "service",
+     "x": 680,
+     "y": 100,
+     "w": 130,
+     "h": 62,
+     "label": "Poll"
+    },
+    {
+     "id": "sess",
+     "kind": "cache",
+     "x": 380,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Queue/session",
+     "sub": "replicated KV"
+    },
+    {
+     "id": "sched",
+     "kind": "job",
+     "x": 530,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Poll open/close",
+     "sub": "CronJob"
+    },
+    {
+     "id": "vote",
+     "kind": "service",
+     "x": 680,
+     "y": 185,
+     "w": 130,
+     "h": 62,
+     "label": "Voting",
+     "sub": "validate, publish",
+     "accent": true
+    },
+    {
+     "id": "stream",
+     "kind": "stream",
+     "x": 380,
+     "y": 278,
+     "w": 430,
+     "h": 64,
+     "label": "Event streaming (StatefulSet)",
+     "sub": "VoteCast · PollOpened/Closed · partitioned by poll",
+     "accent": true
+    },
+    {
+     "id": "notif",
+     "kind": "service",
+     "x": 380,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Notification",
+     "sub": "generic"
+    },
+    {
+     "id": "pred",
+     "kind": "service",
+     "x": 530,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Prediction",
+     "sub": "Phase 2"
+    },
+    {
+     "id": "res",
+     "kind": "service",
+     "x": 680,
+     "y": 375,
+     "w": 130,
+     "h": 62,
+     "label": "Results",
+     "sub": "projector + push"
+    },
+    {
+     "id": "q",
+     "kind": "queue",
+     "x": 380,
+     "y": 465,
+     "w": 135,
+     "h": 56,
+     "label": "Email\nqueue"
+    },
+    {
+     "id": "report",
+     "kind": "job",
+     "x": 530,
+     "y": 465,
+     "w": 135,
+     "h": 56,
+     "label": "Report builder",
+     "sub": "CronJob"
+    },
+    {
+     "id": "emailfn",
+     "kind": "function",
+     "x": 380,
+     "y": 575,
+     "w": 135,
+     "h": 56,
+     "label": "Send email",
+     "sub": "function"
+    },
+    {
+     "id": "importfn",
+     "kind": "function",
+     "x": 530,
+     "y": 575,
+     "w": 135,
+     "h": 56,
+     "label": "Voter import",
+     "sub": "function"
+    },
+    {
+     "id": "polldb",
+     "kind": "db",
+     "x": 845,
+     "y": 56,
+     "w": 200,
+     "h": 70,
+     "label": "Poll DB"
+    },
+    {
+     "id": "userdb",
+     "kind": "db",
+     "x": 845,
+     "y": 138,
+     "w": 200,
+     "h": 70,
+     "label": "User DB",
+     "sub": "encrypted PII"
+    },
+    {
+     "id": "votedb",
+     "kind": "db",
+     "x": 845,
+     "y": 220,
+     "w": 200,
+     "h": 74,
+     "label": "Vote store",
+     "sub": "append-only, sharded"
+    },
+    {
+     "id": "rescache",
+     "kind": "cache",
+     "x": 845,
+     "y": 375,
+     "w": 200,
+     "h": 62,
+     "label": "Results read model",
+     "sub": "in-memory"
+    },
+    {
+     "id": "obj",
+     "kind": "store",
+     "x": 845,
+     "y": 560,
+     "w": 200,
+     "h": 70,
+     "label": "Object store",
+     "sub": "voter files, reports"
+    },
+    {
+     "id": "note",
+     "kind": "note",
+     "x": 845,
+     "y": 452,
+     "w": 200,
+     "h": 92,
+     "label": "Cloud B runs the same\nstack from the same IaC;\nstream and data replicate\nasynchronously."
+    },
+    {
+     "id": "plat",
+     "kind": "box",
+     "tone": 2,
+     "x": 365,
+     "y": 660,
+     "w": 680,
+     "h": 62,
+     "label": "Shared platform services",
+     "sub": "IaC + GitOps · secrets / KMS · central logs, metrics, traces · registry · policy & cost"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "waf",
+     "style": "sync",
+     "label": "HTTPS",
+     "labelDy": -10
+    },
+    {
+     "from": "web",
+     "to": "waf",
+     "style": "sync"
+    },
+    {
+     "from": "waf",
+     "to": "gw",
+     "style": "sync"
+    },
+    {
+     "from": "gw",
+     "to": "k8s",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.454
+     ],
+     "label": "REST",
+     "labelDy": -12
+    },
+    {
+     "from": "gw",
+     "to": "idp",
+     "style": "sync",
+     "fromAt": [
+      0.2,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "OIDC",
+     "labelDx": 18
+    },
+    {
+     "from": "app",
+     "to": "video",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.95
+     ],
+     "via": [
+      [
+       160,
+       196
+      ],
+      [
+       160,
+       431
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "web",
+     "to": "video",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.9
+     ]
+    },
+    {
+     "from": "proc",
+     "to": "video",
+     "style": "sync",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "rooms",
+     "labelAt": 0.6
+    },
+    {
+     "from": "proc",
+     "to": "sess",
+     "style": "sync"
+    },
+    {
+     "from": "poll",
+     "to": "polldb",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.4
+     ],
+     "toAt": [
+      0,
+      0.55
+     ]
+    },
+    {
+     "from": "user",
+     "to": "userdb",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       597,
+       173
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "vote",
+     "to": "votedb",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.5
+     ]
+    },
+    {
+     "from": "vote",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.85,
+      0
+     ]
+    },
+    {
+     "from": "sched",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "notif",
+     "style": "event",
+     "fromAt": [
+      0.15,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "pred",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "res",
+     "style": "event",
+     "fromAt": [
+      0.85,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "res",
+     "to": "rescache",
+     "style": "sync"
+    },
+    {
+     "from": "notif",
+     "to": "q",
+     "style": "async"
+    },
+    {
+     "from": "q",
+     "to": "emailfn",
+     "style": "async"
+    },
+    {
+     "from": "emailfn",
+     "to": "mail",
+     "style": "sync",
+     "fromAt": [
+      0,
+      0.5
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    },
+    {
+     "from": "obj",
+     "to": "importfn",
+     "style": "event",
+     "fromAt": [
+      0,
+      0.6
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "file uploaded"
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,2869 @@
+{
+ "key": "mock-1-parcelpath",
+ "kind": "mock",
+ "short": "Mock 1",
+ "title": "Mock paper 1: ParcelPath (SWE5001 format)",
+ "module": "Original mock in the SWE5001 Architecting Scalable Systems format",
+ "domain": "Last-mile parcel delivery with smart lockers",
+ "blurb": "IoT lockers that must work offline, courier location streams, merchant API idempotency, availability arithmetic.",
+ "intro": [
+  "An original paper in the structure, length and marks of the SWE5001 sample (Section A 25, Section B 13, Section C 12). Allow the same time as the real paper. Open the [case study](case#top) in a second tab and answer before opening any model answer."
+ ],
+ "sections": [
+  {
+   "id": "A",
+   "title": "Section A",
+   "focus": "Architecting + Platform",
+   "questions": [
+    {
+     "n": 1,
+     "marks": 25,
+     "intro": [
+      "Refer to the case study in Appendix A and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "body": [
+        "The success of ParcelPath as a platform depends on couriers, lockers and merchants interacting reliably at the morning peak."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 2,
+         "pattern": "diagnose",
+         "topics": [
+          "architecting/06-design-for-performance-in-architectur#operational-laws",
+          "architecting/06-design-for-performance-in-architectur#mm1",
+          "architecting/07-perform-capacity-planning-for-archite#scalability-laws"
+         ],
+         "body": [
+          "During load testing of the courier **location ping** API (each active courier sends one ping every 10 seconds, see [Section 4](case#s4)), the 90th-percentile response time was 120 ms with 2,000 simulated couriers. With 5,000 simulated couriers it rose to 9 seconds, although CPU utilisation on the API servers stayed at about 55%.",
+          "Give the most likely reason for this observation and one way to confirm it."
+         ],
+         "answer": {
+          "text": [
+           "**Likely reason:** the bottleneck is not the API servers but a resource behind them, probably the single relational database. Every ping is a write (an insert or update) into the Courier aggregate's LocationPing table ([Figure 2](case#s7)). 5,000 couriers / 10 s = 500 writes/s against 200/s at 2,000 couriers. If each write holds the database or a connection for about 1.9 ms, utilisation goes from about 0.4 to about 0.95. With random arrivals, R = S / (1 − U) grows sharply as U approaches 1, so requests queue for connections and locks while the API servers idle waiting. That explains the jump from 120 ms to 9 s.",
+           "**Confirm it** with the utilisation law, U = X × S, per resource. Measure throughput and busy time (or connection-pool wait, lock waits and disk queue) on the database during the 5,000-courier run. The resource with the highest utilisation is the bottleneck. Its demand per ping should match the observed saturation point."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: a saturated downstream resource (database write path, connection pool or lock contention) where queueing delay explodes near 100% utilisation. CPU on the API tier is not the bottleneck."
+           },
+           {
+            "m": 1,
+            "t": "Confirmation: measure per-resource utilisation and queueing (U = X × S, pool wait, lock waits) under load to locate the bottleneck."
+           }
+          ],
+          "trap": "‘Add more API servers.’ The 55% CPU says the API servers are waiting, not working."
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 2,
+         "pattern": "defend",
+         "topics": [
+          "architecting/05-design-highly-available-architecture-#availability-tactics",
+          "cloud-native/06-application-architecture-styles-septe#modern-archetypes-2",
+          "architecting/04-design-secure-architecture-v4-7#cryptography"
+         ],
+         "body": [
+          "A developer proposes that each locker controller calls the platform synchronously (REST over 4G) to validate every pickup code entered on the keypad. You recommend instead that lockers validate codes **locally**, using signed, time-limited codes synchronised to the locker in advance, and report collections to the platform **asynchronously**. Give two reasons for your recommendation."
+         ],
+         "answer": {
+          "text": [
+           "1. **Collection must survive a network outage of up to 4 hours** ([Section 4](case#s4)). With synchronous validation, every collection depends in series on the 4G link, the gateway and the Locker service, so any one failing stops collections. Local validation takes the network off the critical path, and store-and-forward reporting delivers the collection events once the link returns.",
+           "2. **Latency and load at peak:** the compartment must open within 2 s for 95% of attempts. A 4G round trip to the cloud adds variable latency and puts load on the platform at the busiest hour. Validating a signed code locally (a signature or HMAC check against keys provisioned to the locker) takes milliseconds and cannot be forged without the key. The cost: revoking a code is only effective after the next sync, so codes must be short-lived and single-use."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Availability: removes the network and cloud from the collection path, meeting the 4-hour offline requirement with store-and-forward."
+           },
+           {
+            "m": 1,
+            "t": "Performance or security: meets 2 s p95 locally; signed codes resist forgery; acknowledges the revocation lag."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "b",
+       "body": [
+        "With reference to the domain model in [Section 7](case#s7) of the case study, analyse the following issues. For each issue, identify the most likely cause, propose an effective countermeasure (by revising the domain model) and suggest the major drawback(s) of the countermeasure, if any."
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "marks": 5,
+         "pattern": "fix-cost",
+         "topics": [
+          "platform/04-reusable-services-and-api-gateway-v2-#aggregates",
+          "platform/04-reusable-services-and-api-gateway-v2-#de-example-workshop",
+          "platform/02-reusable-assets-and-frameworks-v2-1#bounded-contexts-ubiquitous-language"
+         ],
+         "body": [
+          "Between 10:00 and 12:00, up to 15 couriers deposit parcels at the same busy locker station. Couriers frequently receive the error ‘compartment status changed, please retry’, and a deposit can take 20 seconds or more."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** LockerStation is modelled as one aggregate composed of all 60 Compartments, so every deposit at a station updates the same aggregate and conflicts with every other courier's deposit (optimistic-lock failures, retries). Worse, Stop in DeliveryManager is associated directly with Compartment and sets its status, so two bounded contexts write the same data with no single owner of the compartment-allocation rule.",
+           "**Countermeasure:** make **Compartment** (or a CompartmentReservation) its own small aggregate owned only by LockerManager. LockerStation keeps just station data and references its compartments by id. Replace the Stop–Compartment association with a compartmentId reference. DeliveryManager *requests* a reservation (a command to LockerManager), and LockerManager allocates a free compartment of the right size and publishes CompartmentReserved and later ParcelDeposited, which DeliveryManager consumes to update the Stop. Concurrent deposits now touch different aggregates.",
+           "**Drawbacks:** station-wide rules, such as ‘never more than N large compartments reserved’, become eventually consistent or need a separate counter. Reservations need expiry and compensation if the courier never arrives. There are more messages and states to test."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Identifies the oversized LockerStation aggregate (60 compartments as one consistency boundary) causing contention."
+           },
+           {
+            "m": 1,
+            "t": "Identifies the cross-context write: Stop associated with Compartment, so DeliveryManager mutates LockerManager's data."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: Compartment or Reservation as its own aggregate in LockerManager, id references, a reservation command and domain events back to DeliveryManager."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: eventual consistency of station-level invariants, reservation expiry and compensation, more messaging."
+           }
+          ]
+         }
+        },
+        {
+         "label": "ii",
+         "marks": 4,
+         "pattern": "fix-cost",
+         "topics": [
+          "cloud-native/10-appendix-cloud-patterns-and-practices#data-patterns",
+          "cloud-native/10-appendix-cloud-patterns-and-practices#content-aggregation",
+          "platform/06-data-management-v2-1#key-value"
+         ],
+         "body": [
+          "At peak, recipients complain that the tracking page takes about 8 seconds to load and that the courier's position shown is often several minutes old, although couriers' phones send pings every 10 seconds."
+         ],
+         "answer": {
+          "text": [
+           "**Cause:** TrackingView has no data of its own. It is assembled at request time by following associations into Shipment (ShipmentManager), Stop (DeliveryManager) and LocationPing, which is held *inside* the Courier aggregate. Each view therefore needs synchronous calls across three services and a scan of a fast-growing ping history. The location writes (500/s) contend with these reads on the same store, so pages are slow, and readers fall back to stale cached positions.",
+           "**Countermeasure:** separate the write and read models. LocationPing leaves the Courier aggregate and becomes a stream of CourierLocated events. TrackingManager owns a **TrackingSnapshot** read model, one per active shipment, holding status, ETA and latest position, built from ShipmentCreated, StopCompleted and CourierLocated events. Keep it in a key-value store or cache keyed by shipmentNo, so the page is a single key lookup. History, if needed, goes to a time-series store.",
+           "**Drawback:** the snapshot duplicates data and is eventually consistent, a few seconds behind. The projection must handle out-of-order and duplicate events, and the extra store and stream must be run."
+          ],
+          "points": [
+           {
+            "m": 1,
+            "t": "Cause: a request-time composition across three contexts plus ping history inside the Courier aggregate (write and read contention, growing data)."
+           },
+           {
+            "m": 2,
+            "t": "Revised model: a TrackingSnapshot read model owned by TrackingManager, fed by events; pings out of the Courier aggregate; key lookup by shipment."
+           },
+           {
+            "m": 1,
+            "t": "Drawback: duplication, eventual consistency, projection complexity."
+           }
+          ]
+         }
+        }
+       ]
+      },
+      {
+       "label": "c",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "platform/03-api-design-v2-2#resource-design-http",
+        "platform/03-api-design-v2-2#richardson-maturity",
+        "platform/03-api-design-v2-2#feedback-status-codes",
+        "platform/03-api-design-v2-2#versioning-security-basics"
+       ],
+       "body": [
+        "Merchants integrate with ParcelPath through a public Merchant API. The team's first design for three operations is shown below.",
+        {
+         "table": {
+          "columns": [
+           "URI",
+           "Service",
+           "Inputs",
+           "Outputs",
+           "Explanation",
+           "HTTP Action"
+          ],
+          "rows": [
+           [
+            "`/api/createShipment`",
+            "ShipmentManager",
+            "merchant id, API key, recipient name, phone, address, parcels",
+            "shipment id, full recipient record, assigned courier name and phone",
+            "Create a shipment",
+            "POST"
+           ],
+           [
+            "`/api/shipment/cancel?id={shipment-id}&key={api-key}`",
+            "ShipmentManager",
+            "shipment id, API key",
+            "“OK” or “ERROR: …” (always HTTP 200)",
+            "Cancel a shipment before pickup",
+            "GET"
+           ],
+           [
+            "`/api/v2.3/tracking?shipmentId={id}`",
+            "TrackingManager",
+            "shipment id",
+            "full shipment history including every location ping",
+            "Track a shipment",
+            "POST"
+           ]
+          ]
+         }
+        },
+        "Merchants' systems retry automatically when a call times out after 5 seconds. Several merchants have reported duplicate shipments after timeouts during the 11.11 sale.",
+        {
+         "ol": [
+          "Which level of the Richardson Maturity Model does this design reach? Give the reasons.",
+          "Propose a mechanism that stops merchant retries from creating duplicate shipments, and explain how it works.",
+          "Reconstruct the table to depict corrected interfaces."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         "**1. Level 0 to 1 at best.** The URIs name actions (createShipment, cancel) rather than resources, and the HTTP verbs are misused: GET changes state (cancel), POST is used for a read (tracking), and every outcome returns 200 with the error in the body. Level 2 needs resources, correct verbs and meaningful status codes. The API key in the query string also ends up in logs and caches, and /v2.3 exposes a minor version.",
+         "**2. Idempotency key.** The merchant sends an `Idempotency-Key` header (a UUID per business request, or its own order reference) with the create. ShipmentManager stores the key with the result, atomically with the shipment insert. A retry with the same key and body returns the original 201 response instead of creating a second shipment; the same key with a different body returns 422. Keys are kept for at least the retry window (for example 24 h). The client must reuse the key on retries, not generate a new one.",
+         "**3. Corrected interfaces:**",
+         {
+          "table": {
+           "columns": [
+            "URI",
+            "Service",
+            "Inputs",
+            "Outputs",
+            "Explanation",
+            "HTTP"
+           ],
+           "rows": [
+            [
+             "`/v2/shipments`",
+             "ShipmentManager",
+             "Body: recipient, parcels. Headers: `Authorization` (merchant credential), `Idempotency-Key`. Merchant id from the credential",
+             "201 Created + `Location: /v2/shipments/{id}`; shipment id, status, pickup window. No courier phone or full recipient record",
+             "Create a shipment",
+             "POST"
+            ],
+            [
+             "`/v2/shipments/{id}`",
+             "ShipmentManager",
+             "Path id; credential header; optional reason",
+             "204 No Content; 409 Conflict if already picked up; 404 if unknown",
+             "Cancel before pickup (or `POST /v2/shipments/{id}/cancellation`)",
+             "DELETE"
+            ],
+            [
+             "`/v2/shipments/{id}/tracking`",
+             "TrackingManager",
+             "Path id; credential header",
+             "200 with status, ETA, latest position and key events. Paged history via `?page`",
+             "Track a shipment",
+             "GET (cacheable, ETag)"
+            ]
+           ]
+          }
+         }
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Level identified (0–1) with reasons: action URIs, verb misuse, 200-for-errors."
+         },
+         {
+          "m": 2,
+          "t": "Idempotency-key mechanism explained: stored with the result atomically, replay returns the original response, key scope and expiry."
+         },
+         {
+          "m": 3,
+          "t": "Corrected table: resource URIs, correct verbs, credentials in headers, data minimisation, status codes, major-only versioning."
+         }
+        ]
+       }
+      },
+      {
+       "label": "d",
+       "marks": 2,
+       "pattern": "agree",
+       "topics": [
+        "architecting/01-introduction-to-solution-architecture#quality-attributes-utility-tree",
+        "architecting/04-design-secure-architecture-v4-7#secure-design-principles",
+        "architecting/04-design-secure-architecture-v4-7#cryptography"
+       ],
+       "body": [
+        "A team member argues that because lockers must keep working offline, availability is the only non-functional requirement that matters for the locker subsystem. To make offline collection possible, he proposes caching the plain-text pickup codes on each locker controller. Do you agree? Justify your answer."
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** Availability is critical, but the lockers hold other people's parcels in public places, so confidentiality and integrity of the codes are just as significant. A stolen or tampered controller with plain-text codes would open every compartment. The two qualities need not conflict: store only **hashes** or keyed MACs of codes, or verify **signed, expiring** codes without storing them, with keys in the controller's secure element. Offline collection then works without exposing usable codes. Rank both high in the utility tree."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: security (confidentiality and integrity of codes) is also architecturally significant, with the threat from physical locker compromise."
+         },
+         {
+          "m": 1,
+          "t": "Shows both can be met: hashed or signed codes, secure key storage, so availability is not traded for security."
+         }
+        ]
+       }
+      },
+      {
+       "label": "e",
+       "marks": 4,
+       "pattern": "agree",
+       "topics": [
+        "platform/05-platform-management-v2-1#metrics",
+        "architecting/05-design-highly-available-architecture-#availability-basics",
+        "architecting/05-design-highly-available-architecture-#availability-calculations"
+       ],
+       "body": [
+        "A team member proposes reporting the **average delivery time per day** (from shipment creation to collection) as the main availability metric of the platform. Do you agree? If not, what would you measure instead?"
+       ],
+       "answer": {
+        "text": [
+         "**Disagree.** Average delivery time is a business (service-level) outcome driven by recipients, traffic and couriers. A platform could be down for an hour and the daily average would barely move, while a perfectly available platform can still have slow deliveries. An average also hides the tail and the timing of outages.",
+         "**Availability** is the proportion of time, or of requests, in which the platform does its job. Measure: uptime of the locker-operation path against 99.95% (allowed downtime about 22 minutes a month); **yield**, the share of open-compartment and API requests that succeed; **harvest**, the completeness of answers when degraded, such as tracking without live position; MTBF and **MTTR** per component; and the error-budget burn. Report these per locker station and per critical use case, not just overall.",
+         "Keep average delivery time as a business KPI next to them."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Verdict: delivery time is a business outcome, not availability; give a counter-example."
+         },
+         {
+          "m": 1,
+          "t": "Explains why an average hides outages and tails."
+         },
+         {
+          "m": 2,
+          "t": "Proper availability measures: uptime vs target, request success (yield), harvest, MTTR or MTBF, per critical path."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "B",
+   "title": "Section B",
+   "focus": "Cloud native",
+   "questions": [
+    {
+     "n": 2,
+     "marks": 13,
+     "intro": [
+      "With reference to the case study in Appendix A, answer the following questions. The cloud native team is preparing Phase 2 (dynamic re-routing and ETA prediction) and must first fix the Phase 1 prototype."
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 10,
+       "pattern": "design",
+       "topics": [
+        "cloud-native/02-cloud-reference-architecture-august-2#hybrid-multicloud",
+        "cloud-native/06-application-architecture-styles-septe#data-event-ai-archetypes",
+        "cloud-native/07-microservices-design-september-2026#inter-process-communication",
+        "cloud-native/08-serverless-computing-september-2026#principles-use-cases",
+        "cloud-native/05a-kubernetes-september-2026#summary-appendix",
+        "cloud-native/05-architecting-a-cloud-native-applicati#state-pets-vs-cattle"
+       ],
+       "body": [
+        "The prototype built for the pilot is shown below. Lockers poll the server every 5 seconds for commands.",
+        {
+         "figure": "mvp"
+        },
+        "Transform the prototype into a cloud native reference architecture that also covers the locker sites and the hub sorting systems that stay on premises (a **hybrid** deployment). *Hint: consider microservices, event/stream-driven services, scheduled jobs, serverless functions and edge components.*"
+       ],
+       "parts": [
+        {
+         "label": "i",
+         "body": [
+          "Draw the reference architecture with its essential components and interactions. Which additional components are essential because part of the solution runs at the edge and on premises?"
+         ]
+        },
+        {
+         "label": "ii",
+         "body": [
+          "How will lockers communicate with the platform, and how will the internal services communicate? Label these in your diagram and justify the patterns."
+         ]
+        },
+        {
+         "label": "iii",
+         "body": [
+          "Identify **one** component that must remember state and propose a suitable state-management mechanism."
+         ]
+        },
+        {
+         "label": "iv",
+         "body": [
+          "Describe the deployment of the cloud part on Kubernetes, either as a k8s deployment diagram or as a paragraph."
+         ]
+        }
+       ],
+       "answer": {
+        "text": [
+         {
+          "figure": "ans-ref"
+         },
+         "**i. Components.** Couriers, recipients and merchants come in through CDN + WAF and the API gateway (merchant credentials, rate limits). Lockers connect to a separate **device gateway** (an MQTT-style broker) with per-device certificates. Microservices per context: Shipment, Delivery, Locker, Tracking and Billing. An **event stream** carries scans, location pings and locker events. The **route planner** is a scheduled batch job (05:00 daily). **Functions** handle bursty, short work: SMS with pickup codes, shipping-label PDFs. Each service owns its database. Tracking is a read model in a cache, and an object store keeps labels and proof-of-delivery photos. **Edge and on-premises essentials:** a local agent on each locker with a code cache and store-and-forward queue; a device registry with device shadows; certificate-based device identity and over-the-air update management; a VPN or private link to the hub sorters; and integration adapters for the on-premises systems.",
+         "**ii. Communication.** Lockers use **publish/subscribe** over the broker. Telemetry and collection events flow up; commands such as ‘open compartment 12’ flow down with correlation ids and acknowledgements. The connection is persistent, so no 5-second polling, and messages are buffered when offline. Internally, synchronous REST/gRPC only where a user waits (Delivery asks Locker to reserve a compartment). Everything else is asynchronous events on the stream (ParcelScanned, CourierLocated, ParcelDeposited), consumed independently by Tracking, Billing and later the Phase 2 re-router. Commands to functions go over a queue with retry and a dead-letter queue.",
+         "**iii. State.** The **Locker service** must know each locker's last reported state (compartments, firmware, connectivity) even while the locker is offline. Keep a **device shadow** per locker (desired vs reported state) in a durable store owned by the Locker service: commands update ‘desired’, locker reports update ‘reported’, and the difference is applied on reconnect. The service pods stay stateless. (Alternative: the route planner's job state, with checkpoints in the object store so a failed run restarts from the last zone.)",
+         "**iv. Kubernetes.** A managed cluster across three zones, with namespaces per domain (delivery, lockers, tracking, billing, platform). Services run as Deployments (at least 3 replicas, HPA on requests per second or consumer lag) behind an Ingress fed by the API gateway. The broker and the stream run as StatefulSets with persistent volumes, or as managed services. The route planner is a CronJob with resource requests sized for its 40-minute CPU run and its own node pool. Config and secrets come from ConfigMaps and Secrets, network policies apply between namespaces, and GitOps handles delivery with canary releases. Scheduled scale-up runs before the 10:00 peak."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "Diagram with services per context, gateways, event stream, scheduled job, functions and data stores, with sensible interactions."
+         },
+         {
+          "m": 1,
+          "t": "Edge and on-premises essentials: local agent and buffering, device registry or shadow, device identity and OTA, VPN/private link, adapters."
+         },
+         {
+          "m": 2,
+          "t": "Locker pub/sub with commands and acks instead of polling; internal async events with sync only where needed, justified."
+         },
+         {
+          "m": 2,
+          "t": "A stateful component with a fitting mechanism (device shadow, checkpointed job), and stateless pods."
+         },
+         {
+          "m": 2,
+          "t": "A coherent k8s plan: zones, namespaces, Deployments, StatefulSets or managed services, CronJob, HPA, rollout."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 3,
+       "pattern": "a-or-b",
+       "topics": [
+        "cloud-native/08-serverless-computing-september-2026#principles-use-cases",
+        "cloud-native/05a-kubernetes-september-2026#cloud-native-on-k8s",
+        "cloud-native/06-application-architecture-styles-septe#hexagonal-serverless"
+       ],
+       "body": [
+        "The route-planning engine runs at 05:00 daily over about 150,000 parcels and needs about 40 minutes of CPU-heavy optimisation. In Phase 2, re-routing must also be triggered by traffic incidents and produce a revised route for the affected couriers within 60 seconds. Would you implement the route planner as serverless functions or as containerised jobs/services on Kubernetes? What are the implications for the rest of the platform?"
+       ],
+       "answer": {
+        "text": [
+         "**Containers for the daily plan, event-driven for re-routing.** A 40-minute, CPU- and memory-heavy optimisation exceeds typical function time limits and is cheaper and more predictable as a Kubernetes Job on a dedicated node pool. Phase 2 re-routing is small, frequent and triggered by events, so it can be a long-running containerised service consuming TrafficIncident events. Serverless is defensible only if each re-route stays well inside the function limits and cold starts fit the 60 s budget. We give up scale-to-zero for the batch.",
+         "**Implications:** the planner needs a consistent snapshot of the day's parcels and stops, taken at a cut-off and exported to the object store. Re-routing needs a live, partitioned stream of incidents and courier positions. Route updates must be versioned, so a courier's app can tell an old route from a new one, and delivered to couriers by push. Delivery must accept route revisions idempotently."
+        ],
+        "points": [
+         {
+          "m": 1,
+          "t": "Decision justified by runtime, resource and limit facts (40 min CPU vs function limits; event-triggered re-route)."
+         },
+         {
+          "m": 1,
+          "t": "Trade-off named: scale-to-zero vs cost predictability, cold starts."
+         },
+         {
+          "m": 1,
+          "t": "Knock-on effects: data snapshot or cut-off, event inputs, route versioning, push to couriers, idempotent updates."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "C",
+   "title": "Section C",
+   "focus": "Architecting",
+   "questions": [
+    {
+     "n": 3,
+     "marks": 12,
+     "intro": [
+      "Refer to the logical architecture in [Section 6](case#s6), the domain model in [Section 7](case#s7) and the logical packaging cum deployment model in [Section 8](case#s8) of the case study, and answer the following questions:"
+     ],
+     "parts": [
+      {
+       "label": "a",
+       "marks": 6,
+       "pattern": "critique",
+       "topics": [
+        "architecting/03-architect-the-solution-architecture-m#logical-deployment-verify",
+        "architecting/04-design-secure-architecture-v4-7#secure-design-principles",
+        "architecting/04-design-secure-architecture-v4-7#access-control-segregation",
+        "cloud-native/10-appendix-cloud-patterns-and-practices#data-patterns"
+       ],
+       "body": [
+        "Evaluate the incomplete and potentially erroneous logical packaging cum deployment model for the *Deposit Parcel in Locker* use case (Figure 3). Identify **two** undesirable architectural decisions, propose corrective actions and justify how each decision leads to your correction. You may draw only the parts of the diagram needed to illustrate your answer."
+       ],
+       "answer": {
+        "text": [
+         "Any two of the following, each as decision → why it is undesirable → correction:",
+         "1. **Locker Control (CompartmentController) is deployed to the courier's mobile device.** The courier app would decide which compartment opens and could unlock by itself, so a tampered or stolen phone can open any compartment. The trust boundary is in the wrong place and complete mediation is lost. **Correction:** deploy Locker Control on the Locker Controller node, where it accepts only commands authorised by the Locker service (signed, per-compartment, short-lived). The courier app sends a deposit request to Delivery, not an unlock command.",
+         "2. **PickupCode is manifested by Delivery Manager Data Access.** Codes are a LockerManager concern, used at the locker. Storing them in Delivery's database splits ownership, needs cross-service reads at collection time and widens the exposure of secrets. **Correction:** PickupCode moves to Locker Manager Data Access, stored hashed, and is issued by the Locker service. Delivery holds only a reference.",
+         "3. **Notification Control (PickupNotifier) is deployed to the Locker Controller.** Every locker would need SMS gateway credentials, and codes cannot be sent while the locker is offline. **Correction:** keep notification server-side, as a function triggered by ParcelDeposited.",
+         "4. **The Locker Controller has no local data access element**, yet [Section 4](case#s4) requires 4 hours of offline collection. **Correction:** add a Locker Local Data Access subsystem holding hashed or signed codes and a store-and-forward event queue."
+        ],
+        "points": [
+         {
+          "m": 3,
+          "t": "First decision: what is wrong in the figure, the consequence (security, ownership, offline), and a concrete corrected packaging or deployment."
+         },
+         {
+          "m": 3,
+          "t": "Second decision: the same three elements, justified against the case requirements."
+         }
+        ]
+       }
+      },
+      {
+       "label": "b",
+       "marks": 6,
+       "pattern": "design",
+       "topics": [
+        "architecting/05-design-highly-available-architecture-#availability-calculations",
+        "architecting/05-design-highly-available-architecture-#redundancy",
+        "architecting/05-design-highly-available-architecture-#availability-patterns"
+       ],
+       "body": [
+        "Locker operations must reach **99.95%** monthly availability ([Section 4](case#s4)). In the prototype, a collection depends in series on: the locker controller (99.9%), the site's single 4G router (99.5%), the API gateway (99.95%), the Locker service (99.9%) and its database (99.95%). Compute the current availability of a collection and the monthly downtime it implies. Propose a design that meets the target, and identify two side effects the team should monitor."
+       ],
+       "answer": {
+        "text": [
+         "**Now:** A = 0.999 × 0.995 × 0.9995 × 0.999 × 0.9995 ≈ **0.9920 (99.2%)**, about 0.008 × 730 h ≈ **5.8 hours of downtime a month**. The target, 99.95%, allows about 22 minutes. The 4G router is the weakest link, and the controller alone (99.9%) is already below target.",
+         "**Design:**",
+         {
+          "ol": [
+           "**Take the network and cloud off the collection path:** validate codes locally (signed or hashed codes cached on the controller) and report asynchronously. Collection then depends only on the locker site.",
+           "**Make the controller redundant:** a second controller in active/standby with automatic failover. In parallel, 1 − (0.001)² ≈ 0.999999.",
+           "**Make deposits less dependent on the network:** dual connectivity (4G plus fixed line or a second carrier). In parallel, 1 − 0.005 × 0.005 = 0.999975. Run the cloud services at least 3 replicas across zones, with a multi-zone database.",
+           "Result for collection ≈ the redundant controller pair × local power/mechanics, comfortably above 99.95%. Deposits (which need the cloud) ≈ 0.999975 × 0.9995 × 0.99999 × 0.9995 ≈ 99.9%; if they also must hit the target, queue deposits locally and confirm later."
+          ]
+         },
+         "**Side effects to monitor:** (1) **stale codes**: cancellations or expiries reach an offline locker only on the next sync, so track sync age per locker; (2) **conflicts on reconnect**: double allocation of a compartment, or events replayed twice, so watch reconciliation errors and duplicate-event counts; (3) failover that never triggers, or both controllers acting at once (split brain), so test regularly; (4) higher hardware and connectivity cost per site."
+        ],
+        "points": [
+         {
+          "m": 2,
+          "t": "Correct series calculation (≈ 99.2%) and downtime (≈ 5.8 h/month) vs the target (≈ 22 min)."
+         },
+         {
+          "m": 2,
+          "t": "A design that raises availability where it matters: local validation, redundant controller and connectivity (parallel formula), multi-zone services."
+         },
+         {
+          "m": 2,
+          "t": "Two relevant side effects with what to monitor (stale codes or sync age, reconciliation conflicts, failover, cost)."
+         }
+        ]
+       }
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "case": {
+  "label": "Appendix A",
+  "title": "ParcelPath",
+  "subtitle": "Case study for Mock paper 1 (fictitious)",
+  "intro": [
+   "The figures are part of the case. As in the real paper, Figures 2 and 3 are the work of other team members and may contain mistakes."
+  ],
+  "sections": [
+   {
+    "id": "top",
+    "title": "Background",
+    "blocks": [
+     "Online retail in the region has grown every year, and so has the cost of the last mile: failed doorstep deliveries, repeat attempts and couriers circling for parking. *Loop Logistics* is a start-up that wants to cut those costs with a delivery platform called **ParcelPath**. It combines courier routing with a network of smart parcel lockers at train stations, malls and housing estates.",
+     "ParcelPath is a platform rather than a single application: merchants create shipments through an API, independent couriers accept delivery jobs, recipients track and collect parcels, and locker sites are operated by hub operators. The more merchants join, the more parcels flow to the lockers, which makes the network more attractive to couriers and recipients.",
+     "You are the Lead Solution Architect. Phase 1 (the MVP) must be live before the year-end sale season. Phase 2 adds dynamic re-routing and ETA prediction.",
+     "There are 4 pilot applications: a mobile app for couriers, a web portal for merchants, a web tracking page for recipients and a web console for hub operators and platform admins. Locker controllers run embedded software supplied with the lockers but configurable by the platform."
+    ]
+   },
+   {
+    "id": "s1",
+    "n": "1",
+    "title": "Phase 1 of the Platform",
+    "blocks": [
+     "Actors:",
+     {
+      "ol": [
+       "**Merchant:** an online shop that creates shipments through the Merchant API or portal and pays monthly.",
+       "**Recipient:** receives a parcel at home or at a locker; tracks it on the web page; does not need an account.",
+       "**Courier:** an independent driver who accepts daily routes in the courier app, scans parcels and deposits them in lockers or at doorsteps.",
+       "**Hub Operator:** manages locker stations, clears expired parcels and handles returns.",
+       "**Platform Admin:** onboards merchants and couriers.",
+       "**Locker Controller:** the embedded controller in each locker station (keypad, compartments, 4G router).",
+       "**SMS Gateway, Payment Gateway, Maps Service:** external systems for SMS, payouts and invoices, and road distances."
+      ]
+     },
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Create Shipment",
+         "The Merchant submits recipient details and one or more parcels; the platform returns a shipment number and label."
+        ],
+        [
+         "Plan Routes",
+         "Every day at 05:00 the platform groups the day's parcels into routes per zone and courier, using road distances from the Maps Service."
+        ],
+        [
+         "Accept Route",
+         "The Courier accepts the route offered for the day."
+        ],
+        [
+         "Scan Parcel",
+         "The Courier scans each parcel at pickup and at each stop."
+        ],
+        [
+         "Deposit Parcel in Locker",
+         "At a locker station the Courier selects the parcel; the platform allocates a free compartment of a suitable size, the compartment opens, the Courier deposits the parcel and closes it. A pickup code is generated and sent to the Recipient by SMS."
+        ],
+        [
+         "Collect Parcel",
+         "The Recipient enters the pickup code at the locker keypad; the compartment opens. The code is single-use and expires after 72 hours."
+        ],
+        [
+         "Track Shipment",
+         "The Recipient or Merchant views status, ETA and, while the parcel is out for delivery, the courier's live position."
+        ],
+        [
+         "Report Failed Delivery",
+         "The Courier records a failed doorstep delivery; the parcel is redirected to the nearest locker."
+        ],
+        [
+         "Clear Expired Parcels",
+         "The Hub Operator removes expired parcels from lockers and returns them to the hub."
+        ],
+        [
+         "Pay Couriers / Invoice Merchants",
+         "Weekly courier payouts and monthly merchant invoices are produced."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s2",
+    "n": "2",
+    "title": "Phase 2 of the Platform",
+    "blocks": [
+     {
+      "table": {
+       "columns": [
+        "Use Case",
+        "Description"
+       ],
+       "rows": [
+        [
+         "Re-route on Incident",
+         "When a traffic incident affects a route, the platform recomputes the affected couriers' remaining stops and pushes revised routes within 60 seconds."
+        ],
+        [
+         "Predict ETA",
+         "The platform predicts each parcel's delivery window from historical routes, traffic and courier behaviour."
+        ],
+        [
+         "Reserve Locker",
+         "Recipients may reserve a locker compartment at a preferred station before dispatch."
+        ]
+       ]
+      }
+     }
+    ]
+   },
+   {
+    "id": "s3",
+    "n": "3",
+    "title": "Extensibility of the Platform",
+    "blocks": [
+     "The platform must allow new locker vendors, new courier types (e.g. cargo bikes) and further merchant integrations to be added without changing existing services."
+    ]
+   },
+   {
+    "id": "s4",
+    "n": "4",
+    "title": "Performance, Scalability and Availability",
+    "blocks": [
+     {
+      "ul": [
+       "**2,000** merchants; **150,000** parcels per day on normal days and **300,000** on sale days, with **30%** created between 10:00 and 12:00.",
+       "Up to **5,000** couriers active concurrently; each courier app sends one location ping every **10 seconds** while on a route.",
+       "**800** locker stations with up to **60** compartments each; up to **15** couriers may be depositing at one station at the same time.",
+       "A compartment must open within **2 seconds** for **95%** of deposit and collection attempts.",
+       "The tracking page must load in under **2 seconds** for 90% of requests and show a courier position no older than **30 seconds**.",
+       "Locker collection must continue to work during a network outage of up to **4 hours**.",
+       "Locker operations (deposit, collect) must achieve **99.95%** monthly availability; other features **99.9%**."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s5",
+    "n": "5",
+    "title": "Security",
+    "blocks": [
+     {
+      "ul": [
+       "Pickup codes are single-use secrets and must not be recoverable from a stolen locker controller.",
+       "Recipients' personal data (name, phone, address) and couriers' location histories are personal data under the national data protection act; only the minimum needed may be shared with merchants and couriers.",
+       "Merchant API access is authenticated per merchant and rate-limited."
+      ]
+     }
+    ]
+   },
+   {
+    "id": "s6",
+    "n": "6",
+    "title": "Initial Architecture",
+    "blocks": [
+     {
+      "h": "6.1 Logical Architecture Overview",
+      "id": "s6-1"
+     },
+     {
+      "figure": "overview"
+     },
+     {
+      "h": "6.2 Deployment Options",
+      "id": "s6-2"
+     },
+     "The platform is to be cloud native, with microservices in the internal zone. Locker stations and the hub sorting systems remain on premises and connect over 4G and VPN respectively."
+    ]
+   },
+   {
+    "id": "s7",
+    "n": "7",
+    "title": "Domain Model for Phase 1",
+    "blocks": [
+     "A software architect produced the following domain model for Phase 1. The development team intends to implement it as drawn.",
+     {
+      "figure": "domain"
+     }
+    ]
+   },
+   {
+    "id": "s8",
+    "n": "8",
+    "title": "Logical Packaging cum Deployment Model",
+    "blocks": [
+     "A solution architect has drafted an **incomplete** and **potentially erroneous** packaging and deployment model for the *Deposit Parcel in Locker* use case. Only the elements involved in this use case are shown.",
+     {
+      "figure": "packaging"
+     }
+    ]
+   }
+  ]
+ },
+ "figures": {
+  "overview": {
+   "title": "Figure 1: Logical Architecture Overview",
+   "caption": "Locations and tiers. Arrows show the main request paths.",
+   "size": [
+    1000,
+    530
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 245,
+     "h": 320
+    },
+    {
+     "id": "site",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Locker Station (edge)",
+     "tone": 5,
+     "x": 15,
+     "y": 352,
+     "w": 245,
+     "h": 165
+    },
+    {
+     "id": "dmz",
+     "kind": "zone",
+     "stereo": "zone",
+     "label": "DMZ",
+     "tone": 2,
+     "x": 280,
+     "y": 12,
+     "w": 185,
+     "h": 505
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internal Zone",
+     "tone": 0,
+     "x": 485,
+     "y": 12,
+     "w": 500,
+     "h": 505
+    },
+    {
+     "id": "svc",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Service Tier",
+     "tone": 0,
+     "x": 500,
+     "y": 66,
+     "w": 470,
+     "h": 210
+    },
+    {
+     "id": "sto",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Storage Tier",
+     "tone": 1,
+     "x": 500,
+     "y": 296,
+     "w": 225,
+     "h": 205,
+     "sub": "Data Access per service\n(one schema each)"
+    },
+    {
+     "id": "itg",
+     "kind": "package",
+     "stereo": "tier",
+     "label": "Integration Tier",
+     "tone": 5,
+     "x": 745,
+     "y": 296,
+     "w": 225,
+     "h": 205,
+     "sub": "SMS · Payment · Maps\nadapters; hub VPN"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 32,
+     "y": 66,
+     "w": 210,
+     "h": 74,
+     "label": "Web Browser",
+     "sub": "merchant portal · tracking · console"
+    },
+    {
+     "id": "cour",
+     "kind": "device",
+     "x": 40,
+     "y": 160,
+     "w": 90,
+     "h": 150,
+     "label": "Courier",
+     "sub": "app +\ncache"
+    },
+    {
+     "id": "msys",
+     "kind": "external",
+     "x": 145,
+     "y": 190,
+     "w": 100,
+     "h": 90,
+     "label": "Merchant",
+     "sub": "systems\n(API)"
+    },
+    {
+     "id": "lock",
+     "kind": "iot",
+     "x": 32,
+     "y": 405,
+     "w": 210,
+     "h": 86,
+     "label": "Locker Controller",
+     "sub": "keypad · compartments · 4G"
+    },
+    {
+     "id": "wp",
+     "kind": "service",
+     "tone": 4,
+     "x": 295,
+     "y": 80,
+     "w": 155,
+     "h": 70,
+     "label": "Web\nPresentation"
+    },
+    {
+     "id": "api",
+     "kind": "gateway",
+     "x": 295,
+     "y": 200,
+     "w": 155,
+     "h": 76,
+     "label": "API Gateway",
+     "sub": "merchant · courier"
+    },
+    {
+     "id": "dev",
+     "kind": "gateway",
+     "x": 295,
+     "y": 410,
+     "w": 155,
+     "h": 76,
+     "label": "Locker\nChannel"
+    },
+    {
+     "id": "s1",
+     "kind": "component",
+     "x": 515,
+     "y": 120,
+     "w": 140,
+     "h": 56,
+     "label": "Shipment\nManager"
+    },
+    {
+     "id": "s2",
+     "kind": "component",
+     "x": 670,
+     "y": 120,
+     "w": 140,
+     "h": 56,
+     "label": "Delivery\nManager"
+    },
+    {
+     "id": "s3",
+     "kind": "component",
+     "x": 825,
+     "y": 120,
+     "w": 130,
+     "h": 56,
+     "label": "Locker\nManager"
+    },
+    {
+     "id": "s4",
+     "kind": "component",
+     "x": 590,
+     "y": 196,
+     "w": 140,
+     "h": 56,
+     "label": "Tracking\nManager"
+    },
+    {
+     "id": "s5",
+     "kind": "component",
+     "x": 745,
+     "y": 196,
+     "w": 140,
+     "h": 56,
+     "label": "Billing\nManager"
+    }
+   ],
+   "edges": [
+    {
+     "from": "web",
+     "to": "wp",
+     "style": "flow"
+    },
+    {
+     "from": "cour",
+     "to": "api",
+     "style": "flow",
+     "fromAt": [
+      1,
+      0.85
+     ],
+     "via": [
+      [
+       270,
+       295
+      ]
+     ],
+     "toAt": [
+      0,
+      0.8
+     ]
+    },
+    {
+     "from": "msys",
+     "to": "api",
+     "style": "flow"
+    },
+    {
+     "from": "lock",
+     "to": "dev",
+     "style": "flow",
+     "label": "4G",
+     "labelDy": -12
+    },
+    {
+     "from": "wp",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.15
+     ]
+    },
+    {
+     "from": "api",
+     "to": "svc",
+     "style": "flow",
+     "toAt": [
+      0,
+      0.7
+     ]
+    },
+    {
+     "from": "dev",
+     "to": "svc",
+     "style": "flow",
+     "via": [
+      [
+       475,
+       448
+      ],
+      [
+       475,
+       262
+      ]
+     ],
+     "toAt": [
+      0,
+      0.93
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "sto",
+     "style": "flow",
+     "fromAt": [
+      0.24,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "svc",
+     "to": "itg",
+     "style": "flow",
+     "fromAt": [
+      0.76,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    }
+   ]
+  },
+  "domain": {
+   "title": "Figure 2: Domain Model for Phase 1",
+   "caption": "Entities grouped by owning service, with key attributes and multiplicities. Filled diamond = composition (part of the same aggregate).",
+   "size": [
+    1045,
+    715
+   ],
+   "groups": [
+    {
+     "id": "sm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "ShipmentManager",
+     "tone": 0,
+     "x": 20,
+     "y": 30,
+     "w": 360,
+     "h": 300
+    },
+    {
+     "id": "dm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "DeliveryManager",
+     "tone": 3,
+     "x": 410,
+     "y": 30,
+     "w": 360,
+     "h": 330
+    },
+    {
+     "id": "lm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "LockerManager",
+     "tone": 5,
+     "x": 20,
+     "y": 380,
+     "w": 360,
+     "h": 270
+    },
+    {
+     "id": "tm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "TrackingManager",
+     "tone": 4,
+     "x": 410,
+     "y": 390,
+     "w": 300,
+     "h": 240
+    },
+    {
+     "id": "bm",
+     "kind": "package",
+     "stereo": "service",
+     "label": "BillingManager",
+     "tone": 2,
+     "x": 730,
+     "y": 390,
+     "w": 290,
+     "h": 240
+    }
+   ],
+   "nodes": [
+    {
+     "id": "Merchant",
+     "kind": "class",
+     "tone": 0,
+     "x": 40,
+     "y": 90,
+     "w": 150,
+     "label": "Merchant",
+     "attrs": [
+      "merchantId",
+      "apiKey"
+     ]
+    },
+    {
+     "id": "Recipient",
+     "kind": "class",
+     "tone": 0,
+     "x": 210,
+     "y": 90,
+     "w": 150,
+     "label": "Recipient",
+     "attrs": [
+      "name",
+      "phone",
+      "address"
+     ]
+    },
+    {
+     "id": "Shipment",
+     "kind": "class",
+     "tone": 0,
+     "x": 40,
+     "y": 205,
+     "w": 150,
+     "label": "Shipment",
+     "attrs": [
+      "shipmentNo",
+      "status"
+     ]
+    },
+    {
+     "id": "Parcel",
+     "kind": "class",
+     "tone": 0,
+     "x": 210,
+     "y": 215,
+     "w": 150,
+     "label": "Parcel",
+     "attrs": [
+      "barcode",
+      "size"
+     ]
+    },
+    {
+     "id": "Courier",
+     "kind": "class",
+     "tone": 3,
+     "x": 430,
+     "y": 90,
+     "w": 150,
+     "label": "Courier",
+     "attrs": [
+      "courierId",
+      "vehicle"
+     ]
+    },
+    {
+     "id": "LocationPing",
+     "kind": "class",
+     "tone": 3,
+     "x": 600,
+     "y": 90,
+     "w": 150,
+     "label": "LocationPing",
+     "attrs": [
+      "lat, lng",
+      "recordedAt"
+     ]
+    },
+    {
+     "id": "Route",
+     "kind": "class",
+     "tone": 3,
+     "x": 430,
+     "y": 215,
+     "w": 150,
+     "label": "Route",
+     "attrs": [
+      "date",
+      "zone"
+     ]
+    },
+    {
+     "id": "Stop",
+     "kind": "class",
+     "tone": 3,
+     "x": 600,
+     "y": 205,
+     "w": 150,
+     "label": "Stop",
+     "attrs": [
+      "sequence",
+      "status",
+      "eta"
+     ]
+    },
+    {
+     "id": "LockerStation",
+     "kind": "class",
+     "tone": 5,
+     "x": 40,
+     "y": 440,
+     "w": 150,
+     "label": "LockerStation",
+     "attrs": [
+      "siteCode",
+      "address"
+     ]
+    },
+    {
+     "id": "Compartment",
+     "kind": "class",
+     "tone": 5,
+     "x": 210,
+     "y": 440,
+     "w": 150,
+     "label": "Compartment",
+     "attrs": [
+      "number",
+      "size",
+      "status"
+     ]
+    },
+    {
+     "id": "PickupCode",
+     "kind": "class",
+     "tone": 5,
+     "x": 210,
+     "y": 560,
+     "w": 150,
+     "label": "PickupCode",
+     "attrs": [
+      "code",
+      "expiresAt"
+     ]
+    },
+    {
+     "id": "TrackingView",
+     "kind": "class",
+     "tone": 4,
+     "x": 440,
+     "y": 470,
+     "w": 220,
+     "label": "TrackingView",
+     "attrs": [
+      "shipmentNo",
+      "status",
+      "courierPosition",
+      "eta"
+     ]
+    },
+    {
+     "id": "CourierPayout",
+     "kind": "class",
+     "tone": 2,
+     "x": 760,
+     "y": 450,
+     "w": 170,
+     "label": "CourierPayout",
+     "attrs": [
+      "week",
+      "amount"
+     ]
+    },
+    {
+     "id": "MerchantInvoice",
+     "kind": "class",
+     "tone": 2,
+     "x": 760,
+     "y": 545,
+     "w": 170,
+     "label": "MerchantInvoice",
+     "attrs": [
+      "month",
+      "amount"
+     ]
+    }
+   ],
+   "edges": [
+    {
+     "from": "Merchant",
+     "to": "Shipment",
+     "style": "assoc",
+     "m1": "1",
+     "m2": "0..*"
+    },
+    {
+     "from": "Shipment",
+     "to": "Recipient",
+     "style": "assoc",
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "Shipment",
+     "to": "Parcel",
+     "style": "comp",
+     "fromAt": [
+      1,
+      0.55
+     ],
+     "toAt": [
+      0,
+      0.45
+     ],
+     "m2": "1..*"
+    },
+    {
+     "from": "Courier",
+     "to": "LocationPing",
+     "style": "comp",
+     "m2": "0..*"
+    },
+    {
+     "from": "Courier",
+     "to": "Route",
+     "style": "assoc",
+     "m1": "1",
+     "m2": "0..*",
+     "label": "drives",
+     "labelDx": 34
+    },
+    {
+     "from": "Route",
+     "to": "Stop",
+     "style": "comp",
+     "fromAt": [
+      1,
+      0.4
+     ],
+     "toAt": [
+      0,
+      0.5
+     ],
+     "m2": "1..*"
+    },
+    {
+     "from": "Stop",
+     "to": "Parcel",
+     "style": "assoc",
+     "fromAt": [
+      0.4,
+      1
+     ],
+     "via": [
+      [
+       660,
+       345
+      ],
+      [
+       285,
+       345
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "m1": "0..*",
+     "m2": "1..*",
+     "label": "carries",
+     "labelAt": 0.62
+    },
+    {
+     "from": "Stop",
+     "to": "Compartment",
+     "style": "assoc",
+     "fromAt": [
+      0.15,
+      1
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "m1": "0..*",
+     "m2": "0..1",
+     "label": "deposits into",
+     "labelAt": 0.5,
+     "labelDy": 0,
+     "labelDx": 34
+    },
+    {
+     "from": "LockerStation",
+     "to": "Compartment",
+     "style": "comp",
+     "m2": "60"
+    },
+    {
+     "from": "Compartment",
+     "to": "PickupCode",
+     "style": "assoc",
+     "m1": "1",
+     "m2": "0..1"
+    },
+    {
+     "from": "PickupCode",
+     "to": "Recipient",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       395,
+       598
+      ],
+      [
+       395,
+       136
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "TrackingView",
+     "to": "Stop",
+     "style": "assoc",
+     "fromAt": [
+      0.6,
+      0
+     ],
+     "toAt": [
+      0.6,
+      1
+     ],
+     "label": "reads",
+     "labelDx": 22
+    },
+    {
+     "from": "TrackingView",
+     "to": "LocationPing",
+     "style": "assoc",
+     "fromAt": [
+      0.9,
+      0
+     ],
+     "via": [
+      [
+       638,
+       375
+      ],
+      [
+       790,
+       375
+      ],
+      [
+       790,
+       128
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ],
+     "label": "reads",
+     "labelAt": 0.3,
+     "labelDx": 0,
+     "labelDy": -10
+    },
+    {
+     "from": "TrackingView",
+     "to": "Shipment",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       550,
+       695
+      ],
+      [
+       8,
+       695
+      ],
+      [
+       8,
+       243
+      ]
+     ],
+     "toAt": [
+      0,
+      0.5
+     ],
+     "label": "reads",
+     "labelAt": 0.3
+    },
+    {
+     "from": "CourierPayout",
+     "to": "Courier",
+     "style": "assoc",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       845,
+       182
+      ],
+      [
+       505,
+       182
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    },
+    {
+     "from": "MerchantInvoice",
+     "to": "Merchant",
+     "style": "assoc",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       1032,
+       583
+      ],
+      [
+       1032,
+       15
+      ],
+      [
+       160,
+       15
+      ]
+     ],
+     "toAt": [
+      0.8,
+      0
+     ],
+     "m1": "0..*",
+     "m2": "1"
+    }
+   ]
+  },
+  "packaging": {
+   "title": "Figure 3: Logical Packaging cum Deployment Model (Deposit Parcel in Locker)",
+   "caption": "Subsystems «manifest» the boundary, control and entity elements and are «deploy»ed to nodes. Incomplete and potentially erroneous.",
+   "size": [
+    1060,
+    640
+   ],
+   "groups": [
+    {
+     "id": "inet",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internet",
+     "tone": 3,
+     "x": 15,
+     "y": 12,
+     "w": 205,
+     "h": 272
+    },
+    {
+     "id": "dev",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Courier\nMobile Device",
+     "x": 35,
+     "y": 70,
+     "w": 160,
+     "h": 190
+    },
+    {
+     "id": "site",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Locker Station",
+     "tone": 5,
+     "x": 15,
+     "y": 304,
+     "w": 205,
+     "h": 320
+    },
+    {
+     "id": "lc",
+     "kind": "node",
+     "stereo": "device",
+     "label": "Locker\nController",
+     "x": 35,
+     "y": 362,
+     "w": 160,
+     "h": 240
+    },
+    {
+     "id": "int",
+     "kind": "zone",
+     "stereo": "location",
+     "label": "Internal Zone",
+     "tone": 0,
+     "x": 845,
+     "y": 12,
+     "w": 200,
+     "h": 612
+    },
+    {
+     "id": "dsn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Delivery\nService",
+     "x": 862,
+     "y": 70,
+     "w": 165,
+     "h": 200
+    },
+    {
+     "id": "lsn",
+     "kind": "node",
+     "stereo": "node",
+     "label": "Locker\nService",
+     "x": 862,
+     "y": 330,
+     "w": 165,
+     "h": 200
+    },
+    {
+     "id": "cap",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Courier App Presentation",
+     "tone": 3,
+     "x": 240,
+     "y": 12,
+     "w": 170,
+     "h": 64
+    },
+    {
+     "id": "lctl",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Locker Control",
+     "tone": 5,
+     "x": 425,
+     "y": 12,
+     "w": 150,
+     "h": 64
+    },
+    {
+     "id": "dmc",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Delivery Manager Control",
+     "tone": 3,
+     "x": 590,
+     "y": 12,
+     "w": 190,
+     "h": 64
+    },
+    {
+     "id": "dmda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Delivery Manager Data Access",
+     "tone": 3,
+     "x": 245,
+     "y": 450,
+     "w": 215,
+     "h": 64
+    },
+    {
+     "id": "lmda",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Locker Manager Data Access",
+     "tone": 5,
+     "x": 480,
+     "y": 450,
+     "w": 195,
+     "h": 64
+    },
+    {
+     "id": "nctl",
+     "kind": "package",
+     "stereo": "subsystem",
+     "label": "Notification Control",
+     "tone": 2,
+     "x": 690,
+     "y": 450,
+     "w": 150,
+     "h": 64
+    }
+   ],
+   "nodes": [
+    {
+     "id": "screen",
+     "kind": "class",
+     "stereo": "boundary",
+     "tone": 4,
+     "x": 245,
+     "y": 150,
+     "w": 160,
+     "label": "DepositScreen"
+    },
+    {
+     "id": "cctl",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 418,
+     "y": 150,
+     "w": 180,
+     "label": "CompartmentController"
+    },
+    {
+     "id": "dctl",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 612,
+     "y": 150,
+     "w": 165,
+     "label": "DepositController"
+    },
+    {
+     "id": "stop",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 245,
+     "y": 300,
+     "w": 105,
+     "label": "Stop"
+    },
+    {
+     "id": "code",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 365,
+     "y": 300,
+     "w": 135,
+     "label": "PickupCode"
+    },
+    {
+     "id": "comp",
+     "kind": "class",
+     "stereo": "entity",
+     "tone": 1,
+     "x": 515,
+     "y": 300,
+     "w": 140,
+     "label": "Compartment"
+    },
+    {
+     "id": "notif",
+     "kind": "class",
+     "stereo": "control",
+     "tone": 0,
+     "x": 670,
+     "y": 300,
+     "w": 140,
+     "label": "PickupNotifier"
+    }
+   ],
+   "edges": [
+    {
+     "from": "cap",
+     "to": "dev",
+     "style": "dep",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "toAt": [
+      1,
+      0.12
+     ],
+     "label": "deploy",
+     "labelDy": -10
+    },
+    {
+     "from": "lctl",
+     "to": "dev",
+     "style": "dep",
+     "fromAt": [
+      0.07,
+      1
+     ],
+     "via": [
+      [
+       435,
+       112
+      ]
+     ],
+     "toAt": [
+      1,
+      0.23
+     ],
+     "label": "deploy",
+     "labelAt": 0.88
+    },
+    {
+     "from": "dmc",
+     "to": "dsn",
+     "style": "dep",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.3
+     ],
+     "label": "deploy"
+    },
+    {
+     "from": "lmda",
+     "to": "lsn",
+     "style": "dep",
+     "fromAt": [
+      0.9,
+      0
+     ],
+     "via": [
+      [
+       655,
+       420
+      ],
+      [
+       845,
+       420
+      ]
+     ],
+     "toAt": [
+      0,
+      0.45
+     ],
+     "label": "deploy",
+     "labelAt": 0.9
+    },
+    {
+     "from": "nctl",
+     "to": "lc",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       765,
+       590
+      ],
+      [
+       195,
+       590
+      ]
+     ],
+     "toAt": [
+      1,
+      0.95
+     ],
+     "label": "deploy",
+     "labelAt": 0.5
+    },
+    {
+     "from": "cap",
+     "to": "screen",
+     "style": "dep",
+     "fromAt": [
+      0.48,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30
+    },
+    {
+     "from": "lctl",
+     "to": "cctl",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30,
+     "labelAt": 0.65
+    },
+    {
+     "from": "dmc",
+     "to": "dctl",
+     "style": "dep",
+     "fromAt": [
+      0.55,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 30
+    },
+    {
+     "from": "screen",
+     "to": "cctl",
+     "style": "assoc"
+    },
+    {
+     "from": "cctl",
+     "to": "dctl",
+     "style": "assoc"
+    },
+    {
+     "from": "dctl",
+     "to": "stop",
+     "style": "assoc",
+     "fromAt": [
+      0.15,
+      1
+     ]
+    },
+    {
+     "from": "dctl",
+     "to": "code",
+     "style": "assoc",
+     "fromAt": [
+      0.3,
+      1
+     ]
+    },
+    {
+     "from": "dctl",
+     "to": "comp",
+     "style": "assoc",
+     "fromAt": [
+      0.45,
+      1
+     ]
+    },
+    {
+     "from": "cctl",
+     "to": "comp",
+     "style": "assoc",
+     "fromAt": [
+      0.6,
+      1
+     ],
+     "toAt": [
+      0.3,
+      0
+     ]
+    },
+    {
+     "from": "notif",
+     "to": "code",
+     "style": "assoc",
+     "fromAt": [
+      0.2,
+      1
+     ],
+     "via": [
+      [
+       698,
+       382
+      ],
+      [
+       432,
+       382
+      ]
+     ],
+     "toAt": [
+      0.5,
+      1
+     ]
+    },
+    {
+     "from": "dmda",
+     "to": "stop",
+     "style": "dep",
+     "fromAt": [
+      0.24,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": -32
+    },
+    {
+     "from": "dmda",
+     "to": "code",
+     "style": "dep",
+     "fromAt": [
+      0.85,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 34,
+     "labelDy": 6
+    },
+    {
+     "from": "lmda",
+     "to": "comp",
+     "style": "dep",
+     "fromAt": [
+      0.55,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32,
+     "labelDy": 6
+    },
+    {
+     "from": "nctl",
+     "to": "notif",
+     "style": "dep",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "label": "manifest",
+     "labelDx": 32,
+     "labelDy": 6
+    }
+   ]
+  },
+  "mvp": {
+   "title": "Prototype architecture (pilot)",
+   "caption": "All clients and lockers talk to one server and one database.",
+   "size": [
+    720,
+    310
+   ],
+   "legend": false,
+   "groups": [
+    {
+     "id": "vm",
+     "kind": "tier",
+     "tone": 0,
+     "x": 225,
+     "y": 25,
+     "w": 470,
+     "h": 265,
+     "label": "Cloud VM"
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 15,
+     "w": 105,
+     "h": 130,
+     "label": "Courier app"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 160,
+     "w": 130,
+     "h": 60,
+     "label": "Portals"
+    },
+    {
+     "id": "lock",
+     "kind": "iot",
+     "x": 20,
+     "y": 236,
+     "w": 130,
+     "h": 58,
+     "label": "Lockers"
+    },
+    {
+     "id": "mono",
+     "kind": "component",
+     "x": 262,
+     "y": 110,
+     "w": 200,
+     "h": 86,
+     "label": "ParcelPath server",
+     "sub": "(monolith)"
+    },
+    {
+     "id": "db",
+     "kind": "db",
+     "x": 530,
+     "y": 105,
+     "w": 130,
+     "h": 96,
+     "label": "Single\ndatabase"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "web",
+     "to": "mono",
+     "style": "sync"
+    },
+    {
+     "from": "lock",
+     "to": "mono",
+     "style": "async",
+     "label": "polls every 5 s",
+     "labelDy": 14,
+     "labelDx": 10
+    },
+    {
+     "from": "mono",
+     "to": "db",
+     "style": "sync"
+    }
+   ]
+  },
+  "ans-ref": {
+   "title": "Model answer: hybrid reference architecture",
+   "caption": "Cloud services on Kubernetes, lockers on a device channel with local agents, scheduled planning, functions for bursty side work. The hub sorters stay on premises behind a VPN.",
+   "size": [
+    1080,
+    760
+   ],
+   "groups": [
+    {
+     "id": "edge",
+     "kind": "zone",
+     "label": "Edge (DMZ)",
+     "tone": 2,
+     "x": 168,
+     "y": 20,
+     "w": 164,
+     "h": 720
+    },
+    {
+     "id": "cloud",
+     "kind": "cloud",
+     "label": "Cloud region (IaC)",
+     "tone": 0,
+     "x": 350,
+     "y": 20,
+     "w": 715,
+     "h": 720
+    },
+    {
+     "id": "k8s",
+     "kind": "cluster",
+     "label": "Managed Kubernetes · 3 zones",
+     "tone": 0,
+     "x": 365,
+     "y": 52,
+     "w": 460,
+     "h": 498
+    }
+   ],
+   "nodes": [
+    {
+     "id": "app",
+     "kind": "device",
+     "x": 30,
+     "y": 50,
+     "w": 110,
+     "h": 120,
+     "label": "Courier app",
+     "sub": "offline cache"
+    },
+    {
+     "id": "web",
+     "kind": "browser",
+     "x": 20,
+     "y": 190,
+     "w": 130,
+     "h": 76,
+     "label": "Web portals"
+    },
+    {
+     "id": "merch",
+     "kind": "external",
+     "x": 20,
+     "y": 285,
+     "w": 130,
+     "h": 58,
+     "label": "Merchant",
+     "sub": "systems"
+    },
+    {
+     "id": "locker",
+     "kind": "iot",
+     "x": 20,
+     "y": 380,
+     "w": 130,
+     "h": 86,
+     "label": "Locker",
+     "sub": "local agent,\ncode cache"
+    },
+    {
+     "id": "hub",
+     "kind": "external",
+     "x": 20,
+     "y": 500,
+     "w": 130,
+     "h": 58,
+     "label": "Hub sorters",
+     "sub": "on premises"
+    },
+    {
+     "id": "sms",
+     "kind": "external",
+     "x": 20,
+     "y": 600,
+     "w": 130,
+     "h": 52,
+     "label": "SMS gateway"
+    },
+    {
+     "id": "maps",
+     "kind": "external",
+     "x": 20,
+     "y": 670,
+     "w": 130,
+     "h": 52,
+     "label": "Maps service"
+    },
+    {
+     "id": "waf",
+     "kind": "security",
+     "x": 183,
+     "y": 70,
+     "w": 134,
+     "h": 56,
+     "label": "CDN + WAF"
+    },
+    {
+     "id": "gw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 180,
+     "w": 134,
+     "h": 76,
+     "label": "API gateway",
+     "sub": "keys, rate limit"
+    },
+    {
+     "id": "dgw",
+     "kind": "gateway",
+     "x": 183,
+     "y": 380,
+     "w": 134,
+     "h": 86,
+     "label": "Device gateway",
+     "sub": "MQTT broker,\ndevice certs"
+    },
+    {
+     "id": "vpn",
+     "kind": "security",
+     "x": 183,
+     "y": 500,
+     "w": 134,
+     "h": 58,
+     "label": "VPN"
+    },
+    {
+     "id": "ship",
+     "kind": "service",
+     "x": 380,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Shipment"
+    },
+    {
+     "id": "deliv",
+     "kind": "service",
+     "x": 530,
+     "y": 100,
+     "w": 135,
+     "h": 62,
+     "label": "Delivery"
+    },
+    {
+     "id": "lockr",
+     "kind": "service",
+     "x": 680,
+     "y": 100,
+     "w": 130,
+     "h": 62,
+     "label": "Locker",
+     "sub": "device shadows",
+     "accent": true
+    },
+    {
+     "id": "plan",
+     "kind": "job",
+     "x": 380,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Route planner",
+     "sub": "CronJob 05:00"
+    },
+    {
+     "id": "bill",
+     "kind": "service",
+     "x": 530,
+     "y": 185,
+     "w": 135,
+     "h": 62,
+     "label": "Billing"
+    },
+    {
+     "id": "integ",
+     "kind": "service",
+     "x": 680,
+     "y": 185,
+     "w": 130,
+     "h": 62,
+     "label": "Hub adapter"
+    },
+    {
+     "id": "stream",
+     "kind": "stream",
+     "x": 380,
+     "y": 278,
+     "w": 430,
+     "h": 64,
+     "label": "Event stream",
+     "sub": "ParcelScanned · CourierLocated · ParcelDeposited",
+     "accent": true
+    },
+    {
+     "id": "track",
+     "kind": "service",
+     "x": 380,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "Tracking",
+     "sub": "projection"
+    },
+    {
+     "id": "eta",
+     "kind": "ai",
+     "x": 530,
+     "y": 375,
+     "w": 135,
+     "h": 62,
+     "label": "ETA / re-route",
+     "sub": "Phase 2"
+    },
+    {
+     "id": "notify",
+     "kind": "service",
+     "x": 680,
+     "y": 375,
+     "w": 130,
+     "h": 62,
+     "label": "Notify"
+    },
+    {
+     "id": "q",
+     "kind": "queue",
+     "x": 680,
+     "y": 465,
+     "w": 130,
+     "h": 56,
+     "label": "SMS\nqueue"
+    },
+    {
+     "id": "smsfn",
+     "kind": "function",
+     "x": 680,
+     "y": 575,
+     "w": 130,
+     "h": 56,
+     "label": "Send SMS",
+     "sub": "function"
+    },
+    {
+     "id": "labelfn",
+     "kind": "function",
+     "x": 845,
+     "y": 470,
+     "w": 200,
+     "h": 56,
+     "label": "Label PDF",
+     "sub": "on ShipmentCreated"
+    },
+    {
+     "id": "shipdb",
+     "kind": "db",
+     "x": 845,
+     "y": 56,
+     "w": 200,
+     "h": 70,
+     "label": "Shipment DB"
+    },
+    {
+     "id": "lockdb",
+     "kind": "db",
+     "x": 845,
+     "y": 138,
+     "w": 200,
+     "h": 74,
+     "label": "Locker DB",
+     "sub": "shadows, hashed codes"
+    },
+    {
+     "id": "deldb",
+     "kind": "db",
+     "x": 845,
+     "y": 224,
+     "w": 200,
+     "h": 70,
+     "label": "Delivery DB"
+    },
+    {
+     "id": "trcache",
+     "kind": "cache",
+     "x": 845,
+     "y": 375,
+     "w": 200,
+     "h": 62,
+     "label": "Tracking snapshots",
+     "sub": "key-value"
+    },
+    {
+     "id": "obj",
+     "kind": "store",
+     "x": 845,
+     "y": 560,
+     "w": 200,
+     "h": 70,
+     "label": "Object store",
+     "sub": "labels, POD photos"
+    },
+    {
+     "id": "plat",
+     "kind": "box",
+     "tone": 2,
+     "x": 365,
+     "y": 660,
+     "w": 680,
+     "h": 62,
+     "label": "Shared platform services",
+     "sub": "IaC + GitOps · device registry + OTA · secrets / KMS · logs, metrics, traces"
+    }
+   ],
+   "edges": [
+    {
+     "from": "app",
+     "to": "waf",
+     "style": "sync"
+    },
+    {
+     "from": "web",
+     "to": "waf",
+     "style": "sync"
+    },
+    {
+     "from": "waf",
+     "to": "gw",
+     "style": "sync"
+    },
+    {
+     "from": "merch",
+     "to": "gw",
+     "style": "sync",
+     "label": "API",
+     "labelDy": -8
+    },
+    {
+     "from": "gw",
+     "to": "k8s",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.33
+     ]
+    },
+    {
+     "from": "locker",
+     "to": "dgw",
+     "style": "event",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "toAt": [
+      0,
+      0.5
+     ],
+     "label": "pub/sub",
+     "labelDy": -12
+    },
+    {
+     "from": "dgw",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      1,
+      0.3
+     ],
+     "via": [
+      [
+       345,
+       406
+      ],
+      [
+       345,
+       320
+      ]
+     ],
+     "toAt": [
+      0,
+      0.65
+     ]
+    },
+    {
+     "from": "hub",
+     "to": "vpn",
+     "style": "sync"
+    },
+    {
+     "from": "vpn",
+     "to": "integ",
+     "style": "sync",
+     "fromAt": [
+      1,
+      0.5
+     ],
+     "via": [
+      [
+       340,
+       529
+      ],
+      [
+       340,
+       560
+      ],
+      [
+       836,
+       560
+      ],
+      [
+       836,
+       216
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    },
+    {
+     "from": "lockr",
+     "to": "lockdb",
+     "style": "sync"
+    },
+    {
+     "from": "ship",
+     "to": "shipdb",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      0
+     ],
+     "via": [
+      [
+       447,
+       80
+      ],
+      [
+       835,
+       80
+      ]
+     ],
+     "toAt": [
+      0,
+      0.35
+     ]
+    },
+    {
+     "from": "deliv",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       597,
+       172
+      ],
+      [
+       672,
+       172
+      ],
+      [
+       672,
+       268
+      ]
+     ],
+     "toAt": [
+      0.68,
+      0
+     ]
+    },
+    {
+     "from": "plan",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.15,
+      0
+     ]
+    },
+    {
+     "from": "lockr",
+     "to": "stream",
+     "style": "event",
+     "fromAt": [
+      0.15,
+      1
+     ],
+     "via": [
+      [
+       700,
+       268
+      ]
+     ],
+     "toAt": [
+      0.75,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "track",
+     "style": "event",
+     "fromAt": [
+      0.15,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "eta",
+     "style": "event",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "stream",
+     "to": "notify",
+     "style": "event",
+     "fromAt": [
+      0.85,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ]
+    },
+    {
+     "from": "track",
+     "to": "trcache",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       447,
+       455
+      ],
+      [
+       835,
+       455
+      ]
+     ],
+     "toAt": [
+      0,
+      1
+     ]
+    },
+    {
+     "from": "notify",
+     "to": "q",
+     "style": "async"
+    },
+    {
+     "from": "q",
+     "to": "smsfn",
+     "style": "async"
+    },
+    {
+     "from": "smsfn",
+     "to": "sms",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "via": [
+      [
+       745,
+       648
+      ],
+      [
+       340,
+       648
+      ],
+      [
+       340,
+       626
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    },
+    {
+     "from": "plan",
+     "to": "maps",
+     "style": "sync",
+     "fromAt": [
+      0,
+      0.8
+     ],
+     "via": [
+      [
+       372,
+       235
+      ],
+      [
+       372,
+       612
+      ],
+      [
+       160,
+       612
+      ],
+      [
+       160,
+       696
+      ]
+     ],
+     "toAt": [
+      1,
+      0.5
+     ]
+    },
+    {
+     "from": "labelfn",
+     "to": "obj",
+     "style": "sync",
+     "fromAt": [
+      0.5,
+      1
+     ],
+     "toAt": [
+      0.5,
+      0
+     ],
+     "label": "stores PDF",
+     "labelDx": 40
+    }
+   ]
+  }
+ }
+}
