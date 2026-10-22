@@ -1,3 +1,18 @@
+// Keep the contents control available even when the sidebar is hidden or scrolled.
+const sidebarToggle = document.querySelector('.sidebar-toggle');
+if (sidebarToggle) {
+  const sidebar = document.getElementById(sidebarToggle.getAttribute('aria-controls'));
+  const layout = sidebar.closest('.layout');
+  sidebarToggle.hidden = false;
+  layout.classList.add('has-sidebar-toggle');
+  sidebarToggle.addEventListener('click', () => {
+    sidebar.hidden = !sidebar.hidden;
+    layout.classList.toggle('sidebar-collapsed', sidebar.hidden);
+    sidebarToggle.setAttribute('aria-expanded', String(!sidebar.hidden));
+    sidebarToggle.textContent = sidebar.hidden ? 'Show contents' : 'Hide contents';
+  });
+}
+
 // Diagram boxes with details: clicking one shows its text in that figure's detail panel.
 document.addEventListener('click', e => {
   const box = e.target.closest('.visual [data-detail]');
