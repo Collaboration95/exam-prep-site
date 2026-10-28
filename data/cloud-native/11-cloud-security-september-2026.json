@@ -24,10 +24,72 @@
    ],
    "summary": "Why attackers attack, the main categories of attack, and statistics showing how frequent and costly breaches are.",
    "notes": [
-    "**Know the attacker's motive, then the technique.** Motives are stealing information for competitors, for financial gain, for espionage, or creating operational disruption. Techniques: phishing (impersonated email), malware (ransomware blocks access, spyware exfiltrates, worms/viruses disrupt), man-in-the-middle (intercepting a two-party exchange), denial of service (flooding to exhaust resources), SQL injection (malicious input makes a SQL server leak data) and DNS tunneling (smuggling data out over port 53).",
-    "**Map attack to the property it breaks.** DoS hits availability; man-in-the-middle and spyware hit confidentiality and integrity; ransomware hits availability of data. This is the quickest way to pick controls in a scenario.",
-    "**The lecture cites historical statistics, not a current risk forecast:** attacks every 39 seconds, 71% financially motivated and 25% espionage, average breach cost USD 3.92 million and only 5% of folders properly protected. Use the figures to motivate controls; prioritise actual assets and threats rather than treating these percentages as universal.",
-    "**Detection and containment both matter.** The cited 2019 averages are 206 days to identify and 314 days from breach to containment; the latter includes detection time. Yahoo and Uber illustrate the scale of historical incidents. Prevention alone is insufficient: retained logs, audit trails, alerting and response capability reduce the time an intrusion remains active."
+    {
+     "h": "Attacker motives",
+     "lead": "Know the attacker's motive, then the technique.",
+     "items": [
+      "**Stealing information** for **competitors**",
+      "**Financial gain**",
+      "**Espionage**",
+      "**Operational disruption**"
+     ]
+    },
+    {
+     "h": "Attack techniques",
+     "items": [
+      "**Phishing** → **impersonated email**",
+      {
+       "t": "**Malware**",
+       "sub": [
+        "**ransomware** → **blocks access**",
+        "**spyware** → **exfiltrates**",
+        "**worms/viruses** → **disrupt**"
+       ]
+      },
+      "**Man-in-the-middle** → **intercepting** a **two-party exchange**",
+      "**Denial of service** → **flooding** to **exhaust resources**",
+      "**SQL injection** → **malicious input** makes a **SQL server leak data**",
+      "**DNS tunneling** → **smuggling data out** over **port 53**"
+     ]
+    },
+    {
+     "h": "Map attack to the property it breaks",
+     "items": [
+      "**DoS** → **availability**",
+      "**Man-in-the-middle** and **spyware** → **confidentiality** and **integrity**",
+      "**Ransomware** → **availability of data**"
+     ],
+     "foot": "The **quickest way to pick controls** in a scenario."
+    },
+    {
+     "h": "Historical statistics",
+     "lead": "Cited by the lecture; not a current risk forecast.",
+     "items": [
+      "**Attacks every 39 seconds**",
+      "**71% financially motivated**",
+      "**25% espionage**",
+      "**Average breach cost USD 3.92 million**",
+      "**Only 5% of folders** properly protected"
+     ],
+     "foot": "Use the figures to **motivate controls**; prioritise **actual assets and threats** rather than treating these percentages as **universal**."
+    },
+    {
+     "h": "Detection and containment both matter",
+     "items": [
+      "**Cited 2019 averages** → **206 days to identify**; **314 days from breach to containment** (the latter **includes detection time**)",
+      "**Yahoo** and **Uber** → illustrate the **scale of historical incidents**",
+      "**Prevention alone is insufficient**",
+      {
+       "t": "**Reduce the time an intrusion remains active**:",
+       "sub": [
+        "**retained logs**",
+        "**audit trails**",
+        "**alerting**",
+        "**response capability**"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -113,10 +175,59 @@
    ],
    "summary": "Explains what changes in the cloud (shared responsibility by service model), lists what enterprises worry about, and introduces the Cloud Security Alliance and its 14-domain guidance.",
    "notes": [
-    "**Shared responsibility: the provider secures the cloud, the customer secures what is in it.** Cloud security is like on-premises security without owning facilities and hardware; you protect information flows with software-based tools.",
-    "**Responsibility shifts upward with the service model.** IaaS leaves the customer operating OS and applications; PaaS manages more runtime/host work; SaaS operates the application too. Data classification and access accountability stay with the customer. Joint controls still need both sides: the provider runs a firewall service, while the customer sets appropriate rules.",
-    "**Why enterprises hesitate even when the provider is secure:** privacy, ownership and control, trust, governance requirements, regulation and legislation, and access to skills.",
-    "**CSA guidance groups concerns rather than replacing a threat model.** The lecture’s chart lists 14 domains: cloud concepts/architecture; governance/risk; legal/contracts/e-discovery; compliance/audit; information governance; management plane/business continuity; infrastructure; virtualisation/containers; incident response; application security; data/encryption; identity/entitlement/access; virtualisation; and security as a service. It repeats virtualisation in domains 8 and 13, so use the chart as the lecture’s taxonomy rather than a definitive version-to-domain reference."
+    {
+     "h": "Shared responsibility",
+     "lead": "The provider secures the cloud, the customer secures what is in it.",
+     "items": [
+      "**Cloud security** → like **on-premises security** without **owning facilities and hardware**",
+      "**Protect information flows** with **software-based tools**"
+     ]
+    },
+    {
+     "h": "Responsibility shifts with service model",
+     "lead": "Responsibility shifts upward with the service model.",
+     "ordered": true,
+     "items": [
+      "**IaaS** → customer **operates OS and applications**",
+      "**PaaS** → provider manages more **runtime/host** work",
+      "**SaaS** → provider **operates the application** too"
+     ],
+     "foot": "**Data classification** and **access accountability** stay with the **customer**. **Joint controls** still need both sides: the provider runs a **firewall service**, the customer **sets appropriate rules**."
+    },
+    {
+     "h": "Why enterprises hesitate",
+     "lead": "Even when the provider is secure:",
+     "items": [
+      "**Privacy**",
+      "**Ownership and control**",
+      "**Trust**",
+      "**Governance requirements**",
+      "**Regulation and legislation**",
+      "**Access to skills**"
+     ]
+    },
+    {
+     "h": "CSA guidance: 14 domains",
+     "lead": "CSA guidance groups concerns rather than replacing a threat model. The lecture's chart lists:",
+     "ordered": true,
+     "items": [
+      "**Cloud concepts/architecture**",
+      "**Governance/risk**",
+      "**Legal/contracts/e-discovery**",
+      "**Compliance/audit**",
+      "**Information governance**",
+      "**Management plane/business continuity**",
+      "**Infrastructure**",
+      "**Virtualisation/containers**",
+      "**Incident response**",
+      "**Application security**",
+      "**Data/encryption**",
+      "**Identity/entitlement/access**",
+      "**Virtualisation**",
+      "**Security as a service**"
+     ],
+     "foot": "It **repeats virtualisation in domains 8 and 13**, so use the chart as the **lecture's taxonomy** rather than a definitive **version-to-domain reference**."
+    }
    ],
    "terms": [
     {
@@ -208,11 +319,61 @@
    ],
    "summary": "The lecture’s historical CSA threat list and cases, analysed with STRIDE and linked to relevant security controls.",
    "notes": [
-    "**The Treacherous Twelve is the historical CSA threat list used in this course; use it as a checklist for threat analysis.** Each threat can be analysed with STRIDE (Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege) and mapped to the CSA domains that address it.",
-    "**Identity and access threats.** Data breach (BitDefender 2015: credentials stolen from an AWS-hosted app, USD 15,000 ransom demanded; information disclosure). Insufficient identity, credential and access management (cloud credentials committed to GitHub were misused within 36 hours; the possible consequences depend on the credential’s permissions). Account hijacking (an Amazon XSS bug let attackers steal credentials). Malicious insiders (the 'privileged identity gap': rein in shared accounts and track user activity).",
-    "**Software and interface threats.** Insecure interfaces and APIs (the IRS 'Get Transcript' API leaked over 300,000 records). System vulnerabilities (Heartbleed and Shellshock showed open-source software is not automatically safer). Shared technology vulnerabilities (VENOM, a QEMU floppy-controller buffer overflow, let one guest escape to the hypervisor and take over the host and its other tenants), a shared-platform risk amplified by multi-tenancy, including private virtualised environments.",
-    "**Business and availability threats.** Data loss (Code Spaces was hacked, most customer data destroyed, and the firm closed). Insufficient due diligence (Nirvanix went bankrupt and gave customers under two weeks to move data). Advanced persistent threats (stealthy, long-running espionage, e.g. hundreds of terabytes taken from 141 organisations). Abuse of cloud services (attackers rent capacity from providers who cannot vet everyone, and run DDoS for weeks). Denial of service (rising DDoS against providers).",
-    "**Breach vs data loss, hijacking vs insider.** A breach is disclosure (confidentiality); loss is destruction (availability/integrity). Hijacking is an outsider taking over an account; an insider already has legitimate access and abuses it."
+    {
+     "h": "The Treacherous Twelve",
+     "lead": "The historical CSA threat list used in this course; use it as a checklist for threat analysis.",
+     "items": [
+      {
+       "t": "**Analyse each threat with STRIDE**:",
+       "sub": [
+        "**S**poofing",
+        "**T**ampering",
+        "**R**epudiation",
+        "**I**nformation disclosure",
+        "**D**enial of service",
+        "**E**levation of privilege"
+       ]
+      },
+      "**Map** each to the **CSA domains** that address it"
+     ]
+    },
+    {
+     "h": "Identity and access threats",
+     "items": [
+      "**Data breach** → **BitDefender 2015**: credentials stolen from an **AWS-hosted app**, **USD 15,000 ransom** demanded (**information disclosure**)",
+      "**Insufficient identity, credential and access management** → cloud credentials **committed to GitHub** were **misused within 36 hours**; possible consequences depend on the **credential's permissions**",
+      "**Account hijacking** → an **Amazon XSS bug** let attackers **steal credentials**",
+      "**Malicious insiders** → the **'privileged identity gap'**: rein in **shared accounts** and **track user activity**"
+     ]
+    },
+    {
+     "h": "Software and interface threats",
+     "items": [
+      "**Insecure interfaces and APIs** → the **IRS 'Get Transcript' API** leaked **over 300,000 records**",
+      "**System vulnerabilities** → **Heartbleed** and **Shellshock** showed **open-source software is not automatically safer**",
+      "**Shared technology vulnerabilities** → **VENOM**, a **QEMU floppy-controller buffer overflow**, let one guest **escape to the hypervisor** and **take over the host and its other tenants**",
+      "**Shared-platform risk** → **amplified by multi-tenancy**, including **private virtualised environments**"
+     ]
+    },
+    {
+     "h": "Business and availability threats",
+     "items": [
+      "**Data loss** → **Code Spaces** was hacked, **most customer data destroyed**, and the **firm closed**",
+      "**Insufficient due diligence** → **Nirvanix** went **bankrupt** and gave customers **under two weeks** to move data",
+      "**Advanced persistent threats** → **stealthy, long-running espionage**, e.g. **hundreds of terabytes** taken from **141 organisations**",
+      "**Abuse of cloud services** → attackers **rent capacity** from providers who **cannot vet everyone**, and **run DDoS for weeks**",
+      "**Denial of service** → **rising DDoS against providers**"
+     ]
+    },
+    {
+     "h": "Breach vs data loss, hijacking vs insider",
+     "items": [
+      "**Breach** → **disclosure** (**confidentiality**)",
+      "**Data loss** → **destruction** (**availability/integrity**)",
+      "**Hijacking** → an **outsider taking over an account**",
+      "**Insider** → already has **legitimate access** and **abuses it**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -340,12 +501,75 @@
    ],
    "summary": "Splits cloud security into identity, application and data security, then covers data classification, the data lifecycle, encryption, masking and tokenization.",
    "notes": [
-    "**Security splits by layer: identity management (users: transmission, authentication), application security (access control) and data security (key management, encryption).** In the cloud the focus shifts from infrastructure to data, because the customer always owns its data.",
-    "**Ask three things about data: what is it, where is it, how is it protected.** Type: confidential, public, sensitive. State: at rest, in motion, in memory. Protection: encrypt stored and transmitted data and manage keys (BYOK/KYOK).",
-    "**Protect data across its lifecycle.** Create: classify. Store: encrypt, access control, backup, monitor. Use: DLP, DRM, database activity monitoring, WAF. Share: DLP, DRM, HTTPS/TLS, VPN, SSH. Archive: retention policy, encryption, access control, retrievability. Destroy: secure disposal and crypto-shredding.",
-    "**Encryption is applied per layer but the key question is who holds the key.** TLS/VPN in transit; file, volume, object, and database encryption (transparent or application-level) at rest. If the provider holds keys, not all threats are covered; if the consumer does, it must protect them, and the provider may be unable to process encrypted data. RAM and moving data add further weaknesses.",
-    "**Masking and tokenization reduce unnecessary exposure.** Masking changes or hides values shown to a viewer or placed in a derived dataset. Tokenization substitutes a token and protects its mapping or recovery mechanism separately. These controls complement authorisation and encryption; their compliance effect depends on the design.",
-    "**Deployment model does not decide sensitivity by itself.** The lecture illustrates private placement for confidential systems and public placement for other workloads. In a design answer, test data location, access, provider duties, key access and recovery requirements; public cloud is not inherently unsuitable for sensitive data."
+    {
+     "h": "Security splits by layer",
+     "items": [
+      "**Identity management** → **users**: **transmission, authentication**",
+      "**Application security** → **access control**",
+      "**Data security** → **key management, encryption**"
+     ],
+     "foot": "In the cloud the focus **shifts from infrastructure to data**, because the **customer always owns its data**."
+    },
+    {
+     "h": "Three questions about data",
+     "lead": "What is it, where is it, how is it protected?",
+     "items": [
+      "**Type** → **confidential, public, sensitive**",
+      "**State** → **at rest, in motion, in memory**",
+      "**Protection** → **encrypt stored and transmitted data** and **manage keys** (**BYOK/KYOK**)"
+     ]
+    },
+    {
+     "h": "Protect data across its lifecycle",
+     "ordered": true,
+     "items": [
+      "**Create** → **classify**",
+      "**Store** → **encrypt**, **access control**, **backup**, **monitor**",
+      "**Use** → **DLP**, **DRM**, **database activity monitoring**, **WAF**",
+      "**Share** → **DLP**, **DRM**, **HTTPS/TLS**, **VPN**, **SSH**",
+      "**Archive** → **retention policy**, **encryption**, **access control**, **retrievability**",
+      "**Destroy** → **secure disposal** and **crypto-shredding**"
+     ]
+    },
+    {
+     "h": "Encryption: who holds the key",
+     "lead": "Encryption is applied per layer, but the key question is who holds the key.",
+     "items": [
+      "**In transit** → **TLS/VPN**",
+      "**At rest** → **file, volume, object** and **database encryption** (**transparent** or **application-level**)",
+      "**Provider holds keys** → **not all threats are covered**",
+      "**Consumer holds keys** → it **must protect them**, and the provider may be **unable to process encrypted data**",
+      "**RAM and moving data** → add **further weaknesses**"
+     ]
+    },
+    {
+     "h": "Masking and tokenization",
+     "lead": "Reduce unnecessary exposure.",
+     "items": [
+      "**Masking** → **changes or hides values** shown to a **viewer** or placed in a **derived dataset**",
+      "**Tokenization** → **substitutes a token** and **protects its mapping or recovery mechanism separately**",
+      "**Complement** → **authorisation** and **encryption**",
+      "**Compliance effect** → **depends on the design**"
+     ]
+    },
+    {
+     "h": "Deployment model vs sensitivity",
+     "lead": "Deployment model does not decide sensitivity by itself.",
+     "items": [
+      "**Lecture illustration** → **private placement** for **confidential systems**, **public placement** for other workloads",
+      {
+       "t": "**In a design answer, test**:",
+       "sub": [
+        "data location",
+        "access",
+        "provider duties",
+        "key access",
+        "recovery requirements"
+       ]
+      }
+     ],
+     "foot": "**Public cloud** is **not inherently unsuitable** for **sensitive data**."
+    }
    ],
    "terms": [
     {
@@ -440,10 +664,52 @@
    ],
    "summary": "How to secure applications (scanning, DevSecOps), users (resource and network protection), the network and hardware layer, and how to make access-control decisions.",
    "notes": [
-    "**Classify first, then protect.** Apps are mission-critical, infrastructure or business-function; users are public, registered, or employees/developers/administrators. The class sets how strong the controls need to be.",
-    "**Secure applications through the pipeline:** scan applications, scan containers and adopt DevSecOps so security is built into delivery rather than added at the end.",
-    "**Use defence in depth.** Subnets zone the network; security groups filter connections; host firewalls add local rules; VPN protects hybrid connectivity; a WAF filters HTTP-level exploits and some application-layer abuse. Broader DDoS protection addresses resource and network flooding. An HSM gives tamper-resistant key operations, not immunity to every attack.",
-    "**Access decisions use actor, function, location and other attributes.** Actor: who. Function: what action. Location: network (office, home, VPN), machine (own vs company) and country (data export limits). Others: group membership and time of day. Enforce with key management, federated identity and IAM."
+    {
+     "h": "Classify first, then protect",
+     "items": [
+      "**Apps** → **mission-critical**, **infrastructure** or **business-function**",
+      "**Users** → **public**, **registered**, or **employees/developers/administrators**"
+     ],
+     "foot": "The **class sets how strong** the controls need to be."
+    },
+    {
+     "h": "Secure applications through the pipeline",
+     "items": [
+      "**Scan applications**",
+      "**Scan containers**",
+      "**Adopt DevSecOps** → security **built into delivery** rather than **added at the end**"
+     ]
+    },
+    {
+     "h": "Defence in depth",
+     "items": [
+      "**Subnets** → **zone the network**",
+      "**Security groups** → **filter connections**",
+      "**Host firewalls** → add **local rules**",
+      "**VPN** → protects **hybrid connectivity**",
+      "**WAF** → filters **HTTP-level exploits** and some **application-layer abuse**",
+      "**Broader DDoS protection** → addresses **resource and network flooding**",
+      "**HSM** → **tamper-resistant key operations**, **not immunity** to every attack"
+     ]
+    },
+    {
+     "h": "Access decision attributes",
+     "lead": "Access decisions use actor, function, location and other attributes.",
+     "items": [
+      "**Actor** → **who**",
+      "**Function** → **what action**",
+      {
+       "t": "**Location**",
+       "sub": [
+        "**network** (office, home, VPN)",
+        "**machine** (own vs company)",
+        "**country** (**data export limits**)"
+       ]
+      },
+      "**Others** → **group membership** and **time of day**",
+      "**Enforce with** → **key management**, **federated identity**, **IAM**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -491,10 +757,49 @@
    ],
    "summary": "Ongoing security management has three steps (monitor, gain visibility, manage access), with AWS tools as examples, followed by the deck's concluding principles.",
    "notes": [
-    "**Ongoing security is a loop of monitor, gain visibility, manage access.** Use the provider's native tooling for each.",
-    "**Monitoring and audit answer different questions.** CloudWatch-style metrics/logs/alarms show health and behaviour. CloudTrail-style audit events record supported identity and resource actions, helping reconstruct who did what. Verify logging scope, retention and protection; a log identity may itself have been compromised.",
-    "**IAM gives the right people the right resources at the right times for the right reasons.** Functions: manage identities, provision/deprovision, authenticate, authorise, report and single sign-on.",
-    "**Conclusions.** The SLA is the consumer-provider contract; responsibility varies by service model; providers supply network, device, identity and encryption services; focus shifts to data security; secure data in transit, at rest and in use; access control follows classification across the whole data lifecycle."
+    {
+     "h": "Ongoing security loop",
+     "ordered": true,
+     "items": [
+      "**Monitor**",
+      "**Gain visibility**",
+      "**Manage access**"
+     ],
+     "foot": "Use the **provider's native tooling** for each."
+    },
+    {
+     "h": "Monitoring vs audit",
+     "lead": "They answer different questions.",
+     "items": [
+      "**CloudWatch-style** → **metrics/logs/alarms** show **health and behaviour**",
+      "**CloudTrail-style** → **audit events** record supported **identity and resource actions**, helping **reconstruct who did what**",
+      "**Verify** → **logging scope**, **retention**, **protection**",
+      "**Caveat** → a **log identity** may itself have been **compromised**"
+     ]
+    },
+    {
+     "h": "IAM functions",
+     "lead": "The right people, the right resources, at the right times, for the right reasons.",
+     "items": [
+      "**Manage identities**",
+      "**Provision/deprovision**",
+      "**Authenticate**",
+      "**Authorise**",
+      "**Report**",
+      "**Single sign-on**"
+     ]
+    },
+    {
+     "h": "Conclusions",
+     "items": [
+      "**SLA** → the **consumer-provider contract**",
+      "**Responsibility varies by service model**",
+      "**Providers supply** → **network, device, identity and encryption services**",
+      "**Focus shifts to data security**",
+      "**Secure data** → **in transit, at rest and in use**",
+      "**Access control follows classification** across the **whole data lifecycle**"
+     ]
+    }
    ],
    "terms": [
     {

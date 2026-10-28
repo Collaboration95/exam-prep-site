@@ -24,10 +24,82 @@
    ],
    "summary": "How VMs and containers package applications, what managed cloud services are, why IaaS emerged and which workloads suit it.",
    "notes": [
-    "**VMs and containers isolate at different boundaries.** A VM boots a guest OS via a hypervisor; a container starts isolated processes sharing the host kernel. Containers usually have less overhead and faster startup; image pulls and application initialisation still take time. VMs suit different OS requirements or stronger kernel separation.",
-    "**IaaS is the cloud's raw-infrastructure layer.** It grew out of successive waves of sharing (networks, the web, grids, then services) and is justified by elastic capacity, lower upfront investment, cheaper DR, easy seasonal scaling and freeing the business to focus on core work. It suits analytics, ERP/CRM, collaboration, dev/test, backup/DR and general infrastructure workloads.",
-    "**Managed cloud services hand part or all of cloud operations (migration, configuration, optimization, security, maintenance) to a provider**, usually on subscription and contracted before migrating, so the client gets cloud benefit with less internal time and cost.",
-    "**IaC treats infrastructure as machine-readable definition files rather than manual setup**, which is what makes IaaS repeatable. An IaaS platform itself is run by three back-end systems: resource management (VIM), SLA management and billing."
+    {
+     "h": "VMs vs containers: isolation boundaries",
+     "items": [
+      "**VM** → boots a **guest OS** via a **hypervisor**",
+      "**Container** → starts **isolated processes** sharing the **host kernel**",
+      "**Containers** → usually **less overhead**, **faster startup**; **image pulls** and **application initialisation** still take time",
+      "**VMs suit** → **different OS requirements** or **stronger kernel separation**"
+     ]
+    },
+    {
+     "h": "IaaS: the raw-infrastructure layer",
+     "items": [
+      {
+       "t": "**Grew out of successive waves of sharing**:",
+       "sub": [
+        "networks",
+        "the web",
+        "grids",
+        "then services"
+       ]
+      },
+      {
+       "t": "**Justified by**:",
+       "sub": [
+        "**elastic capacity**",
+        "**lower upfront investment**",
+        "**cheaper DR**",
+        "easy **seasonal scaling**",
+        "freeing the business to **focus on core work**"
+       ]
+      },
+      {
+       "t": "**Suits workloads**:",
+       "sub": [
+        "analytics",
+        "ERP/CRM",
+        "collaboration",
+        "dev/test",
+        "backup/DR",
+        "general infrastructure"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Managed cloud services",
+     "items": [
+      {
+       "t": "Hand **part or all of cloud operations** to a provider:",
+       "sub": [
+        "migration",
+        "configuration",
+        "optimization",
+        "security",
+        "maintenance"
+       ]
+      },
+      "Usually on **subscription**",
+      "**Contracted before migrating**",
+      "Client gets **cloud benefit** with **less internal time and cost**"
+     ]
+    },
+    {
+     "h": "IaC and IaaS back end",
+     "items": [
+      "**IaC** → infrastructure as **machine-readable definition files**, not **manual setup** → makes IaaS **repeatable**",
+      {
+       "t": "An IaaS platform is run by **three back-end systems**:",
+       "sub": [
+        "**resource management (VIM)**",
+        "**SLA management**",
+        "**billing**"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -100,9 +172,44 @@
    ],
    "summary": "OpenStack as an open-source IaaS platform and Ansible as a way to provision it as code.",
    "notes": [
-    "**OpenStack is an open-source suite that turns hardware into a private IaaS cloud**: compute (Nova), networking (Neutron), object and block storage (Swift, Cinder), identity (Keystone), VM templates (Glance), dashboard (Horizon) and orchestration (Heat).",
-    "**Ansible provisions and configures systems using ordered YAML playbooks.** Modules can express intended resource state without a resident target agent. Heat uses its own YAML format, HOT, for OpenStack orchestration; a Heat template is not an Ansible playbook.",
-    "**The point is Infrastructure as Code**: a playbook declares VM templates, servers, networks and security groups so a whole environment is versioned and re-runnable instead of hand-built. OpenStack-Ansible is even a common way to install OpenStack itself."
+    {
+     "h": "OpenStack: private IaaS cloud",
+     "lead": "Open-source suite that turns hardware into a private IaaS cloud.",
+     "items": [
+      "**Compute** → **Nova**",
+      "**Networking** → **Neutron**",
+      "**Object and block storage** → **Swift**, **Cinder**",
+      "**Identity** → **Keystone**",
+      "**VM templates** → **Glance**",
+      "**Dashboard** → **Horizon**",
+      "**Orchestration** → **Heat**"
+     ]
+    },
+    {
+     "h": "Ansible: ordered YAML playbooks",
+     "items": [
+      "**Provisions and configures** systems using **ordered YAML playbooks**",
+      "**Modules** can express **intended resource state** without a **resident target agent**",
+      "**Heat** uses its own YAML format, **HOT**, for OpenStack orchestration",
+      "A **Heat template is not an Ansible playbook**"
+     ]
+    },
+    {
+     "h": "The point: Infrastructure as Code",
+     "items": [
+      {
+       "t": "A **playbook declares**:",
+       "sub": [
+        "VM templates",
+        "servers",
+        "networks",
+        "security groups"
+       ]
+      },
+      "Whole environment is **versioned and re-runnable** instead of **hand-built**",
+      "**OpenStack-Ansible** → a common way to **install OpenStack itself**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -195,10 +302,61 @@
    ],
    "summary": "Why PaaS emerged, what it gives, which workloads fit it, the CNCF ecosystem, and the VM vs container comparison.",
    "notes": [
-    "**PaaS reduces platform operations for developers:** deployment, scaling and runtime management are supplied by the platform. The lecture’s large labour, capital and delivery-time reductions are illustrative benefits, not guaranteed savings for every workload; teams still configure access and secure their code.",
-    "**IaaS vs PaaS fit:** workloads that consume managed platform services (databases, queues, APIs, rule engines, batch/ETL, CI/CD, mobile back-ends) fit PaaS; workloads needing server-level control (application servers, backup, DR, storage) fit IaaS.",
-    "**Compute abstraction keeps moving up the stack** (mainframe, client-server, web, now containers with edge devices), and the CNCF (Linux Foundation) hosts the open-source projects behind cloud-native computing.",
-    "**VM vs container in four contrasts:** hardware-level vs OS-level virtualization; isolation of machines vs processes; resources via hypervisor vs kernel namespaces and cgroups; hardware flexibility vs portability. VMs bring established management/security tools; containers bring lightness and speed."
+    {
+     "h": "PaaS reduces platform operations",
+     "items": [
+      "Platform supplies **deployment**, **scaling** and **runtime management** for developers",
+      "Lecture's large **labour, capital and delivery-time reductions** → **illustrative benefits**, not **guaranteed savings** for every workload",
+      "Teams still **configure access** and **secure their code**"
+     ]
+    },
+    {
+     "h": "IaaS vs PaaS fit",
+     "items": [
+      {
+       "t": "**PaaS** → workloads consuming **managed platform services**:",
+       "sub": [
+        "databases",
+        "queues",
+        "APIs",
+        "rule engines",
+        "batch/ETL",
+        "CI/CD",
+        "mobile back-ends"
+       ]
+      },
+      {
+       "t": "**IaaS** → workloads needing **server-level control**:",
+       "sub": [
+        "application servers",
+        "backup",
+        "DR",
+        "storage"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Compute abstraction moves up the stack",
+     "items": [
+      "**Mainframe**",
+      "**Client-server**",
+      "**Web**",
+      "Now **containers** with **edge devices**"
+     ],
+     "ordered": true,
+     "foot": "The **CNCF** (**Linux Foundation**) hosts the **open-source projects** behind cloud-native computing."
+    },
+    {
+     "h": "VM vs container: four contrasts",
+     "items": [
+      "**Virtualization** → **hardware-level** vs **OS-level**",
+      "**Isolation** → **machines** vs **processes**",
+      "**Resources** → via **hypervisor** vs **kernel namespaces and cgroups**",
+      "**Strength** → **hardware flexibility** vs **portability**",
+      "**VMs** bring **established management/security tools**; **containers** bring **lightness and speed**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -238,10 +396,81 @@
    ],
    "summary": "How to think about migration: an on-prem to AWS example, the AWS migration roadmap, lift-and-shift vs lift-and-optimize, and Gartner's six drivers of modernization.",
    "notes": [
-    "**Migration is a decision process, not a single move.** The AWS roadmap runs discover and assess, then choose a path per application (do not move, decommission, vendor SaaS/PaaS, lift and shift, refactor, replatform/rearchitect/recode), then plan and sequence, migrate and UAT, tune, sign off, cut over and operate, with org/ops impact analysis and change management alongside.",
-    "**Lift-and-shift trades initial speed against later optimisation.** It moves largely unchanged applications quickly but may preserve inefficient resource use. Lift-and-optimise adapts during migration, usually taking longer and costing more initially for potential ongoing cost and ROI improvements. TCO is a cost to minimise; ROI is a return to improve.",
-    "**Diagnose before prescribing with Gartner's six drivers.** Business: business fit (no longer meets needs), innovation (blocks opportunities), agility (cannot keep pace with change). IT: cost (too high for its value), complexity (hard and risky to change), risk (security, compliance, supportability, scalability, skills shortage).",
-    "**Method:** understand each approach's scope and effect, run a cause-effect analysis with the six drivers to find the functional, architectural and technological problems, then pick an approach per application with Gartner's framework. An on-prem 3-tier app maps to AWS as DNS, load balancing, auto-scaling web/app fleets across two AZs and a managed database."
+    {
+     "h": "AWS migration roadmap",
+     "lead": "Migration is a decision process, not a single move.",
+     "items": [
+      "**Discover and assess**",
+      {
+       "t": "**Choose a path per application**:",
+       "sub": [
+        "do not move",
+        "decommission",
+        "vendor SaaS/PaaS",
+        "lift and shift",
+        "refactor",
+        "replatform/rearchitect/recode"
+       ]
+      },
+      "**Plan and sequence**",
+      "**Migrate and UAT**",
+      "**Tune**",
+      "**Sign off**",
+      "**Cut over** and **operate**"
+     ],
+     "ordered": true,
+     "foot": "Alongside throughout: **org/ops impact analysis** and **change management**."
+    },
+    {
+     "h": "Lift-and-shift vs lift-and-optimise",
+     "lead": "Trades initial speed against later optimisation.",
+     "items": [
+      "**Lift-and-shift** → moves **largely unchanged** apps **quickly**; may **preserve inefficient resource use**",
+      "**Lift-and-optimise** → **adapts during migration**; usually **longer** and **costs more initially**, for potential **ongoing cost and ROI improvements**",
+      "**TCO** → a **cost to minimise**",
+      "**ROI** → a **return to improve**"
+     ]
+    },
+    {
+     "h": "Gartner's six drivers (diagnose first)",
+     "items": [
+      {
+       "t": "**Business drivers**:",
+       "sub": [
+        "**Business fit** → no longer meets needs",
+        "**Innovation** → blocks opportunities",
+        "**Agility** → cannot keep pace with change"
+       ]
+      },
+      {
+       "t": "**IT drivers**:",
+       "sub": [
+        "**Cost** → too high for its value",
+        "**Complexity** → hard and risky to change",
+        "**Risk** → security, compliance, supportability, scalability, skills shortage"
+       ]
+      }
+     ],
+     "foot": "**Diagnose before prescribing**."
+    },
+    {
+     "h": "Method",
+     "items": [
+      "**Understand** each approach's **scope and effect**",
+      "Run a **cause-effect analysis** with the six drivers → find the **functional, architectural and technological problems**",
+      "**Pick an approach per application** with **Gartner's framework**"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "On-prem 3-tier app mapped to AWS",
+     "items": [
+      "**DNS**",
+      "**Load balancing**",
+      "**Auto-scaling web/app fleets** across **two AZs**",
+      "**Managed database**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -319,10 +548,59 @@
    ],
    "summary": "The option spectrum against IaaS/PaaS/SaaS, and the two lightest-touch options with typical use cases.",
    "notes": [
-    "**The options form a spectrum of increasing change:** Retire, Rehost, Replatform, Rearchitect, Rebuild, Replace. Roughly, IaaS corresponds to Rehost, PaaS to Replatform through Rebuild, and SaaS to Replace.",
-    "**Rehost (lift and shift, redeploy)** moves the app to other infrastructure with no recompiling and no change to code, features or functions. Its benefits are infrastructure-only: scalability at peaks, less hardware upkeep, redundancy and availability, remote access, provider security and compliance posture.",
-    "**Replatform (lift, shape and shift)** moves to a new runtime platform with minimal compatibility changes (for example a managed cloud database, serverless or auto-scaling) but no change to code structure or features. Typical gains: better analytics or AI services, faster transactions, auto-scaling.",
-    "**Rehost vs Replatform:** Rehost changes only where it runs; Replatform also swaps platform pieces (database, runtime) while the application stays functionally the same."
+    {
+     "h": "Spectrum of increasing change",
+     "items": [
+      "**Retire**",
+      "**Rehost**",
+      "**Replatform**",
+      "**Rearchitect**",
+      "**Rebuild**",
+      "**Replace**"
+     ],
+     "ordered": true,
+     "foot": "Roughly: **IaaS** ≈ Rehost; **PaaS** ≈ Replatform through Rebuild; **SaaS** ≈ Replace."
+    },
+    {
+     "h": "Rehost (lift and shift, redeploy)",
+     "items": [
+      "Moves the app to **other infrastructure**",
+      "**No recompiling**; **no change to code, features or functions**",
+      {
+       "t": "Benefits are **infrastructure-only**:",
+       "sub": [
+        "**scalability at peaks**",
+        "less **hardware upkeep**",
+        "**redundancy and availability**",
+        "**remote access**",
+        "provider **security and compliance posture**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Replatform (lift, shape and shift)",
+     "items": [
+      "Moves to a **new runtime platform** with **minimal compatibility changes**",
+      "Examples: **managed cloud database**, **serverless**, **auto-scaling**",
+      "**No change to code structure or features**",
+      {
+       "t": "Typical gains:",
+       "sub": [
+        "better **analytics or AI services**",
+        "**faster transactions**",
+        "**auto-scaling**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Rehost vs Replatform",
+     "items": [
+      "**Rehost** → changes **only where it runs**",
+      "**Replatform** → also **swaps platform pieces** (database, runtime); app stays **functionally the same**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -402,10 +680,69 @@
    ],
    "summary": "The deeper-change options (Rearchitect, Rebuild) and the non-migrating or replacing options (Replace, Retain, Retire, Encapsulate).",
    "notes": [
-    "**Rearchitect (re-engineer, refactor) restructures code without changing external behaviour** to remove technical debt and improve non-functional qualities, often moving to microservices, serverless/event-driven, containers or CDN/caching so components scale independently.",
-    "**Rebuild (rewrite, redesign) writes the application afresh**, even as a like-for-like replacement, usually cloud-native, to gain new capabilities (mobile-first, IoT, AI, offline mode, microservices). Rearchitect vs Rebuild: Rearchitect keeps behaviour and reshapes the existing code; Rebuild may change functionality too and has the highest value, cost and risk.",
-    "**Replace (repurchase, drop and shop)** swaps the app for a COTS or SaaS product, taking new requirements into account; **Retire** decommissions it, often as part of a Replace.",
-    "**Retain** leaves the app as is for now because modernization is not worth the effort and risk or it is nearing retirement. **Encapsulate** exposes the app's data and functions as API services, extending its value while hiding the implementation."
+    {
+     "h": "Rearchitect (re-engineer, refactor)",
+     "items": [
+      "**Restructures code** without **changing external behaviour**",
+      "Goal → remove **technical debt**, improve **non-functional qualities**",
+      {
+       "t": "Often moves to:",
+       "sub": [
+        "**microservices**",
+        "**serverless/event-driven**",
+        "**containers**",
+        "**CDN/caching**"
+       ]
+      },
+      "→ components **scale independently**"
+     ]
+    },
+    {
+     "h": "Rebuild (rewrite, redesign)",
+     "items": [
+      "**Writes the application afresh**, even as a **like-for-like replacement**",
+      "Usually **cloud-native**",
+      {
+       "t": "Gains **new capabilities**:",
+       "sub": [
+        "mobile-first",
+        "IoT",
+        "AI",
+        "offline mode",
+        "microservices"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Rearchitect vs Rebuild",
+     "items": [
+      "**Rearchitect** → **keeps behaviour**, **reshapes the existing code**",
+      "**Rebuild** → may **change functionality too**; **highest value, cost and risk**"
+     ]
+    },
+    {
+     "h": "Replace and Retire",
+     "items": [
+      "**Replace (repurchase, drop and shop)** → swaps the app for a **COTS or SaaS product**, taking **new requirements** into account",
+      "**Retire** → **decommissions** it, often **as part of a Replace**"
+     ]
+    },
+    {
+     "h": "Retain and Encapsulate",
+     "items": [
+      "**Retain** → leave the app **as is for now**",
+      {
+       "t": "Retain because:",
+       "sub": [
+        "modernization **not worth the effort and risk**",
+        "or it is **nearing retirement**"
+       ]
+      },
+      "**Encapsulate** → exposes the app's **data and functions as API services**",
+      "Encapsulate **extends its value** while **hiding the implementation**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -453,10 +790,70 @@
    ],
    "summary": "Gartner's comparison of what each option changes and its trade-offs, Gartner's migration stages, and the seven-step plan with eight classification criteria.",
    "notes": [
-    "**More change means more value but more cost and risk.** Rehost changes only infrastructure; Replatform adds platform/data layers; Rearchitect adds configuration and custom code; Rebuild and Replace can change everything including business logic and UX. In Gartner's ratings Rehost is lowest overall, Rebuild is highest on change, value, cost and risk, and Replace causes the most business disruption. Pick the lightest option that fixes the diagnosed drivers.",
-    "**Gartner's four steps for mass migration to IaaS:** choose the approach (lift-and-shift vs lift-and-optimize, weighing lock-in against unique cloud value); build the business case; prepare (landing zone, cloud patterns, migration partner, cloud operations model); migrate and optimize using cloud-native services sooner.",
-    "**The seven-step plan:** (1) identify desired outcomes, (2) classify cloud candidates, (3) define service and deployment criteria per workload (IaaS/PaaS/SaaS and public/private placement), (4) devise an iterative agile process that fails fast and learns fast, (5) get buy-in, (6) start simple and prioritize learning over ROI, (7) rinse and repeat.",
-    "**Candidates are classified on eight criteria:** architecture, security, availability, performance, scalability, strategic importance, future plans and enthusiasm of the team. The first project should be low-risk and highly instructive, not the highest-ROI one, because early success builds skills and buy-in."
+    {
+     "h": "More change: more value, cost, risk",
+     "items": [
+      "**Rehost** → changes **only infrastructure**",
+      "**Replatform** → adds **platform/data layers**",
+      "**Rearchitect** → adds **configuration and custom code**",
+      "**Rebuild** and **Replace** → can change **everything**, including **business logic and UX**"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Gartner's ratings",
+     "items": [
+      "**Rehost** → **lowest overall**",
+      "**Rebuild** → **highest** on **change, value, cost and risk**",
+      "**Replace** → most **business disruption**"
+     ],
+     "foot": "Pick the **lightest option** that **fixes the diagnosed drivers**."
+    },
+    {
+     "h": "Gartner's four steps: mass migration to IaaS",
+     "items": [
+      "**Choose the approach** → **lift-and-shift vs lift-and-optimize**, weighing **lock-in** against **unique cloud value**",
+      "**Build the business case**",
+      {
+       "t": "**Prepare**:",
+       "sub": [
+        "**landing zone**",
+        "**cloud patterns**",
+        "**migration partner**",
+        "**cloud operations model**"
+       ]
+      },
+      "**Migrate and optimize** → use **cloud-native services sooner**"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "The seven-step plan",
+     "items": [
+      "**Identify desired outcomes**",
+      "**Classify cloud candidates**",
+      "**Define service and deployment criteria** per workload (**IaaS/PaaS/SaaS** and **public/private** placement)",
+      "**Devise an iterative agile process** → **fails fast and learns fast**",
+      "**Get buy-in**",
+      "**Start simple** → **prioritize learning over ROI**",
+      "**Rinse and repeat**"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Classify candidates on eight criteria",
+     "items": [
+      "**Architecture**",
+      "**Security**",
+      "**Availability**",
+      "**Performance**",
+      "**Scalability**",
+      "**Strategic importance**",
+      "**Future plans**",
+      "**Enthusiasm of the team**"
+     ],
+     "foot": "First project → **low-risk and highly instructive**, not the **highest-ROI** one: **early success builds skills and buy-in**."
+    }
    ],
    "terms": [
     {
@@ -533,9 +930,47 @@
    ],
    "summary": "What to assess in each application, the migration planning framework, the migration cost bubble and TCO.",
    "notes": [
-    "**Assess each application across concern families:** performance (elasticity, latency, throughput), architecture (complexity, data, life expectancy), financial (operating cost, business value), risk (business criticality, technical, contractual, audit), operations (continuity, tooling, deployment) and security/compliance (jurisdiction, regulation, privacy, encryption), which can rule out regions or providers.",
-    "**The planning framework** establishes a baseline (drivers, portfolio analysis assigning an R to each app, requirement recovery), designs the target, then follows a road map to migration complete, supported by stakeholder buy-in, quality assurance, risk mitigation and a scope/schedule plan.",
-    "**Budget for the migration bubble:** discovery, duplicate environments, training, consultants, tools and lease penalties raise costs temporarily. Compare lifetime TCO with the baseline; retirement and optimisation may produce savings, but only the business case can establish whether and when they occur."
+    {
+     "h": "Assess each app across concern families",
+     "items": [
+      "**Performance** → elasticity, latency, throughput",
+      "**Architecture** → complexity, data, life expectancy",
+      "**Financial** → operating cost, business value",
+      "**Risk** → business criticality, technical, contractual, audit",
+      "**Operations** → continuity, tooling, deployment",
+      "**Security/compliance** → jurisdiction, regulation, privacy, encryption; can **rule out regions or providers**"
+     ]
+    },
+    {
+     "h": "The planning framework",
+     "items": [
+      {
+       "t": "**Establish a baseline**:",
+       "sub": [
+        "**drivers**",
+        "**portfolio analysis** assigning **an R to each app**",
+        "**requirement recovery**"
+       ]
+      },
+      "**Design the target**",
+      "Follow a **road map** to **migration complete**"
+     ],
+     "ordered": true,
+     "foot": "Supported by **stakeholder buy-in**, **quality assurance**, **risk mitigation** and a **scope/schedule plan**."
+    },
+    {
+     "h": "Budget for the migration bubble",
+     "lead": "Costs rise temporarily from:",
+     "items": [
+      "**Discovery**",
+      "**Duplicate environments**",
+      "**Training**",
+      "**Consultants**",
+      "**Tools**",
+      "**Lease penalties**"
+     ],
+     "foot": "Compare **lifetime TCO** with the **baseline**; **retirement and optimisation** may produce savings, but only the **business case** can establish **whether and when** they occur."
+    }
    ],
    "terms": [
     {
@@ -575,10 +1010,58 @@
    ],
    "summary": "Deciding who should run each capability and where it should be hosted, using weighted criteria, then the overall assessment approach.",
    "notes": [
-    "**Two separate decisions per capability:** the sourcing model (who operates it: internal team or a partner such as an MSP or cloud product partner) and the hosting model (where it runs: own data centre, IaaS, PaaS or SaaS).",
-    "**Sourcing factors:** level of differentiation (core stays internal, non-differentiators go to partners), complexity of business processes (complex stays internal) and skills (common skills in-house, highly specialized skills outsourced). Capabilities that are core, complex and commonly skilled lean internal; non-differentiating, simple, specialized ones lean partner.",
-    "**Make it systematic with weighted scoring:** rate each criterion 1-3 and weight it (example: differentiation 60%, operational complexity 20%, skills 20%, with skills scored inversely so 1 means highly specialized), combine into a composite classification and validate with stakeholders.",
-    "**Finish with options and proof:** assess portfolio dependencies, data type, coupling, compliance and audience, compare pros and cons of alternatives, and use a proof of concept to reduce risk."
+    {
+     "h": "Two separate decisions per capability",
+     "items": [
+      "**Sourcing model** → **who operates it**: **internal team** or a **partner** (e.g. **MSP** or **cloud product partner**)",
+      "**Hosting model** → **where it runs**: **own data centre**, **IaaS**, **PaaS** or **SaaS**"
+     ]
+    },
+    {
+     "h": "Sourcing factors",
+     "items": [
+      "**Level of differentiation** → **core stays internal**; **non-differentiators go to partners**",
+      "**Complexity of business processes** → **complex stays internal**",
+      "**Skills** → **common skills in-house**; **highly specialized skills outsourced**"
+     ],
+     "foot": "**Core, complex, commonly skilled** → lean **internal**; **non-differentiating, simple, specialized** → lean **partner**."
+    },
+    {
+     "h": "Weighted scoring (make it systematic)",
+     "items": [
+      "**Rate each criterion 1-3** and **weight** it",
+      {
+       "t": "Example weights:",
+       "sub": [
+        "**differentiation 60%**",
+        "**operational complexity 20%**",
+        "**skills 20%**"
+       ]
+      },
+      "**Skills scored inversely** → **1 means highly specialized**",
+      "Combine into a **composite classification**",
+      "**Validate with stakeholders**"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Finish with options and proof",
+     "items": [
+      {
+       "t": "**Assess the portfolio**:",
+       "sub": [
+        "dependencies",
+        "data type",
+        "coupling",
+        "compliance",
+        "audience"
+       ]
+      },
+      "**Compare pros and cons** of alternatives",
+      "Use a **proof of concept** to **reduce risk**"
+     ],
+     "ordered": true
+    }
    ],
    "terms": [
     {

@@ -24,8 +24,37 @@
    ],
    "summary": "The basic question: can traditional data storage keep up as applications move from a single server and database to distributed cloud deployments?",
    "notes": [
-    "**Cloud deployment makes data distribution an explicit design choice.** Multiple application instances may share one database or use several stores and regions. Identify which state must survive failures, how it is accessed, and whether it needs partitioning or replication; not every cloud app needs many databases.",
-    "Persistence technology keeps evolving with the nature of the data, so the recurring question is whether current designs still meet evolving needs. The aim is to understand the options, evaluate and recommend one, and design a strategy from requirements."
+    {
+     "h": "Data distribution is an explicit choice",
+     "lead": "Cloud deployment makes data distribution an explicit design choice.",
+     "items": [
+      "**Multiple application instances** may **share one database** or use **several stores and regions**",
+      {
+       "t": "**Identify**:",
+       "sub": [
+        "which **state must survive failures**",
+        "**how it is accessed**",
+        "whether it needs **partitioning or replication**"
+       ]
+      },
+      "**Not every cloud app needs many databases**"
+     ]
+    },
+    {
+     "h": "Persistence technology keeps evolving",
+     "items": [
+      "Evolves with the **nature of the data**",
+      "Recurring question → do **current designs still meet evolving needs**?",
+      {
+       "t": "**The aim**:",
+       "sub": [
+        "**understand the options**",
+        "**evaluate and recommend** one",
+        "**design a strategy from requirements**"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -53,10 +82,58 @@
    ],
    "summary": "Database generations: hierarchical and network (1960s), relational with normalisation and ACID (1970s), and object databases (1990s), ending with RDBMS strengths and its scaling weakness.",
    "notes": [
-    "**Each database generation fixed the previous one's pain.** Hierarchical (tree, one parent per child, e.g. IMS) and network (graph, many parents, e.g. IDMS) models of the 1960s tied access to the physical structure; the relational model (1970s, Codd) instead describes how data is presented, not stored, using tables joined on keys.",
-    "**RDBMS gives normalisation and ACID.** Normalisation splits data into smaller tables joined at query time to cut duplication, avoid insert/update/delete anomalies and stay neutral to changing queries. Transactions are atomic, consistent, isolated and durable, behind one uniform (declarative) language, SQL.",
-    "**Object databases (1990s) tried to remove the object-relational mismatch** by storing objects directly (identity, inheritance, no normalisation) but failed to win market share; ORM tools solved much of the mismatch on top of mature RDBMS instead (e.g. flattening an inheritance hierarchy into one table with a type column).",
-    "**RDBMS weakness to remember: it is mature and precise (star schemas, reporting) but expensive to scale.** This sets up why NoSQL appeared."
+    {
+     "h": "Each database generation fixed a pain",
+     "items": [
+      "**Hierarchical model** (1960s) → **tree**, **one parent per child** (e.g. **IMS**)",
+      "**Network model** (1960s) → **graph**, **many parents** (e.g. **IDMS**)",
+      "Both **tied access to the physical structure**",
+      "**Relational model** (1970s, **Codd**) → describes how data is **presented, not stored**; **tables joined on keys**"
+     ],
+     "ordered": true,
+     "foot": "Each generation fixed the **previous one's pain**."
+    },
+    {
+     "h": "RDBMS: normalisation and ACID",
+     "items": [
+      {
+       "t": "**Normalisation** → split data into **smaller tables joined at query time** to:",
+       "sub": [
+        "**cut duplication**",
+        "avoid **insert/update/delete anomalies**",
+        "stay **neutral to changing queries**"
+       ]
+      },
+      {
+       "t": "**ACID transactions**:",
+       "sub": [
+        "**Atomic**",
+        "**Consistent**",
+        "**Isolated**",
+        "**Durable**"
+       ]
+      },
+      "Behind **one uniform (declarative) language**: **SQL**"
+     ]
+    },
+    {
+     "h": "Object databases (1990s)",
+     "items": [
+      "Tried to remove the **object-relational mismatch**",
+      "**Stored objects directly** → **identity**, **inheritance**, **no normalisation**",
+      "**Failed to win market share**",
+      "**ORM tools** solved much of the mismatch on top of **mature RDBMS** instead",
+      "ORM example → **flattening an inheritance hierarchy** into **one table with a type column**"
+     ]
+    },
+    {
+     "h": "RDBMS weakness to remember",
+     "items": [
+      "**Mature and precise** (**star schemas**, **reporting**)",
+      "But **expensive to scale**"
+     ],
+     "foot": "This sets up **why NoSQL appeared**."
+    }
    ],
    "terms": [
     {
@@ -108,11 +185,64 @@
    ],
    "summary": "How the six V's exposed RDBMS limits, how Google, Amazon, Facebook and others built their own stores, how NoSQL got its name, the three kinds of data structure, and polyglot persistence.",
    "notes": [
-    "**Big data (six V's) exposed RDBMS limits.** Volume (scale-out on commodity/cloud, not one big server), Velocity (real-time performance via distributed persistence), Variety (non-static schemas for structured, semi-structured, unstructured data), Variability (agility: always-on services, frequent releases), Veracity (trustworthiness) and Value (turning data into value).",
-    "**Web-scale search exposed a mismatch in workload.** The lecture’s keyword-to-URL example needs huge distributed lookups rather than complex joins and multi-record transactions. Its timeline distinguishes Google File System (2003), MapReduce (2004) and Bigtable (2006), followed by other web-scale storage innovations. Bigtable belongs to the column-family lineage.",
-    "**What modern systems expect:** large volume across servers, low latency, very high availability, incremental scaling with no downtime, tolerance of network partitions and cheap commodity hardware without lock-in. Cloud technology is the answer.",
-    "**NoSQL means 'Not Only SQL':** several non-relational data models, not one guarantee set. Structured data has an explicit model; semi-structured data such as JSON/XML has flexible structure; unstructured text or media may need search, extraction or ML depending on the task.",
-    "**Polyglot persistence:** use different storage technologies for different needs, across an enterprise or within one application. Wrap data access in services to limit the impact of each choice, but remember every extra technology adds programming and operational complexity, so weigh the fit against that cost."
+    {
+     "h": "Big data (six V's) exposed RDBMS limits",
+     "items": [
+      "**Volume** → **scale-out** on **commodity/cloud**, not **one big server**",
+      "**Velocity** → **real-time performance** via **distributed persistence**",
+      "**Variety** → **non-static schemas** for **structured, semi-structured, unstructured** data",
+      "**Variability** → **agility**: **always-on services**, **frequent releases**",
+      "**Veracity** → **trustworthiness**",
+      "**Value** → **turning data into value**"
+     ]
+    },
+    {
+     "h": "Web-scale search: workload mismatch",
+     "items": [
+      "Lecture's **keyword-to-URL** example → needs **huge distributed lookups**, not **complex joins** and **multi-record transactions**",
+      {
+       "t": "**Timeline**:",
+       "sub": [
+        "**Google File System (2003)**",
+        "**MapReduce (2004)**",
+        "**Bigtable (2006)**",
+        "followed by other **web-scale storage innovations**"
+       ]
+      },
+      "**Bigtable** belongs to the **column-family lineage**"
+     ]
+    },
+    {
+     "h": "What modern systems expect",
+     "items": [
+      "**Large volume across servers**",
+      "**Low latency**",
+      "**Very high availability**",
+      "**Incremental scaling** with **no downtime**",
+      "**Tolerance of network partitions**",
+      "**Cheap commodity hardware** without **lock-in**"
+     ],
+     "foot": "**Cloud technology** is the answer."
+    },
+    {
+     "h": "NoSQL means 'Not Only SQL'",
+     "items": [
+      "**Several non-relational data models**, not **one guarantee set**",
+      "**Structured** data → has an **explicit model**",
+      "**Semi-structured** (e.g. **JSON/XML**) → **flexible structure**",
+      "**Unstructured** text or media → may need **search, extraction or ML** depending on the task"
+     ]
+    },
+    {
+     "h": "Polyglot persistence",
+     "items": [
+      "**Different storage technologies** for **different needs**",
+      "Applies **across an enterprise** or **within one application**",
+      "**Wrap data access in services** → **limit the impact** of each choice",
+      "Every extra technology adds **programming and operational complexity**"
+     ],
+     "foot": "**Weigh the fit against that cost**."
+    }
    ],
    "terms": [
     {
@@ -160,10 +290,40 @@
    ],
    "summary": "The four NoSQL patterns (key-value, column family, document, graph): what each stores and typical uses.",
    "notes": [
-    "**Four NoSQL patterns differ in what the unit of storage is.** Key-value: a value looked up by a single key (caches, lookup tables, file stores). Column family: sparse data keyed by row and column, with columns grouped into families read together (web crawling, large sparse tables). Document: a whole tree-structured object in one unit (orders, invoices, forms, web pages). Graph: nodes, edges and properties (social, friend-of-friend, pattern matching).",
-    "**Document stores group related object data.** An order and its line items can be read as one aggregate without reconstructing normalised tables. This simplifies object-shaped reads; cross-document relationships and constraints still need deliberate modelling.",
-    "**Column-family stores can be seen two ways:** row-oriented (each row an aggregate such as customer 1234, with families like profile and order history) or column-oriented (each family a record type, a row being the join across families).",
-    "**Graph stores emphasise traversal.** Nodes and edges express relationship-heavy questions such as friend-of-friend recommendations. Their advantage depends on the traversal workload, indexes and dataset, rather than being universally faster than joins."
+    {
+     "h": "Four NoSQL patterns: unit of storage",
+     "items": [
+      "**Key-value** → a **value looked up by a single key** (caches, lookup tables, file stores)",
+      "**Column family** → **sparse data keyed by row and column**, columns **grouped into families read together** (web crawling, large sparse tables)",
+      "**Document** → a whole **tree-structured object in one unit** (orders, invoices, forms, web pages)",
+      "**Graph** → **nodes, edges and properties** (social, **friend-of-friend**, **pattern matching**)"
+     ]
+    },
+    {
+     "h": "Document stores group related data",
+     "items": [
+      "Group related **object data**",
+      "An **order and its line items** read as **one aggregate**, without **reconstructing normalised tables**",
+      "**Simplifies object-shaped reads**",
+      "**Cross-document relationships and constraints** still need **deliberate modelling**"
+     ]
+    },
+    {
+     "h": "Column-family stores: two views",
+     "items": [
+      "**Row-oriented** → each **row an aggregate** (e.g. **customer 1234**, with families like **profile** and **order history**)",
+      "**Column-oriented** → each **family a record type**; a **row** is the **join across families**"
+     ]
+    },
+    {
+     "h": "Graph stores emphasise traversal",
+     "items": [
+      "**Nodes and edges** express **relationship-heavy questions**",
+      "Example → **friend-of-friend recommendations**",
+      "Advantage depends on the **traversal workload**, **indexes** and **dataset**",
+      "**Not universally faster than joins**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -239,10 +399,41 @@
    ],
    "summary": "Decision criteria and product examples for each NoSQL type, ending with a SQL vs NoSQL vs NewSQL comparison.",
    "notes": [
-    "**Start from access patterns.** Key-value for direct keyed reads, caching and suitable specialised structures such as Redis rankings. Column-family for large sparse records organised by row key and families. Documents for flexible nested aggregates. Graphs for relationship traversal. Data size alone does not decide the family; model the queries and update patterns.",
-    "**Check guarantees at the operation’s scope.** Relational stores are a natural fit for joins, constraints and ACID transactions. NoSQL capabilities vary by product and operation; some offer transactions. NewSQL aims to combine relational/SQL semantics with distributed scale, with coordination costs to evaluate.",
-    "**Read the lecture’s SQL/NoSQL/NewSQL table as a simplified comparison.** Traditional relational systems can be costly to scale out; this does not mean SQL is inherently slow or unable to distribute. NoSQL does not universally exclude schemas, SQL-like queries or ACID. A column-family store is also distinct from an analytical columnar warehouse such as Redshift.",
-    "The related class exercise practises deriving data elements and a schema for a shopping-cart page, i.e. applying these choices to a concrete scenario."
+    {
+     "h": "Start from access patterns",
+     "items": [
+      "**Key-value** → **direct keyed reads**, **caching**, suitable **specialised structures** (e.g. **Redis rankings**)",
+      "**Column-family** → **large sparse records** organised by **row key and families**",
+      "**Documents** → **flexible nested aggregates**",
+      "**Graphs** → **relationship traversal**"
+     ],
+     "foot": "**Data size alone does not decide** the family; **model the queries and update patterns**."
+    },
+    {
+     "h": "Check guarantees at the operation's scope",
+     "items": [
+      "**Relational** → natural fit for **joins, constraints and ACID transactions**",
+      "**NoSQL** → capabilities **vary by product and operation**; **some offer transactions**",
+      "**NewSQL** → aims to combine **relational/SQL semantics** with **distributed scale**; **coordination costs** to evaluate"
+     ]
+    },
+    {
+     "h": "SQL/NoSQL/NewSQL table: simplified",
+     "lead": "Read the lecture's comparison table as a simplification.",
+     "items": [
+      "**Traditional relational** systems can be **costly to scale out**",
+      "That does **not** mean SQL is **inherently slow** or **unable to distribute**",
+      "**NoSQL does not universally exclude** **schemas**, **SQL-like queries** or **ACID**",
+      "A **column-family store** ≠ an **analytical columnar warehouse** such as **Redshift**"
+     ]
+    },
+    {
+     "h": "Related class exercise",
+     "items": [
+      "Derive **data elements** and a **schema** for a **shopping-cart page**",
+      "→ applying these choices to a **concrete scenario**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -325,10 +516,59 @@
    ],
    "summary": "The two ways to distribute data (sharding and replication), the two replication styles, and why distributed stores often settle for BASE instead of ACID.",
    "notes": [
-    "**Two ways to distribute data, usable together.** Sharding (horizontal partitioning by hash or range) puts different data on different servers, each serving reads and writes for its subset, so volume, reads and writes all scale (e.g. Singapore orders on a Singapore node, Malaysia orders on a Malaysia node). Replication copies the same data to several servers (e.g. a global product list) for read capacity and availability.",
-    "**Replication style changes write coordination.** Single-leader (master-slave) sends writes to one leader and may serve reads from followers; failover must be designed. Peer-to-peer permits multiple writers, but conflict resolution and replication overhead matter. More writers do not guarantee linear write throughput.",
-    "**BASE is an option, not a consequence of distribution.** When stale reads are acceptable, asynchronous propagation can favour availability and lower coordination. BASE means Basically Available, Soft state and Eventually consistent: copies converge once updates stop and propagation completes. Distributed ACID remains possible when its coordination cost is justified.",
-    "**Decision rule:** keep ACID for money-critical data; accept eventual consistency where availability and scale matter more than instant agreement."
+    {
+     "h": "Two ways to distribute data",
+     "lead": "Usable together.",
+     "items": [
+      {
+       "t": "**Sharding** (**horizontal partitioning** by **hash or range**) →",
+       "sub": [
+        "**different data on different servers**",
+        "each serves **reads and writes for its subset**",
+        "**volume, reads and writes all scale**",
+        "e.g. **Singapore orders** on a Singapore node, **Malaysia orders** on a Malaysia node"
+       ]
+      },
+      {
+       "t": "**Replication** → **copies the same data** to several servers:",
+       "sub": [
+        "for **read capacity** and **availability**",
+        "e.g. a **global product list**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Replication style changes write coordination",
+     "items": [
+      "**Single-leader (master-slave)** → writes to **one leader**; may serve **reads from followers**; **failover must be designed**",
+      "**Peer-to-peer** → **multiple writers**; **conflict resolution** and **replication overhead** matter",
+      "**More writers** do not guarantee **linear write throughput**"
+     ]
+    },
+    {
+     "h": "BASE is an option",
+     "lead": "Not a consequence of distribution.",
+     "items": [
+      "When **stale reads are acceptable** → **asynchronous propagation** can favour **availability** and **lower coordination**",
+      {
+       "t": "**BASE** =",
+       "sub": [
+        "**Basically Available**",
+        "**Soft state**",
+        "**Eventually consistent** → copies **converge once updates stop and propagation completes**"
+       ]
+      },
+      "**Distributed ACID remains possible** when its **coordination cost is justified**"
+     ]
+    },
+    {
+     "h": "Decision rule",
+     "items": [
+      "**Keep ACID** → **money-critical** data",
+      "**Accept eventual consistency** → where **availability and scale** matter more than **instant agreement**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -413,9 +653,48 @@
    ],
    "summary": "The cloud persistence options (files and databases) and the four file storage types with durability, sharing, analogies and AWS examples.",
    "notes": [
-    "**Cloud persistence splits into files and databases.** Files: local file system, network file system, mounted volume, object storage. Databases: RDBMS, document, column, key-value/in-memory cache, graph.",
-    "**Compare lifecycle and access semantics.** Instance-store disk is ephemeral and suits scratch data. EFS provides shared file access. EBS provides persistent block storage, normally used as a disk for an attached VM; retention settings determine whether it survives VM deletion. S3 stores objects through APIs rather than a normal mounted filesystem.",
-    "**Choosing:** temporary scratch -> local disk; shared files across instances -> network file system; fast durable disk for one VM (e.g. database files) -> mounted volume; data used by many apps and channels -> object storage, the most flexible and ubiquitous option."
+    {
+     "h": "Cloud persistence: files and databases",
+     "items": [
+      {
+       "t": "**Files**:",
+       "sub": [
+        "local file system",
+        "network file system",
+        "mounted volume",
+        "object storage"
+       ]
+      },
+      {
+       "t": "**Databases**:",
+       "sub": [
+        "RDBMS",
+        "document",
+        "column",
+        "key-value/in-memory cache",
+        "graph"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Lifecycle and access semantics",
+     "items": [
+      "**Instance-store disk** → **ephemeral**; suits **scratch data**",
+      "**EFS** → **shared file access**",
+      "**EBS** → **persistent block storage**, normally a **disk for an attached VM**; **retention settings** decide whether it **survives VM deletion**",
+      "**S3** → stores **objects through APIs**, not a normal **mounted filesystem**"
+     ]
+    },
+    {
+     "h": "Choosing storage",
+     "items": [
+      "**Temporary scratch** → **local disk**",
+      "**Shared files across instances** → **network file system**",
+      "**Fast durable disk for one VM** (e.g. **database files**) → **mounted volume**",
+      "**Data used by many apps and channels** → **object storage**: the **most flexible and ubiquitous** option"
+     ]
+    }
    ],
    "terms": [
     {
@@ -493,9 +772,37 @@
    ],
    "summary": "Mapping each persistence option to an AWS managed service, and the wrap-up on polyglot persistence.",
    "notes": [
-    "**Map services to workload:** EC2 instance store for scratch, EFS for shared files, EBS for block volumes and S3 for objects. RDS/Aurora serve relational transactions; DynamoDB supports key-value and document access; Redshift is an analytical SQL warehouse, not a NoSQL column-family store. ElastiCache supplies in-memory caching and Neptune graph queries.",
-    "**Managed is a useful default, not the only valid choice.** It offloads much maintenance, backups and availability work. Self-host when compatibility, control or a missing capability justifies the operating burden; still design security, capacity and recovery.",
-    "**Takeaway:** options are unstructured (files) and structured (databases), and polyglot persistence means choosing the right tool for each use case."
+    {
+     "h": "Map AWS services to workload",
+     "items": [
+      "**EC2 instance store** → **scratch**",
+      "**EFS** → **shared files**",
+      "**EBS** → **block volumes**",
+      "**S3** → **objects**",
+      "**RDS/Aurora** → **relational transactions**",
+      "**DynamoDB** → **key-value and document** access",
+      "**Redshift** → **analytical SQL warehouse**, **not** a NoSQL column-family store",
+      "**ElastiCache** → **in-memory caching**",
+      "**Neptune** → **graph queries**"
+     ]
+    },
+    {
+     "h": "Managed is a useful default",
+     "lead": "Not the only valid choice.",
+     "items": [
+      "**Managed** → **offloads** much **maintenance, backups and availability** work",
+      "**Self-host** → when **compatibility, control** or a **missing capability** justifies the **operating burden**",
+      "Either way, **still design security, capacity and recovery**"
+     ]
+    },
+    {
+     "h": "Takeaway",
+     "items": [
+      "**Unstructured** → **files**",
+      "**Structured** → **databases**",
+      "**Polyglot persistence** → choosing the **right tool for each use case**"
+     ]
+    }
    ],
    "terms": [
     {

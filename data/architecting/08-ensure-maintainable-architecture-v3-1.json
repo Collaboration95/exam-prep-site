@@ -24,9 +24,36 @@
    ],
    "summary": "The IEEE definition, the lifecycle-cost argument and the practical benefits of maintainable software.",
    "notes": [
-    "**Definition (IEEE 610.12-90):** the ease with which a system or component can be modified to correct faults, improve performance or other attributes, or adapt to a changed environment.",
-    "**Lifecycle cost matters.** The lecture cites an 80–90% maintenance share as motivation for reducing future change effort. The architectural decision is where likely changes justify investment, rather than assuming that percentage applies to every project.",
-    "**What maintainable software lets you do quickly and easily:** fix a bug without introducing a new one; add features without altering existing ones; improve usability and performance; make a fix that prevents future bugs; support new environments, operating systems or tools; and onboard new developers."
+    {
+     "h": "Definition (IEEE 610.12-90)",
+     "lead": "The **ease** with which a system or component can be **modified** to:",
+     "items": [
+      "**Correct faults**",
+      "**Improve performance or other attributes**",
+      "**Adapt to a changed environment**"
+     ]
+    },
+    {
+     "h": "Lifecycle cost matters",
+     "items": [
+      "Lecture cites an **80–90% maintenance share**",
+      "→ motivation for **reducing future change effort**",
+      "**Architectural decision**: **where likely changes justify investment**"
+     ],
+     "foot": "Don't assume that percentage applies to **every project**."
+    },
+    {
+     "h": "What maintainable software lets you do",
+     "lead": "...**quickly and easily**:",
+     "items": [
+      "**Fix a bug** without **introducing a new one**",
+      "**Add features** without **altering existing ones**",
+      "**Improve usability and performance**",
+      "Make a **fix that prevents future bugs**",
+      "**Support new environments**, **operating systems** or **tools**",
+      "**Onboard new developers**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -54,10 +81,83 @@
    ],
    "summary": "Change is ubiquitous; the choice is who can make it and what it costs to build and to apply.",
    "notes": [
-    "**Change is inevitable and ubiquitous** (Software Architecture in Practice). Sources: functional, platform, integration and growth. Likelihood of change is higher with deferred functionality, requirement gaps, vague requirements and open-ended requirements.",
-    "**Four ways to incorporate change, trading build cost against change cost:** Code change (developer; change cost high, development cost low; any change possible). Configuration change (developer/operations; medium, medium; cost depends on how modifiable the architecture is). Customizable by implementation team (medium change, high development cost; mostly B2B, each tenant has a dedicated implementation team). Customizable by end user (low change cost, high development cost; difficult, but best value when done right).",
-    "**Rule:** the more you invest up front in making change possible without code, the cheaper each later change, so invest where change is likely.",
-    "**This topic focuses on modifiability and analyzability**, then practices for reliable change. Reliable change is a supporting practice, not a replacement name for the ISO model’s maintainability sub-characteristics."
+    {
+     "h": "Change is inevitable and ubiquitous",
+     "lead": "(**Software Architecture in Practice**)",
+     "items": [
+      {
+       "t": "**Sources** of change:",
+       "sub": [
+        "**functional**",
+        "**platform**",
+        "**integration**",
+        "**growth**"
+       ]
+      },
+      {
+       "t": "**Likelihood of change is higher** with:",
+       "sub": [
+        "**deferred functionality**",
+        "**requirement gaps**",
+        "**vague requirements**",
+        "**open-ended requirements**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Four ways to incorporate change",
+     "lead": "Trading **build cost** against **change cost**:",
+     "items": [
+      {
+       "t": "**Code change**",
+       "sub": [
+        "by **developer**",
+        "change cost **high**, development cost **low**",
+        "**any change possible**"
+       ]
+      },
+      {
+       "t": "**Configuration change**",
+       "sub": [
+        "by **developer/operations**",
+        "change cost **medium**, development cost **medium**",
+        "cost depends on **how modifiable the architecture is**"
+       ]
+      },
+      {
+       "t": "**Customizable by implementation team**",
+       "sub": [
+        "change cost **medium**, development cost **high**",
+        "mostly **B2B**: each **tenant** has a **dedicated implementation team**"
+       ]
+      },
+      {
+       "t": "**Customizable by end user**",
+       "sub": [
+        "change cost **low**, development cost **high**",
+        "**difficult**, but **best value when done right**"
+       ]
+      }
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Rule: invest where change is likely",
+     "items": [
+      "The **more you invest up front** in making **change possible without code**",
+      "→ the **cheaper each later change**",
+      "→ so **invest where change is likely**"
+     ]
+    },
+    {
+     "h": "Focus of this topic",
+     "items": [
+      "**Modifiability** and **analyzability**",
+      "Then **practices for reliable change**",
+      "**Reliable change** is a **supporting practice**, not a replacement name for the **ISO model’s maintainability sub-characteristics**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -136,11 +236,62 @@
    ],
    "summary": "The four tactics, and how monolith, microservices and event-driven styles apply split, cohesion and coupling.",
    "notes": [
-    "**Modifiability tactics:** 1 Split modules, 2 Increase cohesion, 3 Reduce coupling, 4 Defer binding. The first three are examined at architecture level and code level.",
-    "**Monolith:** a single deployable. Unstructured it is tangled classes behind one UI; a layered monolith (presentation, business rules, persistence, database) separates concerns by technical layer; a modular monolith groups classes into modules and components, all still deployed as one unit (a quantum). Changes stay inside a layer or module only if boundaries are respected.",
-    "**Microservices** put capability-specific logic and data behind service APIs, allowing independent deployment when contracts remain compatible. Splitting services does not automatically enforce low coupling: shared data, synchronous call chains or coordinated API changes can still make change spread.",
-    "**Event-driven extension:** add an analytics consumer of an existing event without changing producers if its payload already meets the need. Broker topology routes events among processors; mediator topology coordinates workflow steps. Events still couple consumers to payload meaning and delivery behaviour.",
-    "**Schema registry:** stores versioned payload schemas, and messages identify the schema used (the lecture illustrates an id and version). Consumers use that definition to read the payload. A registry makes schema evolution manageable; incompatible field or meaning changes still require coordination and compatibility checks."
+    {
+     "h": "Modifiability tactics",
+     "items": [
+      "**Split modules**",
+      "**Increase cohesion**",
+      "**Reduce coupling**",
+      "**Defer binding**"
+     ],
+     "ordered": true,
+     "foot": "The **first three** are examined at **architecture level** and **code level**."
+    },
+    {
+     "h": "Monolith",
+     "lead": "A **single deployable**.",
+     "items": [
+      "**Unstructured** → **tangled classes** behind **one UI**",
+      "**Layered monolith** → **presentation**, **business rules**, **persistence**, **database**: separates concerns by **technical layer**",
+      "**Modular monolith** → groups classes into **modules and components**, all still **deployed as one unit (a quantum)**"
+     ],
+     "foot": "**Changes stay inside a layer or module only if boundaries are respected.**"
+    },
+    {
+     "h": "Microservices",
+     "items": [
+      "Put **capability-specific logic and data** behind **service APIs**",
+      "Allow **independent deployment** when **contracts remain compatible**",
+      "**Splitting services does not automatically enforce low coupling**",
+      {
+       "t": "**Change can still spread** via:",
+       "sub": [
+        "**shared data**",
+        "**synchronous call chains**",
+        "**coordinated API changes**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Event-driven extension",
+     "items": [
+      "Add an **analytics consumer** of an **existing event** **without changing producers**, if its **payload already meets the need**",
+      "**Broker topology** → **routes events** among **processors**",
+      "**Mediator topology** → **coordinates workflow steps**",
+      "**Events still couple** consumers to **payload meaning** and **delivery behaviour**"
+     ]
+    },
+    {
+     "h": "Schema registry",
+     "items": [
+      "Stores **versioned payload schemas**",
+      "**Messages identify the schema used** (lecture illustrates an **id** and **version**)",
+      "**Consumers use that definition** to **read the payload**",
+      "Makes **schema evolution manageable**",
+      "**Incompatible field or meaning changes** still require **coordination** and **compatibility checks**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -216,11 +367,51 @@
    ],
    "summary": "Five design tactic groups contain changes and provide extension points; reliable-change practices are covered later.",
    "notes": [
-    "**Contain change.** Encapsulation (keep change inside a component, e.g. a Discount Engine using the Strategy pattern); separation of concerns (clear distinct responsibilities); single point of definition (data types, algorithms, config, schemas defined once, so no need to synchronise changes).",
-    "**Create extensible interfaces:** object parameters can grow without a method-signature change; optional fields and flexible JSON/XML formats can support compatibility. Keep old fields and meanings usable, test existing consumers, and version incompatible changes with a clear support policy. A flexible format alone does not make a change safe.",
-    "**Apply design techniques that facilitate change.** Abstraction and layering (minimal impact of one part on others); generalisation (group similar scenarios into a general pattern handled by one component); inversion of control (components can be reconfigured).",
-    "**Build variation points.** Make elements replaceable; parameterise changeable properties in configuration; separate physical from logical processing (convert many physical formats into one logical structure); break processes into steps so change is confined to some steps.",
-    "**Use standard extension points** built into technologies: ODBC/JDBC for different databases, JSON/SOAP/REST for calling services, JCA as the standard Java adapter."
+    {
+     "h": "Contain change",
+     "items": [
+      "**Encapsulation** → keep change **inside a component** (e.g. a **Discount Engine** using the **Strategy pattern**)",
+      "**Separation of concerns** → **clear distinct responsibilities**",
+      "**Single point of definition** → **data types**, **algorithms**, **config**, **schemas** defined **once**, so **no need to synchronise changes**"
+     ]
+    },
+    {
+     "h": "Create extensible interfaces",
+     "items": [
+      "**Object parameters** can grow **without a method-signature change**",
+      "**Optional fields** and **flexible JSON/XML formats** can support **compatibility**",
+      "**Keep old fields and meanings usable**",
+      "**Test existing consumers**",
+      "**Version incompatible changes** with a clear **support policy**"
+     ],
+     "foot": "**A flexible format alone does not make a change safe.**"
+    },
+    {
+     "h": "Design techniques that facilitate change",
+     "items": [
+      "**Abstraction and layering** → **minimal impact** of one part on others",
+      "**Generalisation** → group **similar scenarios** into a **general pattern** handled by **one component**",
+      "**Inversion of control** → components can be **reconfigured**"
+     ]
+    },
+    {
+     "h": "Build variation points",
+     "items": [
+      "Make elements **replaceable**",
+      "**Parameterise changeable properties** in **configuration**",
+      "**Separate physical from logical processing** → convert **many physical formats** into **one logical structure**",
+      "**Break processes into steps** → change is **confined to some steps**"
+     ]
+    },
+    {
+     "h": "Use standard extension points",
+     "lead": "Built into technologies:",
+     "items": [
+      "**ODBC/JDBC** → for **different databases**",
+      "**JSON/SOAP/REST** → for **calling services**",
+      "**JCA** → the **standard Java adapter**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -292,9 +483,33 @@
    ],
    "summary": "Push decisions to run time so users or implementers change behaviour without recompiling.",
    "notes": [
-    "**Defer binding means making the application customisable at run time.** Making it fully user-customisable needs good UX expertise and domain understanding. The deck's example is Amplitude analytics, whose customisable cohort analyser lets users analyse retention across cohorts without writing data-munging logic.",
-    "**Workflow engine pattern:** an admin or implementer designs a workflow for a specific tenant or role; the workflow logic is persisted. At run time the engine deserialises the tenant or role's workflow and executes it, calling domain logic. Result: logic customisation without recompiling, e.g. a different approval workflow per client.",
-    "**Many engines provide a visual designer**, which lowers the skill needed to change behaviour. This is the 'customizable by implementation team' end of the change-cost table."
+    {
+     "h": "Defer binding",
+     "items": [
+      "Making the application **customisable at run time**",
+      "**Fully user-customisable** needs **good UX expertise** and **domain understanding**",
+      "Deck's example: **Amplitude analytics** → **customisable cohort analyser** lets users analyse **retention across cohorts** **without writing data-munging logic**"
+     ]
+    },
+    {
+     "h": "Workflow engine pattern",
+     "items": [
+      "An **admin or implementer designs a workflow** for a **specific tenant or role**",
+      "The **workflow logic is persisted**",
+      "At **run time** the engine **deserialises** the tenant or role's workflow",
+      "...and **executes it**, **calling domain logic**"
+     ],
+     "ordered": true,
+     "foot": "Result: **logic customisation without recompiling**, e.g. a **different approval workflow per client**."
+    },
+    {
+     "h": "Visual designer",
+     "items": [
+      "Many engines provide a **visual designer**",
+      "→ **lowers the skill** needed to **change behaviour**",
+      "= the '**customizable by implementation team**' end of the **change-cost table**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -355,11 +570,54 @@
    ],
    "summary": "How to detect problems, find the root cause and monitor systems, including logging in microservices.",
    "notes": [
-    "**Analyzability asks:** how do we detect problems, identify the root cause, and make and deploy the fix (the last step is like any other change).",
-    "**Tactics:** automated error detection and reporting (e.g. UNIX core dump, log file monitoring); good logging practice with enough information to support an investigation; allow system monitoring through standard protocols such as JMX (Java) and SNMP (devices).",
-    "**Logging in microservices has three components:** a logging agent, log storage, and a log dashboard with search.",
-    "**EFK stack on Kubernetes:** Fluentd is the agent collecting logs from the nodes, Elasticsearch is the storage, Kibana is the dashboard.",
-    "**Propagate a correlation id** so entries from one request can be matched across services. Central storage alone does not show which records belong together. Missing identifiers make reconstruction harder and less reliable."
+    {
+     "h": "Analyzability asks",
+     "items": [
+      "How do we **detect problems**?",
+      "**Identify the root cause**?",
+      "**Make and deploy the fix**? (the last step is **like any other change**)"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Analyzability tactics",
+     "items": [
+      "**Automated error detection and reporting** → e.g. **UNIX core dump**, **log file monitoring**",
+      "**Good logging practice** → **enough information to support an investigation**",
+      {
+       "t": "**Allow system monitoring** through **standard protocols**:",
+       "sub": [
+        "**JMX** (Java)",
+        "**SNMP** (devices)"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Logging in microservices",
+     "lead": "Three components:",
+     "items": [
+      "**Logging agent**",
+      "**Log storage**",
+      "**Log dashboard** with **search**"
+     ]
+    },
+    {
+     "h": "EFK stack on Kubernetes",
+     "items": [
+      "**Fluentd** → the **agent**, collecting logs from the **nodes**",
+      "**Elasticsearch** → the **storage**",
+      "**Kibana** → the **dashboard**"
+     ]
+    },
+    {
+     "h": "Propagate a correlation id",
+     "items": [
+      "So **entries from one request** can be **matched across services**",
+      "**Central storage alone** does **not show which records belong together**",
+      "**Missing identifiers** → reconstruction **harder and less reliable**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -423,9 +681,48 @@
    ],
    "summary": "Practices that make changes safe, and fitness functions that automatically guard architectural rules.",
    "notes": [
-    "**Reliable change needs a reproducible process:** track changes in version control, automate tests and build/integration checks, support deployment rollback, manage environment configuration as code, and apply hypothesis-driven testing. Integrate secrets management without committing secret values. Automating release/deployment extends the delivery process beyond CI alone.",
-    "**Fitness function:** an automated check that an architectural characteristic still holds. In the deck's pipeline, after unit test, build and deploy, integration and end-to-end tests, a set of checks (code quality, resiliency, observability and performance testing, compliance standards, security code analysis, operability standards) must pass before promote.",
-    "**Example:** a unit test using a dependency-analysis tool (JDepend) asserts that persistence and web packages depend on util as allowed, so the build fails if any code breaks layer dependencies in a layered architecture."
+    {
+     "h": "Reproducible process for reliable change",
+     "items": [
+      "**Track changes** in **version control**",
+      "**Automate tests** and **build/integration checks**",
+      "Support **deployment rollback**",
+      "Manage **environment configuration as code**",
+      "Apply **hypothesis-driven testing**",
+      "Integrate **secrets management** **without committing secret values**"
+     ],
+     "foot": "**Automating release/deployment** extends the **delivery process** beyond **CI alone**."
+    },
+    {
+     "h": "Fitness function",
+     "lead": "An **automated check** that an **architectural characteristic still holds**. Deck's pipeline:",
+     "items": [
+      "**Unit test**",
+      "**Build** and **deploy**",
+      "**Integration** and **end-to-end tests**",
+      {
+       "t": "A **set of checks** must pass:",
+       "sub": [
+        "**code quality**",
+        "**resiliency**",
+        "**observability** and **performance testing**",
+        "**compliance standards**",
+        "**security code analysis**",
+        "**operability standards**"
+       ]
+      },
+      "**Promote**"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Fitness function example: JDepend",
+     "items": [
+      "A **unit test** using a **dependency-analysis tool (JDepend)**",
+      "Asserts that **persistence** and **web** packages **depend on util** as allowed",
+      "→ the **build fails** if any code **breaks layer dependencies** in a **layered architecture**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -487,9 +784,38 @@
    ],
    "summary": "Static analysis tools help track relative quality, but only if you understand the metrics.",
    "notes": [
-    "**The lecture’s static-analysis examples** include FindBugs, Checkstyle, PMD and SonarQube for code issues and metrics, plus CodeCity for visualising code structure. Learn what a result reveals rather than memorising product names as proof of quality.",
-    "**Use with care:** understand what each metric means. They are useful for the relative quality progression of one code base over time, not for absolute comparison between systems.",
-    "**Connect the models:** this topic stresses analyzability, changeability, stability and testability. For an ISO 25010:2011 classification question, use modularity, reusability, analyzability, modifiability and testability from the foundations lecture."
+    {
+     "h": "Static-analysis examples",
+     "items": [
+      "**FindBugs**, **Checkstyle**, **PMD**, **SonarQube** → **code issues and metrics**",
+      "**CodeCity** → **visualising code structure**"
+     ],
+     "foot": "**Learn what a result reveals** rather than memorising product names as **proof of quality**."
+    },
+    {
+     "h": "Use with care",
+     "items": [
+      "**Understand what each metric means**",
+      "Useful for the **relative quality progression** of **one code base over time**",
+      "**Not for absolute comparison between systems**"
+     ]
+    },
+    {
+     "h": "Connect the models",
+     "items": [
+      "This topic stresses **analyzability**, **changeability**, **stability** and **testability**",
+      {
+       "t": "For an **ISO 25010:2011 classification** question, use (from the **foundations lecture**):",
+       "sub": [
+        "**modularity**",
+        "**reusability**",
+        "**analyzability**",
+        "**modifiability**",
+        "**testability**"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {

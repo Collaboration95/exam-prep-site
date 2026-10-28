@@ -24,9 +24,43 @@
    ],
    "summary": "Why architects reuse assets, and how reference patterns, reference architectures and architectural description relate.",
    "notes": [
-    "**How you derive an architecture depends on the system.** A system similar to one built before leans mainly on reuse of known solutions, with method/assets and intuition as supporting inputs; an innovative system relies more heavily on method and assets, while reuse is a smaller (but still present) input.",
-    "**The lecture’s metamodel:** an architecture uses reference patterns and reference architectures and is documented by an architectural description. These reusable assets capture earlier solutions; check their fit to the current requirements.",
-    "**Reference patterns break down into idioms, design patterns and architecture styles.** Styles are the coarse-grained ones this topic focuses on; the lecture's summary also lists analysis patterns among them."
+    {
+     "h": "Derivation depends on the system",
+     "lead": "How you derive an architecture depends on the system:",
+     "items": [
+      {
+       "t": "**Similar system** (built before) →",
+       "sub": [
+        "leans **mainly on reuse** of known solutions",
+        "**method/assets** and **intuition** as supporting inputs"
+       ]
+      },
+      {
+       "t": "**Innovative system** →",
+       "sub": [
+        "relies **more heavily on method and assets**",
+        "**reuse** is a smaller (but still present) input"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Metamodel from the lecture",
+     "items": [
+      "An **architecture uses** → **reference patterns** and **reference architectures**",
+      "An **architecture is documented by** → an **architectural description**"
+     ],
+     "foot": "These **reusable assets** capture earlier solutions; **check their fit** to the current requirements."
+    },
+    {
+     "h": "Reference patterns break down into",
+     "items": [
+      "**Idioms**",
+      "**Design patterns**",
+      "**Architecture styles** → the **coarse-grained** ones this topic focuses on",
+      "**Analysis patterns** → also listed among them in the lecture's summary"
+     ]
+    }
    ],
    "terms": [
     {
@@ -91,11 +125,64 @@
    ],
    "summary": "Client-server and tiered styles, the network zones and proxies used to deploy them, and the server component types.",
    "notes": [
-    "**Client-server:** a server offers services through well-defined interfaces and clients use them (browser, applet, mobile app). Design questions: thick or thin client, application layer design, state management, authentication and authorisation.",
-    "**Tiered computing:** several tiers cooperate, each acting as server to its caller and client to the next (3-tier, n-tier). Decide whether to segregate by layers, features or organisation structure, plus state management and authentication.",
-    "**Network zoning:** the lecture’s example puts a public web reverse proxy in a DMZ, separated from internal application and database servers by an inner firewall. Some supporting servers also appear in its DMZ; placement is an example, not a rule for all deployments. Permit only required traffic between zones.",
-    "**Reverse vs forward proxy.** A reverse proxy sits in front of internal servers, serving internet users and hiding the servers' identity. A forward proxy provides internet access to firewall-restricted internal clients and hides the clients' identity.",
-    "**Server component categories:** service execution (application servers), B2C integration (portal servers), service and B2B integration (API gateway, ESB, BPM suites, B2B gateways), management and governance (MDM, MAM, service registry) and data persistence (SQL, NoSQL)."
+    {
+     "h": "Client-server",
+     "items": [
+      "**Server** offers services through **well-defined interfaces**",
+      "**Clients** use them → browser, applet, mobile app",
+      {
+       "t": "**Design questions**:",
+       "sub": [
+        "thick or thin client",
+        "application layer design",
+        "state management",
+        "authentication and authorisation"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Tiered computing",
+     "items": [
+      "**Several tiers cooperate** → **3-tier, n-tier**",
+      "Each tier acts as **server to its caller** and **client to the next**",
+      {
+       "t": "**Decide**:",
+       "sub": [
+        "segregate by **layers, features or organisation structure**",
+        "plus state management",
+        "authentication"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Network zoning",
+     "items": [
+      "**Example in the lecture** → **public web reverse proxy** in a **DMZ**",
+      "Separated from **internal application and database servers** by an **inner firewall**",
+      "Some **supporting servers** also appear in its DMZ",
+      "Placement is **an example, not a rule** for all deployments",
+      "**Permit only required traffic** between zones"
+     ]
+    },
+    {
+     "h": "Reverse vs forward proxy",
+     "items": [
+      "**Reverse proxy** → sits **in front of internal servers**, serving **internet users**, hides the **servers' identity**",
+      "**Forward proxy** → provides **internet access** to **firewall-restricted internal clients**, hides the **clients' identity**"
+     ]
+    },
+    {
+     "h": "Server component categories",
+     "items": [
+      "**Service execution** → application servers",
+      "**B2C integration** → portal servers",
+      "**Service and B2B integration** → API gateway, ESB, BPM suites, B2B gateways",
+      "**Management and governance** → MDM, MAM, service registry",
+      "**Data persistence** → SQL, NoSQL"
+     ]
+    }
    ],
    "terms": [
     {
@@ -172,12 +259,70 @@
    ],
    "summary": "Data persistence trade-offs a structural style forces: relational vs NoSQL, the CAP theorem, ACID vs BASE, and the peer-to-peer style.",
    "notes": [
-    "**SQL and NoSQL describe data models, not guaranteed scaling or consistency.** Relational stores use tables and declared schemas (MySQL, Postgres, Oracle). NoSQL includes key-value, document, wide-column and graph stores (DynamoDB, MongoDB, Cassandra, Neo4j). The lecture contrasts typical vertical SQL and horizontal NoSQL scaling; actual capabilities depend on the product and configuration.",
-    "**CAP applies during a network partition.** Consistency means operations behave like one up-to-date copy; availability means every request to a non-failing node receives a response. If nodes cannot communicate, a distributed store cannot guarantee both. This is not a general instruction to pick any two properties for normal operation.",
-    "**ACID transactions:** atomicity (all or none), consistency (preserve database rules), isolation (control interference between concurrent transactions), durability (committed changes survive). **ACID consistency differs from CAP consistency.** An ACID label alone does not describe partition behaviour.",
-    "**BASE:** basically available, soft state and eventual consistency. Replicas may temporarily disagree and converge later. This describes an approach to distributed state, not a promise that every NoSQL store lacks transactions or durability.",
-    "**Apply CAP per operation.** Persist carts; browsing and cart updates may tolerate stale data to remain available. Checkout and payment need coordinated, correct updates and may wait or reject requests during a partition. State the acceptable staleness and failure behaviour rather than choosing solely by database label.",
-    "**Peer-to-peer:** peers can act as both clients and servers and communicate directly. The lecture lists Napster, BitTorrent, games and Bitcoin; such systems may still use supporting discovery services. Consider consistency, authentication and authorisation."
+    {
+     "h": "SQL vs NoSQL",
+     "lead": "They describe **data models**, not guaranteed scaling or consistency.",
+     "items": [
+      "**Relational (SQL)** → tables and **declared schemas** (MySQL, Postgres, Oracle)",
+      {
+       "t": "**NoSQL** stores →",
+       "sub": [
+        "key-value (DynamoDB)",
+        "document (MongoDB)",
+        "wide-column (Cassandra)",
+        "graph (Neo4j)"
+       ]
+      },
+      "**Scaling** → lecture contrasts typical **vertical SQL** and **horizontal NoSQL** scaling",
+      "Actual capabilities **depend on the product and configuration**"
+     ]
+    },
+    {
+     "h": "CAP applies during a network partition",
+     "items": [
+      "**Consistency** → operations behave like **one up-to-date copy**",
+      "**Availability** → **every request to a non-failing node** receives a response",
+      "**Partition** → if nodes cannot communicate, a distributed store **cannot guarantee both**"
+     ],
+     "foot": "This is **not** a general instruction to **pick any two** properties for normal operation."
+    },
+    {
+     "h": "ACID transactions",
+     "items": [
+      "**Atomicity** → all or none",
+      "**Consistency** → preserve database rules",
+      "**Isolation** → control interference between concurrent transactions",
+      "**Durability** → committed changes survive"
+     ],
+     "foot": "**ACID consistency differs from CAP consistency.** An ACID label alone does not describe **partition behaviour**."
+    },
+    {
+     "h": "BASE",
+     "items": [
+      "**Basically available**",
+      "**Soft state**",
+      "**Eventual consistency** → replicas may **temporarily disagree** and **converge later**"
+     ],
+     "foot": "Describes an **approach to distributed state**, not a promise that every NoSQL store lacks transactions or durability."
+    },
+    {
+     "h": "Apply CAP per operation",
+     "items": [
+      "**Persist carts**",
+      "**Browsing and cart updates** → may **tolerate stale data** to remain **available**",
+      "**Checkout and payment** → need **coordinated, correct updates**; may **wait or reject** requests during a partition"
+     ],
+     "foot": "State the **acceptable staleness** and **failure behaviour** rather than choosing solely by database label."
+    },
+    {
+     "h": "Peer-to-peer",
+     "items": [
+      "Peers act as **both clients and servers** and **communicate directly**",
+      "**Lecture examples** → Napster, BitTorrent, games, Bitcoin",
+      "May still use **supporting discovery services**",
+      "**Consider** → consistency, authentication and authorisation"
+     ]
+    }
    ],
    "terms": [
     {
@@ -253,11 +398,95 @@
    ],
    "summary": "The three communication styles (data flow, call and return, event-based), the integration level at which each is used and the technologies behind them.",
    "notes": [
-    "**Data flow:** data enters and passes through components one at a time to a final destination; suits batch integration (ETL). Concerns: error handling, acceptable processing time, one- vs two-way replication. At **file level** (FTP, large scheduled batches, legacy integration with few technology options); at **database level** (views, federation, replication) for a single customer view, enterprise data inventory, real-time reporting and dashboards, and updating common information across sources.",
-    "**Call and return:** a component runs when it receives control and returns control when done (OSI layers, OS layers). Concerns: discovering the target, error handling and timeouts. At **presentation level** (URL access, screen scraping) for extending legacy systems to the web without source code or across technology domains; at **application level** (RPC, SOAP/REST web services) for B2B transactions and integrating existing systems in a process.",
-    "**Point-to-point messaging:** a queue routes each message to one consumer for processing. The producer need not wait for the business operation to finish. Decide persistence, acknowledgement, ordering, retry behaviour, push versus pull, and broker redundancy. Asynchrony does not by itself guarantee delivery.",
-    "**Event-based, publish/subscribe:** subscribers register interest and the publisher sends to any number of them (forum subscriptions, push notifications). Concerns: asynchrony, durable vs non-durable, single point of failure.",
-    "**Choosing a style:** match it to the required qualities and coupling. Synchronous call and return is simple but couples caller and callee in time; event-based decouples and handles load but adds complexity. For the haze-information scenario, the public needs availability, performance and usability for rich graphics on top of data that already sits in a sensor system, so database-level data flow or web-service call and return can feed a web front end."
+    {
+     "h": "Data flow",
+     "items": [
+      "Data **enters and passes through components one at a time** to a final destination",
+      "Suits **batch integration (ETL)**",
+      "**Concerns** → error handling, acceptable processing time, one- vs two-way replication",
+      {
+       "t": "**File level** →",
+       "sub": [
+        "FTP",
+        "large scheduled batches",
+        "legacy integration with few technology options"
+       ]
+      },
+      {
+       "t": "**Database level** (views, federation, replication) →",
+       "sub": [
+        "single customer view",
+        "enterprise data inventory",
+        "real-time reporting and dashboards",
+        "updating common information across sources"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Call and return",
+     "items": [
+      "Component **runs when it receives control** and **returns control when done** (OSI layers, OS layers)",
+      "**Concerns** → discovering the target, error handling, timeouts",
+      {
+       "t": "**Presentation level** (URL access, screen scraping) →",
+       "sub": [
+        "extending legacy systems to the web without source code",
+        "or across technology domains"
+       ]
+      },
+      {
+       "t": "**Application level** (RPC, SOAP/REST web services) →",
+       "sub": [
+        "B2B transactions",
+        "integrating existing systems in a process"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Point-to-point messaging",
+     "items": [
+      "**Queue** routes **each message to one consumer** for processing",
+      "**Producer need not wait** for the business operation to finish",
+      {
+       "t": "**Decide**:",
+       "sub": [
+        "persistence",
+        "acknowledgement",
+        "ordering",
+        "retry behaviour",
+        "push versus pull",
+        "broker redundancy"
+       ]
+      }
+     ],
+     "foot": "**Asynchrony does not by itself guarantee delivery.**"
+    },
+    {
+     "h": "Event-based (publish/subscribe)",
+     "items": [
+      "**Subscribers register interest**; publisher sends to **any number** of them",
+      "**Examples** → forum subscriptions, push notifications",
+      "**Concerns** → asynchrony, durable vs non-durable, single point of failure"
+     ]
+    },
+    {
+     "h": "Choosing a communication style",
+     "lead": "Match it to the **required qualities** and **coupling**.",
+     "items": [
+      "**Synchronous call and return** → simple, but **couples caller and callee in time**",
+      "**Event-based** → **decouples** and **handles load**, but **adds complexity**"
+     ]
+    },
+    {
+     "h": "Haze-information scenario",
+     "items": [
+      "**Public needs** → availability, performance, usability for **rich graphics**",
+      "**Data already sits** in a **sensor system**",
+      "**So** → **database-level data flow** or **web-service call and return** can feed a **web front end**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -337,10 +566,53 @@
    ],
    "summary": "What a reference architecture is, the web architecture and its AWS mapping, and the shift to client-centric mobile architecture.",
    "notes": [
-    "**A reference architecture belongs to a domain and bundles many patterns.** The deck covers web, mobile, broker, SOA and microservices, cloud and serverless. The anti-example is spaghetti 'architecture': components tangled with no structure.",
-    "**Web architecture on AWS maps each concern to a service:** DNS routing (Route 53), content delivery at the nearest edge location for low latency (CloudFront), static content storage (S3), load balancing across instances, web and application servers for dynamic content, auto scaling to adjust capacity up or down, and a multi-AZ managed database. The e-commerce version adds a persistent session store for the cart, a volatile session store and cache for the catalogue, search, secure SSL checkout and log-based recommendations.",
-    "**Client-centric architecture** moves rendering and some application logic to a browser or native app that calls backend APIs. Server-side services still enforce business rules and protect data; the shift concerns where presentation and interaction run.",
-    "**Mobile choices are driven by decision drivers** the deck leaves open (e.g. native vs hybrid vs web); IBM and AWS both publish mobile reference architectures that combine device app, API/backend services and enterprise integration."
+    {
+     "h": "What a reference architecture is",
+     "items": [
+      "Belongs to a **domain** and **bundles many patterns**",
+      "**Deck covers** → web, mobile, broker, SOA and microservices, cloud and serverless",
+      "**Anti-example** → **spaghetti 'architecture'**: components tangled with no structure"
+     ]
+    },
+    {
+     "h": "Web architecture on AWS",
+     "lead": "Each concern maps to a service:",
+     "items": [
+      "**DNS routing** → Route 53",
+      "**Content delivery** at the **nearest edge location** for low latency → CloudFront",
+      "**Static content storage** → S3",
+      "**Load balancing** across instances",
+      "**Web and application servers** → dynamic content",
+      "**Auto scaling** → adjust capacity up or down",
+      "**Multi-AZ managed database**"
+     ]
+    },
+    {
+     "h": "E-commerce version adds",
+     "items": [
+      "**Persistent session store** → the cart",
+      "**Volatile session store and cache** → the catalogue",
+      "**Search**",
+      "**Secure SSL checkout**",
+      "**Log-based recommendations**"
+     ]
+    },
+    {
+     "h": "Client-centric architecture",
+     "items": [
+      "Moves **rendering** and **some application logic** to a **browser or native app** that calls **backend APIs**",
+      "**Server-side services still** enforce **business rules** and **protect data**"
+     ],
+     "foot": "The shift concerns **where presentation and interaction run**."
+    },
+    {
+     "h": "Mobile reference architecture",
+     "items": [
+      "Choices driven by **decision drivers** the deck leaves open (e.g. **native vs hybrid vs web**)",
+      "**IBM and AWS** both publish mobile reference architectures",
+      "Combine **device app**, **API/backend services** and **enterprise integration**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -380,12 +652,83 @@
    ],
    "summary": "Broker/ESB event channels, the five-layer SOA reference architecture and the microservices style with its scale cube, discovery and API gateway.",
    "notes": [
-    "**Broker architecture:** events go into event channels and are handled by independent event processors (modules); examples are ESBs such as WebSphere ESB, Apache Camel and Mule. Process orchestration sits on top (e.g. BizTalk). Consider the integration need, number of systems, orchestration complexity and the broker's own single-point-of-failure and bottleneck risk.",
-    "**SOA (Open Group) has layers:** Consumer (portal), Integration and Business Process, Services, Component, Operational Systems (runtime, legacy and packaged back ends). Using the deck's loan example: portal on top, process orchestration beneath, services supporting the process, components implementing services, systems running them.",
-    "**Microservices split the system into vertical slices instead of horizontal layers**, each owning its own data store. Cost: hundreds of services form a dense web of dependencies, so the style demands service discovery, gateways and automation.",
-    "**Scale cube (3 dimensions):** X axis horizontal duplication (scale by cloning), Y axis functional decomposition (scale by splitting different things, i.e. microservices), Z axis data partitioning (scale by splitting similar things, i.e. sharding).",
-    "**Service discovery** is needed because instances are ephemeral: clients call a router at a well-known location, which queries a service registry and forwards to an available instance. An **API gateway** is the single entry point that routes, aggregates and shields clients from the service layout.",
-    "**On AWS** microservices run either traditionally on application servers on EC2, or serverless with Lambda."
+    {
+     "h": "Broker architecture",
+     "items": [
+      "**Events** go into **event channels**, handled by **independent event processors** (modules)",
+      "**Examples (ESBs)** → WebSphere ESB, Apache Camel, Mule",
+      "**Process orchestration** sits on top (e.g. **BizTalk**)",
+      {
+       "t": "**Consider**:",
+       "sub": [
+        "integration need",
+        "number of systems",
+        "orchestration complexity",
+        "the broker's own **single-point-of-failure** and **bottleneck** risk"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "SOA layers (Open Group)",
+     "ordered": true,
+     "items": [
+      "**Consumer** → portal",
+      "**Integration** and **Business Process**",
+      "**Services**",
+      "**Component**",
+      "**Operational Systems** → runtime, legacy and packaged back ends"
+     ]
+    },
+    {
+     "h": "SOA loan example (from the deck)",
+     "ordered": true,
+     "items": [
+      "**Portal** on top",
+      "**Process orchestration** beneath",
+      "**Services** supporting the process",
+      "**Components** implementing services",
+      "**Systems** running them"
+     ]
+    },
+    {
+     "h": "Microservices",
+     "items": [
+      "Split the system into **vertical slices** instead of **horizontal layers**",
+      "Each **owns its own data store**",
+      "**Cost** → **hundreds of services** form a **dense web of dependencies**",
+      "So the style **demands** → **service discovery**, **gateways** and **automation**"
+     ]
+    },
+    {
+     "h": "Scale cube (3 dimensions)",
+     "items": [
+      "**X axis** → **horizontal duplication** (scale by **cloning**)",
+      "**Y axis** → **functional decomposition** (scale by **splitting different things**, i.e. **microservices**)",
+      "**Z axis** → **data partitioning** (scale by **splitting similar things**, i.e. **sharding**)"
+     ]
+    },
+    {
+     "h": "Service discovery and API gateway",
+     "items": [
+      {
+       "t": "**Service discovery** → needed because instances are **ephemeral**:",
+       "sub": [
+        "clients call a **router** at a **well-known location**",
+        "router queries a **service registry**",
+        "forwards to an **available instance**"
+       ]
+      },
+      "**API gateway** → the **single entry point** that **routes, aggregates** and **shields clients** from the service layout",
+      {
+       "t": "**On AWS**, microservices run either:",
+       "sub": [
+        "**traditionally** on application servers on **EC2**",
+        "or **serverless** with **Lambda**"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -471,12 +814,58 @@
    ],
    "summary": "Cloud reference architecture, service and deployment models, VMs vs containers, multitenancy and elasticity, serverless, and the Reactive Manifesto.",
    "notes": [
-    "**Cloud reference architecture (IBM):** governance and security, resiliency, performance and consumability wrap three roles (service creator, consumer, provider). The provider's common cloud management platform supplies operational and business support services over cloud services at IaaS, PaaS, SaaS and BPaaS levels.",
-    "**Deployment models:** private (on-site or outsourced), community (on-site or outsourced), public and hybrid (NIST).",
-    "**VMs versus containers:** each VM includes a guest OS; containers share a host kernel and package the app with its dependencies. A hosted hypervisor is one arrangement; the key distinction is the guest OS boundary versus a shared kernel.",
-    "**Multitenancy** is isolation of independent organisations' workloads in a shared environment; **elasticity** is provisioning resources in proportion to changing demand, up or down.",
-    "**Serverless** (e.g. Lambda): you supply functions and the platform runs and scales them, so you do not manage servers; it complements microservices.",
-    "**Reactive Manifesto:** responsive, consistent response times with reliable upper bounds. Stay responsive under varying workload (elastic) and in the face of failure (resilient). Asynchronous message passing gives loose coupling, isolation and location transparency."
+    {
+     "h": "Cloud reference architecture (IBM)",
+     "items": [
+      "**Wrapped by** → governance and security, resiliency, performance, consumability",
+      "**Three roles** → service **creator**, **consumer**, **provider**",
+      "**Provider's common cloud management platform** → supplies **operational and business support services**",
+      "Over **cloud services** at **IaaS, PaaS, SaaS and BPaaS** levels"
+     ]
+    },
+    {
+     "h": "Deployment models (NIST)",
+     "items": [
+      "**Private** → on-site or outsourced",
+      "**Community** → on-site or outsourced",
+      "**Public**",
+      "**Hybrid**"
+     ]
+    },
+    {
+     "h": "VMs vs containers",
+     "items": [
+      "**VM** → each includes a **guest OS**",
+      "**Container** → **shares a host kernel**, packages the **app with its dependencies**",
+      "A **hosted hypervisor** is one arrangement"
+     ],
+     "foot": "The key distinction is the **guest OS boundary** versus a **shared kernel**."
+    },
+    {
+     "h": "Multitenancy and elasticity",
+     "items": [
+      "**Multitenancy** → **isolation** of independent organisations' **workloads** in a **shared environment**",
+      "**Elasticity** → provisioning resources **in proportion to changing demand**, up or down"
+     ]
+    },
+    {
+     "h": "Serverless",
+     "items": [
+      "e.g. **Lambda**",
+      "You **supply functions**; the platform **runs and scales** them",
+      "You **do not manage servers**",
+      "**Complements microservices**"
+     ]
+    },
+    {
+     "h": "Reactive Manifesto",
+     "items": [
+      "**Responsive** → consistent response times with **reliable upper bounds**",
+      "**Elastic** → stay responsive under **varying workload**",
+      "**Resilient** → stay responsive in the **face of failure**",
+      "**Asynchronous message passing** → gives **loose coupling**, **isolation** and **location transparency**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -556,11 +945,57 @@
    ],
    "summary": "How architecture is documented: IEEE 42010 metamodel, UML, the 4+1 view model and further viewpoints aimed at specific stakeholders.",
    "notes": [
-    "**ISO/IEC/IEEE 42010** is the standard for architecture description (building on IEEE 1471). The key idea: stakeholders have concerns, a viewpoint addresses those concerns with modelling techniques, and a view is the viewpoint applied to the system.",
-    "**UML** is the general-purpose standard notation, with structure and behaviour diagram types (class, component, package, deployment, sequence, activity, state).",
-    "**4+1 view model** describes the architecture with several concurrent views tied to scenarios: Logical (end user, functionality), Process (integrator: performance, security, throughput), Development (programmer: coding, testing), Physical (system engineer: topology, delivery, installation, telecommunication), plus **Scenarios** that tie the four together.",
-    "**Other viewpoints, each with stakeholders, concerns and techniques:** Organization (block diagram), Business Function (block diagram), Business Process (block, BPMN, BPEL, UML activity), Application Structure (layering, UML package, component), Application Behaviour (sequence, collaboration, state), Infrastructure (network, package, block; security, stability, cost), Deployment (UML package, deployment diagrams; mapping logical components to physical artifacts), Information Structure (UML class, ER).",
-    "**Takeaway:** the metamodel consists of reference patterns, reference architectures and architectural description. Reference patterns include architecture styles, analysis patterns, design patterns and idioms. Choosing the right style and architecture, which depends on the architect's knowledge and experience, is critical to achieving the required qualities."
+    {
+     "h": "ISO/IEC/IEEE 42010",
+     "lead": "Standard for **architecture description** (building on **IEEE 1471**). Key idea:",
+     "items": [
+      "**Stakeholders** have **concerns**",
+      "A **viewpoint** addresses those concerns with **modelling techniques**",
+      "A **view** is the viewpoint **applied to the system**"
+     ]
+    },
+    {
+     "h": "UML",
+     "items": [
+      "**General-purpose standard notation**",
+      "**Structure** and **behaviour** diagram types",
+      "**Examples** → class, component, package, deployment, sequence, activity, state"
+     ]
+    },
+    {
+     "h": "4+1 view model",
+     "lead": "Several **concurrent views** tied to scenarios (view → stakeholder: concerns):",
+     "items": [
+      "**Logical** → end user: functionality",
+      "**Process** → integrator: performance, security, throughput",
+      "**Development** → programmer: coding, testing",
+      "**Physical** → system engineer: topology, delivery, installation, telecommunication",
+      "**+1 Scenarios** → tie the four together"
+     ]
+    },
+    {
+     "h": "Other viewpoints",
+     "lead": "Each has **stakeholders, concerns and techniques** (viewpoint → techniques):",
+     "items": [
+      "**Organization** → block diagram",
+      "**Business Function** → block diagram",
+      "**Business Process** → block, BPMN, BPEL, UML activity",
+      "**Application Structure** → layering, UML package, component",
+      "**Application Behaviour** → sequence, collaboration, state",
+      "**Infrastructure** → network, package, block (concerns: security, stability, cost)",
+      "**Deployment** → UML package, deployment diagrams (mapping **logical components to physical artifacts**)",
+      "**Information Structure** → UML class, ER"
+     ]
+    },
+    {
+     "h": "Takeaway",
+     "items": [
+      "**Metamodel** → reference patterns, reference architectures, architectural description",
+      "**Reference patterns include** → architecture styles, analysis patterns, design patterns, idioms",
+      "**Choosing the right style and architecture** depends on the **architect's knowledge and experience**"
+     ],
+     "foot": "The right choice is **critical to achieving the required qualities**."
+    }
    ],
    "terms": [
     {

@@ -23,10 +23,56 @@
    ],
    "summary": "Datastore requirements (scale, consistency, availability, latency, evolvability) and an honest assessment of RDBMS against them.",
    "notes": [
-    "**Applications are built to be available, fault-tolerant, performant and gracefully degrading, so datastores must be too,** while coping with IoT and analytics-driven data volume. Beyond storing and reading data we want scalability (vertical/horizontal), consistency, availability, low latency, evolvability, analytics and security; scalability and availability are usually related.",
-    "**Data organisation:** structured data follows a defined model, such as relational rows and columns. Semi-structured data carries labels or hierarchy, such as JSON or XML. The lecture also groups CSV here; a fixed CSV table can be treated as structured. Unstructured content, such as images or prose, lacks a predefined application-level record model.",
-    "**RDBMS is great for most scenarios:** entities map to tables, SQL, flexible querying on any column, logical data model, good read/write performance, strong ACID consistency.",
-    "**RDBMS trade-offs:** keeping strong consistency while scaling across machines requires coordination; schema changes need planning; object models must map to tables, sometimes through an ORM. An ORM is optional, not a relational requirement. Deep relationship traversal can favour a graph model, depending on the query."
+    {
+     "h": "Datastores must match the apps",
+     "lead": "Applications are built to be **available, fault-tolerant, performant and gracefully degrading**, so datastores must be too, while coping with **IoT and analytics-driven data volume**.",
+     "items": [
+      "Beyond storing and reading data, we want:",
+      {
+       "t": "**Wish list** →",
+       "sub": [
+        "**scalability** (vertical/horizontal)",
+        "**consistency**",
+        "**availability**",
+        "**low latency**",
+        "**evolvability**",
+        "**analytics**",
+        "**security**"
+       ]
+      }
+     ],
+     "foot": "**Scalability and availability are usually related.**"
+    },
+    {
+     "h": "Data organisation",
+     "items": [
+      "**Structured** → follows a defined model, such as relational rows and columns",
+      "**Semi-structured** → carries labels or hierarchy, such as **JSON** or **XML**",
+      "**CSV** → the lecture also groups it as semi-structured; a fixed CSV table can be treated as structured",
+      "**Unstructured** → content such as images or prose; lacks a predefined application-level record model"
+     ]
+    },
+    {
+     "h": "RDBMS is great for most scenarios",
+     "items": [
+      "**Entities map to tables**",
+      "**SQL**",
+      "**Flexible querying on any column**",
+      "**Logical data model**",
+      "**Good read/write performance**",
+      "**Strong ACID consistency**"
+     ]
+    },
+    {
+     "h": "RDBMS trade-offs",
+     "items": [
+      "**Scaling across machines** while keeping strong consistency requires coordination",
+      "**Schema changes need planning**",
+      "**Object models must map to tables**, sometimes through an **ORM**",
+      "An **ORM is optional**, not a relational requirement",
+      "**Deep relationship traversal** can favour a **graph model**, depending on the query"
+     ]
+    }
    ],
    "terms": [
     {
@@ -66,10 +112,42 @@
    ],
    "summary": "Use replicas to distribute reads, shards to divide the dataset and caches for hot data. Separate read caching from the durability policy for writes.",
    "notes": [
-    "**Read replication scales reads.** Only the master accepts writes; read replicas are full read-only copies, clients are routed to any replica for reads, and if a replica is down others serve. Small replication lag means reads can be slightly stale.",
-    "**Sharding scales writes (and reads).** A shard is a subset of data (horizontal partitioning), one master per shard, partitioned across machines. A locator service tells clients which master owns which shard.",
-    "**Algorithmic sharding removes the locator:** the algorithm sits in the client, like a HashMap. A fixed sharding key may distribute poorly; hash-based partitioning distributes more evenly. If shards change, masters publish events.",
-    "**Caching:** read-through fetches from the database on a cache miss. With write-through, acknowledge only after the backing store has accepted the write under its durability policy. With delayed flushing (write-behind), acknowledging an in-memory write first risks data loss if the cache fails. The lecture mentions both durability and pre-flush loss; distinguish the acknowledgement timing."
+    {
+     "h": "Read replication scales reads",
+     "items": [
+      "**Only the master accepts writes**",
+      "**Read replicas** → full read-only copies",
+      "Clients are **routed to any replica** for reads",
+      "If a **replica is down, others serve**",
+      "**Small replication lag** → reads can be slightly stale"
+     ]
+    },
+    {
+     "h": "Sharding scales writes (and reads)",
+     "items": [
+      "**Shard** → a subset of data (**horizontal partitioning**)",
+      "**One master per shard**, partitioned across machines",
+      "**Locator service** → tells clients which master owns which shard"
+     ]
+    },
+    {
+     "h": "Algorithmic sharding removes the locator",
+     "items": [
+      "**Algorithm sits in the client**, like a **HashMap**",
+      "**Fixed sharding key** → may distribute poorly",
+      "**Hash-based partitioning** → distributes more evenly",
+      "If **shards change**, masters **publish events**"
+     ]
+    },
+    {
+     "h": "Caching: read and write modes",
+     "items": [
+      "**Read-through** → fetches from the database on a cache miss",
+      "**Write-through** → acknowledge only after the backing store has accepted the write under its **durability policy**",
+      "**Write-behind** (delayed flushing) → acknowledging an in-memory write first **risks data loss** if the cache fails"
+     ],
+     "foot": "The lecture mentions both durability and pre-flush loss; **distinguish the acknowledgement timing**."
+    }
    ],
    "terms": [
     {
@@ -149,10 +227,40 @@
    ],
    "summary": "CAP constrains behaviour during a network partition. Decide whether refusing some operations or serving potentially inconsistent data is acceptable for the business.",
    "notes": [
-    "**Three properties:** consistency means operations behave as if using one current copy; availability means requests to non-failing nodes receive results rather than being refused to preserve consistency; partition tolerance accounts for network links failing between nodes. During a partition, a distributed system cannot guarantee both C and A for all operations.",
-    "**CP behaviour:** reject or delay operations that cannot be answered consistently. **AP behaviour:** keep accepting operations on separated nodes, allowing divergence and later reconciliation. Outside a partition, CAP does not require choosing only consistency or availability.",
-    "**Interpret the lecture’s examples:** its master-only read path illustrates a CP choice when an isolated node cannot serve inconsistent data or take over unsafely. Read routing alone is not proof: failover, replication and write acknowledgement also matter. Likewise a stale replica read alone does not establish full AP availability.",
-    "**Business requirement first:** a stale feed or cart may be preferable to no service; a payment balance may justify refusing an unsafe operation. Make that choice for the operation, then check the implementation. A convenient data model does not determine CAP behaviour."
+    {
+     "h": "CAP: three properties",
+     "items": [
+      "**Consistency** → operations behave as if using **one current copy**",
+      "**Availability** → requests to **non-failing nodes receive results** rather than being refused to preserve consistency",
+      "**Partition tolerance** → accounts for **network links failing** between nodes"
+     ],
+     "foot": "**During a partition**, a distributed system cannot guarantee **both C and A** for all operations."
+    },
+    {
+     "h": "CP vs AP behaviour",
+     "items": [
+      "**CP** → reject or delay operations that cannot be answered consistently",
+      "**AP** → keep accepting operations on separated nodes, allowing **divergence** and later **reconciliation**"
+     ],
+     "foot": "**Outside a partition**, CAP does not require choosing only consistency or availability."
+    },
+    {
+     "h": "Interpreting the lecture examples",
+     "items": [
+      "**Master-only read path** → illustrates a **CP choice** when an isolated node cannot serve inconsistent data or take over unsafely",
+      "**Read routing alone is not proof**: failover, replication and write acknowledgement also matter",
+      "A **stale replica read alone** does not establish full **AP** availability"
+     ]
+    },
+    {
+     "h": "Business requirement first",
+     "items": [
+      "**Stale feed or cart** → may be preferable to no service",
+      "**Payment balance** → may justify refusing an unsafe operation",
+      "**Make the choice per operation**, then check the implementation"
+     ],
+     "foot": "A **convenient data model does not determine CAP behaviour**."
+    }
    ],
    "terms": [
     {
@@ -230,10 +338,52 @@
    ],
    "summary": "Platforms have unique, changing requirements, so they use several databases, and NoSQL fills the gaps RDBMS leaves.",
    "notes": [
-    "**Each platform differs:** write-heavy, read-heavy, analytics-based consumption, varied query patterns and scalability/availability needs, and schema changes are the norm in fast-moving platforms.",
-    "**CQRS:** separate the model accepting commands from the model serving queries. In the lecture, writes update an RDBMS, events feed an event store, and a projection builds an in-memory read database. The two sides scale independently, but asynchronous projection means reads can lag writes. CQRS does not inherently require all these components.",
-    "**NoSQL trade-offs:** partitioning, replication, flexible records and workload-specific indexes can improve scale or latency. Transaction scope, consistency and durability vary by store and configuration. Flexible schema does not remove the need to validate records or evolve their meaning.",
-    "**Models covered:** key-value, document, column family (wide column), search engines and graph."
+    {
+     "h": "Each platform differs",
+     "items": [
+      "**Write-heavy**",
+      "**Read-heavy**",
+      "**Analytics-based consumption**",
+      "**Varied query patterns**",
+      "**Scalability/availability needs**",
+      "**Schema changes are the norm** in fast-moving platforms"
+     ]
+    },
+    {
+     "h": "CQRS",
+     "lead": "Separate the model **accepting commands** from the model **serving queries**.",
+     "items": [
+      {
+       "t": "**Lecture flow** →",
+       "sub": [
+        "writes update an **RDBMS**",
+        "events feed an **event store**",
+        "a **projection** builds an **in-memory read database**"
+       ]
+      },
+      "The two sides **scale independently**",
+      "**Asynchronous projection** → reads can **lag writes**",
+      "CQRS **does not inherently require** all these components"
+     ]
+    },
+    {
+     "h": "NoSQL trade-offs",
+     "items": [
+      "**Can improve scale or latency** via partitioning, replication, flexible records, workload-specific indexes",
+      "**Transaction scope, consistency and durability vary** by store and configuration",
+      "**Flexible schema** does not remove the need to **validate records** or evolve their meaning"
+     ]
+    },
+    {
+     "h": "NoSQL models covered",
+     "items": [
+      "**Key-value**",
+      "**Document**",
+      "**Column family** (wide column)",
+      "**Search engines**",
+      "**Graph**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -294,9 +444,42 @@
    ],
    "summary": "The lecture’s hash-map model makes exact-key lookup cheap; arbitrary field and range queries need additional indexing or a different model.",
    "notes": [
-    "**Problem solved:** given a key, fetch the whole record as fast as possible (in memory). Uses: shopping carts (Amazon, Alibaba), recently uploaded files (Box), Istio rate limits, cache, session cache, application config. It is roughly a distributed HashMap with unique keys replicated across servers.",
-    "**Strength and limit:** a hash-style key lookup is fast, but does not automatically provide ordered range scans or queries on value fields. The lecture emphasises in-memory stores, whose capacity and persistence policy affect cost and durability. Those traits should not be assumed for every key-value implementation.",
-    "**Redis in the lecture:** an in-memory store with richer data structures, illustrated with reads and writes through one shard master and labelled CP. Preserve that lecture example, but check actual partition and failover behaviour before claiming consistent failover or no data loss."
+    {
+     "h": "Key-value: problem solved",
+     "items": [
+      "Given a key, **fetch the whole record as fast as possible** (in memory)",
+      "Roughly a **distributed HashMap** with **unique keys** replicated across servers",
+      {
+       "t": "**Uses** →",
+       "sub": [
+        "shopping carts (Amazon, Alibaba)",
+        "recently uploaded files (Box)",
+        "Istio rate limits",
+        "cache",
+        "session cache",
+        "application config"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Key-value: strength and limit",
+     "items": [
+      "**Strength** → a hash-style key lookup is fast",
+      "**Limit** → does not automatically provide **ordered range scans** or **queries on value fields**",
+      "Lecture emphasises **in-memory stores** → their **capacity and persistence policy** affect cost and durability",
+      "Those traits should **not be assumed for every key-value implementation**"
+     ]
+    },
+    {
+     "h": "Redis in the lecture",
+     "items": [
+      "**In-memory store** with **richer data structures**",
+      "Illustrated with reads and writes through **one shard master**",
+      "Labelled **CP**",
+      "Preserve that example, but **check actual partition and failover behaviour** before claiming consistent failover or no data loss"
+     ]
+    }
    ],
    "terms": [
     {
@@ -328,10 +511,57 @@
    ],
    "summary": "Embed related records in JSON documents to avoid some joins. Evaluate query indexes, transaction scope and validation needs for the chosen store.",
    "notes": [
-    "**Problem solved:** richer querying on all fields without the limits of a strict schema. Uses: eBay search suggestions and product catalogue, MetLife client 360, Shutterfly image store, RDBMS replacement.",
-    "**Model:** nest related child data inside a parent document—for example an order with line items—so one fetch can return it. Flexible fields ease evolution, but old and new record shapes still need validation and compatible readers.",
-    "**Trade-offs in the lecture:** field indexes support rich queries and embedding avoids many joins. The deck warns about joins, complex transactions, SQL, constraints and triggers, while noting MongoDB has some join support. These are comparison points to verify for the chosen product, not universal absences across document stores.",
-    "**MongoDB in the lecture:** JSON-style CRUD and a master-based architecture labelled CP. Use that as the illustrated configuration; consistency still depends on replication, failover and operation settings."
+    {
+     "h": "Document store: problem solved",
+     "items": [
+      "**Richer querying on all fields** without the limits of a strict schema",
+      {
+       "t": "**Uses** →",
+       "sub": [
+        "eBay search suggestions and product catalogue",
+        "MetLife client 360",
+        "Shutterfly image store",
+        "RDBMS replacement"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Document model",
+     "items": [
+      "**Nest related child data inside a parent document** → for example an order with line items",
+      "So **one fetch** can return it",
+      "**Flexible fields ease evolution**",
+      "But old and new record shapes still need **validation** and **compatible readers**"
+     ]
+    },
+    {
+     "h": "Document trade-offs (lecture)",
+     "items": [
+      "**Field indexes** support rich queries",
+      "**Embedding avoids many joins**",
+      {
+       "t": "Deck **warns about** →",
+       "sub": [
+        "joins",
+        "complex transactions",
+        "SQL",
+        "constraints",
+        "triggers"
+       ]
+      },
+      "**MongoDB has some join support**"
+     ],
+     "foot": "These are comparison points to **verify for the chosen product**, not universal absences across document stores."
+    },
+    {
+     "h": "MongoDB in the lecture",
+     "items": [
+      "**JSON-style CRUD**",
+      "**Master-based architecture**, labelled **CP**",
+      "Use that as the illustrated configuration; consistency still depends on **replication, failover and operation settings**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -359,10 +589,49 @@
    ],
    "summary": "Write-heavy, sparse, massively scalable nested maps keyed by row key, column key and timestamp.",
    "notes": [
-    "**Problem solved:** write-heavy workloads (tens of thousands of records a second), very flexible and sparse schema, fetch an entire record by key. Uses: web crawl store (Google, Yahoo), Facebook inbox search and messenger (Cassandra then HBase), Mozilla crash data, Twitter data backup for analytics.",
-    "**Wide-column structure in the lecture:** a distributed nested map indexed by row key, column family/qualifier and a timestamp version. Rows may have different columns. This is the HBase-style example; use its keys to reason about retrieval rather than assuming all wide-column products expose an identical key model.",
-    "**Trade-offs:** sparse rows and partitioned storage suit high write volume. Plan queries around the row key; joins are not the normal access path and secondary indexes may be costly. The lecture cites CQL for Cassandra and Phoenix over HBase as SQL-like interfaces. Scale still depends on partition balance and query shape.",
-    "**HBase:** each region owned by a single server, replication via HDFS (typically 3 replicas), a CP system."
+    {
+     "h": "Column family: problem solved",
+     "items": [
+      "**Write-heavy workloads** (tens of thousands of records a second)",
+      "**Very flexible and sparse schema**",
+      "**Fetch an entire record by key**",
+      {
+       "t": "**Uses** →",
+       "sub": [
+        "web crawl store (Google, Yahoo)",
+        "Facebook inbox search and messenger (Cassandra then HBase)",
+        "Mozilla crash data",
+        "Twitter data backup for analytics"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Wide-column structure (lecture)",
+     "items": [
+      "A **distributed nested map** indexed by **row key**, **column family/qualifier** and a **timestamp version**",
+      "**Rows may have different columns**",
+      "This is the **HBase-style example** → use its keys to reason about retrieval, rather than assuming all wide-column products expose an identical key model"
+     ]
+    },
+    {
+     "h": "Column family trade-offs",
+     "items": [
+      "**Sparse rows and partitioned storage** suit high write volume",
+      "**Plan queries around the row key**",
+      "**Joins** are not the normal access path; **secondary indexes** may be costly",
+      "**SQL-like interfaces** (lecture) → **CQL** for Cassandra, **Phoenix** over HBase",
+      "Scale still depends on **partition balance** and **query shape**"
+     ]
+    },
+    {
+     "h": "HBase",
+     "items": [
+      "Each **region owned by a single server**",
+      "**Replication via HDFS** (typically **3 replicas**)",
+      "A **CP** system"
+     ]
+    }
    ],
    "terms": [
     {
@@ -394,9 +663,48 @@
    ],
    "summary": "Elasticsearch-style stores for ranking, range, wildcard, filtering and aggregations, not as a primary store.",
    "notes": [
-    "**Problem solved:** advanced queries: ranking, point, range, wildcard, filtering and aggregations. Uses: StackOverflow search, GitHub code search, Netflix service operations and security logs, LinkedIn and Medium production debugging (logging).",
-    "**Use as a derived search index:** tokenisation, analysis and index maintenance add write cost. The lecture warns against relying on it for relational-style joins and transactions. Keep authoritative payment/order data elsewhere and rebuild the searchable view from that source.",
-    "**Architecture:** data nodes hold searchable data; the master manages cluster-wide metadata, node membership and shard allocation. The lecture labels Elasticsearch AP. That shorthand does not guarantee every request succeeds during every failure; analyse the concrete topology and operation."
+    {
+     "h": "Search engine: problem solved",
+     "items": [
+      {
+       "t": "**Advanced queries** →",
+       "sub": [
+        "ranking",
+        "point",
+        "range",
+        "wildcard",
+        "filtering",
+        "aggregations"
+       ]
+      },
+      {
+       "t": "**Uses** →",
+       "sub": [
+        "StackOverflow search",
+        "GitHub code search",
+        "Netflix service operations and security logs",
+        "LinkedIn and Medium production debugging (logging)"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Use as a derived search index",
+     "items": [
+      "**Tokenisation, analysis and index maintenance** add write cost",
+      "Lecture warns against relying on it for **relational-style joins and transactions**",
+      "**Keep authoritative** payment/order data elsewhere; **rebuild the searchable view** from that source"
+     ]
+    },
+    {
+     "h": "Search engine architecture",
+     "items": [
+      "**Data nodes** → hold searchable data",
+      "**Master** → manages cluster-wide metadata, node membership and shard allocation",
+      "Lecture labels **Elasticsearch AP**",
+      "That shorthand **does not guarantee every request succeeds** during every failure → analyse the concrete topology and operation"
+     ]
+    }
    ],
    "terms": [
     {
@@ -424,10 +732,58 @@
    ],
    "summary": "Use graph models when traversing relationships is central. SQL-over-files engines provide a query layer over externally stored analytical data.",
    "notes": [
-    "**Graph stores shine when relationships are the point:** social graphs, organisation dependencies, clusters and similarity, key members of a cluster. Uses: Adidas real-time recommendations, eBay logistics and routing, investment banks analysing client-fund relationships, VCs analysing which investors co-invest. Neo4j is an example.",
-    "**Graph trade-offs:** traversals crossing machine boundaries add coordination and network cost, making partitioning difficult. Broad aggregations can require large scans; not every aggregation necessarily visits every node. Choose by traversal shape, dataset and distribution needs.",
-    "**SQL over files:** the lecture groups Hive, Athena, BigQuery and Snowflake as SQL parsing, job generation and metadata management over files. Learn the separation of query compute from stored data. The broad label “not a database” is a teaching simplification, not a reliable classification of every listed analytics product.",
-    "**Choosing, overall:** key-value for fastest key lookup (carts, sessions, caches); document for rich querying with flexible schema; column family for write-heavy sparse data at massive scale; search engine for advanced search and logs; graph for relationships; SQL-over-files for analytics on stored files."
+    {
+     "h": "Graph stores: relationships are the point",
+     "items": [
+      {
+       "t": "**Shine for** →",
+       "sub": [
+        "social graphs",
+        "organisation dependencies",
+        "clusters and similarity",
+        "key members of a cluster"
+       ]
+      },
+      {
+       "t": "**Uses** →",
+       "sub": [
+        "Adidas real-time recommendations",
+        "eBay logistics and routing",
+        "investment banks analysing client-fund relationships",
+        "VCs analysing which investors co-invest"
+       ]
+      },
+      "**Example** → Neo4j"
+     ]
+    },
+    {
+     "h": "Graph trade-offs",
+     "items": [
+      "**Traversals crossing machine boundaries** add coordination and network cost → **partitioning is difficult**",
+      "**Broad aggregations** can require large scans; not every aggregation necessarily visits every node",
+      "**Choose by** traversal shape, dataset and distribution needs"
+     ]
+    },
+    {
+     "h": "SQL over files",
+     "items": [
+      "Lecture groups **Hive, Athena, BigQuery and Snowflake**",
+      "They do **SQL parsing, job generation and metadata management** over files",
+      "Learn the **separation of query compute from stored data**",
+      "The broad label **\"not a database\"** is a teaching simplification, not a reliable classification of every listed analytics product"
+     ]
+    },
+    {
+     "h": "Choosing a datastore overall",
+     "items": [
+      "**Key-value** → fastest key lookup (carts, sessions, caches)",
+      "**Document** → rich querying with flexible schema",
+      "**Column family** → write-heavy sparse data at massive scale",
+      "**Search engine** → advanced search and logs",
+      "**Graph** → relationships",
+      "**SQL-over-files** → analytics on stored files"
+     ]
+    }
    ],
    "terms": [
     {

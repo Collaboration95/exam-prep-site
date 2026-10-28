@@ -24,11 +24,109 @@
    ],
    "summary": "Treat an API as an ongoing product: design for consumers, measure adoption and keep its contract useful and stable.",
    "notes": [
-    "**Product ownership:** the lecture’s Salesforce, eBay and Expedia examples show APIs contributing to revenue. An owner balances developers, consumers, operations, security and end users, then uses adoption and usage data to guide improvements.",
-    "**Outside-in strategy vs inside-out:** design from the needs of consuming developers and end users, not from whatever internal resources happen to exist. Be data-driven (how often, what calls, is behaviour changing), reach developers through forums and conferences, and measure success by adoption and business impact.",
-    "**Time to market:** launch an MVP, then mature the API through iterations, feedback and backlog grooming. APIs must also be easy to discover.",
-    "**Principles 1:** Developer empathy (user-centric, simple, fit for purpose, act on feedback); Granularity (identify key entities, design at the lowest practical level so APIs can be recombined, apply the Single Responsibility and Interface Segregation principles); Ubiquitous standards (well-accepted standards, no assumptions about consumer technology, SDKs for many technologies, security for sensitive APIs).",
-    "**Principles 2:** Security proportional to risk and applied at each granular level; Documentation (discoverable, linked from the endpoint, feedback channel, kept aligned with the API); Endpoint stability (availability matching the platform, backward-compatible versions, explicit service levels for A/B versions)."
+    {
+     "h": "Product ownership",
+     "items": [
+      "**APIs contribute to revenue** → lecture examples: Salesforce, eBay, Expedia",
+      {
+       "t": "**Owner balances** the stakeholders:",
+       "sub": [
+        "developers",
+        "consumers",
+        "operations",
+        "security",
+        "end users"
+       ]
+      },
+      "**Adoption and usage data** guide improvements"
+     ]
+    },
+    {
+     "h": "Outside-in vs inside-out strategy",
+     "items": [
+      "**Outside-in**: design from the needs of consuming developers and end users",
+      "**Inside-out** (avoid): design from whatever internal resources happen to exist",
+      {
+       "t": "**Data-driven**:",
+       "sub": [
+        "how often?",
+        "what calls?",
+        "is behaviour changing?"
+       ]
+      },
+      "**Reach developers** through forums and conferences",
+      "**Measure success** by adoption and business impact"
+     ]
+    },
+    {
+     "h": "Time to market",
+     "ordered": true,
+     "items": [
+      "**Launch an MVP**",
+      "**Mature the API** through iterations, feedback and backlog grooming",
+      "**Easy to discover**: APIs must also be discoverable"
+     ]
+    },
+    {
+     "h": "API design principles (part 1)",
+     "items": [
+      {
+       "t": "**Developer empathy**",
+       "sub": [
+        "user-centric",
+        "simple",
+        "fit for purpose",
+        "act on feedback"
+       ]
+      },
+      {
+       "t": "**Granularity**",
+       "sub": [
+        "identify key entities",
+        "design at the lowest practical level so APIs can be recombined",
+        "apply the **Single Responsibility** and **Interface Segregation** principles"
+       ]
+      },
+      {
+       "t": "**Ubiquitous standards**",
+       "sub": [
+        "well-accepted standards",
+        "no assumptions about consumer technology",
+        "SDKs for many technologies",
+        "security for sensitive APIs"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "API design principles (part 2)",
+     "items": [
+      {
+       "t": "**Security**",
+       "sub": [
+        "proportional to risk",
+        "applied at each granular level"
+       ]
+      },
+      {
+       "t": "**Documentation**",
+       "sub": [
+        "discoverable",
+        "linked from the endpoint",
+        "feedback channel",
+        "kept aligned with the API"
+       ]
+      },
+      {
+       "t": "**Endpoint stability**",
+       "sub": [
+        "availability matching the platform",
+        "backward-compatible versions",
+        "explicit service levels for A/B versions"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -72,13 +170,91 @@
    ],
    "summary": "A quick map of the main API styles, then the six REST constraints (client-server, stateless, uniform interface, layered, caching, code on demand) and why each helps scale.",
    "notes": [
-    "**Choose by interaction:** SOAP suits the lecture’s enterprise integration example; REST exposes web resources; GraphQL serves changing field requirements; gRPC suits low-latency service calls; WebSocket supports continuous two-way communication; webhooks notify a registered URL of events. Security still needs deliberate design for every style.",
-    "**REST has six guiding constraints:** client-server, stateless, uniform interface, layered architecture, caching and code-on-demand. Only code-on-demand is optional; the others are required for a service to be called RESTful.",
-    "**Stateless requests:** each request carries the context needed to process it; the server does not rely on a stored client session from earlier requests. Any suitable instance can handle it, simplifying load balancing. Persistent resource data still lives on the server; cacheability depends on response semantics and headers.",
-    "**Uniform interface:** resources have URIs, messages are self-descriptive, clients manipulate resources through representations, and hypermedia links describe next actions. GET /employees/1/photos/1 combines a method with a resource URI; the verb is not part of the URI.",
-    "**HATEOAS (Hypermedia as the Engine of Application State):** responses carry links so the server drives application state and URL structure. Clients discover and navigate the API by following links, giving loose coupling.",
-    "**Layers and caches:** a client may reach the API through a gateway or load balancer. Caches may live in the client, CDN, gateway, application or a shared cache service. Shared caches reduce separate per-instance copies and survive application restarts, but add network latency and operating cost. Cache consistency and durability depend on configuration.",
-    "**Code on demand (optional):** the server can extend the client by sending scripts or applets, so fewer features need pre-implementing in the client."
+    {
+     "h": "Choose API style by interaction",
+     "items": [
+      "**SOAP** → enterprise integration (example in the lecture)",
+      "**REST** → exposes web resources",
+      "**GraphQL** → changing field requirements",
+      "**gRPC** → low-latency service calls",
+      "**WebSocket** → continuous two-way communication",
+      "**Webhooks** → notify a registered URL of events"
+     ],
+     "foot": "**Security** still needs deliberate design for every style."
+    },
+    {
+     "h": "REST: six guiding constraints",
+     "items": [
+      "**Client-server**",
+      "**Stateless**",
+      "**Uniform interface**",
+      "**Layered architecture**",
+      "**Caching**",
+      "**Code-on-demand** → the only optional one"
+     ],
+     "foot": "All the others are required for a service to be called **RESTful**."
+    },
+    {
+     "h": "Stateless requests",
+     "items": [
+      "**Each request carries the context** needed to process it",
+      "**No stored client session**: the server does not rely on earlier requests",
+      "**Any suitable instance** can handle it → simplifies **load balancing**",
+      "**Persistent resource data** still lives on the server",
+      "**Cacheability** depends on response semantics and headers"
+     ]
+    },
+    {
+     "h": "Uniform interface",
+     "items": [
+      "**Resources have URIs**",
+      "**Self-descriptive messages**",
+      "**Representations**: clients manipulate resources through them",
+      "**Hypermedia links** describe next actions",
+      {
+       "t": "**Method + resource URI** → GET /employees/1/photos/1",
+       "sub": [
+        "the verb is not part of the URI"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "HATEOAS",
+     "lead": "Hypermedia as the Engine of Application State",
+     "items": [
+      "**Responses carry links**",
+      "**Server drives** application state and URL structure",
+      "**Clients discover and navigate** the API by following links",
+      "→ **loose coupling**"
+     ]
+    },
+    {
+     "h": "Layers and caches",
+     "items": [
+      "**Layered architecture**: a client may reach the API through a gateway or load balancer",
+      {
+       "t": "**Cache locations**:",
+       "sub": [
+        "client",
+        "CDN",
+        "gateway",
+        "application",
+        "shared cache service"
+       ]
+      },
+      "**Shared cache pros**: reduces separate per-instance copies; survives application restarts",
+      "**Shared cache cons**: adds network latency and operating cost",
+      "**Consistency and durability** of caches depend on configuration"
+     ]
+    },
+    {
+     "h": "Code on demand (optional)",
+     "items": [
+      "**Server extends the client** by sending scripts or applets",
+      "→ fewer features need pre-implementing in the client"
+     ]
+    }
    ],
    "terms": [
     {
@@ -164,13 +340,99 @@
    ],
    "summary": "Practical rules for URI design and for choosing HTTP methods, with the safe/idempotent distinction and how to keep payment-style calls from duplicating.",
    "notes": [
-    "**Name resources as nouns, plural, consistent.** Use /customers, not /getCustomers; plural nouns (singleton sub-resources like /customers/{id}/address are the exception); kebab-case for multi-word names (/order-items); no trailing slash for consistency.",
-    "**Use path variables for identity and hierarchy, query parameters for shaping.** /customers/{customer-id}/orders/{order-id}/order-items reflects object relationships; filtering (/users?role=admin), sorting (/products?sort=price&order=desc) and pagination (/products?page=2&limit=50) belong in the query string. Paths identify a resource; query parameters adjust how it is returned.",
-    "**Map verbs to intent:** GET retrieve, POST create new resources and sub-resources, PUT update/replace an existing resource, PATCH partial update, DELETE remove.",
-    "**PUT vs POST:** PUT sets the representation at a known URI and may create there if the contract permits. POST submits data to a collection or operation, often creating a server-assigned resource. PUT is idempotent; POST is not guaranteed to be. PATCH expresses a partial change. POST caching needs explicit cache semantics and suitable cache support.",
-    "**Safe vs idempotent:** safe methods do not request a business-state change (GET, HEAD, OPTIONS); incidental logging is compatible with safety. Idempotency means repeats have the same intended effect as one request. PUT and DELETE are idempotent but not safe; POST and PATCH are not guaranteed idempotent. DELETE may return 204 then 404 without changing that property.",
-    "**Payment retries:** use one unique idempotency key per intended payment, reusing that same key on retries. The server records the outcome and recognises repeats, preventing duplicate charges. This implements the lecture’s goal of preventing duplicate transactions.",
-    "**HTTP message recap:** request = method, URI, version, headers (client type, accepted formats, cache settings), body; response = status code, version, headers (content length/type, date, server), body."
+    {
+     "h": "Name resources: nouns, plural, consistent",
+     "items": [
+      "**Nouns, not verbs**: /customers, not /getCustomers",
+      "**Plural nouns** (exception: singleton sub-resources like /customers/{id}/address)",
+      "**kebab-case** for multi-word names: /order-items",
+      "**No trailing slash**, for consistency"
+     ]
+    },
+    {
+     "h": "Path variables vs query parameters",
+     "items": [
+      {
+       "t": "**Path variables** → identity and hierarchy",
+       "sub": [
+        "/customers/{customer-id}/orders/{order-id}/order-items reflects object relationships"
+       ]
+      },
+      {
+       "t": "**Query parameters** (belong in the query string) → shaping",
+       "sub": [
+        "**filtering**: /users?role=admin",
+        "**sorting**: /products?sort=price&order=desc",
+        "**pagination**: /products?page=2&limit=50"
+       ]
+      }
+     ],
+     "foot": "Paths identify a resource; query parameters adjust how it is returned."
+    },
+    {
+     "h": "Map verbs to intent",
+     "items": [
+      "**GET** → retrieve",
+      "**POST** → create new resources and sub-resources",
+      "**PUT** → update/replace an existing resource",
+      "**PATCH** → partial update",
+      "**DELETE** → remove"
+     ]
+    },
+    {
+     "h": "PUT vs POST (vs PATCH)",
+     "items": [
+      "**PUT** → sets the representation at a known URI; may create there if the contract permits",
+      "**POST** → submits data to a collection or operation; often creating a server-assigned resource",
+      "**Idempotency**: PUT is idempotent; POST is not guaranteed to be",
+      "**PATCH** → expresses a partial change",
+      "**POST caching** needs explicit cache semantics and suitable cache support"
+     ]
+    },
+    {
+     "h": "Safe vs idempotent",
+     "items": [
+      "**Safe** = does not request a business-state change → GET, HEAD, OPTIONS (incidental logging is compatible with safety)",
+      "**Idempotent** = repeats have the same intended effect as one request",
+      "**PUT, DELETE** → idempotent but not safe",
+      "**POST, PATCH** → not guaranteed idempotent",
+      "**DELETE may return 204 then 404** → without changing that property (still idempotent)"
+     ]
+    },
+    {
+     "h": "Payment retries: idempotency key",
+     "ordered": true,
+     "items": [
+      "**One unique idempotency key** per intended payment",
+      "**Reuse that same key** on retries",
+      "**Server records the outcome** and recognises repeats → prevents duplicate charges"
+     ],
+     "foot": "Implements the goal in the lecture of **preventing duplicate transactions**."
+    },
+    {
+     "h": "HTTP message recap",
+     "items": [
+      {
+       "t": "**Request** =",
+       "sub": [
+        "method",
+        "URI",
+        "version",
+        "headers (client type, accepted formats, cache settings)",
+        "body"
+       ]
+      },
+      {
+       "t": "**Response** =",
+       "sub": [
+        "status code",
+        "version",
+        "headers (content length/type, date, server)",
+        "body"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -270,10 +532,44 @@
    ],
    "summary": "Return the right status class and examples so developers can succeed, and debug a production 500 methodically rather than by changing code blindly.",
    "notes": [
-    "**Tell the client who is at fault.** 2xx: client and API worked; 4xx: client erred and should change the request; 5xx: the API erred. Good feedback and examples improve developer experience, speed up documentation and raise adoption.",
-    "**Codes to know:** 200 OK (often GET); 201 Created (after a create, usually POST); 204 No Content (usually PUT/PATCH); 400 Bad Request; 401 Unauthorized (credentials not recognised); 403 Forbidden (credentials accepted but no permission); 404 Not Found; 500 Internal Server Error (generic); 503 Service Unavailable (retry headers are useful).",
-    "**401 vs 403:** 401 means we do not know who you are; 403 means we know you but you may not do this.",
-    "**Debugging a production 500:** never change code randomly in production. Find the cause first with logs, metrics and traces (the deck poses the question; the method is standard practice)."
+    {
+     "h": "Tell the client who is at fault",
+     "items": [
+      "**2xx** → client and API worked",
+      "**4xx** → client erred; should change the request",
+      "**5xx** → the API erred"
+     ],
+     "foot": "Good feedback and examples improve **developer experience**, speed up documentation and raise **adoption**."
+    },
+    {
+     "h": "Status codes to know",
+     "items": [
+      "**200 OK** → often GET",
+      "**201 Created** → after a create, usually POST",
+      "**204 No Content** → usually PUT/PATCH",
+      "**400 Bad Request**",
+      "**401 Unauthorized** → credentials not recognised",
+      "**403 Forbidden** → credentials accepted but no permission",
+      "**404 Not Found**",
+      "**500 Internal Server Error** → generic",
+      "**503 Service Unavailable** → retry headers are useful"
+     ]
+    },
+    {
+     "h": "401 vs 403",
+     "items": [
+      "**401** → we do not know who you are",
+      "**403** → we know you, but you may not do this"
+     ]
+    },
+    {
+     "h": "Debugging a production 500",
+     "lead": "Posed as a question in the lecture; the method is standard practice.",
+     "items": [
+      "**Never change code randomly** in production",
+      "**Find the cause first** → logs, metrics and traces"
+     ]
+    }
    ],
    "terms": [
     {
@@ -317,11 +613,54 @@
    ],
    "summary": "RMM separates resource identification, HTTP semantics and hypermedia into levels 0–3. It describes API design, not a throughput measurement.",
    "notes": [
-    "**RMM adds REST capabilities:** resources at level 1, HTTP methods and status codes at level 2, hypermedia at level 3. These can improve interoperability and evolution; a higher level does not by itself guarantee lower latency or higher capacity.",
-    "**Level 0 (Plain Old XML):** HTTP is only a transport to a single endpoint, like SOAP and XML-RPC. The restaurant analogy: one takeaway serves everything and you order pizza, rice and curry from it.",
-    "**Level 1 (Resources):** separate resources get their own URIs, but a single HTTP method is used. Analogy: visit different restaurants per dish.",
-    "**Level 2 (HTTP verbs):** resource nouns combined with proper verbs (GET, POST, PUT, DELETE) and status codes. Analogy: change toppings at the pizza place, cancel at another. This is the level the workshop asks for as a minimum (Level 2 or 3).",
-    "**Level 3 (Hypermedia controls):** HATEOAS. The response tells you what you ordered, what other options exist and links to more information, so the server directs application state."
+    {
+     "h": "RMM adds REST capabilities",
+     "items": [
+      "**Level 1** → resources",
+      "**Level 2** → HTTP methods and status codes",
+      "**Level 3** → hypermedia",
+      "**Can improve** interoperability and evolution",
+      "**Not a performance guarantee**: a higher level does not by itself guarantee lower latency or higher capacity"
+     ]
+    },
+    {
+     "h": "Richardson levels + restaurant analogy",
+     "ordered": true,
+     "items": [
+      {
+       "t": "**Level 0 (Plain Old XML)**",
+       "sub": [
+        "HTTP is only a transport to a single endpoint",
+        "like **SOAP** and **XML-RPC**",
+        "analogy: one takeaway serves everything; you order pizza, rice and curry from it"
+       ]
+      },
+      {
+       "t": "**Level 1 (Resources)**",
+       "sub": [
+        "separate resources get their own URIs",
+        "but a single HTTP method is used",
+        "analogy: visit different restaurants per dish"
+       ]
+      },
+      {
+       "t": "**Level 2 (HTTP verbs)**",
+       "sub": [
+        "resource nouns + proper verbs (GET, POST, PUT, DELETE) and status codes",
+        "analogy: change toppings at the pizza place, cancel at another",
+        "minimum the workshop asks for (Level 2 or 3)"
+       ]
+      },
+      {
+       "t": "**Level 3 (Hypermedia controls)**",
+       "sub": [
+        "**HATEOAS**",
+        "the response tells you what you ordered, what other options exist and links to more information",
+        "the server directs application state"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -390,11 +729,63 @@
    ],
    "summary": "GraphQL as a client-driven alternative to REST, how it works, when each wins, and the specification formats used to document APIs.",
    "notes": [
-    "**GraphQL:** a query language and runtime where clients select fields from a server-defined schema. One query can return customer, order and product data through one endpoint, reducing client round trips and unwanted fields. The server still performs the underlying data access.",
-    "**How it works:** server-side, a schema describes available types and functionality, queries ask for data, and resolvers are the functions that turn an operation into data from a database or legacy API. Client-side tools include GraphiQL (browser interface to test queries and mutations) and Apollo Client (for JavaScript front ends).",
-    "**Operations:** GraphQL has Query (read), Mutation (create, update or delete) and Subscription (live updates). REST has create, retrieve, update, delete via HTTP verbs.",
-    "**Trade-off:** GraphQL’s typed field selection suits changing mobile and dashboard requirements. REST’s resource endpoints fit standard HTTP caching, when responses allow it. GraphQL often needs specialised caching; fewer client calls do not guarantee faster server execution.",
-    "**Documentation:** OpenAPI is the vendor-neutral API description standard based on Swagger. Swagger supplies design and documentation tools. RAML is a machine-readable, human-friendly modelling language; API Blueprint emphasises readable documentation and design before implementation. A specification describes the contract; tools use it to document or test that contract."
+    {
+     "h": "GraphQL",
+     "items": [
+      "**Query language and runtime**: clients select fields from a server-defined schema",
+      "**One query, one endpoint** → customer, order and product data together",
+      "→ reduces client **round trips** and unwanted fields",
+      "**Server still performs** the underlying data access"
+     ]
+    },
+    {
+     "h": "How GraphQL works",
+     "items": [
+      {
+       "t": "**Server-side**",
+       "sub": [
+        "**schema** → describes available types and functionality",
+        "**queries** → ask for data",
+        "**resolvers** → functions that turn an operation into data from a database or legacy API"
+       ]
+      },
+      {
+       "t": "**Client-side tools**",
+       "sub": [
+        "**GraphiQL** → browser interface to test queries and mutations",
+        "**Apollo Client** → for JavaScript front ends"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "GraphQL operations vs REST",
+     "items": [
+      "**Query** → read",
+      "**Mutation** → create, update or delete",
+      "**Subscription** → live updates",
+      "**REST** → create, retrieve, update, delete via HTTP verbs"
+     ]
+    },
+    {
+     "h": "GraphQL vs REST trade-off",
+     "items": [
+      "**GraphQL**: typed field selection → suits changing mobile and dashboard requirements",
+      "**REST**: resource endpoints → fit standard HTTP caching, when responses allow it",
+      "**GraphQL caching** often needs specialised caching",
+      "**Fewer client calls ≠ faster** server execution (not guaranteed)"
+     ]
+    },
+    {
+     "h": "API documentation standards",
+     "items": [
+      "**OpenAPI** → vendor-neutral API description standard, based on Swagger",
+      "**Swagger** → supplies design and documentation tools",
+      "**RAML** → machine-readable, human-friendly modelling language",
+      "**API Blueprint** → emphasises readable documentation and design before implementation"
+     ],
+     "foot": "A **specification** describes the contract; **tools** use it to document or test that contract."
+    }
    ],
    "terms": [
     {
@@ -482,13 +873,78 @@
    ],
    "summary": "How to evolve an API without breaking consumers, and the baseline security approach with a gateway, OAuth 2.0 and validation.",
    "notes": [
-    "**Three versioning rules:** do not take anything away abruptly; do not change the meaning of an existing API; additions are optional (consumers need not use them).",
-    "**Semantic version MAJOR.MINOR.PATCH:** major for breaking changes, minor for backward-compatible features, patch for backward-compatible fixes (e.g. 1.0.0).",
-    "**Two approaches:** URI versioning (api.example.com/v1) or header versioning, either a custom header (Accept-version: v1) or the Accept header with a vendor media type (application/vnd.example.v1+json). URI versioning is visible and simple; header versioning keeps URIs stable.",
-    "**Security baseline:** validate parameters, threat detection, SSL/TLS everywhere, proven solutions, and authenticate then authorise. OAuth 2.0 is the industry standard for authorization.",
-    "**The API gateway is the gatekeeper:** it consolidates API requests from mobile and web clients, interfaces with back-end microservices or monolith APIs and centralises security. Each back-end service must still validate requests.",
-    "**Authorization code flow:** the user approves access at the authorization server; the app receives a short-lived code, exchanges it for an access token, then presents that token to the resource API. The API validates the token and permissions; it need not contact the authorization server on every call if it can validate the token locally.",
-    "**Further topics:** rate limiting and quotas, HTTP caching headers, circuit breakers and retries, webhooks and callbacks, usage analytics."
+    {
+     "h": "Three versioning rules",
+     "items": [
+      "**Do not take anything away** abruptly",
+      "**Do not change the meaning** of an existing API",
+      "**Additions are optional**: consumers need not use them"
+     ]
+    },
+    {
+     "h": "Semantic version MAJOR.MINOR.PATCH",
+     "lead": "e.g. 1.0.0",
+     "items": [
+      "**MAJOR** → breaking changes",
+      "**MINOR** → backward-compatible features",
+      "**PATCH** → backward-compatible fixes"
+     ]
+    },
+    {
+     "h": "Two versioning approaches",
+     "items": [
+      "**URI versioning** → api.example.com/v1; visible and simple",
+      {
+       "t": "**Header versioning** → keeps URIs stable",
+       "sub": [
+        "custom header: Accept-version: v1",
+        "Accept header with a vendor media type: application/vnd.example.v1+json"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Security baseline",
+     "items": [
+      "**Validate parameters**",
+      "**Threat detection**",
+      "**SSL/TLS everywhere**",
+      "**Proven solutions**",
+      "**Authenticate, then authorise**",
+      "**OAuth 2.0** → the industry standard for authorization"
+     ]
+    },
+    {
+     "h": "API gateway is the gatekeeper",
+     "items": [
+      "**Consolidates API requests** from mobile and web clients",
+      "**Interfaces with back-end** microservices or monolith APIs",
+      "**Centralises security**"
+     ],
+     "foot": "Each back-end service must **still validate requests**."
+    },
+    {
+     "h": "Authorization code flow",
+     "ordered": true,
+     "items": [
+      "**User approves access** at the authorization server",
+      "**App receives a short-lived code**",
+      "**Exchanges the code** for an access token",
+      "**Presents the token** to the resource API",
+      "**API validates** the token and permissions"
+     ],
+     "foot": "The API need not contact the authorization server on every call if it can **validate the token locally**."
+    },
+    {
+     "h": "Further topics",
+     "items": [
+      "**Rate limiting and quotas**",
+      "**HTTP caching headers**",
+      "**Circuit breakers and retries**",
+      "**Webhooks and callbacks**",
+      "**Usage analytics**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -561,13 +1017,95 @@
    ],
    "summary": "Operational practices that keep an API dependable in production: error handling, logging, resilience patterns, pagination and metrics.",
    "notes": [
-    "**Consistent errors:** use global exception handling for a stable response format. For an oversized payload, check the intended API limit and gateway/server/action settings. Raise limits only if that payload is legitimate and capacity supports it; otherwise return a clear error.",
-    "**Log to explain what happened:** logging gives a trail of activity before an event, supplements exception records, reveals how clients use the API and records metrics (e.g. NLog in .NET Core).",
-    "**Resilience:** retry transient failures with bounded exponential backoff; use timeouts to bound waiting, a circuit breaker to stop calls during persistent failure, bulkheads to isolate resources and fallback for degraded results. Retry only when repeating the operation is safe or duplicate-protected.",
-    "**One request, several transactions:** an API call can touch multiple services and databases. That does not make it one atomic transaction; identify partial-failure cases and choose coordinated commit or compensation where needed.",
-    "**Pagination:** offset skips a number of rows and may become slow or drift when data changes. A cursor continues from the last position in a stable ordering. Use a unique ordering or tie-breaker: createdOn alone can skip records sharing a timestamp.",
-    "**Monitor what matters:** application metrics are requests per minute, latency and failure rate; infrastructure metrics are API uptime, memory and CPU.",
-    "**Slow API, fast queries:** trace the full request before selecting a fix. Investigate blocked threads, connection or worker pools and downstream calls; fast individual queries do not prove the complete request path is fast."
+    {
+     "h": "Consistent errors",
+     "items": [
+      "**Global exception handling** → stable response format",
+      {
+       "t": "**Oversized payload**:",
+       "sub": [
+        "check the intended API limit",
+        "check gateway/server/action settings",
+        "raise limits only if that payload is legitimate and capacity supports it",
+        "otherwise return a clear error"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Log to explain what happened",
+     "items": [
+      "**Logging gives a trail** of activity before an event",
+      "**Supplements exception records**",
+      "**Reveals how clients use** the API",
+      "**Records metrics**",
+      "**e.g.** NLog in .NET Core"
+     ]
+    },
+    {
+     "h": "Resilience patterns",
+     "items": [
+      "**Retry** → transient failures, with bounded exponential backoff",
+      "**Timeouts** → bound waiting",
+      "**Circuit breaker** → stop calls during persistent failure",
+      "**Bulkheads** → isolate resources",
+      "**Fallback** → degraded results"
+     ],
+     "foot": "Retry only when repeating the operation is **safe or duplicate-protected**."
+    },
+    {
+     "h": "One request, several transactions",
+     "items": [
+      "**One API call** can touch multiple services and databases",
+      "**Not one atomic transaction** just because it is one call",
+      "**Identify partial-failure cases**",
+      "**Choose** coordinated commit or compensation where needed"
+     ]
+    },
+    {
+     "h": "Pagination: offset vs cursor",
+     "items": [
+      "**Offset** → skips a number of rows; may become slow or drift when data changes",
+      "**Cursor** → continues from the last position in a stable ordering",
+      "**Unique ordering or tie-breaker** → createdOn alone can skip records sharing a timestamp"
+     ]
+    },
+    {
+     "h": "Monitor what matters",
+     "items": [
+      {
+       "t": "**Application metrics**",
+       "sub": [
+        "requests per minute",
+        "latency",
+        "failure rate"
+       ]
+      },
+      {
+       "t": "**Infrastructure metrics**",
+       "sub": [
+        "API uptime",
+        "memory",
+        "CPU"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Slow API, fast queries",
+     "items": [
+      "**Trace the full request** before selecting a fix",
+      {
+       "t": "**Investigate**",
+       "sub": [
+        "blocked threads",
+        "connection or worker pools",
+        "downstream calls"
+       ]
+      },
+      "**Fast individual queries** do not prove the complete request path is fast"
+     ]
+    }
    ],
    "terms": [
     {
@@ -644,12 +1182,87 @@
    ],
    "summary": "How to make APIs faster and lighter, how to test them beyond functionality, and a seven-level scale of API adoption in an organisation.",
    "notes": [
-    "**Compression:** clients ask for gzip with an Accept-Encoding: gzip header (and a User-Agent hint). As a standard rule, compress large text payloads like JSON and avoid it for tiny responses or already-compressed content (JPEG, video) where CPU cost outweighs the gain.",
-    "**Partial resources:** a partial response returns selected fields to reduce read payloads. PATCH sends a partial update; its media type and contract define how fields, parent objects, arrays and removals are applied. Do not assume every PATCH is a recursive merge.",
-    "**Treat the API as a contract when testing:** check endpoints, that the object model reflects resources and types, no missing or duplicate functionality and that resource relationships are reflected. Use manual or automated test plans.",
-    "**Test flows and scenarios:** isolated requests, multi-step workflows, and combined UI and API tests. Scenarios run from happy-path positive tests, to extended positive with optional parameters, negative with valid or invalid input, to destructive tests. Verify status code, payload, headers, application state and basic performance.",
-    "**Beyond functional:** security (deny by default, fail securely, least privilege, reject illegal inputs, authorisation tests, role permissions, HTTPS, no leaking internal data models, rate limiting and throttling), performance (load and stress tests) and usability.",
-    "**Architecture maturity has seven levels:** 1 isolated applications, 2 unstructured integrations (sockets, file sharing, queues), 3 component-based (EJB, CORBA, web services), 4 service-oriented (ESB, SOAP), 5 private APIs on microservices (REST, API gateway, containers), 6 open APIs (API platform, developer portal, WAF), 7 APIs as business (service mesh, GraphQL, gRPC). Levels 1-3 are not API-based, 4-5 partially, 6-7 fully."
+    {
+     "h": "Compression (gzip)",
+     "items": [
+      "**Client asks for gzip** → Accept-Encoding: gzip header (and a User-Agent hint)",
+      "**Compress** (standard rule) → large text payloads like JSON",
+      "**Avoid** → tiny responses or already-compressed content (JPEG, video), where CPU cost outweighs the gain"
+     ]
+    },
+    {
+     "h": "Partial resources",
+     "items": [
+      "**Partial response** → returns selected fields to reduce read payloads",
+      "**PATCH** → sends a partial update",
+      "**Media type and contract** define how fields, parent objects, arrays and removals are applied",
+      "**Not always a merge**: do not assume every PATCH is a recursive merge"
+     ]
+    },
+    {
+     "h": "Treat the API as a contract when testing",
+     "items": [
+      "**Check endpoints**",
+      "**Object model** reflects resources and types",
+      "**No missing or duplicate** functionality",
+      "**Resource relationships** are reflected",
+      "**Test plans**: manual or automated"
+     ]
+    },
+    {
+     "h": "Test flows",
+     "items": [
+      "**Isolated requests**",
+      "**Multi-step workflows**",
+      "**Combined UI and API tests**"
+     ]
+    },
+    {
+     "h": "Test scenarios",
+     "ordered": true,
+     "items": [
+      "**Happy-path positive** tests",
+      "**Extended positive** with optional parameters",
+      "**Negative** with valid or invalid input",
+      "**Destructive** tests"
+     ],
+     "foot": "Verify **status code, payload, headers, application state** and basic performance."
+    },
+    {
+     "h": "Testing beyond functional",
+     "items": [
+      {
+       "t": "**Security**",
+       "sub": [
+        "deny by default",
+        "fail securely",
+        "least privilege",
+        "reject illegal inputs",
+        "authorisation tests",
+        "role permissions",
+        "HTTPS",
+        "no leaking internal data models",
+        "rate limiting and throttling"
+       ]
+      },
+      "**Performance** → load and stress tests",
+      "**Usability**"
+     ]
+    },
+    {
+     "h": "Architecture maturity: seven levels",
+     "ordered": true,
+     "items": [
+      "**Isolated applications**",
+      "**Unstructured integrations** → sockets, file sharing, queues",
+      "**Component-based** → EJB, CORBA, web services",
+      "**Service-oriented** → ESB, SOAP",
+      "**Private APIs on microservices** → REST, API gateway, containers",
+      "**Open APIs** → API platform, developer portal, WAF",
+      "**APIs as business** → service mesh, GraphQL, gRPC"
+     ],
+     "foot": "Levels 1-3 are **not API-based**, 4-5 **partially**, 6-7 **fully**."
+    }
    ],
    "terms": [
     {
@@ -737,10 +1350,42 @@
    ],
    "summary": "Telling the security standards apart, why browsers need CORS, how to fix CORS errors, and validating requests at the gateway.",
    "notes": [
-    "**OAuth, JWT and SAML solve different problems.** OAuth is an authorization framework in which a client obtains an access token from a central authorization server. JWT is a token format (JSON with issuer, subject claims, expiry) that can be used inside OAuth and is independent of how the token is obtained. SAML is a Single Sign-On standard that passes identity between sessions using signed XML.",
-    "**CORS:** browsers use server response headers to decide whether a web page may read a cross-origin API response. Some requests first trigger an OPTIONS preflight for allowed origins, methods and headers. CORS does not authenticate callers or stop non-browser clients from reaching the API.",
-    "**Typical CORS error causes:** server policy denies the domain, scheme, port, header, credential or method; the server errored on the pre-flight; the API gateway is not relaying pre-flight responses; or credentials (cookies, HTTP auth) were required but not sent.",
-    "**Payload inspection at the gateway:** validate content (size or JSON schema against the API schema), parameters (headers, query, path), headers and status codes of responses, with actions such as prevent, detect or ignore per parameter."
+    {
+     "h": "OAuth vs JWT vs SAML",
+     "lead": "They solve different problems.",
+     "items": [
+      "**OAuth** → authorization framework: a client obtains an access token from a central authorization server",
+      "**JWT** → token format (JSON with issuer, subject claims, expiry); can be used inside OAuth; independent of how the token is obtained",
+      "**SAML** → Single Sign-On standard; passes identity between sessions using signed XML"
+     ]
+    },
+    {
+     "h": "CORS",
+     "items": [
+      "**Browsers use server response headers** to decide whether a web page may read a cross-origin API response",
+      "**OPTIONS preflight**: some requests first trigger one, for allowed origins, methods and headers",
+      "**Does not authenticate** callers",
+      "**Does not stop non-browser clients** from reaching the API"
+     ]
+    },
+    {
+     "h": "Typical CORS error causes",
+     "items": [
+      "**Server policy denies** the domain, scheme, port, header, credential or method",
+      "**Server errored** on the pre-flight",
+      "**API gateway not relaying** pre-flight responses",
+      "**Credentials** (cookies, HTTP auth) were required but not sent"
+     ]
+    },
+    {
+     "h": "Payload inspection at the gateway",
+     "items": [
+      "**Content** → validate size or JSON schema against the API schema",
+      "**Parameters** → headers, query, path",
+      "**Responses** → headers and status codes",
+      "**Actions per parameter** → prevent, detect or ignore"
+     ]
+    }
    ],
    "terms": [
     {
@@ -788,11 +1433,60 @@
    ],
    "summary": "A gateway simplifies client access; multi-service work still needs explicit handling of partial failures through distributed commit or sagas.",
    "notes": [
-    "**Why not call microservices directly?** The deck poses this as a question: an API gateway gives one entry point that handles cross-cutting concerns (security, routing, aggregation) so clients are not coupled to many services. API orchestration: the API manager calls services in order, e.g. a validation service first, then service A.",
-    "**Defensive handling of bad data:** with a million requests a day and 30% having missing or null fields, validate input at the edge (schema validation) and handle nulls gracefully rather than crashing.",
-    "**Separate services, separate transactions:** with separate databases, a local transaction cannot atomically update order and inventory together. Options are to avoid that requirement, use supported distributed commit (2PC), or use eventual consistency and compensation.",
-    "**Two-phase commit:** a coordinator asks all participants to prepare, and if all report done it tells them to commit; if one fails it tells the others to abort. Strongly consistent but couples services and blocks resources.",
-    "**Saga:** services commit local steps; a later failure triggers business compensation for completed steps. The illustrated event-bus flow has a central coordinator directing Order and Inventory, so it is orchestrated despite its “choreographer” label. Choreography instead lets services decide their reactions without a central controller."
+    {
+     "h": "Why not call microservices directly?",
+     "lead": "Posed as a question in the lecture.",
+     "items": [
+      "**API gateway** → one entry point",
+      "**Handles cross-cutting concerns** → security, routing, aggregation",
+      "→ clients are **not coupled** to many services"
+     ]
+    },
+    {
+     "h": "API orchestration",
+     "ordered": true,
+     "lead": "The API manager calls services in order, e.g.:",
+     "items": [
+      "**Validation service** first",
+      "**Service A** next"
+     ]
+    },
+    {
+     "h": "Defensive handling of bad data",
+     "lead": "A million requests a day, 30% with missing or null fields:",
+     "items": [
+      "**Validate input at the edge** → schema validation",
+      "**Handle nulls gracefully** rather than crashing"
+     ]
+    },
+    {
+     "h": "Separate services, separate transactions",
+     "lead": "With separate databases, a local transaction cannot atomically update order and inventory together. Options:",
+     "items": [
+      "**Avoid** that requirement",
+      "**Distributed commit (2PC)**, where supported",
+      "**Eventual consistency and compensation**"
+     ]
+    },
+    {
+     "h": "Two-phase commit (2PC)",
+     "ordered": true,
+     "items": [
+      "**Prepare**: a coordinator asks all participants to prepare",
+      "**Commit**: if all report done, it tells them to commit",
+      "**Abort**: if one fails, it tells the others to abort"
+     ],
+     "foot": "**Strongly consistent**, but couples services and blocks resources."
+    },
+    {
+     "h": "Saga",
+     "items": [
+      "**Services commit local steps**",
+      "**Later failure** → business **compensation** for completed steps",
+      "**Illustrated event-bus flow**: a central coordinator directs Order and Inventory → **orchestrated**, despite its “choreographer” label",
+      "**Choreography** instead → services decide their reactions without a central controller"
+     ]
+    }
    ],
    "terms": [
     {

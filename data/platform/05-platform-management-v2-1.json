@@ -24,9 +24,51 @@
    ],
    "summary": "A platform exists to enable producer-consumer interaction, and engineering's job is a toolbox that scales, protects and evolves that interaction.",
    "notes": [
-    "**A platform is a business model, and engineering makes its interactions work.** It creates value by facilitating exchanges between interdependent groups (consumers and producers), such as videos on YouTube or data and APIs for a health agency. Modern platforms blur infrastructure and application architecture, so they must solve service discovery, resource coordination, container orchestration and usage reporting.",
-    "**Three engineering concerns decide whether the platform survives:** scalability (increasing and limiting interaction), availability (a seamless experience) and evolvability (shipping fixes and features). Consistently bad experience kills a platform.",
-    "**The toolbox maps tools to business intent:** service discovery, deployment strategies (canary, rolling), circuit breaker and rate limiting, distributed tracing, metrics collection and log aggregation. Together they scale the interaction, limit it, measure it, and let you enhance the platform without disrupting users."
+    {
+     "h": "Platform = business model; engineering makes it work",
+     "items": [
+      "**Creates value** by facilitating exchanges between interdependent groups (**consumers** and **producers**)",
+      {
+       "t": "**Examples** →",
+       "sub": [
+        "videos on YouTube",
+        "data and APIs for a health agency"
+       ]
+      },
+      "Modern platforms **blur infrastructure and application architecture**",
+      {
+       "t": "So they must solve →",
+       "sub": [
+        "**service discovery**",
+        "**resource coordination**",
+        "**container orchestration**",
+        "**usage reporting**"
+       ]
+      }
+     ],
+     "foot": "Engineering is what makes the platform's interactions work."
+    },
+    {
+     "h": "Three engineering concerns for survival",
+     "items": [
+      "**Scalability** → increasing and limiting interaction",
+      "**Availability** → a seamless experience",
+      "**Evolvability** → shipping fixes and features"
+     ],
+     "foot": "These decide whether the platform survives: a **consistently bad experience kills a platform**."
+    },
+    {
+     "h": "Toolbox maps tools to business intent",
+     "items": [
+      "**Service discovery**",
+      "**Deployment strategies** (canary, rolling)",
+      "**Circuit breaker** and **rate limiting**",
+      "**Distributed tracing**",
+      "**Metrics collection**",
+      "**Log aggregation**"
+     ],
+     "foot": "Together they **scale** the interaction, **limit** it, **measure** it, and let you **enhance the platform without disrupting users**."
+    }
    ],
    "terms": [
     {
@@ -54,11 +96,68 @@
    ],
    "summary": "How services find each other when instances come and go: a registry that works like an internal DNS, kept highly available by a consensus cluster.",
    "notes": [
-    "**Architecture trade-off:** a monolith is operationally simpler but scales and deploys as a unit. SOA and microservices add service boundaries and reuse. Microservices favour independent scaling, deployment and data ownership, with greater operational overhead; containers are a common implementation, not their definition.",
-    "**Hardcoded IPs fail in the cloud.** Auto-scaling creates new instances that must join load balancing, and nodes or containers restart and move (fallacies of distributed computing). The solution must survive node failures, store service locations, spare clients from using raw IPs, and not be a single point of failure.",
-    "**The answer is name-based lookup, as on the internet (DNS).** A service registry is effectively an internal DNS server for east-west traffic (service to service inside the platform), as opposed to north-south traffic (users to platform). Three steps: register the service (name to IP), look it up from the registry, connect to it.",
-    "**Keep discovery available:** consensus-backed registries such as ZooKeeper, etcd or Consul commonly use 3 or 5 nodes. A majority must agree on changes; 3 tolerates one unavailable node and 5 tolerates two. Even-sized clusters can form a majority, but an extra even-numbered member does not increase failure tolerance.",
-    "**Use platform discovery:** in the lecture’s Kubernetes example, callers use a service alias such as http://payment-manager-service:8080. Service registration and DNS integration are platform-managed. The Spring Cloud/Eureka example requires more application integration. Prefer a supported platform capability over duplicating plumbing."
+    {
+     "h": "Architecture trade-off",
+     "items": [
+      "**Monolith** → operationally simpler, but scales and deploys as a unit",
+      "**SOA and microservices** → add service boundaries and reuse",
+      "**Microservices** → favour independent scaling, deployment and data ownership, with greater operational overhead",
+      "**Containers** are a common implementation of microservices, not their definition"
+     ]
+    },
+    {
+     "h": "Why hardcoded IPs fail in the cloud",
+     "items": [
+      "**Auto-scaling** creates new instances that must join load balancing",
+      "**Nodes or containers restart and move** (fallacies of distributed computing)"
+     ]
+    },
+    {
+     "h": "Requirements for a discovery solution",
+     "items": [
+      "**Survive node failures**",
+      "**Store service locations**",
+      "**Spare clients from using raw IPs**",
+      "**Not a single point of failure**"
+     ]
+    },
+    {
+     "h": "Answer: name-based lookup (like DNS)",
+     "lead": "As on the internet (DNS), look services up by name.",
+     "items": [
+      "**Service registry** = effectively an internal DNS server",
+      "**East-west traffic** → service to service inside the platform (what the registry serves)",
+      "**North-south traffic** → users to platform"
+     ]
+    },
+    {
+     "h": "Service discovery: three steps",
+     "ordered": true,
+     "items": [
+      "**Register** the service (name to IP)",
+      "**Look it up** from the registry",
+      "**Connect** to it"
+     ]
+    },
+    {
+     "h": "Keep discovery available",
+     "items": [
+      "**Consensus-backed registries** → ZooKeeper, etcd, Consul",
+      "Commonly use **3 or 5 nodes**",
+      "A **majority must agree** on changes",
+      "**3 nodes** tolerates one unavailable node; **5 nodes** tolerates two",
+      "**Even-sized clusters** can form a majority, but an extra even-numbered member does not increase failure tolerance"
+     ]
+    },
+    {
+     "h": "Use platform discovery",
+     "items": [
+      "**Kubernetes** (lecture example) → callers use a service alias such as http://payment-manager-service:8080",
+      "In Kubernetes, **service registration and DNS integration are platform-managed**",
+      "**Spring Cloud/Eureka** example → requires more application integration"
+     ],
+     "foot": "Prefer a **supported platform capability** over duplicating plumbing."
+    }
    ],
    "terms": [
     {
@@ -126,11 +225,68 @@
    ],
    "summary": "Four ways to release a new version (blue/green, rolling, canary, shadowing) and when to choose each.",
    "notes": [
-    "**Pick a strategy from your business context.** Ask how tolerant customers are of downtime (nines; banks, e-commerce), whether users are global, how often you release, how fast you can roll back, and whether you want to experiment in production (A/B tests, passive machine learning models).",
-    "**Four strategies:** blue/green keeps old and new environments available and switches live traffic; rolling progressively replaces old instances; canary gives a small share of live requests to the new version (the lecture uses 5–10%); shadowing sends copies to the new version but discards its responses.",
-    "**Canary = low-risk, experiment-friendly.** Only a small set of users or servers sees the release. It must be incremental and backward compatible for easy rollback. Use it for cohort behaviour, evaluating new ML models and unpredictable feature behaviour.",
-    "**Rolling deployments:** gradually replace instances while others serve traffic. They avoid duplicating a full environment, but seamless service needs sufficient healthy capacity, traffic draining and compatible versions. Temporary extra capacity may still be needed; “no downtime” is a design goal, not an automatic property.",
-    "**Choose by risk:** rolling for compatible routine patches; canary for limited real-user exposure; blue/green for fast traffic switch-back while both environments remain ready. Shadowing compares behaviour without returning new responses, but mirrored writes must be isolated to avoid duplicate side effects. None automatically reverses database changes."
+    {
+     "h": "Pick a strategy from business context",
+     "lead": "Questions to ask:",
+     "items": [
+      "**Downtime tolerance** → how tolerant are customers of downtime (nines; banks, e-commerce)?",
+      "**Global users**? Are users global?",
+      "**Release frequency** → how often do you release?",
+      "**Rollback speed** → how fast can you roll back?",
+      "**Experiment in production**? (A/B tests, passive machine learning models)"
+     ]
+    },
+    {
+     "h": "Four deployment strategies",
+     "items": [
+      "**Blue/green** → keeps old and new environments available and switches live traffic",
+      "**Rolling** → progressively replaces old instances",
+      "**Canary** → a small share of live requests goes to the new version (lecture uses **5–10%**)",
+      "**Shadowing** → sends copies to the new version but discards its responses"
+     ]
+    },
+    {
+     "h": "Canary = low-risk, experiment-friendly",
+     "items": [
+      "Only a **small set of users or servers** sees the release",
+      "Must be **incremental** and **backward compatible** for easy rollback",
+      {
+       "t": "**Use it for** →",
+       "sub": [
+        "cohort behaviour",
+        "evaluating new ML models",
+        "unpredictable feature behaviour"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Rolling deployments",
+     "items": [
+      "**Gradually replace instances** while others serve traffic",
+      "**Avoid duplicating a full environment**",
+      {
+       "t": "Seamless service needs →",
+       "sub": [
+        "sufficient healthy capacity",
+        "traffic draining",
+        "compatible versions"
+       ]
+      },
+      "**Temporary extra capacity** may still be needed"
+     ],
+     "foot": "**\"No downtime\" is a design goal**, not an automatic property."
+    },
+    {
+     "h": "Choose by risk",
+     "items": [
+      "**Rolling** → compatible routine patches",
+      "**Canary** → limited real-user exposure",
+      "**Blue/green** → fast traffic switch-back while both environments remain ready",
+      "**Shadowing** → compares behaviour without returning new responses; **mirrored writes must be isolated** to avoid duplicate side effects"
+     ],
+     "foot": "**None automatically reverses database changes.**"
+    }
    ],
    "terms": [
     {
@@ -211,8 +367,23 @@
    ],
    "summary": "A breaking database change must be broken into backward-compatible increments (see the separate 05c case study).",
    "notes": [
-    "**The scenario:** the Payment microservice stores all payment types in one Payment table. Analysis shows Cheque and Apple Pay capture different fields, so the table should be split into ChequePayment and ApplePayPayment. Version 1 writes to Payment; Version 2 writes to the two new tables.",
-    "**Why it is hard:** old data must be migrated and the change is not backward compatible (old payments could not be read). The cure is planning: incremental releases 1.1, 1.2 ... finally 2.0, each choosing a suitable deployment strategy."
+    {
+     "h": "The scenario: splitting Payment",
+     "items": [
+      "**Payment microservice** stores all payment types in one **Payment** table",
+      "Analysis shows **Cheque** and **Apple Pay** capture different fields",
+      "So split the table into **ChequePayment** and **ApplePayPayment**",
+      "**Version 1** writes to Payment; **Version 2** writes to the two new tables"
+     ]
+    },
+    {
+     "h": "Why it is hard",
+     "items": [
+      "**Old data must be migrated**",
+      "The change is **not backward compatible** → old payments could not be read"
+     ],
+     "foot": "The cure is **planning**: **incremental releases** 1.1, 1.2 ... finally **2.0**, each choosing a suitable deployment strategy."
+    }
    ],
    "terms": [
     {
@@ -240,10 +411,62 @@
    ],
    "summary": "Stop a failing dependency from dragging callers down: fail fast, retry carefully, with the logic in an interceptor rather than business code.",
    "notes": [
-    "**The problem is cascading failure.** If Payment is down or so slow that requests time out, Agency keeps calling it, its thread pool clogs, it can no longer serve other calls, and requests to Agency clog in turn.",
-    "**Breaker behaviour:** count dependency errors or timeouts in a window; open when a threshold is exceeded and fail fast. After a reset interval, allow limited probes and close only on success. A retry policy is separate: use bounded backoff for transient failures without overwhelming recovery.",
-    "**Implement via interceptors, not code.** Coding forwarding/blocking logic into Agency is not a business problem and would change per protocol (HTTP, gRPC, Thrift). Libraries or a mesh intercept all outgoing requests, track failures in a time window, fail beyond the threshold, and retry some requests after the window, with little or no code. Options: Resilience4J, Sentinel, Hystrix (not active), Istio service mesh (Envoy).",
-    "**It is a state machine:** Closed (allow all), Open (deny all), Half-Open (allow some)."
+    {
+     "h": "The problem: cascading failure",
+     "lead": "Payment is down, or so slow that requests time out:",
+     "ordered": true,
+     "items": [
+      "**Agency keeps calling** Payment",
+      "Agency's **thread pool clogs**",
+      "Agency can **no longer serve other calls**",
+      "**Requests to Agency clog** in turn"
+     ]
+    },
+    {
+     "h": "Breaker behaviour",
+     "ordered": true,
+     "items": [
+      "**Count** dependency errors or timeouts in a **window**",
+      "**Open** when a **threshold** is exceeded and **fail fast**",
+      "After a **reset interval**, allow **limited probes**",
+      "**Close only on success**"
+     ],
+     "foot": "A **retry policy is separate**: use **bounded backoff** for transient failures without overwhelming recovery."
+    },
+    {
+     "h": "Implement via interceptors, not code",
+     "items": [
+      "Coding forwarding/blocking logic into Agency is **not a business problem**",
+      "It would **change per protocol** (HTTP, gRPC, Thrift)",
+      {
+       "t": "**Libraries or a mesh** →",
+       "sub": [
+        "intercept all outgoing requests",
+        "track failures in a time window",
+        "fail beyond the threshold",
+        "retry some requests after the window"
+       ]
+      },
+      "**Little or no code**",
+      {
+       "t": "**Options** →",
+       "sub": [
+        "Resilience4J",
+        "Sentinel",
+        "Hystrix (not active)",
+        "Istio service mesh (Envoy)"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Circuit breaker is a state machine",
+     "items": [
+      "**Closed** → allow all",
+      "**Open** → deny all",
+      "**Half-Open** → allow some"
+     ]
+    }
    ],
    "terms": [
     {
@@ -308,9 +531,32 @@
    ],
    "summary": "Protect limited resources and spending by capping traffic per caller, again through interceptors.",
    "notes": [
-    "**Why:** not all users are equal (conditional limits by plan), services have limited CPU, memory and IOPS and limited budget, and unrestricted traffic invites DDoS.",
-    "**How:** an interceptor intercepts all requests, extracts username, source IP, source service or user plan, and consults a fast in-memory quota database to verify and update limits and usage. Little or no code. Options: Resilience4J, Sentinel, Istio, all cloud providers.",
-    "**Circuit breaker vs rate limiter:** the breaker protects the caller from a failing callee; the limiter protects the callee from excessive callers. Both limit interaction."
+    {
+     "h": "Why rate limit",
+     "items": [
+      "**Not all users are equal** → conditional limits by plan",
+      "**Services have limited** CPU, memory and IOPS, and **limited budget**",
+      "**Unrestricted traffic invites DDoS**"
+     ]
+    },
+    {
+     "h": "How rate limiting works",
+     "ordered": true,
+     "items": [
+      "An **interceptor** intercepts all requests",
+      "**Extracts** username, source IP, source service or user plan",
+      "Consults a **fast in-memory quota database** to verify and update limits and usage"
+     ],
+     "foot": "**Little or no code.** Options: **Resilience4J, Sentinel, Istio, all cloud providers**."
+    },
+    {
+     "h": "Circuit breaker vs rate limiter",
+     "items": [
+      "**Circuit breaker** → protects the **caller** from a failing **callee**",
+      "**Rate limiter** → protects the **callee** from excessive **callers**"
+     ],
+     "foot": "Both **limit interaction**."
+    }
    ],
    "terms": [
     {
@@ -342,10 +588,43 @@
    ],
    "summary": "Follow one user request across many services using a shared ID, so failures are found quickly and MTTR drops.",
    "notes": [
-    "**Problem:** one request touches many services; without tracing it is hard to debug, fixes are slow, MTTR rises and teams lose communication.",
-    "**Mechanism:** propagate a trace ID in request headers across services; reuse incoming context and create a new trace at an entry point when needed. Instrumentation creates spans and records timing and parent/child relationships. A shared ID correlates work; it does not make the request a single database transaction.",
-    "**Trace vs span:** the lecture presents OpenTracing and a Tracer API. A trace follows an end-to-end request; a span records one unit of work such as an HTTP call or database query. One service may produce several spans, so service count and span count need not match.",
-    "**Tools:** Jaeger (CNCF), Spring Sleuth, Zipkin, Datadog, Stackdriver."
+    {
+     "h": "Problem without tracing",
+     "lead": "One request touches many services; without tracing:",
+     "items": [
+      "**Hard to debug**",
+      "**Slow fixes**, so **MTTR rises**",
+      "**Teams lose communication**"
+     ]
+    },
+    {
+     "h": "Tracing mechanism",
+     "items": [
+      "**Propagate a trace ID** in request headers across services",
+      "**Reuse incoming context**; create a **new trace at an entry point** when needed",
+      "**Instrumentation creates spans** and records **timing** and **parent/child relationships**"
+     ],
+     "foot": "A **shared ID correlates work**; it does **not** make the request a single database transaction."
+    },
+    {
+     "h": "Trace vs span",
+     "lead": "Lecture presents **OpenTracing** and a **Tracer API**.",
+     "items": [
+      "**Trace** → follows an end-to-end request",
+      "**Span** → records one unit of work, such as an HTTP call or database query",
+      "One service may produce **several spans**, so service count and span count need not match"
+     ]
+    },
+    {
+     "h": "Tracing tools",
+     "items": [
+      "**Jaeger** (CNCF)",
+      "**Spring Sleuth**",
+      "**Zipkin**",
+      "**Datadog**",
+      "**Stackdriver**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -385,10 +664,46 @@
    ],
    "summary": "Why two-phase commit does not fit microservices, and how sagas use compensating transactions with orchestration or choreography.",
    "notes": [
-    "**Business transactions span services and need consistency.** The traditional answer is two-phase commit (prepare, then commit), but not all databases support ACID, platforms use several databases, and 2PC needs synchronous communication while modern systems are asynchronous. Skipping transactions is also risky because partial executions are dangerous.",
-    "**Saga:** commit local steps and compensate completed steps after a later failure. In the lecture, CreateOrder and CreateMaidOrder precede MakePayment. If payment fails, cancel MaidOrder, then Order. Compensation is a new business action, not an isolated database rollback, and may itself require retry.",
-    "**Coordination:** an orchestrator stores progress and directs forward and compensating steps; its availability and contention need attention. Choreography distributes reactions among services, avoiding one central controller but making the complete flow harder to debug. Both need reliable, duplicate-safe processing.",
-    "**Expectations:** a shared traceId is very important, and there is no read isolation: users may read data from incomplete transactions or in-progress cancellations."
+    {
+     "h": "Business transactions span services",
+     "lead": "They need consistency. The traditional answer is **two-phase commit** (**prepare**, then **commit**), but:",
+     "items": [
+      "**Not all databases support ACID**",
+      "Platforms use **several databases**",
+      "**2PC needs synchronous communication**, while modern systems are **asynchronous**"
+     ],
+     "foot": "**Skipping transactions is also risky**, because partial executions are dangerous."
+    },
+    {
+     "h": "Saga: local commits + compensation",
+     "items": [
+      "**Commit local steps**; **compensate** completed steps after a later failure",
+      {
+       "t": "**Lecture example** →",
+       "sub": [
+        "CreateOrder and CreateMaidOrder precede MakePayment",
+        "if payment fails: cancel MaidOrder, then Order"
+       ]
+      },
+      "**Compensation is a new business action**, not an isolated database rollback",
+      "Compensation **may itself require retry**"
+     ]
+    },
+    {
+     "h": "Saga coordination: two styles",
+     "items": [
+      "**Orchestrator** → stores progress and directs forward and compensating steps; its **availability and contention** need attention",
+      "**Choreography** → distributes reactions among services; avoids one central controller but makes the **complete flow harder to debug**"
+     ],
+     "foot": "Both need **reliable, duplicate-safe processing**."
+    },
+    {
+     "h": "Saga expectations",
+     "items": [
+      "A **shared traceId** is very important",
+      "**No read isolation** → users may read data from incomplete transactions or in-progress cancellations"
+     ]
+    }
    ],
    "terms": [
     {
@@ -462,11 +777,71 @@
    ],
    "summary": "What to measure (infra, application, availability) and the key formulas: uptime, nines, yield and harvest.",
    "notes": [
-    "**Metrics serve business goals:** lower cost, faster APIs, better client retention and service, meeting SLAs. 'If you can't measure it, you can't improve it.'",
-    "**Infrastructure metrics:** CPU and memory, request volume (IOPS), availability, peak usage time, average response time with outliers and percentiles, success/failure rate, payload sizes, garbage collection time. **Application metrics:** task success (did the transaction finish or the customer drop out), clarity (ease of learning and use; heatmaps), happiness (returning visitors, visit frequency).",
-    "**Time-based availability:** the lecture uses (MTBF − MTTR) / MTBF, treating MTBF as the complete failure-to-failure interval including recovery. For 1000 h between failures and 1 h recovery: 999/1000 = 99.9%. If a problem instead defines MTBF as operating time only, use MTBF / (MTBF + MTTR). State the convention; the formulas are not interchangeable definitions. Three nines is about 9 h downtime/year, four about 50 min and five about 5 min.",
-    "**Yield and harvest:** yield = successful requests / total requests, measuring service actually received. Harvest = available data / total data, measuring completeness. A service can stay up yet return errors or incomplete data, so these measures answer different questions.",
-    "**Tech:** Prometheus time-series DB with Grafana, the TICK stack (Telegraf, InfluxDB, Chronograf, Kapacitor), Splunk metrics, metrics-as-a-service."
+    {
+     "h": "Metrics serve business goals",
+     "items": [
+      "**Lower cost**",
+      "**Faster APIs**",
+      "**Better client retention** and service",
+      "**Meeting SLAs**"
+     ],
+     "foot": "'If you can't measure it, you can't improve it.'"
+    },
+    {
+     "h": "Infrastructure metrics",
+     "items": [
+      "**CPU and memory**",
+      "**Request volume** (IOPS)",
+      "**Availability**",
+      "**Peak usage time**",
+      "**Average response time**, with outliers and percentiles",
+      "**Success/failure rate**",
+      "**Payload sizes**",
+      "**Garbage collection time**"
+     ]
+    },
+    {
+     "h": "Application metrics",
+     "items": [
+      "**Task success** → did the transaction finish or the customer drop out?",
+      "**Clarity** → ease of learning and use (heatmaps)",
+      "**Happiness** → returning visitors, visit frequency"
+     ]
+    },
+    {
+     "h": "Time-based availability",
+     "items": [
+      "**Lecture uses** → (MTBF − MTTR) / MTBF, treating **MTBF** as the complete failure-to-failure interval **including recovery**",
+      "**Worked example** → 1000 h between failures, 1 h recovery: 999/1000 = **99.9%**",
+      "If a problem defines **MTBF as operating time only** → use **MTBF / (MTBF + MTTR)**",
+      "**State the convention**; the formulas are not interchangeable definitions",
+      {
+       "t": "**Nines** → downtime/year",
+       "sub": [
+        "three nines ≈ 9 h",
+        "four nines ≈ 50 min",
+        "five nines ≈ 5 min"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Yield vs harvest",
+     "items": [
+      "**Yield** = successful requests / total requests → measures **service actually received**",
+      "**Harvest** = available data / total data → measures **completeness**"
+     ],
+     "foot": "A service can **stay up yet return errors or incomplete data**, so these measures answer different questions."
+    },
+    {
+     "h": "Metrics tech",
+     "items": [
+      "**Prometheus** time-series DB with **Grafana**",
+      "**TICK stack** → Telegraf, InfluxDB, Chronograf, Kapacitor",
+      "**Splunk metrics**",
+      "**Metrics-as-a-service**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -553,9 +928,51 @@
    ],
    "summary": "Centralised log aggregation patterns and how all the tools map to platform goals.",
    "notes": [
-    "**Why log:** engineers spend much of their time debugging, analysing and tuning. Typically log authentication/authorisation successes and failures, changes to data entities, access to external resources (database, files, queues), configuration, application errors and feature usage.",
-    "**Centralise logs.** With many components, one place to query and analyse beats logging into every machine or container. Three shipping patterns: (1) the app ships formatted logs directly to the central server; (2) the app ships raw logs to a transformation and shipping server that parses them into the central server's format; (3) the app writes to a local file, a lightweight shipping agent sends raw logs to a remote parser, and the heavy transformer stores into the central server. Tech: ELK (Elasticsearch, Logstash, Kibana) with FluentD or Filebeat, Splunk, AWS centralised logging, Stackdriver, Papertrail, Loggly.",
-    "**Summary mapping:** seamless interaction = deployment strategies (rollout, canary); scaling = auto-scaling; limiting = circuit breaker, rate limiting, retries; experimentation/traffic management = canary; data-driven intelligence = logs and metrics (observability); faster issue resolution = logging, monitoring and distributed tracing. Security (mutual TLS, reducing attack surface) is mentioned but not covered."
+    {
+     "h": "Why log",
+     "lead": "Engineers spend much of their time **debugging, analysing and tuning**. Typically log:",
+     "items": [
+      "**Authentication/authorisation** successes and failures",
+      "**Changes to data entities**",
+      "**Access to external resources** (database, files, queues)",
+      "**Configuration**",
+      "**Application errors**",
+      "**Feature usage**"
+     ]
+    },
+    {
+     "h": "Centralise logs",
+     "lead": "With many components, **one place to query and analyse** beats logging into every machine or container. Three shipping patterns:",
+     "ordered": true,
+     "items": [
+      "**Direct** → app ships formatted logs directly to the central server",
+      "**Via transformer** → app ships raw logs to a transformation and shipping server that parses them into the central server's format",
+      "**Agent + parser** → app writes to a local file; a **lightweight shipping agent** sends raw logs to a remote parser; the **heavy transformer** stores into the central server"
+     ]
+    },
+    {
+     "h": "Logging tech",
+     "items": [
+      "**ELK** (Elasticsearch, Logstash, Kibana) with **FluentD** or **Filebeat**",
+      "**Splunk**",
+      "**AWS centralised logging**",
+      "**Stackdriver**",
+      "**Papertrail**",
+      "**Loggly**"
+     ]
+    },
+    {
+     "h": "Summary mapping: business intent → tool",
+     "items": [
+      "**Seamless interaction** → deployment strategies (rollout, canary)",
+      "**Scaling** → auto-scaling",
+      "**Limiting** → circuit breaker, rate limiting, retries",
+      "**Experimentation/traffic management** → canary",
+      "**Data-driven intelligence** → logs and metrics (observability)",
+      "**Faster issue resolution** → logging, monitoring and distributed tracing"
+     ],
+     "foot": "**Security** (mutual TLS, reducing attack surface) is mentioned but not covered."
+    }
    ],
    "terms": [
     {

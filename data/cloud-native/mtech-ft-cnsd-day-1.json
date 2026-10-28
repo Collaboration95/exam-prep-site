@@ -24,10 +24,58 @@
    ],
    "summary": "Starts from familiar apps, then frames what an architecture is and how requirements and technical debt flow into the backlog.",
    "notes": [
-    "**Different problem types lead to different architectures and technology stacks.** The instructor grouped familiar systems (messaging, e-commerce platforms, streaming, agent-driven) to show that the domain shapes language and design choices.",
-    "**Architecture answers three questions:** what (reference architecture: layers, components and their interactions), how (decisions driven by constraints, requirements and objectives) and where (viewpoints: data, infrastructure, application, platform, security, enterprise). A solution architecture combines architecture, design and products into a blueprint.",
-    "**Architecture has two audiences:** humans (drawn architecture views, H2H) and machines (IaC, YAML, properties files, H2M/M2M). In cloud native work the provisioning code is part of the architecture.",
-    "**Functional and non-functional requirements belong in the backlog.** Shortcuts and deferred design or quality work can accumulate technical debt. The instructor calls it a hidden “secret list”; make its cost and remediation visible rather than treating hidden debt as good practice."
+    {
+     "h": "Problem types shape architecture",
+     "lead": "Different problem types lead to different architectures and technology stacks.",
+     "items": [
+      {
+       "t": "**Familiar systems grouped by the instructor**:",
+       "sub": [
+        "messaging",
+        "e-commerce platforms",
+        "streaming",
+        "agent-driven"
+       ]
+      },
+      "**Point** → the **domain shapes language and design choices**"
+     ]
+    },
+    {
+     "h": "Architecture answers three questions",
+     "items": [
+      "**What** → **reference architecture**: **layers, components** and their **interactions**",
+      "**How** → **decisions** driven by **constraints, requirements and objectives**",
+      {
+       "t": "**Where** → **viewpoints**:",
+       "sub": [
+        "data",
+        "infrastructure",
+        "application",
+        "platform",
+        "security",
+        "enterprise"
+       ]
+      }
+     ],
+     "foot": "A **solution architecture** combines **architecture, design and products** into a **blueprint**."
+    },
+    {
+     "h": "Two audiences for architecture",
+     "items": [
+      "**Humans** → drawn **architecture views** (**H2H**)",
+      "**Machines** → **IaC, YAML, properties files** (**H2M/M2M**)"
+     ],
+     "foot": "In **cloud native** work the **provisioning code is part of the architecture**."
+    },
+    {
+     "h": "Requirements, backlog, technical debt",
+     "items": [
+      "**Functional and non-functional requirements** → belong in the **backlog**",
+      "**Shortcuts** and **deferred design or quality work** → can accumulate **technical debt**",
+      "**Instructor's term** → a hidden **“secret list”**",
+      "**Make its cost and remediation visible** rather than treating **hidden debt** as **good practice**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -71,10 +119,67 @@
    ],
    "summary": "The same web application in three stages: on-premise, a like-for-like migration to AWS, and a cloud-native Kubernetes design.",
    "notes": [
-    "**The same web application is drawn at three maturity stages**, which is a ready-made storyline for an exam answer on migration.",
-    "**On-premise:** DNS, firewall, routers and API gateway in front of load-balanced web and app server tiers, with a database pair that is active-active (both serve) or active-passive (standby takes over) for availability.",
-    "**One-to-one cloud mapping preserves the broad tiers.** The sketch replaces edge delivery, access control, gateways, load balancers, compute and databases with AWS services. Match roles carefully: CloudFront is a CDN, Route 53 supplies DNS, and IAM controls access. Managed compute can already provide scaling or replacement; business-service decomposition is a separate change.",
-    "**Cloud native on Kubernetes:** an API gateway (firewall, throttling, IAM, monitoring) fronts public endpoints and a service registry; a Service load-balances across a Deployment's pods on nodes, images come from a container registry, and a service mesh (Istio) carries service-to-service calls (e.g. gRPC). A backend deployment set might be one load balancer, five Tomcat copies and two MongoDB copies."
+    {
+     "h": "Three maturity stages, one web app",
+     "ordered": true,
+     "lead": "The same web application drawn at three maturity stages: a ready-made storyline for an exam answer on migration.",
+     "items": [
+      "**On-premise**",
+      "**One-to-one cloud mapping**",
+      "**Cloud native on Kubernetes**"
+     ]
+    },
+    {
+     "h": "On-premise",
+     "items": [
+      "**In front** → **DNS**, **firewall**, **routers**, **API gateway**",
+      "**Tiers** → **load-balanced web** and **app server** tiers",
+      {
+       "t": "**Database pair** for **availability**:",
+       "sub": [
+        "**active-active** → **both serve**",
+        "**active-passive** → **standby takes over**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "One-to-one cloud mapping",
+     "lead": "Preserves the broad tiers.",
+     "items": [
+      {
+       "t": "**Replaced with AWS services**:",
+       "sub": [
+        "edge delivery",
+        "access control",
+        "gateways",
+        "load balancers",
+        "compute",
+        "databases"
+       ]
+      },
+      {
+       "t": "**Match roles carefully**:",
+       "sub": [
+        "**CloudFront** → **CDN**",
+        "**Route 53** → **DNS**",
+        "**IAM** → **controls access**"
+       ]
+      },
+      "**Managed compute** → can already provide **scaling or replacement**",
+      "**Business-service decomposition** → a **separate change**"
+     ]
+    },
+    {
+     "h": "Cloud native on Kubernetes",
+     "items": [
+      "**API gateway** (**firewall, throttling, IAM, monitoring**) → fronts **public endpoints** and a **service registry**",
+      "**Service** → **load-balances** across a **Deployment's pods** on **nodes**",
+      "**Images** → from a **container registry**",
+      "**Service mesh** (**Istio**) → carries **service-to-service calls** (e.g. **gRPC**)",
+      "**Backend deployment set** (example) → **one load balancer**, **five Tomcat copies**, **two MongoDB copies**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -147,9 +252,35 @@
    ],
    "summary": "The three ways to wrap a solution and the history that led to Kubernetes.",
    "notes": [
-    "**Packaging does not force an operating schedule.** VMs package a guest OS; containers package application dependencies while sharing a kernel; functions provide on-demand execution with a managed runtime. VMs and containers can also run scheduled or short-lived jobs.",
-    "**Choose from execution needs.** Always-on services may favour containers or VMs; sporadic event-driven work often favours functions. Check latency, startup, state, execution limits and cost rather than assuming a packaging choice decides them.",
-    "**Why Kubernetes emerged:** the cloud providers (AWS, Azure, GCP) made VMs (IaaS) and SDK platforms (PaaS) mainstream, Docker made single containers easy, and Google's Borg/Omega experience led to Kubernetes to schedule, scale and heal many containers; by 2018 it was the standard orchestrator with pluggable runtime, storage and networking interfaces."
+    {
+     "h": "Packaging vs operating schedule",
+     "lead": "Packaging does not force an operating schedule.",
+     "items": [
+      "**VMs** → package a **guest OS**",
+      "**Containers** → package **application dependencies** while **sharing a kernel**",
+      "**Functions** → **on-demand execution** with a **managed runtime**",
+      "**VMs and containers** → can also run **scheduled or short-lived jobs**"
+     ]
+    },
+    {
+     "h": "Choose from execution needs",
+     "items": [
+      "**Always-on services** → may favour **containers or VMs**",
+      "**Sporadic event-driven work** → often favours **functions**",
+      "**Check** → **latency, startup, state, execution limits, cost**",
+      "**Don't assume** a **packaging choice** decides them"
+     ]
+    },
+    {
+     "h": "Why Kubernetes emerged",
+     "ordered": true,
+     "items": [
+      "**Cloud providers** (**AWS, Azure, GCP**) → made **VMs (IaaS)** and **SDK platforms (PaaS)** mainstream",
+      "**Docker** → made **single containers** easy",
+      "**Google's Borg/Omega** experience → led to **Kubernetes** to **schedule, scale and heal many containers**",
+      "**By 2018** → the **standard orchestrator** with **pluggable runtime, storage and networking interfaces**"
+     ]
+    }
    ],
    "terms": [
     {

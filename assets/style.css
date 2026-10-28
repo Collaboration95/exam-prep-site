@@ -36,6 +36,15 @@ section{border-top:1px solid var(--line);margin-top:2.4em}
 section>h2{margin-top:1.1em}
 .summary{color:var(--muted);font-size:1.02rem}
 ul.notes{padding-left:1.2em}ul.notes li{margin:.55em 0}
+/* Notes: headed lists inside one sketch frame (same look as the diagrams in sketch.css). */
+.notesheet{margin:22px 0;padding:18px;columns:2 300px;column-gap:16px;color:var(--ink);
+  background:var(--canvas) radial-gradient(var(--dot) 1.2px,transparent 1.3px) 0 0/18px 18px;border:2px solid var(--ink);border-radius:var(--wobble-frame)}
+.note{break-inside:avoid;margin:0 0 16px;padding:12px 16px 10px;background:var(--paper);border:2px solid var(--ink);border-radius:12px;font-size:.95rem;line-height:1.5}
+.note:last-child{margin-bottom:0}
+.note h4{margin:0 0 6px;font:700 1.05rem/1.3 var(--sketch-font)}
+.note p{margin:.3em 0}.note .lead{color:var(--ink-soft)}
+.note ul,.note ol{margin:.3em 0;padding-left:1.15em}.note ol{padding-left:1.4em}.note li{margin:.22em 0}.note li ul{margin:.1em 0}.note ol>li::marker{font-weight:700}
+.note .foot{margin-top:.55em;padding-top:.45em;border-top:1.5px dashed #1d1d1d55;font-weight:500}
 p.read{margin:1em 0}p.read a{font-weight:600}
 dl.terms{display:grid;grid-template-columns:max-content 1fr;gap:6px 16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:16px 0 0}
 dl.terms dt{font-weight:600}dl.terms dd{margin:0}

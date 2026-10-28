@@ -22,10 +22,48 @@
    ],
    "summary": "What IaC is, its benefits and tools, the components and best practices of an IaC reference architecture, and the three example architectures.",
    "notes": [
-    "**IaC defines repeatable environments in versioned files.** Tools automate setup, reduce manual differences and record changes. Reuse modules while deliberately parameterising differences such as production size, access and region.",
-    "**Reference architecture has three components:** infrastructure provisioning (create VMs, containers, databases, networks), configuration management (software configured as intended, e.g. Ansible, Chef) and orchestration (workflows, deployments, scaling, e.g. Kubernetes, Terraform).",
-    "**Three best practices:** modular design (reusable networking/compute modules), environment segmentation (isolated Dev, Test, Prod) and state management (track current infrastructure for smoother updates).",
-    "**Tool choice follows scope:** native tools (CloudFormation/SAM, Bicep, the GCP tooling illustrated in the lecture) for one cloud; Terraform for cross-cloud; Helm, Kustomize, Argo CD for Kubernetes. The examples are a serverless AWS app, microservices on Azure AKS, an event-driven GCP pipeline and multiple Kubernetes clusters across clouds."
+    {
+     "h": "IaC: repeatable environments in versioned files",
+     "items": [
+      "**Tools automate setup**",
+      "**Reduce manual differences**",
+      "**Record changes**",
+      "**Reuse modules** while **deliberately parameterising differences** (production **size**, **access**, **region**)"
+     ]
+    },
+    {
+     "h": "Reference architecture: three components",
+     "items": [
+      "**Infrastructure provisioning** → create **VMs, containers, databases, networks**",
+      "**Configuration management** → software **configured as intended** (e.g. **Ansible**, **Chef**)",
+      "**Orchestration** → **workflows, deployments, scaling** (e.g. **Kubernetes**, **Terraform**)"
+     ]
+    },
+    {
+     "h": "Three best practices",
+     "items": [
+      "**Modular design** → reusable **networking/compute modules**",
+      "**Environment segmentation** → isolated **Dev, Test, Prod**",
+      "**State management** → **track current infrastructure** for **smoother updates**"
+     ]
+    },
+    {
+     "h": "Tool choice follows scope",
+     "items": [
+      "**One cloud** → **native tools**: **CloudFormation/SAM**, **Bicep**, the **GCP tooling** illustrated in the lecture",
+      "**Cross-cloud** → **Terraform**",
+      "**Kubernetes** → **Helm**, **Kustomize**, **Argo CD**"
+     ]
+    },
+    {
+     "h": "Lecture examples",
+     "items": [
+      "**Serverless AWS app**",
+      "**Microservices on Azure AKS**",
+      "**Event-driven GCP pipeline**",
+      "**Multiple Kubernetes clusters across clouds**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -109,10 +147,57 @@
    ],
    "summary": "Two worked examples using each provider's own IaC tooling: a serverless web app on AWS and a containerised microservices app on Azure.",
    "notes": [
-    "**Native templates describe the whole solution, not just compute.** The AWS serverless app (Lambda, API Gateway, DynamoDB, S3 for static content) is defined in a SAM template with permissions and CloudWatch logging; deploy with sam build and sam deploy.",
-    "**The Azure microservices app (AKS, Cosmos DB, VNet with Private Endpoints, Application Gateway with WAF) is defined in Bicep/ARM,** including Azure Monitor logging and role assignments so AKS reaches Cosmos DB securely; deploy with az deployment group create.",
-    "**Security and observability are part of the template,** so they are deployed identically every time rather than bolted on manually.",
-    "**SAM/CloudFormation vs Bicep/ARM:** same declarative idea on different clouds, both single-provider; choose native tools when everything lives on one provider and Terraform when it spans clouds."
+    {
+     "h": "Native templates describe the whole solution",
+     "lead": "Not just compute.",
+     "items": [
+      {
+       "t": "**AWS serverless app** → **SAM template**:",
+       "sub": [
+        "**Lambda**",
+        "**API Gateway**",
+        "**DynamoDB**",
+        "**S3** for static content",
+        "**permissions**",
+        "**CloudWatch** logging"
+       ]
+      },
+      "**Deploy** → **sam build** and **sam deploy**"
+     ]
+    },
+    {
+     "h": "Azure microservices app in Bicep/ARM",
+     "items": [
+      {
+       "t": "**Resources**:",
+       "sub": [
+        "**AKS**",
+        "**Cosmos DB**",
+        "**VNet** with **Private Endpoints**",
+        "**Application Gateway** with **WAF**"
+       ]
+      },
+      "**Azure Monitor** logging",
+      "**Role assignments** so AKS reaches Cosmos DB **securely**",
+      "**Deploy** → **az deployment group create**"
+     ]
+    },
+    {
+     "h": "Security and observability in the template",
+     "items": [
+      "**Deployed identically every time**",
+      "Rather than **bolted on manually**"
+     ]
+    },
+    {
+     "h": "SAM/CloudFormation vs Bicep/ARM",
+     "items": [
+      "**Same declarative idea** on **different clouds**",
+      "Both **single-provider**",
+      "**Everything on one provider** → choose **native tools**",
+      "**Spans clouds** → choose **Terraform**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -160,10 +245,59 @@
    ],
    "summary": "Terraform examples for a GCP event-driven pipeline and a multi-cloud Kubernetes deployment, then Kubernetes IaC principles: declarative config, version control and GitOps.",
    "notes": [
-    "**Terraform is the cross-cloud choice.** One language and workflow with a provider per platform; the GCP event-driven pipeline (Pub/Sub, Cloud Functions or Cloud Run, BigQuery, monitoring) is provisioned this way, with IAM set per component for least privilege.",
-    "**Multi-cloud Kubernetes means separate clusters with common provisioning.** Terraform modules create EKS, AKS and GKE. Connectivity, federated identity, workload placement, scaling and logging need additional configuration; GitOps can synchronise workload definitions. The example commands initialise providers and apply the declared resources.",
-    "**Kubernetes IaC is declarative:** YAML/JSON describe desired state rather than imperative steps, and live in Git for traceability, collaboration and rollback.",
-    "**GitOps separates desired state from live state.** Review a Git change, let automation synchronise the cluster, then check convergence. Reverting a commit changes desired state; successful recovery still depends on compatible application versions, schemas and persistent data."
+    {
+     "h": "Terraform is the cross-cloud choice",
+     "items": [
+      "**One language and workflow**, with a **provider per platform**",
+      {
+       "t": "**GCP event-driven pipeline** provisioned this way:",
+       "sub": [
+        "**Pub/Sub**",
+        "**Cloud Functions** or **Cloud Run**",
+        "**BigQuery**",
+        "monitoring"
+       ]
+      },
+      "**IAM set per component** → **least privilege**"
+     ]
+    },
+    {
+     "h": "Multi-cloud Kubernetes",
+     "lead": "Separate clusters with common provisioning.",
+     "items": [
+      "**Terraform modules** create **EKS**, **AKS** and **GKE**",
+      {
+       "t": "**Need additional configuration**:",
+       "sub": [
+        "connectivity",
+        "**federated identity**",
+        "workload placement",
+        "scaling",
+        "logging"
+       ]
+      },
+      "**GitOps** can **synchronise workload definitions**",
+      "Example commands → **initialise providers**, then **apply the declared resources**"
+     ]
+    },
+    {
+     "h": "Kubernetes IaC is declarative",
+     "items": [
+      "**YAML/JSON** describe **desired state**, not **imperative steps**",
+      "**Live in Git** → **traceability**, **collaboration**, **rollback**"
+     ]
+    },
+    {
+     "h": "GitOps: desired state vs live state",
+     "lead": "GitOps separates desired state from live state.",
+     "items": [
+      "**Review a Git change**",
+      "Let **automation synchronise the cluster**",
+      "**Check convergence**"
+     ],
+     "ordered": true,
+     "foot": "**Reverting a commit** changes **desired state**; successful **recovery** still depends on compatible **application versions**, **schemas** and **persistent data**."
+    }
    ],
    "terms": [
     {

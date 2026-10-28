@@ -24,10 +24,44 @@
    ],
    "summary": "Defines cloud native architecture and applications, and introduces the three Ps (Platforms, Properties, Practices) and the wider map of ideas around cloud native.",
    "notes": [
-    "**Cloud native is about exploiting the cloud's very different constraints, not just hosting on it.** The goal qualities are scalable, portable and maintainable; the capabilities are resilient, scalable, observable, highly automated and easily updated, and the practices are cooperation, integration and open governance between teams.",
-    "**Three Ps frame every answer.** Platforms (dynamic public, private or hybrid clouds and subscribed managed services), Properties (scalable, loosely coupled, resilient, manageable, observable, plus config and secrets) and Practices (automation, continuous delivery, DevOps: frequent, predictable change).",
-    "**Resilience, elasticity and portability need design.** Resilience is the ability to continue or recover after failure; autoscaling adjusts capacity to demand. Open standards reduce some integration and switching costs, but provider-specific APIs and data dependencies can still create lock-in.",
-    "Containers, orchestration (Kubernetes) and serverless are the typical topologies, and the CNCF is the foundation that curates this ecosystem. The goals they serve are speed, resilience, scale and cost."
+    {
+     "h": "What cloud native means",
+     "lead": "Exploiting the cloud's very different constraints, not just hosting on it.",
+     "items": [
+      "**Goal qualities**: scalable, portable, maintainable",
+      "**Capabilities**: resilient, scalable, observable, highly automated, easily updated",
+      "**Practices**: cooperation, integration and open governance between teams"
+     ]
+    },
+    {
+     "h": "The three Ps",
+     "lead": "Three Ps frame every answer.",
+     "items": [
+      "**Platforms** → dynamic public, private or hybrid clouds and subscribed managed services",
+      "**Properties** → scalable, loosely coupled, resilient, manageable, observable, plus config and secrets",
+      "**Practices** → automation, continuous delivery, DevOps (frequent, predictable change)"
+     ]
+    },
+    {
+     "h": "Resilience, elasticity, portability",
+     "lead": "These need design.",
+     "items": [
+      "**Resilience**: the ability to continue or recover after failure",
+      "**Elasticity / autoscaling**: adjusts capacity to demand",
+      "**Portability / open standards**: reduce some integration and switching costs",
+      "**Lock-in** still possible → provider-specific APIs and data dependencies"
+     ]
+    },
+    {
+     "h": "Typical topologies and CNCF",
+     "items": [
+      "**Containers**",
+      "**Orchestration** (Kubernetes)",
+      "**Serverless**",
+      "**CNCF**: the foundation that curates this ecosystem"
+     ],
+     "foot": "The goals they serve: **speed, resilience, scale and cost**."
+    }
    ],
    "terms": [
     {
@@ -71,11 +105,77 @@
    ],
    "summary": "Compares IaaS, CaaS, PaaS, FaaS and SaaS by who manages what, contrasts the cloud native stack with a traditional web app, and covers Google's five principles and the container workflow.",
    "notes": [
-    "**Service models change the operating boundary.** IaaS exposes VMs; CaaS manages container-platform components; PaaS manages the application runtime; FaaS runs functions; SaaS supplies a finished application. Exact duties vary by offering: managed Kubernetes does not necessarily remove worker-node operations, and data accountability remains with the customer.",
-    "**CaaS vs FaaS:** choose CaaS for long-running or portable containerised workloads where you want runtime control; choose FaaS for short event-driven work where the platform handles runtime and autoscaling.",
-    "**Cloud native splits the traditional layered monolith.** A traditional web app packs request processing, auth, caching, session management, validation, logging and workflows into one server; cloud native pushes these into independently deployable services over a stack of container-optimised OS, registry, service mesh, orchestration and build/release tooling, with security and observability across it.",
-    "**Google's 5 principles:** design for automation, be smart with state, favour managed services (spend effort on business code, not operations), practise defence in depth, always be architecting (design is continuous).",
-    "**The container workflow is the delivery mechanism:** write the app, package it as an image (app plus dependencies), push to a registry, a server pulls it and the container runtime starts it, giving repeatable packaging on compatible platforms; configuration and backing services still affect behaviour."
+    {
+     "h": "Service models: the operating boundary",
+     "lead": "Service models change the operating boundary.",
+     "items": [
+      "**IaaS** → exposes VMs",
+      "**CaaS** → manages container-platform components",
+      "**PaaS** → manages the application runtime",
+      "**FaaS** → runs functions",
+      "**SaaS** → supplies a finished application"
+     ],
+     "foot": "Exact duties vary by offering: **managed Kubernetes does not necessarily remove worker-node operations**, and **data accountability remains with the customer**."
+    },
+    {
+     "h": "CaaS vs FaaS",
+     "items": [
+      "**CaaS** → long-running or portable containerised workloads where you want runtime control",
+      "**FaaS** → short event-driven work where the platform handles runtime and autoscaling"
+     ]
+    },
+    {
+     "h": "Splitting the layered monolith",
+     "lead": "Cloud native splits the traditional layered monolith.",
+     "items": [
+      {
+       "t": "**Traditional web app** → one server packs:",
+       "sub": [
+        "request processing",
+        "auth",
+        "caching",
+        "session management",
+        "validation",
+        "logging",
+        "workflows"
+       ]
+      },
+      "**Cloud native** → pushes these into **independently deployable services**",
+      {
+       "t": "**Over a stack of**:",
+       "sub": [
+        "container-optimised OS",
+        "registry",
+        "service mesh",
+        "orchestration",
+        "build/release tooling"
+       ]
+      },
+      "**Security and observability** across the whole stack"
+     ]
+    },
+    {
+     "h": "Google's 5 principles",
+     "items": [
+      "**Design for automation**",
+      "**Be smart with state**",
+      "**Favour managed services**: spend effort on business code, not operations",
+      "**Practise defence in depth**",
+      "**Always be architecting**: design is continuous"
+     ]
+    },
+    {
+     "h": "Container workflow (delivery mechanism)",
+     "items": [
+      "**Write** the app",
+      "**Package** it as an image (app plus dependencies)",
+      "**Push** to a registry",
+      "**Pull**: a server pulls it",
+      "**Run**: the container runtime starts it"
+     ],
+     "ordered": true,
+     "foot": "Gives **repeatable packaging on compatible platforms**; configuration and backing services still affect behaviour."
+    }
    ],
    "terms": [
     {
@@ -200,10 +300,43 @@
    ],
    "summary": "Explains why cloud native apps should be stateless, how sticky sessions differ from shared state, Kubernetes options for state, and VM-centric vs app-centric deployment.",
    "notes": [
-    "**Stateless instances do not own durable user state.** Store domain data in databases; keep sessions in a shared store or use suitable client-held tokens. Disposable caches are possible, but correctness must not depend on one instance’s memory. Losing an instance should not lose committed user data.",
-    "**Pets vs cattle is an operating model, not a size or VM rule.** A pet needs individual repair; cattle are replaceable from automation. Sticky routing is fragile when session data exists only on that instance. VMs can also be disposable, and containers can still be operated as pets.",
-    "**Where state goes on Kubernetes:** StatefulSets (stable ordering and identity), Persistent Volumes and Claims (cluster storage and requests for it), Operators (custom resources encoding operational knowledge), or external state stores (databases or queues outside the cluster, e.g. managed cloud databases).",
-    "**In-cluster vs external state:** running state in-cluster gives control and portability but you operate it; an external managed store offloads backups, replication and patching and keeps the cluster stateless, which is usually the better default."
+    {
+     "h": "Stateless instances",
+     "lead": "Stateless instances do not own durable user state.",
+     "items": [
+      "**Domain data** → store in databases",
+      "**Sessions** → shared store, or suitable client-held tokens",
+      "**Disposable caches** possible, but correctness must not depend on one instance's memory"
+     ],
+     "foot": "Losing an instance should **not lose committed user data**."
+    },
+    {
+     "h": "Pets vs cattle",
+     "lead": "An operating model, not a size or VM rule.",
+     "items": [
+      "**Pet** → needs individual repair",
+      "**Cattle** → replaceable from automation",
+      "**Sticky routing** is fragile when session data exists only on that instance",
+      "**VMs can also be disposable**; **containers can still be operated as pets**"
+     ]
+    },
+    {
+     "h": "Where state goes on Kubernetes",
+     "items": [
+      "**StatefulSets** → stable ordering and identity",
+      "**Persistent Volumes and Claims** → cluster storage and requests for it",
+      "**Operators** → custom resources encoding operational knowledge",
+      "**External state stores** → databases or queues outside the cluster (e.g. managed cloud databases)"
+     ]
+    },
+    {
+     "h": "In-cluster vs external state",
+     "items": [
+      "**In-cluster** → control and portability, but you operate it",
+      "**External managed store** → offloads backups, replication and patching; keeps the cluster stateless"
+     ],
+     "foot": "External is **usually the better default**."
+    }
    ],
    "terms": [
     {
@@ -280,10 +413,52 @@
    ],
    "summary": "The twelve practices that make a service suitable for cloud deployment.",
    "notes": [
-    "**The 12 factors:** codebase (one tracked codebase, many deploys), dependencies (declared and packaged), config (in the environment), backing services (attached resources via URL), build/release/run (strictly separate stages), processes (stateless), port binding (self-contained service), concurrency (scale out via processes), disposability (fast start, graceful stop), dev/prod parity, logs (event streams), admin processes (one-off tasks).",
-    "**Separate build, release and run.** Build one immutable artifact; combine it with environment-specific configuration to form a release; then execute that release. Promoting the same tested artifact reduces drift. A rollback also needs compatible configuration and data/schema state.",
-    "**Stateless shared-nothing processes, scale-out concurrency and disposability work as a set:** processes that hold no local state can be duplicated freely, and fast startup with graceful shutdown lets the platform add, remove and replace them at will.",
-    "**Backing services are configured dependencies.** External addresses let deployments select compatible databases, queues or mail services without rebuilding. A different protocol or data model can still require code changes. Stream logs to central storage because local files vanish with disposable instances; keep dev and prod sufficiently alike to expose integration problems."
+    {
+     "h": "The 12 factors",
+     "items": [
+      "**Codebase**: one tracked codebase, many deploys",
+      "**Dependencies**: declared and packaged",
+      "**Config**: in the environment",
+      "**Backing services**: attached resources via URL",
+      "**Build/release/run**: strictly separate stages",
+      "**Processes**: stateless",
+      "**Port binding**: self-contained service",
+      "**Concurrency**: scale out via processes",
+      "**Disposability**: fast start, graceful stop",
+      "**Dev/prod parity**",
+      "**Logs**: event streams",
+      "**Admin processes**: one-off tasks"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Separate build, release, run",
+     "items": [
+      "**Build** → one immutable artifact",
+      "**Release** → artifact + environment-specific configuration",
+      "**Run** → execute that release"
+     ],
+     "ordered": true,
+     "foot": "Promoting the **same tested artifact reduces drift**. A **rollback** also needs compatible configuration and data/schema state."
+    },
+    {
+     "h": "Processes, concurrency, disposability",
+     "lead": "They work as a set.",
+     "items": [
+      "**Stateless shared-nothing processes** → hold no local state, so can be duplicated freely",
+      "**Scale-out concurrency** → add more processes",
+      "**Disposability** → fast startup and graceful shutdown let the platform add, remove and replace them at will"
+     ]
+    },
+    {
+     "h": "Backing services, logs, parity",
+     "items": [
+      "**Backing services are configured dependencies** → external addresses let deployments select compatible databases, queues or mail services **without rebuilding**",
+      "**Caveat**: a different protocol or data model can still require code changes",
+      "**Logs** → stream to central storage, because local files vanish with disposable instances",
+      "**Dev/prod parity** → keep dev and prod sufficiently alike to expose integration problems"
+     ]
+    }
    ],
    "terms": [
     {
@@ -357,11 +532,48 @@
    ],
    "summary": "Follows an app from code to a Kubernetes pod, covering the Kubernetes control plane, externalised configuration, the service mesh and application packages.",
    "notes": [
-    "**Code to cluster is a chain of runtimes:** built application (language runtime), container image (container runtime), pod (Kubernetes cluster). Orchestration, unlike running a container on one machine, spreads workloads across a cluster of nodes.",
-    "**Kubernetes is declarative.** You write a manifest (apiVersion, kind, metadata, spec) stating the desired state, and the control plane (scheduling, scaling, self-healing) continuously reconciles reality to it, running pods on worker nodes.",
-    "**Externalise configuration so one artifact serves several environments.** Environment variables or mounted external configuration avoid baking deploy-specific values into the image. Source secrets from protected storage with restricted access; environment variables alone do not make a secret secure.",
-    "**Service mesh vs API gateway:** both have a control plane and a data plane, but a gateway fronts external clients while the mesh manages service-to-service traffic (routing, resilience, observability, security) without changing service code.",
-    "An application package is language-specific (program, same-language libraries, config), whereas a container image bundles the runtime environment too."
+    {
+     "h": "Code to cluster: chain of runtimes",
+     "items": [
+      "**Built application** → language runtime",
+      "**Container image** → container runtime",
+      "**Pod** → Kubernetes cluster"
+     ],
+     "ordered": true,
+     "foot": "**Orchestration**, unlike running a container on one machine, spreads workloads across a **cluster of nodes**."
+    },
+    {
+     "h": "Kubernetes is declarative",
+     "items": [
+      "**Manifest** states the desired state: apiVersion, kind, metadata, spec",
+      "**Control plane** (scheduling, scaling, self-healing) **continuously reconciles** reality to it",
+      "**Worker nodes** run the pods"
+     ]
+    },
+    {
+     "h": "Externalise configuration",
+     "lead": "So one artifact serves several environments.",
+     "items": [
+      "**Environment variables** or **mounted external configuration** → avoid baking deploy-specific values into the image",
+      "**Secrets** → source from protected storage with restricted access",
+      "**Caveat**: environment variables alone do not make a secret secure"
+     ]
+    },
+    {
+     "h": "Service mesh vs API gateway",
+     "items": [
+      "**Both** have a control plane and a data plane",
+      "**API gateway** → fronts external clients",
+      "**Service mesh** → manages service-to-service traffic (routing, resilience, observability, security) **without changing service code**"
+     ]
+    },
+    {
+     "h": "Application package vs container image",
+     "items": [
+      "**Application package** → language-specific: program, same-language libraries, config",
+      "**Container image** → bundles the runtime environment too"
+     ]
+    }
    ],
    "terms": [
     {
@@ -446,11 +658,76 @@
    ],
    "summary": "A cloud native maturity model, a microservice retail example, traditional vs cloud native comparison, key attributes and design axes.",
    "notes": [
-    "**Cloud native maturity ladder:** Cloud Ready (no permanent disk access, self-contained, platform-managed ports and backing services), Cloud Friendly (12-factor, horizontally scalable, uses platform HA), Cloud Resilient (fault tolerant, cloud-agnostic runtime, bundled metrics, proactive failure testing), Cloud Native (microservices, API-first).",
-    "**The lecture contrasts typical operating approaches:** long release cycles and server-centric capacity planning versus frequent automated delivery and disposable, horizontally scaled services. These are tendencies, not rules: monoliths and VMs can also use DevOps and autoscaling.",
-    "**What a cloud native app is like:** predictable, OS-abstracted, right-sized, collaborative, continuously delivered, independent (small services), automatically scalable and quick to recover. Together this means microservices, loose coupling, resilience, agility, automation, self-healing and a DevOps culture.",
-    "**A typical microservice retail example** has clients calling an API gateway that fronts small services (search, cart, checkout, payments), some with their own databases, integrating with back-end systems.",
-    "**Design axes:** cloud native services (building blocks, managed, advanced managed), application-centric design (12-factor, microservices, other aspects) and automation (deploy/config, monitoring/compliance/optimisation, AI/ML prediction)."
+    {
+     "h": "Cloud native maturity ladder",
+     "items": [
+      "**Cloud Ready** → no permanent disk access, self-contained, platform-managed ports and backing services",
+      "**Cloud Friendly** → 12-factor, horizontally scalable, uses platform HA",
+      "**Cloud Resilient** → fault tolerant, cloud-agnostic runtime, bundled metrics, proactive failure testing",
+      "**Cloud Native** → microservices, API-first"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Typical operating approaches contrasted",
+     "items": [
+      "**Traditional** → long release cycles, server-centric capacity planning",
+      "**Cloud native** → frequent automated delivery, disposable horizontally scaled services"
+     ],
+     "foot": "These are **tendencies, not rules**: monoliths and VMs can also use DevOps and autoscaling."
+    },
+    {
+     "h": "What a cloud native app is like",
+     "items": [
+      "**Predictable**",
+      "**OS-abstracted**",
+      "**Right-sized**",
+      "**Collaborative**",
+      "**Continuously delivered**",
+      "**Independent** (small services)",
+      "**Automatically scalable**",
+      "**Quick to recover**"
+     ],
+     "foot": "Together: **microservices, loose coupling, resilience, agility, automation, self-healing and a DevOps culture**."
+    },
+    {
+     "h": "Microservice retail example",
+     "items": [
+      "**Clients** call an **API gateway**",
+      "**Gateway** fronts small services: search, cart, checkout, payments",
+      "**Some services own their own databases**",
+      "**Integrates** with back-end systems"
+     ]
+    },
+    {
+     "h": "Design axes",
+     "items": [
+      {
+       "t": "**Cloud native services**",
+       "sub": [
+        "building blocks",
+        "managed",
+        "advanced managed"
+       ]
+      },
+      {
+       "t": "**Application-centric design**",
+       "sub": [
+        "12-factor",
+        "microservices",
+        "other aspects"
+       ]
+      },
+      {
+       "t": "**Automation**",
+       "sub": [
+        "deploy/config",
+        "monitoring/compliance/optimisation",
+        "AI/ML prediction"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -523,10 +800,48 @@
    ],
    "summary": "Levels of design abstraction, the characteristics to weigh when choosing a cloud, and guidelines for separation of concerns.",
    "notes": [
-    "**Choosing a cloud is a multi-criteria decision.** Start with the goal (productivity, ease of migration, or control), then weigh integration, data storage and location, ecosystem and portfolio, pricing model (fixed vs use-based), QoS (availability, DR, SLA), security and privacy, self-service, elasticity and vendor viability.",
-    "**Legacy migration vs new build** weights these differently: migration favours backward compatibility, internal-network integration and data location; a new product favours productivity, elasticity, use-based pricing and a rich managed-service portfolio.",
-    "**Separation of concerns keeps business rules portable:** independent of frameworks, UI, database and external agencies, and testable without them. Code should be organised around the business problem rather than generic folders.",
-    "Design thinking spans levels of abstraction, from technologies and mechanisms through idioms and patterns up to architecture."
+    {
+     "h": "Choosing a cloud: multi-criteria decision",
+     "lead": "Start with the goal (productivity, ease of migration, or control), then weigh:",
+     "items": [
+      "**Integration**",
+      "**Data storage and location**",
+      "**Ecosystem and portfolio**",
+      "**Pricing model**: fixed vs use-based",
+      "**QoS**: availability, DR, SLA",
+      "**Security and privacy**",
+      "**Self-service**",
+      "**Elasticity**",
+      "**Vendor viability**"
+     ]
+    },
+    {
+     "h": "Legacy migration vs new build",
+     "lead": "Weights the criteria differently.",
+     "items": [
+      "**Migration** favours → backward compatibility, internal-network integration, data location",
+      "**New product** favours → productivity, elasticity, use-based pricing, rich managed-service portfolio"
+     ]
+    },
+    {
+     "h": "Separation of concerns",
+     "lead": "Keeps business rules portable.",
+     "items": [
+      "**Independent of** frameworks, UI, database and external agencies",
+      "**Testable without them**",
+      "**Organise code around the business problem**, not generic folders"
+     ]
+    },
+    {
+     "h": "Levels of design abstraction",
+     "lead": "Design thinking spans levels of abstraction:",
+     "items": [
+      "**Technologies and mechanisms**",
+      "**Idioms and patterns**",
+      "**Architecture**"
+     ],
+     "ordered": true
+    }
    ],
    "terms": [
     {
@@ -558,11 +873,63 @@
    ],
    "summary": "Checklists of questions an architect should answer on scalability, availability, security, manageability and feasibility.",
    "notes": [
-    "**Scalability:** ask which layers must scale, how fast, and whether you can scale down off-hours; check persistence limits and partition data. Prefer many small instances over few large ones, and level load with queues (producer and competing consumers), async operations and load balancers.",
-    "**Availability and DR:** identify dependencies required for each request. For independent services in series, multiply availability probabilities as an estimate; common failures and redundancy change the result. Design failover, replication, bounded retries and circuit breakers. Backups protect against corruption as well as outages; test restoration and idempotent replay.",
-    "**Security:** where data legally resides (including failover and metrics copies), federated identity, secured hybrid links, admin-portal and database access control, credential rotation, multitenancy effects and patching.",
-    "**Manageability:** monitor with usable, compliant storage of metrics and logs, distinguish auditing from logging, and adjust levels at runtime. Deployment should be automated, verifiable, reversible and non-disruptive, with a deliberate number of environments.",
-    "**Feasibility:** can any provider meet the SLAs, do you have the skills, budget and time, what are the operating costs, and what can be reduced (scope, SLAs, resilience) as an accepted trade-off."
+    {
+     "h": "Scalability",
+     "items": [
+      "**Ask**: which layers must scale, how fast, can you scale down off-hours?",
+      "**Persistence**: check limits and partition data",
+      "**Many small instances** over few large ones",
+      {
+       "t": "**Level load** with:",
+       "sub": [
+        "queues (producer and competing consumers)",
+        "async operations",
+        "load balancers"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Availability and DR",
+     "items": [
+      "**Dependencies**: identify those required for each request",
+      "**Series estimate**: for independent services in series, multiply availability probabilities; common failures and redundancy change the result",
+      "**Design**: failover, replication, bounded retries, circuit breakers",
+      "**Backups** protect against corruption as well as outages",
+      "**Test** restoration and idempotent replay"
+     ]
+    },
+    {
+     "h": "Security",
+     "items": [
+      "**Data residency**: where data legally resides, including failover and metrics copies",
+      "**Federated identity**",
+      "**Secured hybrid links**",
+      "**Access control** for admin portal and database",
+      "**Credential rotation**",
+      "**Multitenancy effects**",
+      "**Patching**"
+     ]
+    },
+    {
+     "h": "Manageability",
+     "items": [
+      "**Monitor** with usable, compliant storage of metrics and logs",
+      "**Auditing vs logging**: distinguish them",
+      "**Adjust levels at runtime**",
+      "**Deployment**: automated, verifiable, reversible, non-disruptive",
+      "**Environments**: a deliberate number of them"
+     ]
+    },
+    {
+     "h": "Feasibility",
+     "items": [
+      "**SLAs**: can any provider meet them?",
+      "**Skills, budget and time**: do you have them?",
+      "**Operating costs**: what are they?",
+      "**Trade-offs**: what can be reduced (scope, SLAs, resilience) as an accepted trade-off"
+     ]
+    }
    ],
    "terms": [
     {

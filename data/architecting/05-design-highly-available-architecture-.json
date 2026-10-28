@@ -24,10 +24,41 @@
    ],
    "summary": "Three related but different properties, the AST/DT availability formula, and the MTTR/MTTF/MTBF timing metrics.",
    "notes": [
-    "**Three distinct ideas.** Availability is readiness for use (the probability the system works as required); reliability is the probability of performing its function without failure for a specified period under stated conditions; fault tolerance is the ability to keep normal service going even though a fault has occurred.",
-    "**Measure: Availability = ((AST - DT) / AST) x 100%**, where AST is the Agreed Service Time in hours for a timeframe (e.g. a month) and DT is the downtime in that timeframe. Example: a system agreed to run all of a 720-hour month and down for 0.72 hours is (720 - 0.72)/720 = 99.9% available. Key message: availability depends on failures and downtime.",
-    "**Use 8760 hours for a 365-day year.** The lecture’s 61,320-hour figure is an arithmetic error. Convert consistently: 365 x 24 = 8760 hours = 525,600 minutes.",
-    "**Timing terms need a stated convention.** MTTF is average uptime before failure; MTTR is average recovery duration. The lecture’s timeline calls the entire failure-to-failure cycle MTBF, but its later formula uses MTBF as uptime. To avoid mixing conventions, write A = uptime / (uptime + recovery), then map the given values."
+    {
+     "h": "Three distinct ideas",
+     "items": [
+      "**Availability**: readiness for use (the probability the system works as required)",
+      "**Reliability**: probability of performing its function **without failure** for a specified period under stated conditions",
+      "**Fault tolerance**: ability to keep **normal service** going even though a fault has occurred"
+     ]
+    },
+    {
+     "h": "Measuring availability",
+     "lead": "**Availability = ((AST - DT) / AST) x 100%**",
+     "items": [
+      "**AST** = Agreed Service Time in hours for a timeframe (e.g. a month)",
+      "**DT** = downtime in that timeframe",
+      "**Example**: agreed to run all of a 720-hour month, down for 0.72 hours → (720 - 0.72)/720 = **99.9%** available"
+     ],
+     "foot": "**Key message**: availability depends on failures and downtime."
+    },
+    {
+     "h": "Hours in a year",
+     "items": [
+      "**365-day year** → 365 x 24 = **8760 hours** = **525,600 minutes**",
+      "The lecture's **61,320-hour** figure is an arithmetic error",
+      "**Convert consistently**"
+     ]
+    },
+    {
+     "h": "Timing terms need a convention",
+     "items": [
+      "**MTTF** → average uptime before failure",
+      "**MTTR** → average recovery duration",
+      "**MTBF** → the lecture's timeline calls the entire failure-to-failure cycle MTBF, but its later formula uses MTBF as uptime",
+      "To avoid mixing conventions, write **A = uptime / (uptime + recovery)**, then map the given values"
+     ]
+    }
    ],
    "terms": [
     {
@@ -104,13 +135,92 @@
    ],
    "summary": "The exam-critical arithmetic: MTBF/MTTR formula, downtime per year, and combining components in series and parallel.",
    "notes": [
-    "**Calculate from uptime and recovery.** A = MTTF / (MTTF + MTTR). The lecture writes A = MTBF / (MTBF + MTTR), treating MTBF as average uptime: 999 hours up plus 1 hour recovery gives 99.9%. If MTBF instead means the full cycle, use A = (MTBF - MTTR) / MTBF. Do not add recovery twice.",
-    "**Downtime per year = (1 - A) x 525,600 minutes** for a 365-day year. Results: 90% gives 36.5 days; 99% gives 3.65 days; 99.9% gives 8.76 hours; 99.99% gives 52.56 minutes; 99.999% gives 5.256 minutes; 99.9999% gives 31.536 seconds. These correct rounding in the lecture table.",
-    "**Series: A = A1 x A2 x ...**, assuming independent component states and that every component is required. Two 99% components give 98.01%. The result is no greater than the weakest component; equality is possible if the other components are perfect.",
-    "**Parallel: A = 1 - product(1 - Ai)** for independent replicas when any one can meet the service requirement. Two 99% replicas give 99.99%. Shared power, storage, software faults, insufficient survivor capacity and failover delays can invalidate this ideal result.",
-    "**The lecture’s multi-tier exercise:** collapse each 99% redundant pair to 99.99%. Taking PC, internet, shared filesystem and LDAP as required 99% components, plus three 98% firewalls, one 98% network and four redundant pairs gives 0.99^4 x 0.98^4 x 0.9999^4 = **88.57%**. This independent-component model misses 95%; improve required unreplicated links and check whether every dependency is actually on the service path.",
-    "**A 15-minute outage in a 30-day, 24-hour service month:** A = (43,200 - 15) / 43,200 = 99.9653%. This meets 99.9%, but not 99.99%; a fraction such as “3.5 nines” is not a substitute for the actual result.",
-    "**Design beyond the calculation:** loosely couple critical services from non-critical ones. Fault tolerance can preserve normal service; graceful degradation keeps an agreed reduced service. Decide which outcomes count as available for the requirement being measured."
+    {
+     "h": "Availability from uptime and recovery",
+     "items": [
+      "**A = MTTF / (MTTF + MTTR)**",
+      "Lecture writes **A = MTBF / (MTBF + MTTR)**, treating MTBF as average uptime",
+      "e.g. **999 hours up + 1 hour recovery** → 99.9%",
+      "If MTBF means the **full cycle** → **A = (MTBF - MTTR) / MTBF**",
+      "**Do not add recovery twice**"
+     ]
+    },
+    {
+     "h": "Downtime per year",
+     "lead": "**Downtime = (1 - A) x 525,600 minutes** (365-day year)",
+     "items": [
+      "**90%** → 36.5 days",
+      "**99%** → 3.65 days",
+      "**99.9%** → 8.76 hours",
+      "**99.99%** → 52.56 minutes",
+      "**99.999%** → 5.256 minutes",
+      "**99.9999%** → 31.536 seconds"
+     ],
+     "foot": "These correct rounding in the lecture table."
+    },
+    {
+     "h": "Series availability",
+     "items": [
+      "**A = A1 x A2 x ...**",
+      "**Assumes** independent component states and that every component is required",
+      "e.g. two 99% components → **98.01%**",
+      "Result is **no greater than the weakest component**; equality is possible if the other components are perfect"
+     ]
+    },
+    {
+     "h": "Parallel availability",
+     "items": [
+      "**A = 1 - product(1 - Ai)**",
+      "For **independent replicas** when any one can meet the service requirement",
+      "e.g. two 99% replicas → **99.99%**",
+      {
+       "t": "**Can invalidate this ideal result**:",
+       "sub": [
+        "shared power",
+        "shared storage",
+        "software faults",
+        "insufficient survivor capacity",
+        "failover delays"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Multi-tier exercise",
+     "ordered": true,
+     "items": [
+      "**Collapse each 99% redundant pair** → 99.99%",
+      {
+       "t": "**Count the components**:",
+       "sub": [
+        "PC, internet, shared filesystem and LDAP as required 99% components",
+        "three 98% firewalls + one 98% network",
+        "four redundant pairs"
+       ]
+      },
+      "**0.99^4 x 0.98^4 x 0.9999^4 = 88.57%**",
+      "This independent-component model **misses 95%**",
+      "**Improve** required unreplicated links; check whether every dependency is actually on the **service path**"
+     ]
+    },
+    {
+     "h": "15-minute outage example",
+     "items": [
+      "**30-day, 24-hour service month** → 43,200 minutes",
+      "**A = (43,200 - 15) / 43,200 = 99.9653%**",
+      "**Meets 99.9%**, but not 99.99%",
+      "A fraction such as **\"3.5 nines\"** is not a substitute for the actual result"
+     ]
+    },
+    {
+     "h": "Design beyond the calculation",
+     "items": [
+      "**Loosely couple** critical services from non-critical ones",
+      "**Fault tolerance** → can preserve normal service",
+      "**Graceful degradation** → keeps an agreed reduced service",
+      "**Decide which outcomes count as available** for the requirement being measured"
+     ]
+    }
    ],
    "terms": [
     {
@@ -196,11 +306,99 @@
    ],
    "summary": "The approach to reducing downtime, planned vs unplanned downtime, the common causes at application, server and cloud level, and what an architect does about each.",
    "notes": [
-    "**There are no fixed rules, so follow best practice and get the most from minimum resources.** The approach: chart the systems and IT resources, gather past downtime statistics and compute availability, identify causes (general and organisation-specific), classify them as controllable or not, classify functions as critical or non-critical, derive infrastructure and architecture plans, then weigh alternatives to optimise cost (an essential trade-off).",
-    "**Planned vs unplanned downtime.** Planned downtime is mostly caused by deployment and is attacked by continuous delivery/deployment; unplanned downtime is caused by system failure and is the focus of this topic.",
-    "**Application-level causes:** heterogeneous environments, multiple single points of failure, multiple application interfaces, inadequate monitoring, resource bottlenecks, team silos, job failures, network issues, password expiry/locked accounts, employee attrition. Responses: SOA/integration best practice and EA standardisation to control variety; hardware, data, server and network redundancy and backups; manual plus automated monitoring; criticality analysis with redundancy for critical sets. The people-related causes are non-technical and need a human-relations approach.",
-    "**Server-level causes:** human error, security flaws, OS bugs, understaffed IT, outdated or unstable hardware, OS too old. Responses: training plans and audits for crucial functions, secure infrastructure (firewalls, DMZ, protection against DoS and malware), backups and DR plans, regular patching and maintenance.",
-    "**Cloud-level causes and fixes:** Overload (redundancy, separation of concerns, load shedding with a threshold that balks further calls); Noisy neighbour (rate limits per user or IP); Retry spikes (a retry-control policy, since rejections cause retries); Bad dependency (load testing to find critical components); Scaling boundaries (sharding and clustering); Uneven sharding (split hot shards); Pets (hand-managed components: train, automate); Bad deployment (phased rollout, systematic rollback); Monitoring gaps (monitor user experience); Failure domains (geographic redundancy and off-site backups)."
+    {
+     "h": "Approach to improving availability",
+     "lead": "There are **no fixed rules**, so follow **best practice** and get the most from **minimum resources**.",
+     "ordered": true,
+     "items": [
+      "**Chart** the systems and IT resources",
+      "**Gather past downtime statistics** and compute availability",
+      "**Identify causes** (general and organisation-specific)",
+      "**Classify causes** as controllable or not",
+      "**Classify functions** as critical or non-critical",
+      "**Derive** infrastructure and architecture plans",
+      "**Weigh alternatives to optimise cost** (an essential trade-off)"
+     ]
+    },
+    {
+     "h": "Planned vs unplanned downtime",
+     "items": [
+      "**Planned** → mostly caused by **deployment**; attacked by **continuous delivery/deployment**",
+      "**Unplanned** → caused by **system failure**; the focus of this topic"
+     ]
+    },
+    {
+     "h": "Application-level causes",
+     "items": [
+      "heterogeneous environments",
+      "multiple single points of failure",
+      "multiple application interfaces",
+      "inadequate monitoring",
+      "resource bottlenecks",
+      "team silos",
+      "job failures",
+      "network issues",
+      "password expiry/locked accounts",
+      "employee attrition"
+     ]
+    },
+    {
+     "h": "Application-level responses",
+     "items": [
+      "**SOA/integration best practice and EA standardisation** → control variety",
+      "**Hardware, data, server and network redundancy** and **backups**",
+      "**Manual plus automated monitoring**",
+      "**Criticality analysis** with redundancy for critical sets",
+      "**People-related causes** are non-technical → need a **human-relations approach**"
+     ]
+    },
+    {
+     "h": "Server-level causes and responses",
+     "items": [
+      {
+       "t": "**Causes**:",
+       "sub": [
+        "human error",
+        "security flaws",
+        "OS bugs",
+        "understaffed IT",
+        "outdated or unstable hardware",
+        "OS too old"
+       ]
+      },
+      {
+       "t": "**Responses**:",
+       "sub": [
+        "training plans and audits for crucial functions",
+        "secure infrastructure (firewalls, DMZ, protection against DoS and malware)",
+        "backups and DR plans",
+        "regular patching and maintenance"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Cloud-level causes → fixes",
+     "items": [
+      {
+       "t": "**Overload** →",
+       "sub": [
+        "redundancy",
+        "separation of concerns",
+        "load shedding with a threshold that balks further calls"
+       ]
+      },
+      "**Noisy neighbour** → rate limits per user or IP",
+      "**Retry spikes** → a retry-control policy, since rejections cause retries",
+      "**Bad dependency** → load testing to find critical components",
+      "**Scaling boundaries** → sharding and clustering",
+      "**Uneven sharding** → split hot shards",
+      "**Pets** (hand-managed components) → train, automate",
+      "**Bad deployment** → phased rollout, systematic rollback",
+      "**Monitoring gaps** → monitor user experience",
+      "**Failure domains** → geographic redundancy and off-site backups"
+     ]
+    }
    ],
    "terms": [
     {
@@ -252,11 +450,54 @@
    ],
    "summary": "Why distributed systems fail in chains: every component and connection can fail, and defects propagate through cascades, heavy users, fan-in and restarts.",
    "notes": [
-    "**Failures come from hardware, network and software.** In a distributed system every component and every connection can fail, and a crack in one component can propagate to others.",
-    "**Chain reaction:** instances behind a load balancer run identical logic, so a bug such as a memory leak triggered by a specific operation crashes the instance that handles most of those operations first. The survivors take more load and fail faster, so the whole pool collapses.",
-    "**Cascading failures:** upstream services must handle errors from providers; slow responses propagate trouble upward; speculative retries make it worse; watch resource pools (threads, connections) that fill while waiting on a slow dependency.",
-    "**Impact of users:** heavy incoming requests (malicious users, a poorly communicated marketing campaign) and heavy operations (a special user such as a celebrity whose tweet fans out to many followers).",
-    "**Scaling effect and unbounded capacity:** a service with many fan-ins is hit hard when an upstream service scales out (e.g. a front end of 20 hosts, 75 instances, 3,000 threads calling a back end of 6 hosts, 6 instances, 450 threads). **Dogpile:** after a restart all services warm their in-memory caches by hitting the database at once."
+    {
+     "h": "Sources of failure",
+     "items": [
+      "**Hardware, network and software**",
+      "In a distributed system **every component and every connection** can fail",
+      "A **crack in one component** can propagate to others"
+     ]
+    },
+    {
+     "h": "Chain reaction",
+     "ordered": true,
+     "items": [
+      "Instances behind a **load balancer** run **identical logic**",
+      "A bug such as a **memory leak** triggered by a specific operation crashes the instance that handles most of those operations first",
+      "The **survivors take more load** and fail faster",
+      "The **whole pool collapses**"
+     ]
+    },
+    {
+     "h": "Cascading failures",
+     "items": [
+      "**Upstream services must handle errors** from providers",
+      "**Slow responses** propagate trouble upward",
+      "**Speculative retries** make it worse",
+      "**Watch resource pools** (threads, connections) that fill while waiting on a slow dependency"
+     ]
+    },
+    {
+     "h": "Impact of users",
+     "items": [
+      {
+       "t": "**Heavy incoming requests** →",
+       "sub": [
+        "malicious users",
+        "a poorly communicated marketing campaign"
+       ]
+      },
+      "**Heavy operations** → a special user such as a **celebrity** whose tweet fans out to many followers"
+     ]
+    },
+    {
+     "h": "Scaling effect and dogpile",
+     "items": [
+      "**Scaling effect and unbounded capacity**: a service with **many fan-ins** is hit hard when an upstream service scales out",
+      "e.g. a **front end** of 20 hosts, 75 instances, 3,000 threads calling a **back end** of 6 hosts, 6 instances, 450 threads",
+      "**Dogpile** → after a restart, all services warm their in-memory caches by hitting the database at once"
+     ]
+    }
    ],
    "terms": [
     {
@@ -333,14 +574,110 @@
    ],
    "summary": "The tactic taxonomy (analysis, detection, recovery, prevention) and the practical stability patterns: circuit breaker, bulkhead, load shedding, backpressure, decoupling and chaos engineering.",
    "notes": [
-    "**Static analysis uses fault trees.** A cut set is a combination of basic events that causes the top failure. It is **minimal** when removing any event stops it causing that failure; minimal need not mean the smallest set in the whole tree. A singleton cut set identifies a single failure cause to address.",
-    "**Detection tactics:** ping/echo, heartbeat and monitor, exception tracking/detection, timestamps, sanity and condition checks, voting and self-test.",
-    "**Recovery tactics:** prepare and repair using active/passive redundancy, spares, exception handling, rollback, upgrade, bounded retry, ignoring safe faults, degradation or reconfiguration. Reintroduce components using shadow operation, state resynchronisation, escalating restart or non-stop forwarding.",
-    "**Prevention tactics:** remove suspect components from service, use transactions and process monitors, prevent exceptions through handling, and expand the conditions the system can handle (the lecture’s “increase competence sets”).",
-    "**Circuit breaker:** closed permits calls; repeated failures trip it open to fail fast; after a delay, half-open permits trial calls, returning to closed on success or open on failure. Choose an agreed fallback (cached value, generic response or explicit error), expose state to operators and log transitions. Timeouts bound waiting; retries must be limited.",
-    "**Steady state:** databases, in-memory caches and logs accumulate over time, so have a strategy and implementation to purge them. **Bulkheads** partition the system (redundant copies of services, middleware and databases, physical separation, availability-zone separation) and segregate critical components, e.g. giving component C two separate pools so one pool's failure is contained.",
-    "**Overload controls differ:** load shedding rejects or throttles excess requests; handshake checks whether a downstream instance can accept work; backpressure makes upstream producers slow down. A circuit breaker can stop calls to a failed dependency but does not itself make every producer reduce its rate. Queues decouple timing but still need capacity limits and failure handling.",
-    "**Dynamic analysis: chaos engineering** tests resilience through controlled fault experiments. Prepare tracing and monitoring, state a resilience hypothesis, inject a fault, analyse targeted cases, then automate and repeat. The lecture illustrates this with Netflix’s Simian Army. A meaningful experiment measures the agreed service outcome."
+    {
+     "h": "Static analysis: fault trees",
+     "items": [
+      "**Cut set**: a combination of basic events that causes the top failure",
+      "**Minimal** cut set: removing any event stops it causing that failure",
+      "Minimal need not mean the **smallest set** in the whole tree",
+      "**Singleton cut set** → identifies a single failure cause to address"
+     ]
+    },
+    {
+     "h": "Detection tactics",
+     "items": [
+      "**Ping/echo**",
+      "**Heartbeat** and **monitor**",
+      "**Exception tracking/detection**",
+      "**Timestamps**",
+      "**Sanity and condition checks**",
+      "**Voting** and **self-test**"
+     ]
+    },
+    {
+     "h": "Recovery tactics",
+     "items": [
+      {
+       "t": "**Prepare and repair** using:",
+       "sub": [
+        "active/passive redundancy",
+        "spares",
+        "exception handling",
+        "rollback",
+        "upgrade",
+        "bounded retry",
+        "ignoring safe faults",
+        "degradation or reconfiguration"
+       ]
+      },
+      {
+       "t": "**Reintroduce components** using:",
+       "sub": [
+        "shadow operation",
+        "state resynchronisation",
+        "escalating restart",
+        "non-stop forwarding"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Prevention tactics",
+     "items": [
+      "**Remove suspect components** from service",
+      "**Transactions** and **process monitors**",
+      "**Prevent exceptions** through handling",
+      "**Expand the conditions** the system can handle (the lecture's **\"increase competence sets\"**)"
+     ]
+    },
+    {
+     "h": "Circuit breaker",
+     "ordered": true,
+     "items": [
+      "**Closed** → permits calls",
+      "**Repeated failures trip it open** → fail fast",
+      "**After a delay, half-open** → permits trial calls; back to **closed on success**, **open on failure**"
+     ],
+     "foot": "Choose an agreed **fallback** (cached value, generic response or explicit error), **expose state** to operators and **log transitions**. **Timeouts** bound waiting; **retries must be limited**."
+    },
+    {
+     "h": "Steady state and bulkheads",
+     "items": [
+      "**Steady state**: databases, in-memory caches and logs accumulate over time → have a strategy and implementation to **purge** them",
+      {
+       "t": "**Bulkheads** partition the system:",
+       "sub": [
+        "redundant copies of services, middleware and databases",
+        "physical separation",
+        "availability-zone separation"
+       ]
+      },
+      "Bulkheads **segregate critical components**, e.g. giving component C **two separate pools** so one pool's failure is contained"
+     ]
+    },
+    {
+     "h": "Overload controls differ",
+     "items": [
+      "**Load shedding** → rejects or throttles excess requests",
+      "**Handshake** → checks whether a downstream instance can accept work",
+      "**Backpressure** → makes upstream producers slow down",
+      "**Circuit breaker** → can stop calls to a failed dependency, but does not itself make every producer reduce its rate",
+      "**Queues** → decouple timing, but still need capacity limits and failure handling"
+     ]
+    },
+    {
+     "h": "Dynamic analysis: chaos engineering",
+     "lead": "Tests resilience through **controlled fault experiments**.",
+     "ordered": true,
+     "items": [
+      "**Prepare** tracing and monitoring",
+      "**State a resilience hypothesis**",
+      "**Inject a fault**",
+      "**Analyse** targeted cases",
+      "**Automate and repeat**"
+     ],
+     "foot": "Lecture example: **Netflix's Simian Army**. A meaningful experiment measures the **agreed service outcome**."
+    }
    ],
    "terms": [
     {
@@ -417,12 +754,77 @@
    ],
    "summary": "Eliminating single points of failure with hardware, server (active/passive, active/active), software clustering and data redundancy including RAID levels.",
    "notes": [
-    "**Five strategies to avoid a single point of failure:** hardware redundancy, data redundancy, server redundancy, network redundancy and backup strategies.",
-    "**Hardware components:** redundant power (hot-swap a failed supply without downtime), redundant cooling (a fan failure can kill temperature-sensitive processor or memory), multiple processors (also load balancing and scalability), memory (hard errors are catastrophic failures; soft errors are random bit flips), network adapters in failover pairs, and RAID adapters as a failover pair.",
-    "**Server redundancy** replicates compute, applications and configuration to cover hardware or OS failures. A cold spare needs startup; a standby is already prepared. A cluster presents cooperating computers as a service. Failover transfers service after failure; failback returns it later. A backup server holding files does not by itself provide live compute failover.",
-    "**Active/passive** keeps a standby, detects failure with heartbeats and activates the replacement. **Active/active** shares work across live instances. In both, plan state handling, traffic switching and enough capacity after a loss; a floating IP can move the endpoint but does not transfer application state.",
-    "**Data redundancy:** RAID, SAN redundancy and duplicate data centres cover different failure domains; backups support recovery. RAID 0 stripes without protection; 1 mirrors; 2 uses ECC; 3 and 4 use dedicated parity (the lecture labels them bit- and block-interleaved); 5 distributes parity; 6 has two independent parities; 10 stripes mirrors, while 0+1 mirrors stripes.",
-    "**With four 3 TB disks:** RAID 0 gives 12 TB and no failure tolerance; RAID 10 gives 6 TB, surviving any one failure and some two-failure combinations; RAID 5 gives 9 TB and any one failure; RAID 6 gives 6 TB and any two failures. RAID 10 loses data if both members of the same mirror fail. Performance depends on workload, controller and rebuild activity, not just the RAID number."
+    {
+     "h": "Five strategies to avoid SPOF",
+     "lead": "Avoiding a single point of failure:",
+     "items": [
+      "**Hardware redundancy**",
+      "**Data redundancy**",
+      "**Server redundancy**",
+      "**Network redundancy**",
+      "**Backup strategies**"
+     ]
+    },
+    {
+     "h": "Hardware redundancy components",
+     "items": [
+      "**Redundant power** → hot-swap a failed supply without downtime",
+      "**Redundant cooling** → a fan failure can kill temperature-sensitive processor or memory",
+      "**Multiple processors** → also load balancing and scalability",
+      "**Memory** → hard errors are catastrophic failures; soft errors are random bit flips",
+      "**Network adapters** → in failover pairs",
+      "**RAID adapters** → as a failover pair"
+     ]
+    },
+    {
+     "h": "Server redundancy",
+     "items": [
+      "**Replicates compute, applications and configuration** to cover hardware or OS failures",
+      "**Cold spare** → needs startup",
+      "**Standby** → already prepared",
+      "**Cluster** → presents cooperating computers as a service",
+      "**Failover** → transfers service after failure; **failback** → returns it later",
+      "A **backup server** holding files does not by itself provide live compute failover"
+     ]
+    },
+    {
+     "h": "Active/passive vs active/active",
+     "items": [
+      "**Active/passive** → keeps a standby, detects failure with **heartbeats** and activates the replacement",
+      "**Active/active** → shares work across live instances",
+      "In both, plan **state handling**, **traffic switching** and **enough capacity after a loss**",
+      "A **floating IP** can move the endpoint but does not transfer application state"
+     ]
+    },
+    {
+     "h": "Data redundancy and RAID levels",
+     "items": [
+      "**RAID, SAN redundancy and duplicate data centres** → cover different failure domains",
+      "**Backups** → support recovery",
+      {
+       "t": "**RAID levels**:",
+       "sub": [
+        "**0** → stripes without protection",
+        "**1** → mirrors",
+        "**2** → uses ECC",
+        "**3 and 4** → dedicated parity (lecture labels them bit- and block-interleaved)",
+        "**5** → distributes parity",
+        "**6** → two independent parities",
+        "**10** → stripes mirrors; **0+1** → mirrors stripes"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "RAID with four 3 TB disks",
+     "items": [
+      "**RAID 0** → 12 TB, no failure tolerance",
+      "**RAID 10** → 6 TB, survives any one failure and some two-failure combinations; loses data if **both members of the same mirror** fail",
+      "**RAID 5** → 9 TB, any one failure",
+      "**RAID 6** → 6 TB, any two failures"
+     ],
+     "foot": "**Performance** depends on workload, controller and rebuild activity, not just the RAID number."
+    }
    ],
    "terms": [
     {
@@ -519,10 +921,42 @@
    ],
    "summary": "Three backup types and their trade-off between backup effort and restore effort.",
    "notes": [
-    "**Full backup** copies all files every time. Restore is easy from a single set, but it takes the longest and uses the most disk, tape or network space.",
-    "**Differential backup** copies files changed or new since the last full backup. It is faster and smaller than full, but a restore needs the last full plus the latest differential, so restoring everything or locating one file is slower. Example: Monday full; Tuesday and Wednesday each back up everything changed since Monday's full, so Wednesday's set includes Tuesday's changes too.",
-    "**Incremental backup** copies changes since the last backup in the chain. Start with a full base, then take only new changes each time. Restore requires the base plus every needed incremental in order, making the chain more complex than a full-plus-latest-differential restore.",
-    "**Choose by trade-off:** full = slow backup, fast restore; differential = middle; incremental = fast backup, slow restore. Backups protect against data loss and disasters but are a recovery measure (they affect MTTR), not a substitute for live redundancy."
+    {
+     "h": "Full backup",
+     "items": [
+      "**Copies all files every time**",
+      "**Restore is easy** from a single set",
+      "Takes the **longest** and uses the **most disk, tape or network space**"
+     ]
+    },
+    {
+     "h": "Differential backup",
+     "items": [
+      "**Copies files changed or new since the last full backup**",
+      "**Faster and smaller** than full",
+      "**Restore needs** the last full + the latest differential → restoring everything or locating one file is slower",
+      "**Example**: Monday full; Tuesday and Wednesday each back up everything changed since Monday's full, so Wednesday's set includes Tuesday's changes too"
+     ]
+    },
+    {
+     "h": "Incremental backup",
+     "items": [
+      "**Copies changes since the last backup** in the chain",
+      "Start with a **full base**, then take only new changes each time",
+      "**Restore requires** the base + every needed incremental, **in order**",
+      "Chain is **more complex** than a full-plus-latest-differential restore"
+     ]
+    },
+    {
+     "h": "Choosing a backup strategy",
+     "lead": "Choose by trade-off:",
+     "items": [
+      "**Full** → slow backup, fast restore",
+      "**Differential** → middle",
+      "**Incremental** → fast backup, slow restore"
+     ],
+     "foot": "Backups protect against **data loss and disasters** but are a **recovery measure (they affect MTTR)**, not a substitute for live redundancy."
+    }
    ],
    "terms": [
     {
@@ -606,10 +1040,40 @@
    ],
    "summary": "A progression of web-app topologies, each removing more single points of failure at higher cost.",
    "notes": [
-    "**Basic web app:** one web application server in the DMZ between the protocol firewall (from the outside world) and the domain firewall (to the internal network with directory/security services, database and shared file system). Every box is a single point of failure.",
-    "**Load balanced web app:** a load balancer in front of a cluster of web application servers, so a failed server is bypassed and capacity grows. **With hot standby:** a standby load balancer or node is kept ready to take over, so the load balancer itself stops being a single point of failure.",
-    "**High-availability topology** duplicates load balancers and web clusters. Check all required dependencies, including storage, directory services, firewalls and networks: redundancy drawn at the web tier does not establish redundancy for the whole service.",
-    "**Wide area load balancing:** a global load balancer spreads traffic across entire sites (Site A and Site B), each with its own firewalls, load balancer, web application servers, database and file system, protecting against whole-site (failure-domain) failure. Each step up buys availability and costs more, so match the pattern to the required nines."
+    {
+     "h": "Basic web app",
+     "items": [
+      "**One web application server in the DMZ**",
+      "**Protocol firewall** → from the outside world",
+      "**Domain firewall** → to the internal network (directory/security services, database, shared file system)",
+      "**Every box is a single point of failure**"
+     ]
+    },
+    {
+     "h": "Load balanced web app",
+     "items": [
+      "**Load balancer** in front of a **cluster** of web application servers",
+      "A failed server is **bypassed** and **capacity grows**",
+      "**With hot standby** → a standby load balancer or node is kept ready to take over, so the load balancer itself stops being a single point of failure"
+     ]
+    },
+    {
+     "h": "High-availability topology",
+     "items": [
+      "**Duplicates load balancers and web clusters**",
+      "**Check all required dependencies**, including storage, directory services, firewalls and networks",
+      "Redundancy drawn at the **web tier** does not establish redundancy for the **whole service**"
+     ]
+    },
+    {
+     "h": "Wide area load balancing",
+     "items": [
+      "**Global load balancer** spreads traffic across entire sites (**Site A and Site B**)",
+      "Each site has its own **firewalls, load balancer, web application servers, database and file system**",
+      "Protects against **whole-site (failure-domain) failure**"
+     ],
+     "foot": "Each step up buys availability and **costs more**, so **match the pattern to the required nines**."
+    }
    ],
    "terms": [
     {
@@ -683,11 +1147,58 @@
    ],
    "summary": "How Kubernetes self-heals, how database servers achieve redundancy across the active/passive and shared disk/shared nothing models, and the multi-AZ AWS reference.",
    "notes": [
-    "**Kubernetes reconciles declared state.** A ReplicaSet replaces terminated pods to maintain the replica count; liveness probes can trigger container restart. Replacement takes time and needs working capacity. These mechanisms shorten recovery but do not establish data redundancy or prevent a shared-node failure.",
-    "**Database redundancy must cover two things:** the database server process (handles queries) and the storage (data). The two axes are Active/Active vs Active/Passive and Shared Disk vs Shared Nothing.",
-    "**Database examples in the lecture:** Oracle RAC is active/active with shared disk; SQL Server failover clustering is active/passive with shared disk; database mirroring is active/passive with separate storage. MySQL primary/replica serves writes on one primary and can serve reads on replicas: its “active/active” label does not mean multiple write leaders. Cassandra replicates across ring nodes with configurable replica counts.",
-    "**AWS example:** spread application instances across Availability Zones and direct traffic to healthy instances with a load balancer. Replacing a host or remapping an address restores reachability, not lost data. The lecture distinguishes live storage replication within a zone from point-in-time snapshots; cross-zone recovery also requires an explicit data and restore plan.",
-    "**Summary:** understand components and failure causes to build the plan; the key concepts are availability, reliability and fault tolerance; the key decisions are redundancy, backup and patterns."
+    {
+     "h": "Kubernetes reconciles declared state",
+     "items": [
+      "**ReplicaSet** → replaces terminated pods to maintain the replica count",
+      "**Liveness probes** → can trigger container restart",
+      "Replacement **takes time** and needs **working capacity**",
+      "These **shorten recovery** but do not establish **data redundancy** or prevent a **shared-node failure**"
+     ]
+    },
+    {
+     "h": "Database redundancy",
+     "lead": "Must cover two things:",
+     "items": [
+      "**Database server process** → handles queries",
+      "**Storage** → data",
+      {
+       "t": "**Two axes**:",
+       "sub": [
+        "Active/Active vs Active/Passive",
+        "Shared Disk vs Shared Nothing"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Database examples",
+     "items": [
+      "**Oracle RAC** → active/active, shared disk",
+      "**SQL Server failover clustering** → active/passive, shared disk",
+      "**Database mirroring** → active/passive, separate storage",
+      "**MySQL primary/replica** → writes on one primary, reads can be served on replicas; its **\"active/active\" label does not mean multiple write leaders**",
+      "**Cassandra** → replicates across ring nodes with configurable replica counts"
+     ]
+    },
+    {
+     "h": "AWS example",
+     "items": [
+      "**Spread application instances across Availability Zones**",
+      "**Load balancer** directs traffic to healthy instances",
+      "**Replacing a host or remapping an address** restores reachability, not lost data",
+      "Lecture distinguishes **live storage replication within a zone** from **point-in-time snapshots**",
+      "**Cross-zone recovery** also requires an explicit data and restore plan"
+     ]
+    },
+    {
+     "h": "Topic summary",
+     "items": [
+      "**Understand components and failure causes** to build the plan",
+      "**Key concepts** → availability, reliability, fault tolerance",
+      "**Key decisions** → redundancy, backup, patterns"
+     ]
+    }
    ],
    "terms": [
     {

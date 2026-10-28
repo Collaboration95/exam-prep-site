@@ -24,10 +24,56 @@
    ],
    "summary": "The definition, the monolith to FaaS progression, and the platform features that define serverless.",
    "notes": [
-    "**Serverless means you stop managing servers, not that servers vanish.** It is an architectural approach using small independent functions on transient servers in an elastic runtime. Platforms share four traits: no OS to configure, pay-per-invocation billing, automatic scaling, and built-in availability and fault tolerance.",
-    "**Decomposition and hosting are separate choices.** The lecture contrasts one application API, separate domain APIs and individual action functions. A microservice can be implemented with functions; moving to FaaS is not a compulsory next maturity stage or a promise that more functions mean a better design.",
-    "**Serverless supports event-driven composition and elastic compute.** Streams provide ordered processing within their supported ordering scope and may retain events for replay. Configure queues, retries, timeouts and circuit breakers as needed; a function platform does not automatically protect every downstream dependency.",
-    "**Why it matters**: a well-planned serverless design reduces and organises complexity and makes future change easier, which matters for long-lived applications."
+    {
+     "h": "What serverless means",
+     "lead": "You stop managing servers, not that servers vanish.",
+     "items": [
+      "**Architectural approach** → **small independent functions** on **transient servers** in an **elastic runtime**"
+     ]
+    },
+    {
+     "h": "Four shared platform traits",
+     "items": [
+      "**No OS to configure**",
+      "**Pay-per-invocation billing**",
+      "**Automatic scaling**",
+      "**Built-in availability and fault tolerance**"
+     ]
+    },
+    {
+     "h": "Decomposition vs hosting",
+     "lead": "Decomposition and hosting are separate choices.",
+     "items": [
+      {
+       "t": "**Lecture contrast**:",
+       "sub": [
+        "one **application API**",
+        "separate **domain APIs**",
+        "individual **action functions**"
+       ]
+      },
+      "**A microservice can be implemented with functions**",
+      "**Moving to FaaS** is **not a compulsory next maturity stage**",
+      "**More functions ≠ better design** → no such promise"
+     ]
+    },
+    {
+     "h": "Event-driven composition, elastic compute",
+     "lead": "Serverless supports event-driven composition and elastic compute.",
+     "items": [
+      "**Streams** → **ordered processing** within their **supported ordering scope**; may **retain events for replay**",
+      "**Configure as needed** → **queues, retries, timeouts, circuit breakers**",
+      "**Function platform** does **not automatically protect** every **downstream dependency**"
+     ]
+    },
+    {
+     "h": "Why it matters",
+     "items": [
+      "**Well-planned serverless design** → **reduces and organises complexity**",
+      "**Makes future change easier**",
+      "**Matters for long-lived applications**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -96,10 +142,53 @@
    ],
    "summary": "The guiding design principles, the situations where serverless pays off, and typical use cases.",
    "notes": [
-    "**Five principles**: run code on demand in a stateless compute service; write single-purpose stateless functions (more testable, robust, fewer side effects); design push-based, event-driven pipelines (the most flexible designs); create thicker, more powerful front ends (fewer hops, lower latency, better perceived performance); and embrace third-party services rather than building everything.",
-    "**When to use it**: you want to focus on code and design rather than infrastructure, reduce layers and code, get easier scalability and high availability with fairer pricing, or solve problems that benefit from parallel processing using stateless scalable compute.",
-    "**Typical use cases**: application back end (web, mobile, IoT: authentication, device registry, shadowing, rules engine), data processing and transcoding, real-time analytics on logs, events and clicks, legacy API proxy (gateway plus functions translating formats), scheduled services, and bots and skills.",
-    "**Prefer a fit, not a blanket rule.** Short event-triggered work is a natural function fit. Long-running processes, in-memory durable state and tight latency budgets may need a different runtime or extra design. Stateful applications can still use stateless functions with durable external stores; steady high load needs a cost comparison."
+    {
+     "h": "Five principles",
+     "items": [
+      "**Run code on demand** in a **stateless compute service**",
+      "**Single-purpose stateless functions** → more **testable**, **robust**, **fewer side effects**",
+      "**Push-based, event-driven pipelines** → the **most flexible** designs",
+      "**Thicker, more powerful front ends** → **fewer hops**, **lower latency**, better **perceived performance**",
+      "**Embrace third-party services** rather than building everything"
+     ]
+    },
+    {
+     "h": "When to use it",
+     "items": [
+      "**Focus on code and design** rather than infrastructure",
+      "**Reduce layers and code**",
+      "**Easier scalability and high availability** with **fairer pricing**",
+      "**Parallel processing** problems → using **stateless scalable compute**"
+     ]
+    },
+    {
+     "h": "Typical use cases",
+     "items": [
+      {
+       "t": "**Application back end** (web, mobile, IoT)",
+       "sub": [
+        "authentication",
+        "device registry",
+        "shadowing",
+        "rules engine"
+       ]
+      },
+      "**Data processing and transcoding**",
+      "**Real-time analytics** on **logs, events and clicks**",
+      "**Legacy API proxy** → **gateway plus functions translating formats**",
+      "**Scheduled services**",
+      "**Bots and skills**"
+     ]
+    },
+    {
+     "h": "Prefer a fit, not a blanket rule",
+     "items": [
+      "**Short event-triggered work** → natural function fit",
+      "**Long-running processes**, **in-memory durable state**, **tight latency budgets** → may need a **different runtime** or **extra design**",
+      "**Stateful applications** → can still use **stateless functions** with **durable external stores**",
+      "**Steady high load** → needs a **cost comparison**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -143,10 +232,46 @@
    ],
    "summary": "Where serverless sits in the stack and the types of service it is composed from.",
    "notes": [
-    "**Four layers of increasing abstraction**: physical infrastructure (actual servers, networks), virtual infrastructure (virtualised servers and networking), serverless infrastructure (compute and data services) and serverless applications (websites, API/RPC services, simple data pipelines) on top. Each layer hides the one beneath.",
-    "**Serverless compute services**: functions (small code handling a cloud event or HTTP request), services (like functions but containerised and reachable by HTTP), events (broadcast information to one or more components), tasks (reliably send a message to a single component) and scheduling (repeating jobs triggered by other components).",
-    "**Serverless data services**: blob storage, key-value database, big-data query engine and big-data transform pipeline, so storage and analytics also need no server management.",
-    "**Compare provider categories, not one-to-one APIs**: AWS (Lambda, DynamoDB, S3, Athena, Kinesis), Google (Cloud Functions, Cloud Run, Firestore, BigQuery, Dataflow) and Azure (Azure Functions, Table Storage, Event Hub) offer examples in these categories; check each product’s execution and delivery semantics."
+    {
+     "h": "Four layers of increasing abstraction",
+     "ordered": true,
+     "items": [
+      "**Physical infrastructure** → actual servers, networks",
+      "**Virtual infrastructure** → virtualised servers and networking",
+      "**Serverless infrastructure** → **compute and data services**",
+      "**Serverless applications** (on top) → websites, **API/RPC services**, simple **data pipelines**"
+     ],
+     "foot": "Each layer **hides the one beneath**."
+    },
+    {
+     "h": "Serverless compute services",
+     "items": [
+      "**Functions** → small code handling a **cloud event** or **HTTP request**",
+      "**Services** → like functions but **containerised** and **reachable by HTTP**",
+      "**Events** → **broadcast** information to **one or more components**",
+      "**Tasks** → **reliably send a message** to a **single component**",
+      "**Scheduling** → **repeating jobs** triggered by other components"
+     ]
+    },
+    {
+     "h": "Serverless data services",
+     "items": [
+      "**Blob storage**",
+      "**Key-value database**",
+      "**Big-data query engine**",
+      "**Big-data transform pipeline**"
+     ],
+     "foot": "So **storage and analytics** also need **no server management**."
+    },
+    {
+     "h": "Provider categories, not one-to-one APIs",
+     "items": [
+      "**AWS** → **Lambda, DynamoDB, S3, Athena, Kinesis**",
+      "**Google** → **Cloud Functions, Cloud Run, Firestore, BigQuery, Dataflow**",
+      "**Azure** → **Azure Functions, Table Storage, Event Hub**"
+     ],
+     "foot": "These offer examples in these categories; check each product's **execution and delivery semantics**."
+    }
    ],
    "terms": [
     {
@@ -215,11 +340,64 @@
    ],
    "summary": "Four reusable patterns showing how functions combine with gateways, queues, streams and servers.",
    "notes": [
-    "**Application back end**: an API Gateway presents a RESTful interface and hides functions (e.g. save profile, calculate cost, submit job, process job) that talk to storage, databases and a message pipeline. Clients can often call services such as authentication or search directly instead of relaying through the gateway.",
-    "**API proxy for legacy systems**: the gateway fronts legacy SOAP or XML services, with a convert-and-invoke function per route translating request and response formats. This lets modern clients use legacy systems without changing them.",
-    "**Real-time streams**: events flow into a stream service (e.g. Kinesis) and functions pull batches and write to storage or a database. Suited to data-intensive real-time reporting and analytics.",
-    "**Hybrid serverless and server-based**: a design may fan out through notification topics into queues consumed by both functions and EC2 instances, with a database behind. Serverless need not be all-or-nothing; mix it where it fits.",
-    "**Assess the whole path.** Functions may be triggered by objects, queues, HTTP or data changes. Their operational savings can be substantial, but account for downstream capacity, retry behaviour, latency, data durability and integration cost before concluding they are cheaper."
+    {
+     "h": "Application back end",
+     "items": [
+      "**API Gateway** → presents a **RESTful interface** and **hides functions**",
+      {
+       "t": "**Functions** (e.g.)",
+       "sub": [
+        "save profile",
+        "calculate cost",
+        "submit job",
+        "process job"
+       ]
+      },
+      "**Functions talk to** → **storage, databases and a message pipeline**",
+      "**Direct calls** → clients can often call services such as **authentication** or **search** directly instead of relaying through the gateway"
+     ]
+    },
+    {
+     "h": "API proxy for legacy systems",
+     "items": [
+      "**Gateway fronts** legacy **SOAP or XML** services",
+      "**Convert-and-invoke function per route** → translates **request and response formats**",
+      "**Benefit** → **modern clients** use legacy systems **without changing them**"
+     ]
+    },
+    {
+     "h": "Real-time streams",
+     "items": [
+      "**Events flow** into a **stream service** (e.g. **Kinesis**)",
+      "**Functions pull batches** and **write to storage or a database**",
+      "**Suited to** → **data-intensive real-time reporting and analytics**"
+     ]
+    },
+    {
+     "h": "Hybrid serverless and server-based",
+     "items": [
+      "**Fan out** through **notification topics** into **queues**",
+      "**Queues consumed** by both **functions** and **EC2 instances**, with a **database** behind",
+      "**Not all-or-nothing** → mix it where it fits"
+     ]
+    },
+    {
+     "h": "Assess the whole path",
+     "items": [
+      "**Triggers** → **objects, queues, HTTP or data changes**",
+      "**Operational savings** can be **substantial**",
+      {
+       "t": "**Account for, before concluding cheaper**:",
+       "sub": [
+        "downstream capacity",
+        "retry behaviour",
+        "latency",
+        "data durability",
+        "integration cost"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -293,11 +471,60 @@
    ],
    "summary": "How Lambda functions are configured, invoked and exposed as a web API.",
    "notes": [
-    "**Configure code/handler, memory, timeout and execution role.** The timeout bounds execution; the IAM role limits accessible resources. Network configuration can provide access to private resources. The lecture’s billing model combines invocation count and duration weighted by memory; its 100 ms example is historical, so use the model rather than memorising a billing increment.",
-    "**Invocation has more than one dimension.** A function receives event input and runtime context. Synchronous invocation waits for a result; asynchronous invocation accepts an event for later processing. Event sources may push events or be polled by platform mappings, so event-triggered is not a synonym for asynchronous invocation.",
-    "**Lambda as a web API**: integrate a function with an API Gateway method, pass HTTP parameters through, and format the function output as the HTTP response. A URL combines a domain, a stage (prod, test, dev) and resource paths, with each HTTP verb mapped to a function.",
-    "**Request flow** for a call such as GET /greeting: client request, method request (auth), integration request to Lambda, function execution, integration response, method response (HTTP 200 with JSON). Logs (print output) go to CloudWatch Logs, and testing uses a query string to inspect response, latency and logs.",
-    "**Exam tip**: be ready to name the tuning knobs (memory, timeout, IAM role) and explain that memory also determines cost and CPU share."
+    {
+     "h": "Lambda configuration",
+     "lead": "Configure code/handler, memory, timeout and execution role.",
+     "items": [
+      "**Timeout** → **bounds execution**",
+      "**IAM role** → **limits accessible resources**",
+      "**Network configuration** → can provide access to **private resources**",
+      "**Lecture's billing model** → **invocation count** + **duration weighted by memory**",
+      "**100 ms example** is **historical** → use the model rather than memorising a billing increment"
+     ]
+    },
+    {
+     "h": "Invocation dimensions",
+     "lead": "Invocation has more than one dimension.",
+     "items": [
+      "**Input** → function receives **event input** and **runtime context**",
+      "**Synchronous invocation** → **waits for a result**",
+      "**Asynchronous invocation** → **accepts an event** for **later processing**",
+      "**Event sources** → may **push events** or be **polled by platform mappings**"
+     ],
+     "foot": "**Event-triggered** is **not a synonym** for **asynchronous invocation**."
+    },
+    {
+     "h": "Lambda as a web API",
+     "items": [
+      "**Integrate** a function with an **API Gateway method**",
+      "**Pass HTTP parameters through**",
+      "**Format the function output** as the **HTTP response**",
+      "**URL** = **domain** + **stage** (prod, test, dev) + **resource paths**",
+      "**Each HTTP verb** mapped to a function"
+     ]
+    },
+    {
+     "h": "Request flow (GET /greeting)",
+     "ordered": true,
+     "items": [
+      "**Client request**",
+      "**Method request** (auth)",
+      "**Integration request** to Lambda",
+      "**Function execution**",
+      "**Integration response**",
+      "**Method response** → **HTTP 200 with JSON**"
+     ],
+     "foot": "**Logs** (print output) go to **CloudWatch Logs**; **testing** uses a **query string** to inspect **response, latency and logs**."
+    },
+    {
+     "h": "Exam tip: tuning knobs",
+     "items": [
+      "**Memory**",
+      "**Timeout**",
+      "**IAM role**",
+      "**Memory also determines** → **cost** and **CPU share**"
+     ]
+    }
    ],
    "terms": [
     {

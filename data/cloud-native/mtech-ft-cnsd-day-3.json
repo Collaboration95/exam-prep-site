@@ -22,11 +22,71 @@
    ],
    "summary": "How Kubernetes is organised, the technology choices along a delivery toolchain, and how each traditional web concern maps to a cloud native equivalent.",
    "notes": [
-    "**Separate control-plane availability roles.** API servers accept requests; controllers reconcile objects; the scheduler places Pods; etcd persists cluster state. In an HA design these components are replicated appropriately: coordinating controllers and schedulers use leader election, API servers can serve concurrently, and etcd needs quorum. A blanket active-master/standby model hides these differences.",
-    "**Containers underpin it**: a container is Linux kernel isolation plus a runtime, not a VM, which is why Kubernetes can pack and restart them so cheaply.",
-    "**The toolchain is a chain of choices**: language, then data store (RDBMS, document, column-family, in-memory, object, graph, vector), then build, then deploy (CI/CD and GitOps with Argo/Flux), then release tracking, then product. An architect justifies each link, not just the product names.",
-    "**Modernise each concern where it helps.** SPA/PWA and edge/Wasm are interface options; relational, NoSQL, NewSQL and vector stores serve different data needs. OAuth/IAM and layered controls strengthen access. REST/gateways and events can replace selected SOAP/ESB integrations; agent harnesses add a different kind of workflow with verification needs. None automatically replaces every existing mechanism.",
-    "**Read “cookies disabled” as a sketch example, not a cloud-native rule.** Cookies can carry session identifiers or tokens; a shared server-side session store also supports replaceable replicas. Avoid durable state held only in one application instance. Token formats, cookie transport and state placement are separate choices."
+    {
+     "h": "Control-plane availability roles",
+     "lead": "Separate control-plane availability roles.",
+     "items": [
+      "**API servers** → **accept requests**; can **serve concurrently**",
+      "**Controllers** → **reconcile objects**",
+      "**Scheduler** → **places Pods**",
+      "**etcd** → **persists cluster state**; needs **quorum**",
+      "**HA design** → components **replicated appropriately**",
+      "**Coordinating controllers and schedulers** → use **leader election**"
+     ],
+     "foot": "A **blanket active-master/standby model** hides these differences."
+    },
+    {
+     "h": "Containers underpin it",
+     "items": [
+      "**Container** = **Linux kernel isolation** plus a **runtime**, **not a VM**",
+      "**So** → Kubernetes can **pack and restart** them **so cheaply**"
+     ]
+    },
+    {
+     "h": "The toolchain is a chain of choices",
+     "ordered": true,
+     "items": [
+      "**Language**",
+      {
+       "t": "**Data store**",
+       "sub": [
+        "RDBMS",
+        "document",
+        "column-family",
+        "in-memory",
+        "object",
+        "graph",
+        "vector"
+       ]
+      },
+      "**Build**",
+      "**Deploy** → **CI/CD** and **GitOps** with **Argo/Flux**",
+      "**Release tracking**",
+      "**Product**"
+     ],
+     "foot": "An architect **justifies each link**, not just the **product names**."
+    },
+    {
+     "h": "Modernise each concern where it helps",
+     "items": [
+      "**Interface options** → **SPA/PWA**, **edge/Wasm**",
+      "**Data needs** → **relational, NoSQL, NewSQL, vector** stores",
+      "**Access** → **OAuth/IAM** and **layered controls** strengthen it",
+      "**Integration** → **REST/gateways** and **events** can replace selected **SOAP/ESB** integrations",
+      "**Agent harnesses** → add a **different kind of workflow** with **verification needs**"
+     ],
+     "foot": "None **automatically replaces** every **existing mechanism**."
+    },
+    {
+     "h": "“Cookies disabled”: a sketch example",
+     "lead": "Read “cookies disabled” as a sketch example, not a cloud-native rule.",
+     "items": [
+      "**Cookies** → can carry **session identifiers or tokens**",
+      "**Shared server-side session store** → also supports **replaceable replicas**",
+      "**Avoid** → **durable state** held **only in one application instance**",
+      "**Separate choices** → **token formats**, **cookie transport**, **state placement**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -106,10 +166,61 @@
    ],
    "summary": "Singular vs distributed families, where each style sits on a three-axis scaling chart, and a Netflix-style application as a decomposition exercise.",
    "notes": [
-    "**Application architectures split into singular and distributed families.** Singular: monolith, small-scale pipelines, IoT microkernels. Distributed: microservices (usually with event-driven architecture), large-scale pipelines, microliths, data-driven Lambda/Kappa, and AI-driven/AI-native. Real systems are hybrids, and small pipelines grow into Lambda/Kappa.",
-    "**Separate three scaling decisions.** Functional decomposition splits capability ownership; replication adds instances; partitioning spreads data or tenant subsets. The sketch’s VM/container/function and database names are examples, not a ranking of scalability. A VM can host services, a container a monolith, and a relational database can be partitioned.",
-    "**Microlith** is the instructor's term for a coarse-grained deployable between monolith and microservices: independent deployment with far fewer moving parts.",
-    "**Practice case**: decompose a Netflix-style app (search, profile, catalogue rows, playback and resume) into services, each with a fitting data store."
+    {
+     "h": "Singular vs distributed architectures",
+     "lead": "Application architectures split into singular and distributed families.",
+     "items": [
+      {
+       "t": "**Singular**",
+       "sub": [
+        "**monolith**",
+        "**small-scale pipelines**",
+        "**IoT microkernels**"
+       ]
+      },
+      {
+       "t": "**Distributed**",
+       "sub": [
+        "**microservices** (usually with **event-driven architecture**)",
+        "**large-scale pipelines**",
+        "**microliths**",
+        "**data-driven Lambda/Kappa**",
+        "**AI-driven/AI-native**"
+       ]
+      },
+      "**Real systems are hybrids**",
+      "**Small pipelines grow** into **Lambda/Kappa**"
+     ]
+    },
+    {
+     "h": "Three scaling decisions",
+     "lead": "Separate three scaling decisions.",
+     "items": [
+      "**Functional decomposition** → splits **capability ownership**",
+      "**Replication** → adds **instances**",
+      "**Partitioning** → spreads **data or tenant subsets**",
+      "**Sketch's VM/container/function and database names** → **examples**, **not a ranking of scalability**",
+      "**Counter-examples** → a **VM can host services**, a **container a monolith**, a **relational database can be partitioned**"
+     ]
+    },
+    {
+     "h": "Microlith",
+     "items": [
+      "**Instructor's term** for a **coarse-grained deployable**",
+      "**Between monolith and microservices**",
+      "**Independent deployment** with **far fewer moving parts**"
+     ]
+    },
+    {
+     "h": "Practice case: Netflix-style app",
+     "lead": "Decompose into services, each with a fitting data store:",
+     "items": [
+      "**Search**",
+      "**Profile**",
+      "**Catalogue rows**",
+      "**Playback and resume**"
+     ]
+    }
    ],
    "terms": [
     {

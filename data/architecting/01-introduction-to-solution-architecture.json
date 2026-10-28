@@ -24,9 +24,45 @@
    ],
    "summary": "The formal definition of architecture, the forces that shape it, and the practical value of reviewing an architecture.",
    "notes": [
-    "**Architecture is structure plus principles.** It is the fundamental organisation of a system embodied in its components, their relationships to each other and to the environment, and the principles guiding its design and evolution (adapted from IEEE 1471 / ISO 42010). Note it covers the environment and evolution, not just boxes and lines.",
-    "**Four influences:** stakeholders’ needs, organisational goals and structure, the architect’s experience, and the technical environment. Architecture shapes the resulting system, which can then change those influences.",
-    "**Reviews find risk early.** In the lecture’s survey of 86 organisations, reported benefits included risk identification (88%), quality assessment (77%), reuse (72%), good design practice (64%) and avoiding costly design problems (63%). Reviews also capture rationale, uncover requirement conflicts and help stakeholders negotiate."
+    {
+     "h": "Architecture is structure plus principles",
+     "lead": "The fundamental organisation of a system, embodied in:",
+     "items": [
+      "its **components**",
+      "their **relationships** to each other and to the **environment**",
+      "the **principles** guiding its **design and evolution**"
+     ],
+     "foot": "Adapted from **IEEE 1471 / ISO 42010**. Note it covers the **environment and evolution**, not just boxes and lines."
+    },
+    {
+     "h": "Four influences on architecture",
+     "items": [
+      "**Stakeholders' needs**",
+      "**Organisational goals and structure**",
+      "**Experience** of the architect",
+      "**Technical environment**"
+     ],
+     "foot": "Architecture shapes the resulting system, which can then **change those influences** (a feedback loop)."
+    },
+    {
+     "h": "Reviews find risk early",
+     "lead": "Survey of **86 organisations** in the lecture, reported benefits:",
+     "items": [
+      "**Risk identification** (88%)",
+      "**Quality assessment** (77%)",
+      "**Reuse** (72%)",
+      "**Good design practice** (64%)",
+      "**Avoiding costly design problems** (63%)"
+     ]
+    },
+    {
+     "h": "Reviews also",
+     "items": [
+      "**Capture rationale**",
+      "**Uncover requirement conflicts**",
+      "**Help stakeholders negotiate**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -62,11 +98,111 @@
    ],
    "summary": "How enterprise architecture, solution architecture and detailed design nest, what each delivers, and the shared design principles (abstraction, encapsulation, cohesion, coupling).",
    "notes": [
-    "**EA is the 'why and where' for the whole organisation; SA is the end-to-end design for one project.** EA is the organising logic for business processes and IT infrastructure and the source of strategic direction and guidance to solution architecture. SA brings multiple views together for one solution, shaped by business requirements, project constraints and technology options.",
-    "**Constraint chain: Enterprise Architecture constrains Solution Architecture, which constrains Software Design.** Business and ICT/digital strategy feed EA at the planning level; SA sits at design, implementation and delivery. SA itself breaks into software, data, integration and technology architecture (and more).",
-    "**EA deliverables** describe the enterprise landscape: business, data, application and technology models, gap and impact analysis, and transition architecture. **SA deliverables** describe one system: conceptual, logical and physical solution models. The solution architect handles product and technology details within EA guidance; TOGAF is the EA framework introduced here.",
-    "**SA (including high-level design) vs detailed design:** SA defines how components work together at a logical level, using guidelines, standards, patterns and policies, to meet business requirements and expected qualities. Detailed design defines how they work together at implementable detail and chooses methods and tools for implementation.",
-    "**Shared principles.** Abstraction (focus on significant detail) and encapsulation (hide unnecessary detail), plus **high cohesion** (components that belong together) and **low coupling** (little interdependence), which together reduce complexity and improve reusability and maintainability."
+    {
+     "h": "EA vs SA in one line",
+     "items": [
+      "**EA** → the **'why and where'** for the **whole organisation**",
+      "**SA** → the **end-to-end design** for **one project**"
+     ]
+    },
+    {
+     "h": "Enterprise Architecture (EA)",
+     "items": [
+      "**Organising logic** for business processes and IT infrastructure",
+      "Source of **strategic direction and guidance** to solution architecture"
+     ]
+    },
+    {
+     "h": "Solution Architecture (SA)",
+     "items": [
+      "Brings **multiple views together** for one solution",
+      {
+       "t": "**Shaped by**:",
+       "sub": [
+        "business requirements",
+        "project constraints",
+        "technology options"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Constraint chain",
+     "ordered": true,
+     "items": [
+      "**Enterprise Architecture** constrains →",
+      "**Solution Architecture**, which constrains →",
+      "**Software Design**"
+     ]
+    },
+    {
+     "h": "Where each level sits",
+     "items": [
+      "**Business and ICT/digital strategy** → feed EA at the **planning** level",
+      "**SA** → sits at **design, implementation and delivery**",
+      {
+       "t": "**SA breaks into**:",
+       "sub": [
+        "software architecture",
+        "data architecture",
+        "integration architecture",
+        "technology architecture",
+        "(and more)"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "EA vs SA deliverables",
+     "items": [
+      {
+       "t": "**EA deliverables** → describe the **enterprise landscape**:",
+       "sub": [
+        "business, data, application and technology models",
+        "gap and impact analysis",
+        "transition architecture"
+       ]
+      },
+      {
+       "t": "**SA deliverables** → describe **one system**:",
+       "sub": [
+        "conceptual solution model",
+        "logical solution model",
+        "physical solution model"
+       ]
+      },
+      "**Solution architect** handles **product and technology details** within **EA guidance**",
+      "**TOGAF** → the EA framework introduced here"
+     ]
+    },
+    {
+     "h": "SA (incl. high-level design) vs detailed design",
+     "items": [
+      {
+       "t": "**SA / high-level design** → how components work together at a **logical level**:",
+       "sub": [
+        "uses guidelines, standards, patterns and policies",
+        "to meet business requirements and expected qualities"
+       ]
+      },
+      {
+       "t": "**Detailed design** → how they work together at **implementable detail**:",
+       "sub": [
+        "chooses methods and tools for implementation"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Shared design principles",
+     "items": [
+      "**Abstraction** → focus on significant detail",
+      "**Encapsulation** → hide unnecessary detail",
+      "**High cohesion** → components that belong together",
+      "**Low coupling** → little interdependence"
+     ],
+     "foot": "Together they **reduce complexity** and improve **reusability and maintainability**."
+    }
    ],
    "terms": [
     {
@@ -138,10 +274,56 @@
    ],
    "summary": "Who the solution architect is, what they are responsible for, and what separates good from poor architects.",
    "notes": [
-    "**A solution architect may be a person, team or organisation.** They design a blueprint spanning hardware, software and processes to meet current and future business needs. The work may also change IT services and operating processes.",
-    "**Responsibility is viability, not just a design document.** The architect is responsible for the solution's viability (can be implemented and operated), gives solution-related leadership and supports the project manager in delivery.",
-    "**Activities run end to end:** assess business requirements; evaluate feasible technical options and select the optimum; align with enterprise architecture; define and document the architecture; define integration with the rest of the enterprise; incorporate security, reliability and maintainability; support detailed design and construction; deliver functional and non-functional requirements.",
-    "**Good architects** earn trust, document a viable design, support implementation and share enough knowledge for the team to proceed without them. **Failure patterns:** solve the wrong problem, exceed cost or skill constraints, design in an ivory tower, or disappear during construction."
+    {
+     "h": "Who the solution architect is",
+     "items": [
+      "May be a **person, team or organisation**",
+      "Designs a **blueprint** spanning **hardware, software and processes**",
+      "Meets **current and future** business needs",
+      "Work may also **change IT services and operating processes**"
+     ]
+    },
+    {
+     "h": "Responsibility is viability",
+     "lead": "Not just a design document. The architect:",
+     "items": [
+      "Is responsible for the solution's **viability** (can be **implemented and operated**)",
+      "Gives **solution-related leadership**",
+      "**Supports the project manager** in delivery"
+     ]
+    },
+    {
+     "h": "Activities, end to end",
+     "ordered": true,
+     "items": [
+      "**Assess** business requirements",
+      "**Evaluate** feasible technical options and **select the optimum**",
+      "**Align** with enterprise architecture",
+      "**Define and document** the architecture",
+      "**Define integration** with the rest of the enterprise",
+      "**Incorporate** security, reliability and maintainability",
+      "**Support** detailed design and construction",
+      "**Deliver** functional and non-functional requirements"
+     ]
+    },
+    {
+     "h": "Good architects",
+     "items": [
+      "**Earn trust**",
+      "**Document a viable design**",
+      "**Support implementation**",
+      "**Share enough knowledge** for the team to proceed without them"
+     ]
+    },
+    {
+     "h": "Failure patterns",
+     "items": [
+      "**Solve the wrong problem**",
+      "**Exceed cost or skill constraints**",
+      "**Design in an ivory tower**",
+      "**Disappear during construction**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -181,10 +363,43 @@
    ],
    "summary": "What quality attributes are, how they interact (direct, neutral, inverse), the ISO 25010 model as a vocabulary, and the utility tree for prioritising them.",
    "notes": [
-    "**A quality attribute measures how well software is designed and how well it conforms to that design.** They are the non-functional drivers that largely determine architecture choices.",
-    "**Qualities can reinforce each other, be independent, or conflict.** An inverse relationship is a trade-off under stated conditions. For example, a richer GUI may improve operability while using more resources than a command line; the effect depends on the design and workload.",
-    "**Use the lecture’s ISO 25010:2011 vocabulary** to name product quality needs. The eight characteristics are detailed next; a name such as availability still needs a measurable scenario.",
-    "**The utility tree makes qualities testable.** Utility (overall usefulness) is broken into quality attributes, then refinements, down to concrete scenarios as leaves (e.g. 'power outage at site 1 requires traffic redirected to site 2 in under 3 seconds'). Each leaf is ranked by (Importance, Risk of achieving) using H/M/L, and the architecture is evaluated by how it makes the scenarios possible (from Clements, Kazman and Klein)."
+    {
+     "h": "What a quality attribute is",
+     "items": [
+      "**Measures** how well software is **designed** and how well it **conforms to that design**",
+      "The **non-functional drivers** that largely **determine architecture choices**"
+     ]
+    },
+    {
+     "h": "How qualities relate",
+     "items": [
+      "**Reinforce** each other",
+      "**Independent**",
+      "**Conflict** → an **inverse relationship** is a **trade-off under stated conditions**",
+      "**Example** → richer **GUI** may improve **operability** while using **more resources** than a **command line**; effect depends on the **design and workload**"
+     ]
+    },
+    {
+     "h": "Name qualities with ISO 25010",
+     "items": [
+      "Use the **ISO 25010:2011** vocabulary from the lecture to name **product quality** needs",
+      "**Eight characteristics** (detailed next)",
+      "A name such as **availability** still needs a **measurable scenario**"
+     ]
+    },
+    {
+     "h": "Utility tree makes qualities testable",
+     "ordered": true,
+     "items": [
+      "**Utility** (overall usefulness)",
+      "→ **Quality attributes**",
+      "→ **Refinements**",
+      "→ **Concrete scenarios** as **leaves** (e.g. 'power outage at site 1 requires traffic redirected to site 2 in under 3 seconds')",
+      "**Rank each leaf** by **(Importance, Risk of achieving)** using **H/M/L**",
+      "**Evaluate** the architecture by how it makes the scenarios possible"
+     ],
+     "foot": "From **Clements, Kazman and Klein**."
+    }
    ],
    "terms": [
     {
@@ -253,12 +468,93 @@
    ],
    "summary": "The eight product quality characteristics in the lecture’s ISO 25010:2011 model, with short definitions for exam answers.",
    "notes": [
-    "**Eight characteristics, each with sub-characteristics.** Learn the names; the definitions below are short hooks.",
-    "**Functional Suitability:** functions meet stated and implied needs. Completeness (covers all tasks), Correctness (right results, needed precision), Appropriateness (functions help accomplish the tasks).",
-    "**Performance Efficiency:** performance relative to resources used. Time Behaviour (response, processing time, throughput), Resource Utilization (amount and type of resources), Capacity (maximum limits meet requirements). **Compatibility:** Co-existence (share an environment without harming others), Interoperability (exchange and use information).",
-    "**Usability:** Appropriateness recognisability, Learnability, Operability, User error protection, User interface aesthetics, Accessibility (widest range of users). **Reliability:** Maturity (reliable in normal operation), Availability (operational and accessible when needed), Fault tolerance (works despite faults), Recoverability (recover data and re-establish state after failure).",
-    "**Security:** Confidentiality (only authorised access), Integrity (no unauthorised access or modification), Non-repudiation (actions provable, cannot be denied), Accountability (actions traced uniquely to an entity), Authenticity (identity proven to be as claimed).",
-    "**Maintainability:** Modularity (change to one component has minimal impact on others), Reusability, Analyzability (assess impact of change or diagnose faults), Modifiability (change without defects), Testability. **Portability:** Adaptability (to other environments), Installability, Replaceability (replace another product for the same purpose)."
+    {
+     "h": "ISO 25010: eight characteristics",
+     "lead": "Each has sub-characteristics. Learn the names; the definitions are short hooks.",
+     "items": [
+      "Functional Suitability",
+      "Performance Efficiency",
+      "Compatibility",
+      "Usability",
+      "Reliability",
+      "Security",
+      "Maintainability",
+      "Portability"
+     ]
+    },
+    {
+     "h": "Functional Suitability",
+     "lead": "Functions meet **stated and implied needs**.",
+     "items": [
+      "**Completeness** → covers all tasks",
+      "**Correctness** → right results, needed precision",
+      "**Appropriateness** → functions help accomplish the tasks"
+     ]
+    },
+    {
+     "h": "Performance Efficiency",
+     "lead": "Performance **relative to resources used**.",
+     "items": [
+      "**Time Behaviour** → response, processing time, throughput",
+      "**Resource Utilization** → amount and type of resources",
+      "**Capacity** → maximum limits meet requirements"
+     ]
+    },
+    {
+     "h": "Compatibility",
+     "items": [
+      "**Co-existence** → share an environment without harming others",
+      "**Interoperability** → exchange and use information"
+     ]
+    },
+    {
+     "h": "Usability",
+     "items": [
+      "**Appropriateness recognisability**",
+      "**Learnability**",
+      "**Operability**",
+      "**User error protection**",
+      "**User interface aesthetics**",
+      "**Accessibility** → widest range of users"
+     ]
+    },
+    {
+     "h": "Reliability",
+     "items": [
+      "**Maturity** → reliable in normal operation",
+      "**Availability** → operational and accessible when needed",
+      "**Fault tolerance** → works despite faults",
+      "**Recoverability** → recover data and re-establish state after failure"
+     ]
+    },
+    {
+     "h": "Security",
+     "items": [
+      "**Confidentiality** → only authorised access",
+      "**Integrity** → no unauthorised access or modification",
+      "**Non-repudiation** → actions provable, cannot be denied",
+      "**Accountability** → actions traced uniquely to an entity",
+      "**Authenticity** → identity proven to be as claimed"
+     ]
+    },
+    {
+     "h": "Maintainability",
+     "items": [
+      "**Modularity** → change to one component has minimal impact on others",
+      "**Reusability**",
+      "**Analyzability** → assess impact of change or diagnose faults",
+      "**Modifiability** → change without defects",
+      "**Testability**"
+     ]
+    },
+    {
+     "h": "Portability",
+     "items": [
+      "**Adaptability** → to other environments",
+      "**Installability**",
+      "**Replaceability** → replace another product for the same purpose"
+     ]
+    }
    ],
    "terms": [
     {
@@ -350,8 +646,27 @@
    ],
    "summary": "Two supplementary models: business qualities that constrain the architecture from the commercial side, and the ISO quality-in-use model.",
    "notes": [
-    "**Business qualities** are commercial forces: Time to Market (competitive pressure, short window), Cost and Benefit (budget that cannot be exceeded), Projected Lifetime (a long life raises the need for modifiability, scalability and portability) and Targeted Market (mass vs specialised).",
-    "**Quality in use** judges the product when real users use it in context: Effectiveness (accuracy and completeness of goals), Efficiency (resources spent relative to that), Satisfaction, Freedom from Risk (mitigating risk to economic status, life, health, environment) and Context Coverage (works in specified and unforeseen contexts)."
+    {
+     "h": "Business qualities",
+     "lead": "Commercial forces on the architecture:",
+     "items": [
+      "**Time to Market** → competitive pressure, short window",
+      "**Cost and Benefit** → budget that cannot be exceeded",
+      "**Projected Lifetime** → a long life raises the need for **modifiability, scalability and portability**",
+      "**Targeted Market** → mass vs specialised"
+     ]
+    },
+    {
+     "h": "Quality in use",
+     "lead": "Judges the product when **real users** use it **in context**:",
+     "items": [
+      "**Effectiveness** → accuracy and completeness of goals",
+      "**Efficiency** → resources spent relative to that",
+      "**Satisfaction**",
+      "**Freedom from Risk** → mitigating risk to economic status, life, health, environment",
+      "**Context Coverage** → works in specified and unforeseen contexts"
+     ]
+    }
    ],
    "terms": [
     {

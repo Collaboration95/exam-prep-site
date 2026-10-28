@@ -22,8 +22,32 @@
    ],
    "summary": "Splitting a table is a breaking change, so it needs a multi-release plan.",
    "notes": [
-    "**The change:** Payment currently holds all payment types. Cheque and Apple Pay capture different fields, so Version 2 should write to ChequePayment and ApplePayPayment instead of Payment.",
-    "**Why stage it:** V2 cannot retrieve old Payment rows until they are migrated. Reverting to V1 can also hide payments written only to the new tables. Separate schema expansion, compatible code, historical migration and final read cutover; assess rollback data at every stage."
+    {
+     "h": "The change",
+     "items": [
+      "**Payment** table currently holds all payment types",
+      "**Cheque** and **Apple Pay** capture different fields",
+      "So **Version 2** should write to **ChequePayment** and **ApplePayPayment** instead of Payment"
+     ]
+    },
+    {
+     "h": "Why stage it",
+     "items": [
+      "**V2 cannot retrieve old Payment rows** until they are migrated",
+      "**Reverting to V1** can also hide payments written only to the new tables"
+     ]
+    },
+    {
+     "h": "Separate the stages",
+     "ordered": true,
+     "items": [
+      "**Schema expansion**",
+      "**Compatible code**",
+      "**Historical migration**",
+      "**Final read cutover**"
+     ],
+     "foot": "**Assess rollback data at every stage.**"
+    }
    ],
    "terms": [
     {
@@ -51,9 +75,39 @@
    ],
    "summary": "Add the tables, then canary V1.1 with new-table writes and fallback reads. Check the data needed by both versions before rolling back.",
    "notes": [
-    "**Step 1, add tables:** create ChequePayment and ApplePayPayment without changing V1. The lecture chooses a rolling update of database scripts. Dropping unused new tables reverses this step; that is no longer harmless once they contain accepted payments.",
-    "**Step 2, canary V1.1:** write new payments to the new tables; read there first and fall back to Payment when absent. Mark deletes with tombstones. Start with about 5–10% of transactions, observe behaviour, then roll out.",
-    "**Rollback caveat:** the lecture calls rollback “okay” because Payment is untouched and exposure is limited. This preserves old rows but does not explain how V1 reads new-only payments, or how mixed V1/V1.1 instances route reads of them. A complete plan must resolve that compatibility gap before using the canary in production."
+    {
+     "h": "Step 1: add tables",
+     "items": [
+      "**Create ChequePayment and ApplePayPayment** without changing V1",
+      "Lecture chooses a **rolling update of database scripts**",
+      "**Dropping the unused new tables** reverses this step",
+      "That is **no longer harmless once they contain accepted payments**"
+     ]
+    },
+    {
+     "h": "Step 2: canary V1.1",
+     "items": [
+      "**Write** new payments to the new tables",
+      "**Read** there first; **fall back to Payment** when absent",
+      "**Mark deletes with tombstones**",
+      "**Start with about 5–10% of transactions**, observe behaviour, then roll out"
+     ]
+    },
+    {
+     "h": "Step 2 rollback caveat",
+     "items": [
+      "Lecture calls rollback **\"okay\"** → Payment is untouched and exposure is limited",
+      "This **preserves old rows**",
+      {
+       "t": "But it does not explain →",
+       "sub": [
+        "how **V1 reads new-only payments**",
+        "how **mixed V1/V1.1 instances** route reads of them"
+       ]
+      }
+     ],
+     "foot": "A complete plan must **resolve that compatibility gap** before using the canary in production."
+    }
    ],
    "terms": [],
    "check": [
@@ -80,9 +134,40 @@
    ],
    "summary": "Backfill old rows, validate the result, then canary new-only reads. Rollback should restore compatible reading without hiding new payments.",
    "notes": [
-    "**Step 3, backfill:** copy historical payments into the new tables while V1.1 continues new-first, old-fallback reads. Honour tombstones and avoid overwriting newer data. The lecture suggests identifying migrated rows by updated date for rollback; use that only if it distinguishes migration copies from genuine new or changed payments.",
-    "**Step 4, new-only reads:** after confirming all required historical rows are migrated, canary V1.2 and roll it out, then tag it 2.0. Restore the V1.1 compatible reader if needed: it still reads new payments and falls back for old ones. Returning to an old-only reader is unsafe when new-only writes exist.",
-    "**Lesson:** retain data and the reader needed by each rollback target. Traffic strategies limit exposure; they do not reverse database writes. The lecture leaves concurrent updates, backfill validation and full data reconciliation unspecified."
+    {
+     "h": "Step 3: backfill",
+     "items": [
+      "**Copy historical payments** into the new tables",
+      "**V1.1 continues** new-first, old-fallback reads",
+      "**Honour tombstones**",
+      "**Avoid overwriting newer data**",
+      "Lecture suggests **identifying migrated rows by updated date** for rollback → use only if it distinguishes migration copies from genuine new or changed payments"
+     ]
+    },
+    {
+     "h": "Step 4: new-only reads",
+     "items": [
+      "Only **after confirming all required historical rows are migrated**",
+      "**Canary V1.2**, roll it out, then **tag it 2.0**",
+      "**Rollback** → restore the **V1.1 compatible reader** if needed: it still reads new payments and falls back for old ones",
+      "**Returning to an old-only reader is unsafe** when new-only writes exist"
+     ]
+    },
+    {
+     "h": "Lesson",
+     "items": [
+      "**Retain data and the reader** needed by each rollback target",
+      "**Traffic strategies limit exposure**; they do **not reverse database writes**",
+      {
+       "t": "Lecture leaves **unspecified** →",
+       "sub": [
+        "concurrent updates",
+        "backfill validation",
+        "full data reconciliation"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [],
    "check": [

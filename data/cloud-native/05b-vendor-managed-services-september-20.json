@@ -23,9 +23,41 @@
    ],
    "summary": "How Gartner evaluates cloud platform and cloud database vendors, and the three kinds of managed compute.",
    "notes": [
-    "**Analyst reports help judge vendor viability, not fit.** Gartner's Magic Quadrants weight criteria such as market responsiveness, overall viability and product strength (cloud platforms) and offering strategy and innovation (cloud databases); use them as one input alongside region, price and skills.",
-    "**Managed compute has three levels of control.** VMs (EC2) give most control and most to operate; managed Kubernetes (EKS, AKS, GKE) suits long-running containerised services and cross-cloud portability; FaaS (Lambda) suits short event-driven tasks without operating function servers and with usage-based billing.",
-    "**Providers offer overlapping building blocks, not identical semantics.** First state the capability needed, then check the product’s access model, supported regions, operating boundary and constraints."
+    {
+     "h": "Analyst reports: vendor viability, not fit",
+     "lead": "Gartner's Magic Quadrants weight criteria such as:",
+     "items": [
+      "**Cloud platforms** → market responsiveness, overall viability, product strength",
+      "**Cloud databases** → offering strategy and innovation"
+     ],
+     "foot": "Use them as **one input** alongside region, price and skills."
+    },
+    {
+     "h": "Managed compute: three levels of control",
+     "items": [
+      "**VMs (EC2)** → most control and most to operate",
+      "**Managed Kubernetes (EKS, AKS, GKE)** → long-running containerised services, cross-cloud portability",
+      "**FaaS (Lambda)** → short event-driven tasks, no function servers to operate, usage-based billing"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Overlapping building blocks",
+     "lead": "Providers offer overlapping building blocks, not identical semantics.",
+     "items": [
+      "**First** state the capability needed",
+      {
+       "t": "**Then check** the product's:",
+       "sub": [
+        "access model",
+        "supported regions",
+        "operating boundary",
+        "constraints"
+       ]
+      }
+     ],
+     "ordered": true
+    }
    ],
    "terms": [
     {
@@ -65,9 +97,34 @@
    ],
    "summary": "The three storage types and when to use each, then the managed networking services.",
    "notes": [
-    "**Pick storage by access pattern.** Object (S3) for unstructured data at scale such as media, backups and archives; block (EBS, Persistent Disk) for low-latency VM and database disks; file (EFS, Filestore) for shared file systems mounted by many VMs, often for lift-and-shift.",
-    "**Networking has distinct jobs:** VPC/VNet for logical isolation, DNS for naming, load balancing for distributing traffic, network firewall rules for connections and a WAF for HTTP-level filtering. A load balancer helps availability only when healthy backend capacity remains.",
-    "**Managed reduces infrastructure work, not design responsibility.** Select capacity and availability options, configure permissions and retention, and test recovery. A service being managed does not by itself satisfy an application SLA."
+    {
+     "h": "Storage by access pattern",
+     "items": [
+      "**Object (S3)** → unstructured data at scale: media, backups, archives",
+      "**Block (EBS, Persistent Disk)** → low-latency VM and database disks",
+      "**File (EFS, Filestore)** → shared file systems mounted by many VMs, often for lift-and-shift"
+     ]
+    },
+    {
+     "h": "Networking: distinct jobs",
+     "items": [
+      "**VPC/VNet** → logical isolation",
+      "**DNS** → naming",
+      "**Load balancing** → distributing traffic; a load balancer helps availability only when healthy backend capacity remains",
+      "**Network firewall rules** → connections",
+      "**WAF** → HTTP-level filtering"
+     ]
+    },
+    {
+     "h": "Managed is not design-free",
+     "lead": "Managed reduces infrastructure work, not design responsibility.",
+     "items": [
+      "**Select** capacity and availability options",
+      "**Configure** permissions and retention",
+      "**Test** recovery"
+     ],
+     "foot": "A service being managed does **not by itself satisfy an application SLA**."
+    }
    ],
    "terms": [
     {
@@ -155,9 +212,37 @@
    ],
    "summary": "Managed data and analytics, streaming and messaging, and operations and security services.",
    "notes": [
-    "**Data services map to data shape and workload:** relational (RDS, Cloud SQL) for structured transactional data, NoSQL (DynamoDB, Cosmos DB) for flexible or high-scale access, a warehouse (BigQuery, Synapse, Redshift) for SQL analytics over huge data, big-data engines (EMR, Dataproc) for Hadoop/Spark processing, plus AutoML and data catalogue/integration services.",
-    "**Messaging separates distribution from work ownership.** Streams retain ordered event data for processing and replay. Event routing connects producers to interested consumers. A queue distributes work among competing workers; pub/sub fans out to independent subscribers. Delivery may be repeated, so design idempotent processing instead of assuming once-only business effects.",
-    "**Operations and security are managed too:** monitoring (CloudWatch), infrastructure as code for reproducible environments (CloudFormation), identity management (IAM) for access control and key management (KMS) for encryption, so automation, observability and security need not be built from scratch."
+    {
+     "h": "Data services by shape and workload",
+     "items": [
+      "**Relational (RDS, Cloud SQL)** → structured transactional data",
+      "**NoSQL (DynamoDB, Cosmos DB)** → flexible or high-scale access",
+      "**Warehouse (BigQuery, Synapse, Redshift)** → SQL analytics over huge data",
+      "**Big-data engines (EMR, Dataproc)** → Hadoop/Spark processing",
+      "**Plus** AutoML and data catalogue/integration services"
+     ]
+    },
+    {
+     "h": "Messaging patterns",
+     "lead": "Messaging separates distribution from work ownership.",
+     "items": [
+      "**Streams** → retain ordered event data for processing and replay",
+      "**Event routing** → connects producers to interested consumers",
+      "**Queue** → distributes work among competing workers",
+      "**Pub/sub** → fans out to independent subscribers"
+     ],
+     "foot": "Delivery may be repeated: design **idempotent processing** instead of assuming once-only business effects."
+    },
+    {
+     "h": "Managed operations and security",
+     "items": [
+      "**Monitoring** → CloudWatch",
+      "**Infrastructure as code** → CloudFormation, reproducible environments",
+      "**Identity management** → IAM, access control",
+      "**Key management** → KMS, encryption"
+     ],
+     "foot": "Automation, observability and security **need not be built from scratch**."
+    }
    ],
    "terms": [
     {

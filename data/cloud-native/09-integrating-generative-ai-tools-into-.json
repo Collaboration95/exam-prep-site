@@ -24,9 +24,34 @@
    ],
    "summary": "The short history that led to Transformers, contrasting the sequential RNN with the parallel, attention-based Transformer.",
    "notes": [
-    "**Transformers improve training parallelism and context handling.** RNNs propagate state step by step. Self-attention connects positions directly and allows parallel computation over known training inputs. An autoregressive Transformer still generates its output token by token; parallel training does not mean all future output tokens are known at once.",
-    "**Contrast the information path.** An RNN passes context through recurrent state; self-attention lets a position combine allowed context positions directly. This helps large-scale training and long-range relationships without guaranteeing perfect understanding.",
-    "The 2017 paper Attention Is All You Need introduced the Transformer. GPT means Generative Pretrained Transformer. GPT, Claude and Gemini are examples of model families, rather than a claim that one vendor’s model descended from another vendor’s product."
+    {
+     "h": "Transformers: parallelism and context",
+     "lead": "Transformers improve training parallelism and context handling.",
+     "items": [
+      "**RNNs** → **propagate state step by step**",
+      "**Self-attention** → **connects positions directly**; allows **parallel computation** over **known training inputs**",
+      "**Autoregressive Transformer** → still **generates its output token by token**"
+     ],
+     "foot": "**Parallel training** does **not** mean all **future output tokens** are known at once."
+    },
+    {
+     "h": "Contrast the information path",
+     "items": [
+      "**RNN** → passes context through **recurrent state**",
+      "**Self-attention** → a position **combines allowed context positions directly**",
+      "**Helps** → **large-scale training** and **long-range relationships**",
+      "**No guarantee** of **perfect understanding**"
+     ]
+    },
+    {
+     "h": "Origins and names",
+     "items": [
+      "**2017 paper** → **Attention Is All You Need** introduced the **Transformer**",
+      "**GPT** = **Generative Pretrained Transformer**",
+      "**GPT, Claude, Gemini** → examples of **model families**",
+      "**Not a claim** that one vendor's model **descended from** another vendor's product"
+     ]
+    }
    ],
    "terms": [
     {
@@ -90,9 +115,35 @@
    ],
    "summary": "Self-attention explained with a library analogy (Query, Key, Value) and a four-step computation giving each word a context-rich representation.",
    "notes": [
-    "**Self-attention lets each word build its meaning from the words that matter most to it.** Analogy: the Query is your question about the current word, the Keys are the labels of every other word you match against, and the Values are the content you collect from the best matches.",
-    "**Four steps per token:** form learned Query, Key and Value vectors; score the Query against allowed Keys; use softmax to obtain weights summing to 1; sum the weighted Values. The lecture illustrates 'it' attending more to 'animal' than 'street'. The numbers are explanatory examples, not fixed learned rules.",
-    "The result is a context-rich representation. Encoder self-attention can use a whole input; causal decoder attention masks future positions. Encoder-decoder models also use cross-attention to connect decoder queries with encoder outputs."
+    {
+     "h": "Self-attention: Query, Key, Value",
+     "lead": "Each word builds its meaning from the words that matter most to it. Analogy:",
+     "items": [
+      "**Query** → your **question** about the **current word**",
+      "**Keys** → the **labels** of every other word you **match against**",
+      "**Values** → the **content you collect** from the **best matches**"
+     ]
+    },
+    {
+     "h": "Four steps per token",
+     "ordered": true,
+     "items": [
+      "**Form learned Query, Key and Value vectors**",
+      "**Score** the Query against **allowed Keys**",
+      "**Softmax** → obtain **weights summing to 1**",
+      "**Sum the weighted Values**"
+     ],
+     "foot": "Lecture illustration: **'it'** attends more to **'animal'** than **'street'**. The numbers are **explanatory examples**, not **fixed learned rules**."
+    },
+    {
+     "h": "Result and attention types",
+     "items": [
+      "**Result** → a **context-rich representation**",
+      "**Encoder self-attention** → can use a **whole input**",
+      "**Causal decoder attention** → **masks future positions**",
+      "**Encoder-decoder models** → also use **cross-attention** to connect **decoder queries** with **encoder outputs**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -161,9 +212,42 @@
    ],
    "summary": "Three ways of using a language model (plain LLM, RAG, agent), the parts of an autonomous agent, and a definition of Generative AI.",
    "notes": [
-    "**Choose by missing information or action.** A plain LLM uses its learned parameters plus the supplied prompt/context; it does not inherently fetch current company data. RAG retrieves documents and adds them to that context. An agent can select tools and act over several steps, often also using retrieval. These patterns combine; they are not a compulsory ladder.",
-    "**The agent architecture combines an interface, model, instructions and integrations.** The lecture adds planning, tool access and memory/context, with a vector store as one retrieval option. Orchestration frameworks connect these pieces; persistent vector memory is not required for every tool-using agent.",
-    "**Generative AI** is the part of machine learning that learns the patterns and distribution of a training dataset and samples new, similar content from it (e.g. new owl images from random noise). Agentic AI goes further: it sets goals, plans, acts autonomously and adapts."
+    {
+     "h": "LLM vs RAG vs agent",
+     "lead": "Choose by missing information or action.",
+     "items": [
+      "**Plain LLM** → **learned parameters** plus the supplied **prompt/context**; does **not inherently fetch current company data**",
+      "**RAG** → **retrieves documents** and **adds them to that context**",
+      "**Agent** → can **select tools** and **act over several steps**, often also using **retrieval**"
+     ],
+     "foot": "These patterns **combine**; they are **not a compulsory ladder**."
+    },
+    {
+     "h": "Agent architecture",
+     "items": [
+      "**Core** → **interface**, **model**, **instructions**, **integrations**",
+      "**Lecture adds** → **planning**, **tool access**, **memory/context**",
+      "**Vector store** → one **retrieval option**",
+      "**Orchestration frameworks** → connect these pieces",
+      "**Persistent vector memory** is **not required** for every **tool-using agent**"
+     ]
+    },
+    {
+     "h": "Generative AI vs agentic AI",
+     "items": [
+      "**Generative AI** → the part of **machine learning** that **learns the patterns and distribution** of a **training dataset** and **samples new, similar content** from it",
+      "**Example** → new **owl images** from **random noise**",
+      {
+       "t": "**Agentic AI** goes further:",
+       "sub": [
+        "**sets goals**",
+        "**plans**",
+        "**acts autonomously**",
+        "**adapts**"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -240,10 +324,66 @@
    ],
    "summary": "Six families of generative models, why businesses want GenAI services, and foundation models with the layered GenAI tech stack.",
    "notes": [
-    "**Six families of generative model, each generating differently:** variational autoencoders (VAEs) compress and decode data; GANs pit a generator against a discriminator; autoregressive models predict the next value from previous ones (how LLMs write text); flow models transform simple distributions into complex ones; energy-based models give low energy to real data and high to others; diffusion models learn to reverse a defined noise-adding process. GAN vs diffusion: adversarial competition vs reversing gradual noising.",
-    "**Why businesses want GenAI services:** creativity, smart suggestions, personalisation, instant answers, simplifying complex systems with plain language, automating admin work, and content at scale.",
-    "**Foundation models are pre-trained once, at high cost, on massive broad data, then adapted** (fine-tuning, prompt engineering) to many tasks such as Q&A, extraction, captioning and instruction following.",
-    "**GenAI tech stack, bottom up:** hardware (GPUs/TPUs), cloud platforms (scalable compute, storage, AI services), foundation models (closed via API, or open-weight with released parameters), customisation, then end-to-end applications. Closed vs open: closed is ready to use but ties you to a provider; released weights can allow self-hosting and tuning under their licence, at the cost of operating the model."
+    {
+     "h": "Six families of generative model",
+     "lead": "Each generates differently.",
+     "items": [
+      "**Variational autoencoders (VAEs)** → **compress and decode** data",
+      "**GANs** → pit a **generator** against a **discriminator**",
+      "**Autoregressive models** → **predict the next value** from previous ones (how **LLMs write text**)",
+      "**Flow models** → **transform simple distributions** into **complex ones**",
+      "**Energy-based models** → **low energy to real data**, **high to others**",
+      "**Diffusion models** → learn to **reverse** a defined **noise-adding process**"
+     ],
+     "foot": "**GAN vs diffusion**: **adversarial competition** vs **reversing gradual noising**."
+    },
+    {
+     "h": "Why businesses want GenAI services",
+     "items": [
+      "**Creativity**",
+      "**Smart suggestions**",
+      "**Personalisation**",
+      "**Instant answers**",
+      "**Simplifying complex systems** with **plain language**",
+      "**Automating admin work**",
+      "**Content at scale**"
+     ]
+    },
+    {
+     "h": "Foundation models",
+     "items": [
+      "**Pre-trained once**, at **high cost**, on **massive broad data**",
+      "**Then adapted** → **fine-tuning**, **prompt engineering**",
+      {
+       "t": "**To many tasks**:",
+       "sub": [
+        "Q&A",
+        "extraction",
+        "captioning",
+        "instruction following"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "GenAI tech stack, bottom up",
+     "ordered": true,
+     "items": [
+      "**Hardware** → **GPUs/TPUs**",
+      "**Cloud platforms** → **scalable compute, storage, AI services**",
+      "**Foundation models** → **closed via API**, or **open-weight** with **released parameters**",
+      "**Customisation**",
+      "**End-to-end applications**"
+     ]
+    },
+    {
+     "h": "Closed vs open models",
+     "items": [
+      "**Closed** → **ready to use** but **ties you to a provider**",
+      "**Released weights** → can allow **self-hosting** and **tuning** under their **licence**",
+      "**Open cost** → **operating the model**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -326,10 +466,51 @@
    ],
    "summary": "GenAI application areas, with concrete business use cases for voice, video, text and music generation.",
    "notes": [
-    "**GenAI generates many media types:** voice, video, text and translation, music, images, 3D objects, generative design, and scientific uses such as protein folding. For an architect each is a capability consumed as a service through APIs.",
-    "**Voice and text** target service and knowledge work: AI phone agents and IVR that cut wait times, multilingual and accessible narration, auto-generated FAQs and chatbot answers, translation, and first drafts of proposals and reports.",
-    "**Video and music** target marketing and media: personalised videos per segment, virtual presenters for training, product visualisation before manufacture, lip-synced localisation without reshooting, brand jingles, adaptive soundtracks and ad tracks where the applicable usage terms permit.",
-    "**Common business value:** content at scale, personalisation, lower cost and faster delivery."
+    {
+     "h": "Media types GenAI generates",
+     "items": [
+      "**Voice**",
+      "**Video**",
+      "**Text and translation**",
+      "**Music**",
+      "**Images**",
+      "**3D objects**",
+      "**Generative design**",
+      "**Scientific uses** → **protein folding**"
+     ],
+     "foot": "For an **architect** each is a **capability consumed as a service through APIs**."
+    },
+    {
+     "h": "Voice and text",
+     "lead": "Target service and knowledge work.",
+     "items": [
+      "**AI phone agents and IVR** → **cut wait times**",
+      "**Multilingual and accessible narration**",
+      "**Auto-generated FAQs** and **chatbot answers**",
+      "**Translation**",
+      "**First drafts** of **proposals and reports**"
+     ]
+    },
+    {
+     "h": "Video and music",
+     "lead": "Target marketing and media.",
+     "items": [
+      "**Personalised videos** per **segment**",
+      "**Virtual presenters** for **training**",
+      "**Product visualisation** before **manufacture**",
+      "**Lip-synced localisation** without **reshooting**",
+      "**Brand jingles**, **adaptive soundtracks**, **ad tracks** → where the applicable **usage terms permit**"
+     ]
+    },
+    {
+     "h": "Common business value",
+     "items": [
+      "**Content at scale**",
+      "**Personalisation**",
+      "**Lower cost**",
+      "**Faster delivery**"
+     ]
+    }
    ],
    "terms": [
     {

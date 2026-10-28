@@ -24,12 +24,60 @@
    ],
    "summary": "Performance is useful work done accurately, efficiently and quickly, and it is judged through a handful of metrics: response time, throughput, utilization, load, latency and think time.",
    "notes": [
-    "**Choose measurable goals.** Specify response time, throughput and resource use for a stated workload. Low utilization alone is not proof of good performance: an idle system may simply be doing little work. Use metrics together.",
-    "**Response time = service time + waiting time + transmission time.** Service time is how long the work itself takes, waiting (queue) time is how long the request sits behind others, and transmission time is moving the request and reply. For finer analysis each piece can be split further (network, rendering, processing).",
-    "**Throughput is the rate of completed work; load is the rate of incoming work.** Arrival rate (input rate, load) counts requests coming in per period; response rate (output rate, throughput) counts responses going out. Throughput is a better indicator of system performance than clock speed or disk seek time, because it reflects all components together.",
-    "**Utilization = used capacity / total capacity.** It is the share of time a component is busy. A busy CPU or disk cannot take other work, so pending requests wait: high utilization is what creates queueing.",
-    "**Define “load”.** It may mean request rate, throughput or utilization; write the units. In a stable, loss-free system, arrival and completion rates match. End-to-end latency and network latency are different boundaries, so specify which is being measured.",
-    "**Think time is the user's pause between actions.** It does not measure the system, but it changes utilization and throughput calculations, so it matters for performance testing and capacity planning."
+    {
+     "h": "Choose measurable goals",
+     "items": [
+      "Specify **response time**, **throughput** and **resource use**",
+      "...for a **stated workload**",
+      "**Low utilization alone is not proof** of good performance: an idle system may simply be doing little work",
+      "**Use metrics together**"
+     ]
+    },
+    {
+     "h": "Response time components",
+     "lead": "**Response time = service time + waiting time + transmission time**",
+     "items": [
+      "**Service time**: how long the work itself takes",
+      "**Waiting (queue) time**: how long the request sits behind others",
+      "**Transmission time**: moving the request and reply"
+     ],
+     "foot": "For finer analysis each piece can be split further (**network**, **rendering**, **processing**)."
+    },
+    {
+     "h": "Throughput vs load",
+     "items": [
+      "**Throughput** = rate of **completed** work; **load** = rate of **incoming** work",
+      "**Arrival rate** (input rate, load) → counts requests coming in per period",
+      "**Response rate** (output rate, throughput) → counts responses going out",
+      "**Throughput is a better indicator** of system performance than **clock speed** or **disk seek time**, because it reflects all components together"
+     ]
+    },
+    {
+     "h": "Utilization",
+     "items": [
+      "**Utilization = used capacity / total capacity**",
+      "= the **share of time a component is busy**",
+      "**Busy CPU or disk** cannot take other work → pending requests wait",
+      "**High utilization is what creates queueing**"
+     ]
+    },
+    {
+     "h": "Define “load”",
+     "items": [
+      "May mean **request rate**, **throughput** or **utilization**: write the **units**",
+      "**Stable, loss-free system** → arrival and completion rates match",
+      "**End-to-end latency** vs **network latency** are different boundaries: specify which is being measured"
+     ]
+    },
+    {
+     "h": "Think time",
+     "items": [
+      "**Think time** = the user's pause between actions",
+      "Does **not** measure the system",
+      "But it **changes utilization and throughput calculations**",
+      "→ matters for **performance testing** and **capacity planning**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -81,13 +129,78 @@
    ],
    "summary": "How response time and throughput combine across components in series and in parallel, how throughput saturates as load grows, and worked exercises on a burger shop, a game server and a four-tier stack.",
    "notes": [
-    "**Serial composition:** add response times along the request path. Pipeline capacity is limited by the lowest stage capacity when each request visits each stage once. With repeated visits, compare service demand per system request instead.",
-    "**Two meanings of parallel:** concurrent branches of one request contribute their maximum time when all results are required. Load-balanced replicas process different requests and can add capacity. These results assume independent work, adequate distribution and no additional shared bottleneck; include coordination overhead where relevant.",
-    "**Single-worker burger example:** 1 minute to prepare plus 0.5 minute to pack gives 1.5 minutes of work, or capacity of 40 burgers/hour. Halving that service time doubles this worker’s capacity. This does not establish that any reduction in end-to-end response time doubles system throughput.",
-    "**Below saturation**, a stable system completing one response per accepted request has throughput equal to arrival rate. With capacity 20/s and arrivals 22/s, completion rate cannot exceed 20/s: the excess queues or is rejected. At or above capacity, an unbounded queue has no finite steady-state waiting time.",
-    "**Real interactive systems fall short of the ideal curve.** Ideal throughput rises linearly then flattens at capacity; co-ordination overhead keeps real systems below that ceiling, and with congestion penalty a badly behaved system's throughput actually falls as load keeps increasing.",
-    "**Closed population example:** 1000 players each wait 3 seconds after a response. With 50 ms server time and 200 ms round-trip network time, enough parallel capacity, no queueing and one outstanding request per player, rate = 1000 / (3 + 0.05 + 0.2) = 307.7/s. If response time already includes network time, do not add latency again.",
-    "**Four-tier worked example.** Per-tier wait + service: firewall 5+45 = 50 ms, reverse proxy 10+90 = 100 ms, app server 50+550 = 600 ms, DB 30+300 = 330 ms; sum 1080 ms, plus 200 ms network latency = 1280 ms. With one server per tier throughput is min(10, 16, 6, 20) = 6 tps, set by the app server."
+    {
+     "h": "Serial composition",
+     "items": [
+      "**Add response times** along the request path",
+      "**Pipeline capacity** is **limited by the lowest stage capacity** (when each request visits each stage once)",
+      "**Repeated visits** → compare **service demand per system request** instead"
+     ]
+    },
+    {
+     "h": "Two meanings of parallel",
+     "items": [
+      "**Concurrent branches of one request** → contribute their **maximum time** when all results are required",
+      "**Load-balanced replicas** → process **different requests** and can **add capacity**",
+      {
+       "t": "**Assumptions** behind these results:",
+       "sub": [
+        "independent work",
+        "adequate distribution",
+        "no additional shared bottleneck"
+       ]
+      },
+      "Include **coordination overhead** where relevant"
+     ]
+    },
+    {
+     "h": "Single-worker burger example",
+     "items": [
+      "**1 minute** to prepare + **0.5 minute** to pack = **1.5 minutes** of work",
+      "→ capacity **40 burgers/hour**",
+      "**Halving that service time doubles this worker’s capacity**"
+     ],
+     "foot": "This does **not** establish that any reduction in end-to-end response time doubles system throughput."
+    },
+    {
+     "h": "Below vs at saturation",
+     "items": [
+      "**Below saturation**: a stable system completing one response per accepted request → **throughput = arrival rate**",
+      "Capacity **20/s**, arrivals **22/s** → completion rate **cannot exceed 20/s**; the excess **queues or is rejected**",
+      "**At or above capacity**: an **unbounded queue** has **no finite steady-state waiting time**"
+     ]
+    },
+    {
+     "h": "Ideal vs real throughput curve",
+     "items": [
+      "**Ideal**: throughput rises **linearly** then **flattens at capacity**",
+      "**Real interactive systems fall short** of the ideal curve: **co-ordination overhead** keeps them below that ceiling",
+      "**Congestion penalty** → a badly behaved system's throughput actually **falls** as load keeps increasing"
+     ]
+    },
+    {
+     "h": "Closed population example",
+     "lead": "**1000 players**, each waits **3 seconds** after a response.",
+     "items": [
+      "**50 ms** server time, **200 ms** round-trip network time",
+      "Assumes **enough parallel capacity**, **no queueing**, **one outstanding request per player**",
+      "**Rate = 1000 / (3 + 0.05 + 0.2) = 307.7/s**",
+      "If response time **already includes network time**, do **not add latency again**"
+     ]
+    },
+    {
+     "h": "Four-tier worked example",
+     "lead": "Per-tier **wait + service**:",
+     "items": [
+      "**Firewall**: 5+45 = **50 ms**",
+      "**Reverse proxy**: 10+90 = **100 ms**",
+      "**App server**: 50+550 = **600 ms**",
+      "**DB**: 30+300 = **330 ms**",
+      "**Sum 1080 ms** + **200 ms network latency** = **1280 ms**",
+      "**Throughput** (one server per tier) = **min(10, 16, 6, 20) = 6 tps**, set by the **app server**"
+     ],
+     "ordered": true
+    }
    ],
    "terms": [
     {
@@ -160,13 +273,87 @@
    ],
    "summary": "Queueing theory models jobs, servers and waiting; the operational laws (utilization, forced flow, bottleneck) hold on observed measurements regardless of distribution.",
    "notes": [
-    "**Queueing theory is the mathematical basis for response time, throughput and utilization,** and so for performance analysis and capacity planning. A population generates arrivals at rate λ, jobs wait, then c servers each take service time S. Jobs in the system = jobs in queue + jobs in service.",
-    "**Notation:** λ is arrival rate; S is mean service time; µ = 1/S is per-server service capacity; X is actual throughput; c is server count; ρ = λ/(cµ) is mean utilization per identical server under stable, balanced load. L/L_q count jobs in system/queue; W/W_q are their residence/wait times; P_n is the probability of n jobs; K denotes the capacity limit.",
-    "**Operational laws are measurement identities**, independent of arrival and service distributions. Keep units, observation interval and system boundary consistent, and account for losses. Queueing-model predictions require extra assumptions such as steady state, exponential service and Poisson arrivals.",
-    "**Utilization Law: U = X S** for one service resource. In a stable loss-free system, X = λ, giving U = λS = λ/µ. Example: 20 orders/hour x 1.5 minutes/order = 30 busy minutes/hour = 50%; 125 packets/s x 0.002 s = 25%.",
-    "**Forced Flow Law: λ_i = λ_0 V_i.** A component's load equals system load times its visit ratio V_i (average visits to it per system request).",
-    "**Service demand D_i = V_i S_i.** For single resources U_i = X_0 D_i, so the highest demand saturates first. For a component with c_i equivalent parallel workers, compare D_i/c_i and effective capacity instead; do not ignore different worker counts.",
-    "**Worked example.** Each instruction needs 5 s of CPU, 80 I/Os to storage A (50 ms each) and 100 I/Os to storage B (30 ms each); storage A throughput is observed as 15.70/s. Then λ_0 = λ_A / V_A = 15.70 / 80 = 0.196 job/s; D_CPU = 5 s, D_A = 80 x 0.05 = 4 s, D_B = 100 x 0.03 = 3 s, so the CPU is the bottleneck. U_CPU = 0.196 x 5 = 98%, U_A = 0.196 x 4 = 78.4%, U_B = 0.196 x 3 = 58.8%."
+    {
+     "h": "Queueing theory basics",
+     "items": [
+      "**Queueing theory** = mathematical basis for **response time**, **throughput** and **utilization**",
+      "→ and so for **performance analysis** and **capacity planning**",
+      "A **population** generates **arrivals at rate λ** → jobs **wait** → **c servers** each take **service time S**",
+      "**Jobs in the system = jobs in queue + jobs in service**"
+     ]
+    },
+    {
+     "h": "Notation",
+     "items": [
+      "**λ**: arrival rate",
+      "**S**: mean service time",
+      "**µ = 1/S**: per-server service capacity",
+      "**X**: actual throughput",
+      "**c**: server count",
+      "**ρ = λ/(cµ)**: mean utilization per identical server under stable, balanced load",
+      "**L/L_q**: count jobs in system/queue; **W/W_q**: their residence/wait times",
+      "**P_n**: probability of n jobs; **K**: the capacity limit"
+     ]
+    },
+    {
+     "h": "Operational laws vs queueing models",
+     "items": [
+      "**Operational laws are measurement identities**: independent of arrival and service distributions",
+      "Keep **units**, **observation interval** and **system boundary** consistent; **account for losses**",
+      "**Queueing-model predictions** need extra assumptions: **steady state**, **exponential service**, **Poisson arrivals**"
+     ]
+    },
+    {
+     "h": "Utilization Law",
+     "items": [
+      "**U = X S** for one service resource",
+      "**Stable loss-free system**: X = λ → **U = λS = λ/µ**",
+      "Example: **20 orders/hour x 1.5 minutes/order** = 30 busy minutes/hour = **50%**",
+      "Example: **125 packets/s x 0.002 s** = **25%**"
+     ]
+    },
+    {
+     "h": "Forced Flow Law",
+     "items": [
+      "**λ_i = λ_0 V_i**",
+      "A **component's load** = **system load x its visit ratio V_i**",
+      "**V_i** = average visits to it per system request"
+     ]
+    },
+    {
+     "h": "Service demand and bottleneck",
+     "items": [
+      "**D_i = V_i S_i**",
+      "Single resources: **U_i = X_0 D_i** → the **highest demand saturates first** (bottleneck)",
+      "Component with **c_i equivalent parallel workers** → compare **D_i/c_i** and **effective capacity** instead",
+      "Do **not ignore different worker counts**"
+     ]
+    },
+    {
+     "h": "Worked example: CPU and storage",
+     "lead": "Each instruction needs **5 s of CPU**, **80 I/Os to storage A (50 ms each)**, **100 I/Os to storage B (30 ms each)**; storage A throughput observed as **15.70/s**.",
+     "items": [
+      "**λ_0 = λ_A / V_A = 15.70 / 80 = 0.196 job/s**",
+      {
+       "t": "**Service demands**:",
+       "sub": [
+        "**D_CPU = 5 s**",
+        "**D_A = 80 x 0.05 = 4 s**",
+        "**D_B = 100 x 0.03 = 3 s**"
+       ]
+      },
+      "→ the **CPU is the bottleneck**",
+      {
+       "t": "**Utilizations**:",
+       "sub": [
+        "**U_CPU = 0.196 x 5 = 98%**",
+        "**U_A = 0.196 x 4 = 78.4%**",
+        "**U_B = 0.196 x 3 = 58.8%**"
+       ]
+      }
+     ],
+     "ordered": true
+    }
    ],
    "terms": [
     {
@@ -248,10 +435,53 @@
    ],
    "summary": "Little's Law links jobs in the system to arrival rate and response time; the General Response Time Law sums component times weighted by visits.",
    "notes": [
-    "**Little’s Law: n = λR** for stable long-run averages with consistent boundaries. n counts requests both waiting and in service; R includes all time within that same boundary. Use the accepted arrival/completion rate and account for rejected work.",
-    "**Lecture burger estimate:** 15 customers/hour = 0.25/min, 1.6 burgers/customer and 1.5 minutes/burger give 2.4 minutes of work and n = 0.6 customers **if queueing is ignored**. With measured waiting, add it to residence time before using Little’s Law; service time is not generally total time in the shop.",
-    "**Use it backwards to get component response times.** From the CPU/storage example, λ_B = λ_0 V_B = 0.196 x 100 = 19.6/s and λ_CPU = λ_0 V_CPU = 0.196 x 181 = 35.47/s (CPU visits = 80 + 100 + 1). With observed jobs n = 8.88, 3.19, 1.40 at CPU, A and B: R_CPU = 8.88/35.47 = 0.250 s, R_A = 3.19/15.70 = 0.203 s, R_B = 1.40/19.6 = 0.071 s.",
-    "**General Response Time Law: R = sum over i=1..M of R_i V_i.** Total response time is the sum of each component's response time per visit times its visits. Example: 0.250 x 181 + 0.203 x 80 + 0.071 x 100 = about 68.6 s (equivalently 13.47 jobs / 0.196 job/s via Little's Law)."
+    {
+     "h": "Little’s Law",
+     "items": [
+      "**n = λR**",
+      "For **stable long-run averages** with **consistent boundaries**",
+      "**n** counts requests both **waiting and in service**",
+      "**R** includes **all time within that same boundary**",
+      "Use the **accepted arrival/completion rate**; **account for rejected work**"
+     ]
+    },
+    {
+     "h": "Lecture burger estimate",
+     "items": [
+      "**15 customers/hour = 0.25/min**",
+      "**1.6 burgers/customer** x **1.5 minutes/burger** = **2.4 minutes** of work",
+      "→ **n = 0.6 customers** **if queueing is ignored**",
+      "With **measured waiting**, add it to **residence time** before using Little’s Law"
+     ],
+     "foot": "**Service time is not generally total time in the shop.**"
+    },
+    {
+     "h": "Little's Law backwards: component response times",
+     "lead": "From the CPU/storage example:",
+     "items": [
+      "**λ_B = λ_0 V_B = 0.196 x 100 = 19.6/s**",
+      "**λ_CPU = λ_0 V_CPU = 0.196 x 181 = 35.47/s** (CPU visits = **80 + 100 + 1**)",
+      "Observed jobs **n = 8.88, 3.19, 1.40** at CPU, A and B",
+      {
+       "t": "**R = n / λ**:",
+       "sub": [
+        "**R_CPU = 8.88/35.47 = 0.250 s**",
+        "**R_A = 3.19/15.70 = 0.203 s**",
+        "**R_B = 1.40/19.6 = 0.071 s**"
+       ]
+      }
+     ],
+     "ordered": true
+    },
+    {
+     "h": "General Response Time Law",
+     "items": [
+      "**R = sum over i=1..M of R_i V_i**",
+      "Total response time = sum of each component's **response time per visit x its visits**",
+      "Example: **0.250 x 181 + 0.203 x 80 + 0.071 x 100 = about 68.6 s**",
+      "Equivalently **13.47 jobs / 0.196 job/s** via Little's Law"
+     ]
+    }
    ],
    "terms": [
     {
@@ -311,11 +541,58 @@
    ],
    "summary": "Even when average capacity exceeds average load, random or bursty arrivals create queues; M/M/1 gives response time as S/(1-U), which explodes as utilization nears 100%.",
    "notes": [
-    "**Queues appear even at 75% utilization.** Burger shop: a customer every 2 min on average, service 1.5 min, so U = 75%; yet arrivals are random and bursty (e.g. 30 customers in the last 5 minutes after 55 idle minutes), so queues form. Averages hide bursts, which is why queueing models are needed.",
-    "**Kendall notation A/B/C/K/N/D** specifies arrival distribution, service distribution, servers, capacity, population and discipline. M denotes Markovian assumptions, D deterministic, Ek Erlang, G general and PH phase-type. Disciplines include FIFO, LIFO, round robin, processor sharing and priority. Distinguish one queue/server, separate queues, and one shared queue feeding c servers.",
-    "**M/M/1 assumes Poisson arrivals and independent exponential service times**, one server and a stable rate λ < µ. Mean response R = S/(1-U) = 1/(µ-λ). For 20 orders/hour and capacity 30/hour, S = 2 minutes, U = 2/3 and R = 6 minutes, including 4 minutes waiting.",
-    "**Queueing rises non-linearly.** At S = 1 second, M/M/1 predicts R = 2 seconds at 50%, 3.33 at 70% and 10 at 90% utilization. These are model outputs, not a universal safe-utilization threshold. Use the workload, measured curve and response target to choose headroom.",
-    "**Reducing utilization reduces response time.** U_i = λ_0 V_i S_i, so with the same arrival rate you can lower S_i (faster service) or V_i (fewer visits), or reduce the arrival rate to the system (throttling, spreading load)."
+    {
+     "h": "Queues appear even at 75% utilization",
+     "items": [
+      "**Burger shop**: a customer every **2 min** on average, service **1.5 min** → **U = 75%**",
+      "Yet arrivals are **random and bursty** (e.g. **30 customers in the last 5 minutes** after **55 idle minutes**) → queues form"
+     ],
+     "foot": "**Averages hide bursts**, which is why **queueing models** are needed."
+    },
+    {
+     "h": "Kendall notation A/B/C/K/N/D",
+     "items": [
+      "Specifies **arrival distribution**, **service distribution**, **servers**, **capacity**, **population** and **discipline**",
+      "**M** = Markovian assumptions; **D** = deterministic; **Ek** = Erlang; **G** = general; **PH** = phase-type",
+      "**Disciplines**: FIFO, LIFO, round robin, processor sharing, priority",
+      {
+       "t": "**Distinguish**:",
+       "sub": [
+        "one queue/server",
+        "separate queues",
+        "one shared queue feeding c servers"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "M/M/1 model",
+     "items": [
+      "Assumes **Poisson arrivals** and **independent exponential service times**",
+      "**One server**, stable rate **λ < µ**",
+      "**Mean response R = S/(1-U) = 1/(µ-λ)**",
+      "Example: **20 orders/hour**, capacity **30/hour** → **S = 2 minutes**, **U = 2/3**, **R = 6 minutes** (including **4 minutes waiting**)"
+     ]
+    },
+    {
+     "h": "Queueing rises non-linearly",
+     "lead": "At **S = 1 second**, M/M/1 predicts:",
+     "items": [
+      "**50%** utilization → **R = 2 seconds**",
+      "**70%** → **3.33**",
+      "**90%** → **10**"
+     ],
+     "foot": "These are **model outputs**, not a **universal safe-utilization threshold**. Use the **workload**, **measured curve** and **response target** to choose **headroom**."
+    },
+    {
+     "h": "Reducing utilization reduces response time",
+     "lead": "**U_i = λ_0 V_i S_i**; with the same arrival rate:",
+     "items": [
+      "Lower **S_i** → **faster service**",
+      "Lower **V_i** → **fewer visits**",
+      "Or **reduce the arrival rate** to the system → **throttling**, **spreading load**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -359,12 +636,86 @@
    ],
    "summary": "Compare faster single server, parallel queues and one shared queue; plus how to size servers for a target and measure price/performance.",
    "notes": [
-    "**Let a = λS be offered load and ρ = a/c be utilization per identical server.** Balanced separate M/M/1 queues give R = S/(1-ρ). One shared M/M/c queue uses the lecture approximation R ≈ S/(1-ρ^c); the appendix gives exact Erlang C. Require ρ < 1. Offered load a can exceed 1; an individual server’s utilization cannot.",
-    "**Sizing example (2 customers/min, S = 1.5 min, target queueing time under 3 min).** Offered load a = 2 x 1.5 = 3, so ρ = 3/c and the target is R < S + 3 = 4.5 min. Parallel queues: S/(1-ρ) < 4.5 needs ρ < 2/3, so c = 5 (ρ = 0.6, R = 3.75 min; c = 4 gives R = 6 min, too slow). Single queue: need ρ^c < 2/3; c = 4 works (ρ = 0.75, ρ^4 = 0.32, R about 2.2 min), c = 3 is saturated (ρ = 1). The deck leaves these as exercises; these numbers apply its formulas.",
-    "**For identical workers under the lecture’s queue assumptions**, a shared queue avoids idle workers while another queue has waiting jobs. Its response is lower than separate queues. The lecture’s equal-capacity comparison finds one 3x faster worker best, shared queue next, separate queues worst; this ranking is not a guarantee for specialised jobs or real distributed systems.",
-    "**Additional workers move the saturation point**, but response still rises sharply as per-server utilization approaches 100%. Size for the response target and required failure headroom, not just the minimum stable server count.",
-    "**Price/performance = cost / throughput** (e.g. $/tps). TPC benchmarks use price per transaction; Google's cluster design chose cheap mid-range PC-like servers, selecting on cost per query (capital expense with depreciation plus operating costs, divided by performance), expecting a server to last only 2-3 years.",
-    "**Keep the metrics distinct:** response = waiting + service; capacity limits sustainable throughput; arrival rate determines throughput below that limit. A quicker response does not necessarily increase throughput when demand is unchanged."
+    {
+     "h": "Multi-server formulas",
+     "items": [
+      "**a = λS** = **offered load**; **ρ = a/c** = utilization per identical server",
+      "**Balanced separate M/M/1 queues** → **R = S/(1-ρ)**",
+      "**One shared M/M/c queue** → lecture approximation **R ≈ S/(1-ρ^c)**; the **appendix gives exact Erlang C**",
+      "Require **ρ < 1**",
+      "**Offered load a can exceed 1**; an **individual server’s utilization cannot**"
+     ]
+    },
+    {
+     "h": "Sizing example",
+     "lead": "**2 customers/min**, **S = 1.5 min**, target **queueing time under 3 min**.",
+     "items": [
+      "**Offered load a = 2 x 1.5 = 3** → **ρ = 3/c**; target **R < S + 3 = 4.5 min**",
+      {
+       "t": "**Parallel queues**: S/(1-ρ) < 4.5 needs **ρ < 2/3**",
+       "sub": [
+        "**c = 5** (ρ = 0.6, **R = 3.75 min**)",
+        "c = 4 gives **R = 6 min**, too slow"
+       ]
+      },
+      {
+       "t": "**Single queue**: need **ρ^c < 2/3**",
+       "sub": [
+        "**c = 4 works** (ρ = 0.75, ρ^4 = 0.32, **R about 2.2 min**)",
+        "c = 3 is **saturated** (ρ = 1)"
+       ]
+      }
+     ],
+     "foot": "The deck leaves these as **exercises**; these numbers apply its formulas."
+    },
+    {
+     "h": "Shared vs separate queues",
+     "items": [
+      "For **identical workers** under the lecture’s queue assumptions",
+      "**Shared queue** avoids **idle workers** while another queue has waiting jobs → **lower response** than separate queues",
+      {
+       "t": "Lecture’s **equal-capacity comparison** ranking:",
+       "sub": [
+        "**one 3x faster worker** best",
+        "**shared queue** next",
+        "**separate queues** worst"
+       ]
+      },
+      "**Not a guarantee** for **specialised jobs** or **real distributed systems**"
+     ]
+    },
+    {
+     "h": "Additional workers",
+     "items": [
+      "**Additional workers move the saturation point**",
+      "But response still **rises sharply** as per-server utilization approaches **100%**",
+      "**Size for the response target** and required **failure headroom**, not just the **minimum stable server count**"
+     ]
+    },
+    {
+     "h": "Price/performance",
+     "items": [
+      "**Price/performance = cost / throughput** (e.g. **$/tps**)",
+      "**TPC benchmarks** use **price per transaction**",
+      {
+       "t": "**Google's cluster design** → chose **cheap mid-range PC-like servers**",
+       "sub": [
+        "selected on **cost per query**",
+        "= (**capital expense with depreciation** plus **operating costs**) divided by **performance**",
+        "expecting a server to last only **2-3 years**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Keep the metrics distinct",
+     "items": [
+      "**Response = waiting + service**",
+      "**Capacity** limits **sustainable throughput**",
+      "**Arrival rate** determines throughput **below that limit**"
+     ],
+     "foot": "A **quicker response does not necessarily increase throughput** when demand is unchanged."
+    }
    ],
    "terms": [
     {
@@ -451,11 +802,85 @@
    ],
    "summary": "The tactic families (control demand, manage resources) and design heuristics, then how load balancing improves throughput and speed and its state problem.",
    "notes": [
-    "**Architect for performance in three steps:** apply tactics, validate by performance modelling, validate by prototyping.",
-    "**Tactics fall in two groups.** Control resource demand: manage arrival rate, prioritize input. Manage resources: increase resources, increase resource efficiency, multiple copies of compute, multiple copies of data, reduce overhead, schedule resources. Heuristics to apply: load balancing, caching, pre-computation, reduce algorithmic complexity, avoid or reduce bottlenecks (which may trade off with cost).",
-    "**Load balancing distributes requests across instances**, lowering queueing when it uses spare capacity effectively. It need not reduce a request’s own processing time. Splitting one job into independent parallel subtasks is a separate way to reduce service time.",
-    "**Distribution policies:** round robin, random, server load, least response time, traffic served, number of active connections, geographic location, capabilities. Policy choice matters because uneven or blind distribution leaves some servers hot.",
-    "**State breaks free distribution.** If a server holds client state (e.g. a session), the client must keep returning to that server (sticky), which risks availability if it fails and uneven distribution; otherwise state must be externalized."
+    {
+     "h": "Architect for performance",
+     "items": [
+      "**Apply tactics**",
+      "**Validate by performance modelling**",
+      "**Validate by prototyping**"
+     ],
+     "ordered": true
+    },
+    {
+     "h": "Performance tactics: two groups",
+     "items": [
+      {
+       "t": "**Control resource demand**:",
+       "sub": [
+        "manage arrival rate",
+        "prioritize input"
+       ]
+      },
+      {
+       "t": "**Manage resources**:",
+       "sub": [
+        "increase resources",
+        "increase resource efficiency",
+        "multiple copies of compute",
+        "multiple copies of data",
+        "reduce overhead",
+        "schedule resources"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Heuristics to apply",
+     "items": [
+      "**Load balancing**",
+      "**Caching**",
+      "**Pre-computation**",
+      "**Reduce algorithmic complexity**",
+      "**Avoid or reduce bottlenecks** (may **trade off with cost**)"
+     ]
+    },
+    {
+     "h": "Load balancing",
+     "items": [
+      "**Distributes requests across instances**",
+      "**Lowers queueing** when it uses **spare capacity** effectively",
+      "Need **not reduce a request’s own processing time**",
+      "**Splitting one job into independent parallel subtasks** is a separate way to **reduce service time**"
+     ]
+    },
+    {
+     "h": "Distribution policies",
+     "items": [
+      "**Round robin**",
+      "**Random**",
+      "**Server load**",
+      "**Least response time**",
+      "**Traffic served**",
+      "**Number of active connections**",
+      "**Geographic location**",
+      "**Capabilities**"
+     ],
+     "foot": "**Policy choice matters** because **uneven or blind distribution** leaves some servers **hot**."
+    },
+    {
+     "h": "State breaks free distribution",
+     "items": [
+      "Server holds **client state** (e.g. a **session**) → client must keep returning to that server (**sticky**)",
+      {
+       "t": "**Risks**:",
+       "sub": [
+        "**availability** if it fails",
+        "**uneven distribution**"
+       ]
+      },
+      "Otherwise **state must be externalized**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -495,12 +920,77 @@
    ],
    "summary": "Caches trade extra storage for faster access; their value depends on hit ratio, relative access times and cost, and precomputation applies the same idea to computed results.",
    "notes": [
-    "**A cache stores data for faster access;** types: memory (often database results), browser, web server, remote servers. A **hit** finds the data in cache; a **miss** goes to the source and costs the cache lookup plus the source access.",
-    "**Expected access time = weighted average over hits and misses.** Cache 5 ms, data source 50 ms: hit = 5 ms, miss = 5 + 50 = 55 ms. With 20% hits: 0.2 x 5 + 0.8 x 55 = 1 + 44 = 45 ms versus 50 ms with no cache, so it is worth it. Break-even for this hit ratio is a cache access time of 10 ms (5 + 0.8 x 50 = 45; 10 + 0.8 x 50 = 50); above that the cache hurts.",
-    "**Access times differ because fast storage is expensive, hence small,** and because of location (local machine, local network, near or far remote) and operation (simple primary-key lookup vs complex query).",
-    "**Cache benefit has a cost.** Consider storage and bandwidth versus response or throughput gain. In the lecture’s measured totals, benefit/GB ranks B (30 ms/20 GB), A (10/10), then C (10/30). With only 15 GB, use partial-cache hit-rate measurements before assuming B retains that average benefit or allocating all space to it.",
-    "**Popularity affects hit ratio.** For equal-sized items kept in popularity order, a power-law distribution favours caching a small hot set; uniform access gives roughly proportional benefit. The lecture’s “half the cache gives at least half the hits” relies on these assumptions, not every eviction policy or changing workload.",
-    "**Precomputation trades write/computation cost for cheaper reads.** The lecture’s historical Twitter example contrasts timeline reads (~300k/s) with posts (4.6k–12k/s). Fan-out-on-write prebuilds follower timelines; fan-out-on-read computes at viewing time. A hybrid avoids writing to every follower’s cache for celebrity posts. These figures illustrate the design, not current traffic."
+    {
+     "h": "Cache basics",
+     "items": [
+      "**Cache** stores data for **faster access**",
+      {
+       "t": "**Types**:",
+       "sub": [
+        "**memory** (often **database results**)",
+        "**browser**",
+        "**web server**",
+        "**remote servers**"
+       ]
+      },
+      "**Hit** → finds the data in cache",
+      "**Miss** → goes to the source; costs **cache lookup + source access**"
+     ]
+    },
+    {
+     "h": "Expected access time",
+     "lead": "**Weighted average over hits and misses.** Cache **5 ms**, data source **50 ms**:",
+     "items": [
+      "**Hit = 5 ms**; **miss = 5 + 50 = 55 ms**",
+      "**20% hits**: 0.2 x 5 + 0.8 x 55 = 1 + 44 = **45 ms**",
+      "vs **50 ms** with no cache → **worth it**",
+      "**Break-even** for this hit ratio = cache access time of **10 ms** (5 + 0.8 x 50 = 45; **10 + 0.8 x 50 = 50**)",
+      "Above that → **the cache hurts**"
+     ]
+    },
+    {
+     "h": "Why access times differ",
+     "items": [
+      "**Fast storage is expensive**, hence **small**",
+      "**Location**: local machine, local network, near or far remote",
+      "**Operation**: simple **primary-key lookup** vs **complex query**"
+     ]
+    },
+    {
+     "h": "Cache benefit has a cost",
+     "items": [
+      "Consider **storage and bandwidth** vs **response or throughput gain**",
+      {
+       "t": "Lecture’s measured totals, **benefit/GB** ranking:",
+       "sub": [
+        "**B** (30 ms/20 GB)",
+        "**A** (10/10)",
+        "**C** (10/30)"
+       ]
+      },
+      "With **only 15 GB**: use **partial-cache hit-rate measurements** before assuming B retains that **average benefit** or **allocating all space** to it"
+     ]
+    },
+    {
+     "h": "Popularity affects hit ratio",
+     "items": [
+      "Assumes **equal-sized items** kept in **popularity order**",
+      "**Power-law distribution** → favours caching a **small hot set**",
+      "**Uniform access** → roughly **proportional benefit**",
+      "Lecture’s “**half the cache gives at least half the hits**” relies on these assumptions, **not every eviction policy** or **changing workload**"
+     ]
+    },
+    {
+     "h": "Precomputation",
+     "items": [
+      "**Trades write/computation cost for cheaper reads**",
+      "Lecture’s **historical Twitter example**: **timeline reads (~300k/s)** vs **posts (4.6k–12k/s)**",
+      "**Fan-out-on-write** → prebuilds follower timelines",
+      "**Fan-out-on-read** → computes at **viewing time**",
+      "**Hybrid** → avoids writing to every follower’s cache for **celebrity posts**"
+     ],
+     "foot": "These figures **illustrate the design**, not current traffic."
+    }
    ],
    "terms": [
     {
@@ -582,10 +1072,51 @@
    ],
    "summary": "Reduce work growth with better algorithms, put computation where data movement is smallest, optimise storage, and control flow to protect shared resources.",
    "notes": [
-    "**Big O describes growth, not exact seconds.** Ignoring constants, O(1) stays bounded, O(n) grows tenfold for 10x input, and O(n^2) grows hundredfold. Compare algorithms at the expected data size; constants, memory and I/O still affect measured performance.",
-    "**Where code runs changes network cost.** In the job-candidate matching case (score every pair, return the top 1000), running scoring in the app server pulls all the data across the network; pushing it into the database server transfers only results. Weigh growth in scoring operations (time complexity) against growth in network transfers.",
-    "**Optimize the data store.** Reads and writes to storage are often the bottleneck; the right index helps greatly, and the right storage technology matters too (e.g. a graph database for relationship-heavy data like social networks).",
-    "**Flow control protects capacity.** The deck uses analogies (spam calls, an over-eager student, a customer ordering 25 packets ahead of you, a burger shop with 5 staff and 20 sudden customers) to motivate limiting rates, fair queueing and separate lanes or roles so one demanding user or burst cannot starve others."
+    {
+     "h": "Big O and algorithmic complexity",
+     "items": [
+      "**Big O describes growth**, not exact seconds (ignoring constants)",
+      "**O(1)** → stays bounded",
+      "**O(n)** → grows **tenfold** for **10x input**",
+      "**O(n^2)** → grows **hundredfold**",
+      "**Compare algorithms at the expected data size**; **constants**, **memory** and **I/O** still affect measured performance"
+     ]
+    },
+    {
+     "h": "Where code runs changes network cost",
+     "lead": "**Job-candidate matching** case: **score every pair**, return the **top 1000**.",
+     "items": [
+      "Scoring in the **app server** → pulls **all the data across the network**",
+      "Pushing it into the **database server** → transfers **only results**",
+      "Weigh growth in **scoring operations** (**time complexity**) vs growth in **network transfers**"
+     ]
+    },
+    {
+     "h": "Optimize the data store",
+     "items": [
+      "**Reads and writes to storage** are often **the bottleneck**",
+      "The **right index** helps greatly",
+      "The **right storage technology** matters too → e.g. a **graph database** for **relationship-heavy data** like **social networks**"
+     ]
+    },
+    {
+     "h": "Flow control protects capacity",
+     "items": [
+      {
+       "t": "**Analogies** in the deck:",
+       "sub": [
+        "**spam calls**",
+        "an **over-eager student**",
+        "a **customer ordering 25 packets** ahead of you",
+        "a **burger shop with 5 staff** and **20 sudden customers**"
+       ]
+      },
+      "Motivate **limiting rates**",
+      "**Fair queueing**",
+      "**Separate lanes or roles**"
+     ],
+     "foot": "So **one demanding user or burst cannot starve others**."
+    }
    ],
    "terms": [
     {
@@ -625,11 +1156,60 @@
    ],
    "summary": "Use simulation, prototyping and benchmarking to verify performance early, and document performance-relevant parts of the architecture at the right level.",
    "notes": [
-    "**Validate by modelling and prototyping.** Queue-modelling simulators (e.g. the open source JMT) test how a design will behave. Prototyping and benchmarking check the architecture meets targets before the whole system is built: fail early, especially with unknown technology or experimental design.",
-    "**Prototyping steps:** define goals; identify the extent of prototyping needed; build the prototype (possibly with instrumentation); benchmark; repeat until performance risk is contained. The trade-off is level of confidence vs effort and cost.",
-    "**Document performance with several views:** block diagram (components, e.g. service layer between front-end channels and back-end systems), sequence diagram (calls in order, loops such as repeated back-end transform/send steps) and data flow diagram (messages, encoded vs decoded, audit logs).",
-    "**Document what matters at the sweet spot of detail:** major components, large messages, calls carrying many records, high-frequency interactions; not too high-level, not too low-level. Analyze related data together, since one architecture may face heavy online transactions and timely complex reporting. Pick a viewpoint, draw and iterate; granularity varies by viewpoint.",
-    "**Appendix:** for one outstanding request per client, average request rate = clients / (think time + end-to-end response time). Add network latency separately only when excluded from response time. Exact M/M/c uses Erlang C for the probability an arrival must wait; the main lecture formula is an approximation."
+    {
+     "h": "Validate by modelling and prototyping",
+     "items": [
+      "**Queue-modelling simulators** (e.g. the **open source JMT**) → test how a design will behave",
+      "**Prototyping and benchmarking** → check the architecture **meets targets before the whole system is built**",
+      "**Fail early**, especially with **unknown technology** or **experimental design**"
+     ]
+    },
+    {
+     "h": "Prototyping steps",
+     "items": [
+      "**Define goals**",
+      "**Identify the extent** of prototyping needed",
+      "**Build the prototype** (possibly with **instrumentation**)",
+      "**Benchmark**",
+      "**Repeat** until **performance risk is contained**"
+     ],
+     "ordered": true,
+     "foot": "Trade-off: **level of confidence vs effort and cost**."
+    },
+    {
+     "h": "Document performance with several views",
+     "items": [
+      "**Block diagram** → **components**, e.g. **service layer** between **front-end channels** and **back-end systems**",
+      "**Sequence diagram** → **calls in order**, **loops** such as repeated **back-end transform/send** steps",
+      "**Data flow diagram** → **messages**, **encoded vs decoded**, **audit logs**"
+     ]
+    },
+    {
+     "h": "Document what matters: sweet spot of detail",
+     "items": [
+      {
+       "t": "**What matters**:",
+       "sub": [
+        "**major components**",
+        "**large messages**",
+        "**calls carrying many records**",
+        "**high-frequency interactions**"
+       ]
+      },
+      "**Not too high-level, not too low-level**",
+      "**Analyze related data together**: one architecture may face **heavy online transactions** and **timely complex reporting**",
+      "**Pick a viewpoint, draw and iterate**; **granularity varies by viewpoint**"
+     ]
+    },
+    {
+     "h": "Appendix formulas",
+     "items": [
+      "**One outstanding request per client** → **average request rate = clients / (think time + end-to-end response time)**",
+      "Add **network latency separately** only when **excluded from response time**",
+      "**Exact M/M/c** uses **Erlang C** for the **probability an arrival must wait**",
+      "The **main lecture formula is an approximation**"
+     ]
+    }
    ],
    "terms": [
     {

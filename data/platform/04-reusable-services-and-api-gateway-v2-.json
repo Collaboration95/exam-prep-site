@@ -24,12 +24,97 @@
    ],
    "summary": "The defining traits of the microservice style (Fowler) and how each contrasts with the monolith or ESB way of working.",
    "notes": [
-    "**Microservices are small services, each in its own process, built around business capabilities and independently deployable.** They talk through lightweight mechanisms (often an HTTP resource API), with minimal central management and freedom in language and data store.",
-    "**Componentization via services, not shared libraries.** Services are out-of-process, so they deploy independently, have explicit interfaces and keep encapsulation. The cost: remote calls are slower than in-process calls so APIs must be coarser-grained, and moving responsibility between components across process boundaries is harder.",
-    "**Organise around business capabilities (Conway's law).** A system's structure copies the organisation's communication structure, so use cross-functional teams (UX, database, project management) per service. Siloed functional teams turn simple changes into cross-team projects and tempt people to push logic into whatever application they can reach.",
-    "**Smart endpoints, dumb pipes vs ESB.** Microservices put the logic in the endpoints and use a simple message router or REST, which is decoupled, cohesive and cache-friendly. An ESB puts routing, transformation, choreography and business rules into the bus, using heavy protocols such as BPEL or WS-Choreography.",
-    "**Decentralised governance and data:** cross-functional teams own services and their data, may choose different stacks, and operate what they build. Local transactions protect each service; cross-service work often uses eventual consistency and compensation. Independent evolution is a benefit, balanced against distributed-system overhead.",
-    "**Automation and design for failure.** CI/CD pipelines with automated tests, deployment and production management are the norm. Any service call can fail, so clients degrade gracefully and teams monitor both architecture metrics (database throughput) and business metrics (orders per minute)."
+    {
+     "h": "What microservices are",
+     "items": [
+      "**Small services**, each in its own process",
+      "**Built around business capabilities**",
+      "**Independently deployable**",
+      "**Lightweight mechanisms** to talk → often an HTTP resource API",
+      "**Minimal central management**",
+      "**Freedom** in language and data store"
+     ]
+    },
+    {
+     "h": "Componentization via services",
+     "lead": "Services, not shared libraries.",
+     "items": [
+      {
+       "t": "**Out-of-process** →",
+       "sub": [
+        "deploy independently",
+        "explicit interfaces",
+        "keep encapsulation"
+       ]
+      },
+      {
+       "t": "**The cost**:",
+       "sub": [
+        "remote calls are slower than in-process calls → APIs must be **coarser-grained**",
+        "moving responsibility between components across process boundaries is harder"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Organise around business capabilities",
+     "items": [
+      "**Conway's law** → a system's structure copies the organisation's communication structure",
+      "**Cross-functional teams** per service → UX, database, project management",
+      {
+       "t": "**Siloed functional teams** →",
+       "sub": [
+        "simple changes become cross-team projects",
+        "tempt people to push logic into whatever application they can reach"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Smart endpoints, dumb pipes vs ESB",
+     "items": [
+      {
+       "t": "**Microservices**",
+       "sub": [
+        "logic in the **endpoints**",
+        "simple message router or REST",
+        "decoupled, cohesive, cache-friendly"
+       ]
+      },
+      {
+       "t": "**ESB**",
+       "sub": [
+        "routing, transformation, choreography and business rules in the **bus**",
+        "heavy protocols such as **BPEL** or **WS-Choreography**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Decentralised governance and data",
+     "items": [
+      "**Cross-functional teams own** services and their data",
+      "**Different stacks** may be chosen",
+      "**Operate what they build**",
+      "**Local transactions** protect each service",
+      "**Cross-service work** → often eventual consistency and compensation"
+     ],
+     "foot": "**Independent evolution** is a benefit, balanced against **distributed-system overhead**."
+    },
+    {
+     "h": "Automation and design for failure",
+     "items": [
+      "**CI/CD pipelines** are the norm → automated tests, deployment and production management",
+      "**Any service call can fail** → clients degrade gracefully",
+      {
+       "t": "**Teams monitor**",
+       "sub": [
+        "architecture metrics → database throughput",
+        "business metrics → orders per minute"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -107,11 +192,62 @@
    ],
    "summary": "Bounded contexts (the reusable services) still depend on each other; context mappings are the DDD vocabulary for designing those couplings and the team relationships behind them.",
    "notes": [
-    "**Bounded contexts are not fully independent.** Each bounded context (BC) has its own ubiquitous language (UL) and domain model, yet one BC may use an entity owned by another, or need to know about events on another's entities. These couplings must be designed deliberately so BCs are not needlessly tied together.",
-    "**A context mapping designs a relationship between two BCs.** In upstream/downstream patterns, one supplies a model or service and the other consumes it. Shared Kernel and Partnership instead involve mutual agreement. Different ubiquitous languages still need deliberate mediation; for example Agile Project Management consumes Discussion from Collaboration.",
-    "**Mappings range from tight to loose collaboration.** Shared Kernel (small common model, needs constant agreement) and Partnership (teams continuously align schedules) are the closest. Customer-Supplier (supplier upstream, has the final say but tries to serve the customer) and Conformist (downstream just adopts the upstream model) are the upstream/downstream relationships.",
-    "**Conformist vs Anticorruption Layer is the key choice for a downstream team.** Conformist fits when the upstream model is large, well established and unresponsive, and translating is too costly. An Anticorruption Layer translates the upstream UL into the downstream UL to protect the downstream model, but costs effort to maintain; it is a great way to integrate with an upstream Big Ball of Mud (legacy).",
-    "**Open Host Service and Published Language make the upstream easy to consume.** OHS exposes the context as a set of services via a protocol or interface, reducing the need for an ACL downstream. Published Language is a well-documented exchange format (XML Schema, JSON Schema), and an OHS often provides one. Separate Ways means no integration at all when the payoff is too small."
+    {
+     "h": "Bounded contexts are not fully independent",
+     "items": [
+      "**Each bounded context (BC)** has its own **ubiquitous language (UL)** and domain model",
+      "**Shared entities**: one BC may use an entity owned by another",
+      "**Events**: one BC may need to know about events on another's entities"
+     ],
+     "foot": "These couplings must be **designed deliberately** so BCs are not needlessly tied together."
+    },
+    {
+     "h": "A context mapping",
+     "lead": "Designs a relationship between two BCs.",
+     "items": [
+      "**Upstream/downstream patterns** → one supplies a model or service, the other consumes it",
+      "**Shared Kernel and Partnership** → mutual agreement instead",
+      "**Different ubiquitous languages** still need deliberate mediation → e.g. Agile Project Management consumes Discussion from Collaboration"
+     ]
+    },
+    {
+     "h": "Mappings: tight to loose collaboration",
+     "items": [
+      {
+       "t": "**Closest (mutual)**",
+       "sub": [
+        "**Shared Kernel** → small common model, needs constant agreement",
+        "**Partnership** → teams continuously align schedules"
+       ]
+      },
+      {
+       "t": "**Upstream/downstream relationships**",
+       "sub": [
+        "**Customer-Supplier** → supplier upstream, has the final say but tries to serve the customer",
+        "**Conformist** → downstream just adopts the upstream model"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Conformist vs Anticorruption Layer",
+     "lead": "The key choice for a downstream team.",
+     "items": [
+      "**Conformist** → fits when the upstream model is large, well established and unresponsive, and translating is too costly",
+      "**Anticorruption Layer (ACL)** → translates the upstream UL into the downstream UL to protect the downstream model",
+      "**ACL cost** → effort to maintain",
+      "**ACL use case** → a great way to integrate with an upstream **Big Ball of Mud** (legacy)"
+     ]
+    },
+    {
+     "h": "OHS, Published Language, Separate Ways",
+     "lead": "OHS and Published Language make the upstream easy to consume.",
+     "items": [
+      "**Open Host Service (OHS)** → exposes the context as a set of services via a protocol or interface; reduces the need for an ACL downstream",
+      "**Published Language** → well-documented exchange format (XML Schema, JSON Schema); an OHS often provides one",
+      "**Separate Ways** → no integration at all, when the payoff is too small"
+     ]
+    }
    ],
    "terms": [
     {
@@ -212,11 +348,62 @@
    ],
    "summary": "Choose immediate synchronous replies or asynchronous messages according to the business flow. Reliable messages still require duplicate-safe handling.",
    "notes": [
-    "**Avoid integrating through a shared database or file system.** The typical styles are RPC via SOAP, RESTful HTTP and messaging.",
-    "**RPC (SOAP) is simple but brittle.** It looks like a local call, but the request must cross the network, reach the remote system and return. It is vulnerable to network failure, latency and upstream failure, and strongly couples client to service and to a specific protocol. Best practice: upstream provides an Open Host Service with a Published Language; downstream uses an Anticorruption Layer.",
-    "**RESTful HTTP** centres on resources and the four primary operations (POST, GET, PUT, DELETE), giving well-defined APIs. It is still susceptible to network and upstream failure, but mitigates this by relying on the reliability and scalability of the Web.",
-    "**Messaging removes temporal coupling:** a publisher can leave a durable event for a consumer to process later. This tolerates temporary consumer outages but accepts delay and requires operating the messaging infrastructure. Use synchronous calls when an immediate result is necessary; neither style removes network failure.",
-    "**Safe delivery and handling:** at-least-once delivery retries until acknowledgement, assuming the broker retains the message and recovery is possible. Duplicates can occur, so receivers must de-duplicate or safely reapply changes. Acknowledge after successful processing so failure does not silently discard work."
+    {
+     "h": "Integration styles",
+     "items": [
+      "**Avoid** integrating through a shared database or file system",
+      {
+       "t": "**Typical styles**:",
+       "sub": [
+        "**RPC** via SOAP",
+        "**RESTful HTTP**",
+        "**Messaging**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "RPC (SOAP): simple but brittle",
+     "items": [
+      "**Looks like a local call**, but the request must cross the network, reach the remote system and return",
+      "**Vulnerable** to network failure, latency and upstream failure",
+      "**Strongly couples** client to service and to a specific protocol",
+      {
+       "t": "**Best practice**:",
+       "sub": [
+        "upstream provides an **Open Host Service** with a **Published Language**",
+        "downstream uses an **Anticorruption Layer**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "RESTful HTTP",
+     "items": [
+      "**Centres on resources** and the four primary operations (POST, GET, PUT, DELETE)",
+      "→ **well-defined APIs**",
+      "**Still susceptible** to network and upstream failure",
+      "**Mitigates** this by relying on the reliability and scalability of the **Web**"
+     ]
+    },
+    {
+     "h": "Messaging removes temporal coupling",
+     "items": [
+      "**Durable event**: a publisher can leave one for a consumer to process later",
+      "**Tolerates** temporary consumer outages",
+      "**Accepts delay** and requires operating the messaging infrastructure",
+      "**Synchronous calls** → when an immediate result is necessary"
+     ],
+     "foot": "Neither style removes **network failure**."
+    },
+    {
+     "h": "Safe delivery and handling",
+     "items": [
+      "**At-least-once delivery** → retries until acknowledgement (assuming the broker retains the message and recovery is possible)",
+      "**Duplicates can occur** → receivers must de-duplicate or safely reapply changes",
+      "**Acknowledge after successful processing** → failure does not silently discard work"
+     ]
+    }
    ],
    "terms": [
     {
@@ -298,13 +485,78 @@
    ],
    "summary": "An aggregate is a cluster of entities inside one BC that is loaded, changed and saved as a single unit; the rules of thumb say how to size them, reference them and keep them consistent.",
    "notes": [
-    "**An aggregate is a transactional consistency boundary.** It is a cluster of domain entities in one BC treated as a unit (think of elements that live and die together), with one entity as the Aggregate Root that owns all others, plus optional Value Objects. In one transaction modify and commit only one aggregate; consistency across aggregates is handled by separate transactions.",
-    "**Entity vs Value Object vs Aggregate Root.** An Entity has a unique identity and is usually mutable (state changes over time). A Value Object has no identity, is an immutable conceptual whole with attributes and behaviour, and qualifies (describes, quantifies, measures) an entity. The Aggregate Root is the root entity that owns everything else.",
-    "**Protect business invariants inside the boundary.** Example: when all Task instances have hoursRemaining of zero, the BacklogItem status must be DONE; that must hold at the end of the transaction. Business logic belongs in the aggregate, so avoid an Anemic Domain Model (only getters/setters) and do not leak logic into application services or helper classes.",
-    "**Design small aggregates, single-minded (Single Responsibility).** Small ones load quickly, use less memory, collect faster, succeed in transactions more often and are easier to work on and test. For example, break a huge Product (containing many BacklogItems, Releases, Sprints) into separate aggregates.",
-    "**Reference other aggregates by identity only.** BacklogItem, Release and Sprint hold a ProductId, not a Product object. Identities are easy to persist and the same rule applies across BCs; model identities as value objects (immutable).",
-    "**Eventual consistency between aggregates:** BacklogItem stores SprintId and records BacklogItemCommitted in one transaction; Sprint later stores BacklogItemId in its own. They may be in the same BC or different BCs. If one business invariant requires an atomic update, reconsider the boundary: consider merging within a BC, or revisit the cross-context business process.",
-    "**Persistence: one repository per aggregate.** The repository persists the whole aggregate (root, entities, value objects), possibly via several DAOs and tables; a Factory Method may build complex aggregates. An aggregate (domain model) is not a DTO; one aggregate may map to several DTOs."
+    {
+     "h": "Aggregate = transactional consistency boundary",
+     "items": [
+      "**Cluster of domain entities** in one BC treated as a unit (think of elements that live and die together)",
+      "**Aggregate Root** → one entity that owns all others",
+      "**Value Objects** → optional",
+      "**One transaction** → modify and commit only one aggregate",
+      "**Consistency across aggregates** → handled by separate transactions"
+     ]
+    },
+    {
+     "h": "Entity vs Value Object vs Aggregate Root",
+     "items": [
+      "**Entity** → unique identity; usually mutable (state changes over time)",
+      "**Value Object** → no identity; immutable conceptual whole with attributes and behaviour; qualifies (describes, quantifies, measures) an entity",
+      "**Aggregate Root** → the root entity that owns everything else"
+     ]
+    },
+    {
+     "h": "Protect business invariants inside the boundary",
+     "items": [
+      "**Example** → when all Task instances have hoursRemaining of zero, the BacklogItem status must be DONE; must hold at the end of the transaction",
+      "**Business logic belongs in the aggregate**",
+      "**Avoid an Anemic Domain Model** → only getters/setters",
+      "**Do not leak logic** into application services or helper classes"
+     ]
+    },
+    {
+     "h": "Design small aggregates",
+     "lead": "Single-minded (Single Responsibility).",
+     "items": [
+      {
+       "t": "**Small ones**:",
+       "sub": [
+        "load quickly",
+        "use less memory",
+        "collect faster",
+        "succeed in transactions more often",
+        "are easier to work on and test"
+       ]
+      },
+      "**Example** → break a huge Product (containing many BacklogItems, Releases, Sprints) into separate aggregates"
+     ]
+    },
+    {
+     "h": "Reference other aggregates by identity only",
+     "items": [
+      "**BacklogItem, Release and Sprint** hold a ProductId, not a Product object",
+      "**Identities are easy to persist**",
+      "**Same rule applies across BCs**",
+      "**Model identities as value objects** (immutable)"
+     ]
+    },
+    {
+     "h": "Eventual consistency between aggregates",
+     "ordered": true,
+     "items": [
+      "**BacklogItem** stores SprintId and records **BacklogItemCommitted** in one transaction",
+      "**Sprint** later stores BacklogItemId in its own transaction"
+     ],
+     "lead": "They may be in the same BC or different BCs.",
+     "foot": "If one business invariant requires an **atomic update**, reconsider the boundary: consider merging within a BC, or revisit the cross-context business process."
+    },
+    {
+     "h": "Persistence: one repository per aggregate",
+     "items": [
+      "**Repository persists the whole aggregate** → root, entities, value objects",
+      "**Possibly via several DAOs and tables**",
+      "**Factory Method** → may build complex aggregates",
+      "**Aggregate (domain model) is not a DTO** → one aggregate may map to several DTOs"
+     ]
+    }
    ],
    "terms": [
     {
@@ -389,12 +641,73 @@
    ],
    "summary": "A domain event records a business-significant occurrence in a BC; this section covers what they are, why order matters, and how to identify, name, shape and commit them.",
    "notes": [
-    "**A domain event (DE) is a record of a business-significant occurrence in a BC.** It is the loosely coupled integration mechanism: the means for one aggregate or BC to tell others what happened, used for messaging-type context mappings and for propagating change between aggregates.",
-    "**Order matters for causal consistency.** Causally related operations must be seen in the same order by every dependent node of a distributed system. In the wallet example, Sue's 'I lost my wallet!' must be followed by Gary's 'That's terrible!'; if replies and posts are seen out of order, 'That's great!' appears after the lost-wallet post and makes no sense.",
-    "**Identify events from the integration points.** For each context mapping of messaging type, find the business functions that rely on it and the events they require; also add an event for each propagation of change from one aggregate to another.",
-    "**Name events as past-tense verbs.** They are things that already happened. If a command triggered the event, name the event after the command: CreateProduct leads to ProductCreated; CommitBacklogItemToSprint leads to BacklogItemCommitted.",
-    "**Event properties:** in the lecture, copy the business properties of the triggering command, then enrich where needed. ProductCreated might carry tenantId, productId, name and description. Include enough context for subscribers to react without querying the publisher; event data describes the completed outcome.",
-    "**Commit state and event together:** changing BacklogItem and durably recording BacklogItemCommitted must succeed or fail in the same transaction. Recording an event is distinct from delivering it over a network: after commit, deliver it reliably to subscribers, which update their own aggregates in later transactions."
+    {
+     "h": "Domain event (DE)",
+     "items": [
+      "**Record of a business-significant occurrence** in a BC",
+      "**Loosely coupled integration mechanism**",
+      "**Means for one aggregate or BC** to tell others what happened",
+      {
+       "t": "**Used for**:",
+       "sub": [
+        "messaging-type context mappings",
+        "propagating change between aggregates"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Order matters: causal consistency",
+     "items": [
+      "**Causally related operations** must be seen in the same order by every dependent node of a distributed system",
+      {
+       "t": "**Wallet example**:",
+       "sub": [
+        "Sue's 'I lost my wallet!' must be followed by Gary's 'That's terrible!'",
+        "if replies and posts are seen out of order, 'That's great!' appears after the lost-wallet post and makes no sense"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Identify events from the integration points",
+     "items": [
+      "**Each context mapping of messaging type** → find the business functions that rely on it and the events they require",
+      "**Each propagation of change** from one aggregate to another → also add an event"
+     ]
+    },
+    {
+     "h": "Name events as past-tense verbs",
+     "items": [
+      "**Already happened** → past tense",
+      {
+       "t": "**Command-triggered** → name the event after the command:",
+       "sub": [
+        "CreateProduct → **ProductCreated**",
+        "CommitBacklogItemToSprint → **BacklogItemCommitted**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Event properties",
+     "items": [
+      "**Copy the business properties** of the triggering command (in the lecture), then enrich where needed",
+      "**Example** → ProductCreated might carry tenantId, productId, name and description",
+      "**Enough context** for subscribers to react without querying the publisher",
+      "**Event data** describes the completed outcome"
+     ]
+    },
+    {
+     "h": "Commit state and event together",
+     "ordered": true,
+     "items": [
+      "**Same transaction** → changing BacklogItem and durably recording BacklogItemCommitted succeed or fail together",
+      "**After commit** → deliver it reliably to subscribers",
+      "**Subscribers** update their own aggregates in later transactions"
+     ],
+     "foot": "**Recording** an event is distinct from **delivering** it over a network."
+    }
    ],
    "terms": [
     {
@@ -468,10 +781,49 @@
    ],
    "summary": "A worked case showing how splitting an oversized aggregate and replacing a direct cross-context update with a domain event yields independent microservices.",
    "notes": [
-    "**Starting problem:** in the Car Rental System, Rental Manager and Vehicle Manager are bounded contexts. Extending a rental needs to verify the vehicle's usability (a call into Vehicle Manager) and update the rental date, but the rental model is assumed to have an excessive memory footprint.",
-    "**Fix: split into smaller aggregates and use an event.** Rental Manager is divided into Rent Ctrl and Rent Ext aggregates, Vehicle Manager has Vehicle Ctrl. Rent Ext verifies usability with Vehicle Ctrl, then publishes a Rental Extended event, and Rent Ctrl is updated from that event rather than in the same operation. This applies small aggregates plus eventual consistency.",
-    "**Resulting architecture:** each BC becomes a microservice (RentalMgr, VehicleMgr, CustomerMgr) with its own transaction scope, data repository, database, team and code repository. RentalMgr publishes VehicleRented and VehicleReturned domain events. Aggregates and events thus define service boundaries and data ownership.",
-    "**Workshop task:** choose two significant services (BCs) from the earlier entity/BC/UL workshop, design their aggregates with roots, entities and value objects, and design at least three domain events with names and assumed properties."
+    {
+     "h": "Car Rental: starting problem",
+     "items": [
+      "**Bounded contexts** → Rental Manager and Vehicle Manager (Car Rental System)",
+      {
+       "t": "**Extending a rental needs**:",
+       "sub": [
+        "verify the vehicle's usability (a call into Vehicle Manager)",
+        "update the rental date"
+       ]
+      },
+      "**Problem** → the rental model is assumed to have an excessive memory footprint"
+     ]
+    },
+    {
+     "h": "Fix: smaller aggregates + an event",
+     "ordered": true,
+     "items": [
+      "**Split**: Rental Manager divided into **Rent Ctrl** and **Rent Ext** aggregates; Vehicle Manager has **Vehicle Ctrl**",
+      "**Rent Ext** verifies usability with Vehicle Ctrl",
+      "**Rent Ext publishes** a **Rental Extended** event",
+      "**Rent Ctrl is updated from that event**, rather than in the same operation"
+     ],
+     "foot": "Applies **small aggregates** plus **eventual consistency**."
+    },
+    {
+     "h": "Resulting architecture",
+     "items": [
+      "**Each BC becomes a microservice** → RentalMgr, VehicleMgr, CustomerMgr",
+      "**Each has its own** transaction scope, data repository, database, team and code repository",
+      "**RentalMgr publishes** VehicleRented and VehicleReturned domain events"
+     ],
+     "foot": "Aggregates and events thus define **service boundaries** and **data ownership**."
+    },
+    {
+     "h": "Workshop task",
+     "ordered": true,
+     "items": [
+      "**Choose two significant services (BCs)** from the earlier entity/BC/UL workshop",
+      "**Design their aggregates** → roots, entities and value objects",
+      "**Design at least three domain events** → names and assumed properties"
+     ]
+    }
    ],
    "terms": [],
    "check": [
@@ -527,10 +879,46 @@
    ],
    "summary": "Two ways to run a business flow that spans several services, with their trade-offs; they can be mixed.",
    "notes": [
-    "**Why it arises:** as business logic grows, a business function stretches across service boundaries, and the flow must be implemented either by orchestration or choreography (or a mix).",
-    "**Orchestration: a central brain tells others what to do.** In the new-customer example, the Customer service creates the record, then requests the Loyalty Points Bank to create a loyalty record, the Post service to dispatch a welcome pack and the Email service to send a welcome email. It is simpler, the flow is explicit and a rules engine can be used, but it tends to create overly smart 'god' services.",
-    "**Choreography: services react to events.** The Customer service creates the record and emits an event; Loyalty, Post and Email each receive it and do their part. It is more complex with an implicit flow, relies on domain events and is more loosely coupled, but you must monitor and track that the flow is carried out as expected.",
-    "**Decision rule:** prefer orchestration for simplicity and visibility of the flow; prefer choreography for loose coupling and to avoid a god service, accepting the monitoring burden."
+    {
+     "h": "Why the choice arises",
+     "items": [
+      "**Business logic grows** → a business function stretches across service boundaries",
+      "**The flow must be implemented** by orchestration or choreography (or a mix)"
+     ]
+    },
+    {
+     "h": "Orchestration: a central brain",
+     "lead": "One service tells others what to do. New-customer example:",
+     "items": [
+      {
+       "t": "**Customer service** creates the record, then requests:",
+       "sub": [
+        "**Loyalty Points Bank** → create a loyalty record",
+        "**Post service** → dispatch a welcome pack",
+        "**Email service** → send a welcome email"
+       ]
+      },
+      "**Pros** → simpler; the flow is explicit; a **rules engine** can be used",
+      "**Con** → tends to create overly smart **'god' services**"
+     ]
+    },
+    {
+     "h": "Choreography: services react to events",
+     "items": [
+      "**Customer service** creates the record and emits an event",
+      "**Loyalty, Post and Email** each receive it and do their part",
+      "**Cons** → more complex; **implicit flow**",
+      "**Relies on domain events**; more **loosely coupled**",
+      "**Must monitor and track** that the flow is carried out as expected"
+     ]
+    },
+    {
+     "h": "Decision rule",
+     "items": [
+      "**Orchestration** → for simplicity and visibility of the flow",
+      "**Choreography** → for loose coupling and to avoid a god service, accepting the monitoring burden"
+     ]
+    }
    ],
    "terms": [
     {
@@ -604,10 +992,59 @@
    ],
    "summary": "What a microservice system needs before it is production ready: service discovery and load balancing, with the API gateway as the single router in front.",
    "notes": [
-    "**From sample to production:** hard-coded locations miss new or moved instances. Add discovery and load balancing; the sample’s API gateway gives clients one stable entry point. Replicate each service’s owned database for its scaled instances and keep the message broker available. Do not turn this into a database shared across different BCs.",
-    "**Server-side discovery with a service registry.** Instances in virtualised or containerised environments change in number and location dynamically, so clients cannot know addresses. The client calls a router (load balancer) at a well-known location; the router queries the service registry, load balances and forwards to an available instance. Instances register themselves with the registry.",
-    "**The API gateway is that router, plus more.** It makes clients oblivious to how the application is partitioned, gives the optimal API for each client, lets a client reach multiple services in a single trip, and translates the public API protocol to whatever internal protocols are used.",
-    "**Examples:** the production-ready sample uses Spring Cloud tools on Spring Boot (registration and discovery, routing, service-to-service calls, load balancing, circuit breakers, distributed messaging), some originating from Netflix. AWS API Gateway creates, publishes, maintains, monitors and secures APIs at any scale, handling concurrent calls, traffic management, authorisation and access control, monitoring and API version management."
+    {
+     "h": "From sample to production",
+     "items": [
+      "**Problem** → hard-coded locations miss new or moved instances",
+      "**Add discovery and load balancing**",
+      "**API gateway** (in the sample) → gives clients one stable entry point",
+      "**Replicate each service's owned database** for its scaled instances",
+      "**Keep the message broker available**",
+      "**Do not** turn this into a database shared across different BCs"
+     ]
+    },
+    {
+     "h": "Server-side discovery with a service registry",
+     "lead": "Instances in virtualised or containerised environments change in number and location dynamically, so clients cannot know addresses.",
+     "items": [
+      "**Instances register themselves** with the registry",
+      "**Client calls a router** (load balancer) at a well-known location",
+      "**Router queries the service registry**",
+      "**Router load balances** and forwards to an available instance"
+     ]
+    },
+    {
+     "h": "API gateway = that router, plus more",
+     "items": [
+      "**Clients oblivious** to how the application is partitioned",
+      "**Optimal API** for each client",
+      "**Multiple services in a single trip** for a client",
+      "**Protocol translation** → public API protocol to whatever internal protocols are used"
+     ]
+    },
+    {
+     "h": "Example: Spring Cloud",
+     "lead": "The production-ready sample uses Spring Cloud tools on Spring Boot, some originating from Netflix:",
+     "items": [
+      "**Registration and discovery**",
+      "**Routing**",
+      "**Service-to-service calls**",
+      "**Load balancing**",
+      "**Circuit breakers**",
+      "**Distributed messaging**"
+     ]
+    },
+    {
+     "h": "Example: AWS API Gateway",
+     "lead": "Creates, publishes, maintains, monitors and secures APIs at any scale. Handles:",
+     "items": [
+      "**Concurrent calls**",
+      "**Traffic management**",
+      "**Authorisation and access control**",
+      "**Monitoring**",
+      "**API version management**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -672,9 +1109,39 @@
    ],
    "summary": "Client libraries that make consuming services convenient, and the wrap-up of how the pieces of the topic fit.",
    "notes": [
-    "**SDKs make services easy to consume.** AWS provides SDKs for many languages and platforms (Java, .NET, Node.js, Python and others, plus Android, iOS and mobile web), so applications call AWS services through native code.",
-    "**Feign in the lecture’s Spring Cloud stack:** declarative clients map interface methods to REST requests and integrate with Eureka, Ribbon and Hystrix for discovery and resilience. This is the illustrated stack, not a requirement for every SDK. Calls still cross a network and can time out or fail.",
-    "**How the pieces fit:** context mappings describe dependencies between BCs; aggregates define local transaction scope and reference other aggregates by ID; domain events propagate outcomes. Orchestration or choreography coordinates larger flows. Gateways simplify client access, while SDKs ease calls without removing network boundaries."
+    {
+     "h": "SDKs make services easy to consume",
+     "items": [
+      {
+       "t": "**AWS SDKs** for many languages and platforms",
+       "sub": [
+        "Java, .NET, Node.js, Python and others",
+        "plus Android, iOS and mobile web"
+       ]
+      },
+      "**Native code** → applications call AWS services through it"
+     ]
+    },
+    {
+     "h": "Feign (Spring Cloud stack in the lecture)",
+     "items": [
+      "**Declarative clients** → map interface methods to REST requests",
+      "**Integrates with Eureka, Ribbon and Hystrix** → discovery and resilience",
+      "**The illustrated stack**, not a requirement for every SDK",
+      "**Calls still cross a network** → can time out or fail"
+     ]
+    },
+    {
+     "h": "How the pieces fit",
+     "items": [
+      "**Context mappings** → describe dependencies between BCs",
+      "**Aggregates** → define local transaction scope; reference other aggregates by ID",
+      "**Domain events** → propagate outcomes",
+      "**Orchestration or choreography** → coordinates larger flows",
+      "**Gateways** → simplify client access",
+      "**SDKs** → ease calls, without removing network boundaries"
+     ]
+    }
    ],
    "terms": [
     {

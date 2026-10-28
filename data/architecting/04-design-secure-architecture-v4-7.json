@@ -24,11 +24,56 @@
    ],
    "summary": "Security means preserving confidentiality, integrity and availability of information and systems, and it must be designed in from requirements, not bolted on.",
    "notes": [
-    "**Secure by design:** security requirements must be captured during requirements definition and the solution architecture must be reviewed from a security perspective. Security is a non-functional requirement that shapes the architecture, handled through risk management (assess, then treat).",
-    "**CIA triad:** confidentiality prevents unauthorised disclosure; integrity protects data and processing from improper modification; availability keeps required systems and information accessible.",
-    "**Banking example:** authentication and access control restrict who can read statements (confidentiality); a $100 payment must remain $100 (integrity); the service must be reachable when needed (availability). Logging in alone does not protect every path to the data.",
-    "**ISO 27000 describes information security as preserving CIA.** Other relevant properties include authenticity, accountability, non-repudiation and reliability. Security therefore needs ongoing assessment and operation.",
-    "**Beyond CIA:** non-repudiation, authenticity, authorisation and accountability also matter. STRIDE links threat types to CIA, authenticity, non-repudiation and authorisation; audit evidence supports accountability."
+    {
+     "h": "Secure by design",
+     "items": [
+      "**Capture security requirements** during requirements definition",
+      "**Review the solution architecture** from a security perspective",
+      "**Security is a non-functional requirement** that shapes the architecture",
+      "**Handled through risk management** → assess, then treat"
+     ]
+    },
+    {
+     "h": "CIA triad",
+     "items": [
+      "**Confidentiality**: prevents unauthorised disclosure",
+      "**Integrity**: protects data and processing from improper modification",
+      "**Availability**: keeps required systems and information accessible"
+     ]
+    },
+    {
+     "h": "Banking example of CIA",
+     "items": [
+      "**Confidentiality** → authentication and access control restrict who can read statements",
+      "**Integrity** → a $100 payment must remain $100",
+      "**Availability** → the service must be reachable when needed"
+     ],
+     "foot": "Logging in alone does not protect every path to the data."
+    },
+    {
+     "h": "ISO 27000 definition",
+     "items": [
+      "**Information security = preserving CIA**",
+      {
+       "t": "**Other relevant properties**:",
+       "sub": [
+        "authenticity",
+        "accountability",
+        "non-repudiation",
+        "reliability"
+       ]
+      }
+     ],
+     "foot": "Security therefore needs **ongoing assessment and operation**."
+    },
+    {
+     "h": "Beyond CIA",
+     "items": [
+      "**Also matter**: non-repudiation, authenticity, authorisation, accountability",
+      "**STRIDE** links threat types to CIA, authenticity, non-repudiation and authorisation",
+      "**Audit evidence** supports accountability"
+     ]
+    }
    ],
    "terms": [
     {
@@ -72,10 +117,49 @@
    ],
    "summary": "Risk management is an ongoing loop of scoping, assessing (identify, analyse, evaluate) and treating risk; risk arises when a threat meets a vulnerability.",
    "notes": [
-    "**The process (ISO 27005 / ISO 31000):** determine scope, then risk assessment made of risk identification, risk analysis and risk evaluation, then risk treatment. It is on-going, not a one-off.",
-    "**Identification** finds assets, threats, vulnerabilities and consequences. **Analysis** estimates likelihood and impact. **Evaluation** uses those results to determine risk levels and priorities against the chosen criteria.",
-    "**TVR mnemonic:** a threat is a potential cause of harm; a vulnerability is a weakness it could exploit; risk is the resulting potential loss or damage. A vulnerability need not already be publicly known, and a threat need not be a new incident.",
-    "**Controls reduce risk; they need not remove it.** Locking a bicycle reduces theft risk but does not make theft impossible. A data diode restricts a connection to one direction, reducing two-way connectivity exposure; evaluate the remaining paths and risks."
+    {
+     "h": "Risk process (ISO 27005 / ISO 31000)",
+     "ordered": true,
+     "items": [
+      "**Determine scope**",
+      {
+       "t": "**Risk assessment**, made of:",
+       "sub": [
+        "risk identification",
+        "risk analysis",
+        "risk evaluation"
+       ]
+      },
+      "**Risk treatment**"
+     ],
+     "foot": "It is **on-going**, not a one-off."
+    },
+    {
+     "h": "Assessment steps",
+     "items": [
+      "**Identification** → finds assets, threats, vulnerabilities and consequences",
+      "**Analysis** → estimates likelihood and impact",
+      "**Evaluation** → uses those results to determine risk levels and priorities against the chosen criteria"
+     ]
+    },
+    {
+     "h": "TVR mnemonic",
+     "items": [
+      "**Threat**: a potential cause of harm",
+      "**Vulnerability**: a weakness the threat could exploit",
+      "**Risk**: the resulting potential loss or damage",
+      "A vulnerability need not already be **publicly known**",
+      "A threat need not be a **new incident**"
+     ]
+    },
+    {
+     "h": "Controls reduce risk, not remove it",
+     "items": [
+      "**Bicycle lock** → reduces theft risk but does not make theft impossible",
+      "**Data diode** → restricts a connection to one direction, reducing two-way connectivity exposure"
+     ],
+     "foot": "Evaluate the **remaining paths and risks**."
+    }
    ],
    "terms": [
     {
@@ -144,12 +228,72 @@
    ],
    "summary": "Risk identification: find crown jewels and stepping stones, enumerate threats with STRIDE, spot vulnerabilities, and write each risk as a scenario.",
    "notes": [
-    "**Crown jewels vs stepping stones:** crown jewels are assets critical to business objectives and what attackers seek (customer account data of a bank, patient records of a hospital). Stepping stones are resources attackers take over to pivot across network segments on the way to the crown jewels. The SingHealth breach is the class case.",
-    "**MOST critical data:** out of all data held by the company, identify the small set of most critical data and have a custodian responsible for it, so protection is focused where it matters.",
-    "**STRIDE maps each threat to the objective it breaks:** Spoofing -> Authenticity; Tampering -> Integrity; Repudiation -> Non-repudiation; Information disclosure -> Confidentiality; Denial of service -> Availability; Elevation of privilege -> Authorization. Start with STRIDE, then think like a hacker, focusing on data stores, data flows, processes, actors and trust boundaries.",
-    "**Non-repudiation** provides evidence of an action, origin or receipt so it can be challenged with proof. It requires the relevant evidence; it does not make denial physically impossible. **DoS** disrupts service; **DDoS** uses distributed sources.",
-    "**Vulnerability** is a flaw that a threat can exploit to harm an asset (see CWE for catalogues). In other words, your design is vulnerable when it fails to protect CIA, to do AAA (authentication, authorization, accounting) properly, or to provide non-repudiation where required.",
-    "**Write a risk scenario:** threat exploits vulnerability to harm asset, causing consequence. Example: an attacker exploits excessive access permissions to read unencrypted medical records, disclosing patient information. Another: ransomware exploits an unpatched system to encrypt business data and stop operations."
+    {
+     "h": "Crown jewels vs stepping stones",
+     "items": [
+      {
+       "t": "**Crown jewels**: assets critical to business objectives; what attackers seek",
+       "sub": [
+        "customer account data of a bank",
+        "patient records of a hospital"
+       ]
+      },
+      "**Stepping stones**: resources attackers take over to pivot across network segments on the way to the crown jewels",
+      "**SingHealth breach** → the class case"
+     ]
+    },
+    {
+     "h": "MOST critical data",
+     "items": [
+      "Out of all data held by the company, identify the **small set of most critical data**",
+      "Have a **custodian** responsible for it",
+      "So protection is **focused where it matters**"
+     ]
+    },
+    {
+     "h": "STRIDE: threat → objective it breaks",
+     "items": [
+      "**Spoofing** → Authenticity",
+      "**Tampering** → Integrity",
+      "**Repudiation** → Non-repudiation",
+      "**Information disclosure** → Confidentiality",
+      "**Denial of service** → Availability",
+      "**Elevation of privilege** → Authorization"
+     ],
+     "foot": "Start with STRIDE, then **think like a hacker**, focusing on data stores, data flows, processes, actors and trust boundaries."
+    },
+    {
+     "h": "Non-repudiation and DoS",
+     "items": [
+      "**Non-repudiation** → provides evidence of an action, origin or receipt so it can be challenged with proof",
+      "It requires the **relevant evidence**; it does not make denial physically impossible",
+      "**DoS** → disrupts service",
+      "**DDoS** → uses distributed sources"
+     ]
+    },
+    {
+     "h": "Vulnerability",
+     "items": [
+      "**Definition**: a flaw that a threat can exploit to harm an asset",
+      "**CWE** → catalogues of vulnerabilities",
+      {
+       "t": "In other words, your design is vulnerable when it fails to:",
+       "sub": [
+        "protect **CIA**",
+        "do **AAA** properly (authentication, authorization, accounting)",
+        "provide **non-repudiation** where required"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Write a risk scenario",
+     "lead": "Threat exploits vulnerability to harm asset, causing consequence.",
+     "items": [
+      "**Example 1**: an attacker exploits excessive access permissions to read unencrypted medical records, disclosing patient information",
+      "**Example 2**: ransomware exploits an unpatched system to encrypt business data and stop operations"
+     ]
+    }
    ],
    "terms": [
     {
@@ -237,10 +381,73 @@
    ],
    "summary": "Each risk is scored for likelihood and impact (DREAD) and combined to give a risk level, often read from a 3-by-3 matrix.",
    "notes": [
-    "**Risk = function(Likelihood, Impact).** Likelihood is the chance the threat exploits the vulnerability to harm the asset; impact is the magnitude of harm if it occurs. Risk is the likelihood of a threat exploiting a vulnerability to harm an asset, with a business impact.",
-    "**DREAD scores five factors, each 1 to 10:** Discoverability (how easy to find the flaw; 10 = public, findable by search engine), Reproducibility (how easy to repeat; 10 = just a browser, no authentication), Exploitability (effort needed; 10 = just a browser, 1 = custom tools and superuser), Affected users (1 none, 5 some, 10 all), Damage potential (1 nothing, 5 individual user data, 10 complete system or data destruction).",
-    "**Interpret DREAD as a scoring aid.** Damage and affected users describe impact; discoverability, reproducibility and exploitability inform likelihood. The lecture labels the framework both quantitative and qualitative: its 1–10 scores rank concerns but are not measured probabilities.",
-    "**The lecture’s example 3-by-3 matrix** maps probability and impact to Low, Medium or High. In that particular matrix only high/high is High and the low-probability row is Low. This is a chosen scoring policy, not a universal rule that rare catastrophic events are acceptable."
+    {
+     "h": "Risk = function(Likelihood, Impact)",
+     "items": [
+      "**Likelihood**: chance the threat exploits the vulnerability to harm the asset",
+      "**Impact**: magnitude of harm if it occurs",
+      "**Risk**: likelihood of a threat exploiting a vulnerability to harm an asset, with a **business impact**"
+     ]
+    },
+    {
+     "h": "DREAD: five factors, each 1 to 10",
+     "items": [
+      {
+       "t": "**Discoverability**: how easy to find the flaw",
+       "sub": [
+        "10 = public, findable by search engine"
+       ]
+      },
+      {
+       "t": "**Reproducibility**: how easy to repeat",
+       "sub": [
+        "10 = just a browser, no authentication"
+       ]
+      },
+      {
+       "t": "**Exploitability**: effort needed",
+       "sub": [
+        "10 = just a browser",
+        "1 = custom tools and superuser"
+       ]
+      },
+      {
+       "t": "**Affected users**",
+       "sub": [
+        "1 = none",
+        "5 = some",
+        "10 = all"
+       ]
+      },
+      {
+       "t": "**Damage potential**",
+       "sub": [
+        "1 = nothing",
+        "5 = individual user data",
+        "10 = complete system or data destruction"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Interpreting DREAD",
+     "lead": "DREAD is a scoring aid.",
+     "items": [
+      "**Impact** ← damage, affected users",
+      "**Likelihood** ← discoverability, reproducibility, exploitability",
+      "Lecture labels it both **quantitative and qualitative**",
+      "1–10 scores **rank concerns** but are not measured probabilities"
+     ]
+    },
+    {
+     "h": "Example 3-by-3 risk matrix",
+     "items": [
+      "**Maps probability and impact** → Low, Medium or High",
+      "In the lecture's matrix, only **high/high is High**",
+      "The **low-probability row is Low**"
+     ],
+     "foot": "This is a **chosen scoring policy**, not a universal rule that rare catastrophic events are acceptable."
+    }
    ],
    "terms": [
     {
@@ -313,12 +520,43 @@
    ],
    "summary": "For each risk scenario choose one of four responses; mitigation is where security controls come in.",
    "notes": [
-    "**Four responses to cyber risk:** Mitigate (apply security controls to reduce the risk), Avoid (do not carry out the activity that gives rise to the risk), Transfer (share part of the risk with another party), Accept (live with it). The choice is made per risk scenario.",
-    "**Mitigation** puts in measures to reduce the risk level, via security controls. E.g. a firewall restricting traffic mitigates the risk of a system talking to malicious external servers.",
-    "**Avoidance** removes the activity: the Coca-Cola example in class illustrates avoiding an IT risk altogether.",
-    "**Transfer** shares part of the risk, for example through insurance or a service contract. It can reduce the financial impact borne by the organisation; it does not erase operational consequences or accountability.",
-    "**Accept** means making an informed decision to take no further treatment when risk is within tolerance. Record the decision and revisit it when conditions change. Residual risk remains even after other treatments.",
-    "**Controls definition:** after mitigation is chosen, the example scenario (cleartext medical records) is treated with encryption and access control, layered as defence-in-depth. Controls fall into resisting, detecting, reacting and recovering categories (covered later)."
+    {
+     "h": "Four responses to cyber risk",
+     "items": [
+      "**Mitigate**: apply security controls to reduce the risk",
+      "**Avoid**: do not carry out the activity that gives rise to the risk",
+      "**Transfer**: share part of the risk with another party",
+      "**Accept**: live with it"
+     ],
+     "foot": "The choice is made **per risk scenario**."
+    },
+    {
+     "h": "Mitigate and avoid",
+     "items": [
+      "**Mitigation** → put in measures to reduce the risk level, via security controls",
+      "e.g. a **firewall** restricting traffic mitigates the risk of a system talking to malicious external servers",
+      "**Avoidance** → removes the activity",
+      "e.g. the **Coca-Cola example** in class: avoiding an IT risk altogether"
+     ]
+    },
+    {
+     "h": "Transfer and accept",
+     "items": [
+      "**Transfer** → shares part of the risk, e.g. **insurance** or a **service contract**",
+      "Transfer can reduce the **financial impact** borne by the organisation; it does not erase operational consequences or accountability",
+      "**Accept** → an informed decision to take no further treatment when risk is **within tolerance**",
+      "**Record** the acceptance decision and **revisit** it when conditions change",
+      "**Residual risk** remains even after other treatments"
+     ]
+    },
+    {
+     "h": "From treatment to controls",
+     "items": [
+      "After mitigation is chosen, the example scenario (**cleartext medical records**) is treated with **encryption and access control**",
+      "Layered as **defence-in-depth**",
+      "Control categories: **resisting, detecting, reacting, recovering** (covered later)"
+     ]
+    }
    ],
    "terms": [
     {
@@ -387,11 +625,55 @@
    ],
    "summary": "A security control is the safeguard prescribed to mitigate a risk; in practice you choose controls through risk assessment, hygiene lists or a baseline catalogue.",
    "notes": [
-    "**Definition (NIST):** a safeguard or countermeasure prescribed for an information system or organisation to protect the CIA of its information and meet defined security requirements. Examples: security guard, CCTV, anti-virus, backup and restore, password, security policy. Controls are to cyber risk what internal controls are to the finance process.",
-    "**Select controls to address requirements and risks.** A large catalogue offers choices, not a reason to implement every item. Apply mandatory requirements, assess the relevant risks and justify the selected controls.",
-    "**Cyber hygiene establishes a foundation.** The lecture’s CSA Essentials 6 cover assets, authorised software, patching, restricted admin rights, breach detection and access control including MFA. CIS Controls is another prioritised set. Such lists complement risk assessment; they do not establish a percentage probability of being safe.",
-    "**Baselines** prescribe a starting set of controls, informed by catalogues such as NIST 800-53 and processes such as NIST 800-37. The lecture distinguishes mandatory, comply-or-explain and optional controls. Apply the organisation’s actual baseline and document justified exceptions.",
-    "**Takeaway:** security controls are the solution to the cyber risk problem; choose them via risk assessment, reinforced by hygiene and baselines."
+    {
+     "h": "Security control definition (NIST)",
+     "items": [
+      "**A safeguard or countermeasure** prescribed for an information system or organisation",
+      "**Purpose**: protect the CIA of its information and meet defined security requirements",
+      "**Examples**: security guard, CCTV, anti-virus, backup and restore, password, security policy",
+      "**Analogy**: controls are to cyber risk what **internal controls** are to the finance process"
+     ]
+    },
+    {
+     "h": "Select controls, don't collect them",
+     "items": [
+      "**Select controls to address requirements and risks**",
+      "A large catalogue offers **choices**, not a reason to implement every item",
+      "**Apply mandatory requirements**",
+      "**Assess the relevant risks**",
+      "**Justify the selected controls**"
+     ]
+    },
+    {
+     "h": "Cyber hygiene",
+     "lead": "Establishes a foundation.",
+     "items": [
+      {
+       "t": "**CSA Essentials 6** (lecture) cover:",
+       "sub": [
+        "assets",
+        "authorised software",
+        "patching",
+        "restricted admin rights",
+        "breach detection",
+        "access control including MFA"
+       ]
+      },
+      "**CIS Controls** → another prioritised set",
+      "Such lists **complement risk assessment**; they do not establish a percentage probability of being safe"
+     ]
+    },
+    {
+     "h": "Baselines",
+     "items": [
+      "**Prescribe a starting set of controls**",
+      "Informed by catalogues such as **NIST 800-53** and processes such as **NIST 800-37**",
+      "Lecture distinguishes **mandatory, comply-or-explain and optional** controls",
+      "Apply the organisation's **actual baseline**",
+      "Document **justified exceptions**"
+     ],
+     "foot": "**Takeaway**: security controls are the solution to the cyber risk problem; choose them via risk assessment, reinforced by hygiene and baselines."
+    }
    ],
    "terms": [
     {
@@ -435,10 +717,40 @@
    ],
    "summary": "Every control has two classifications: what it is made of (technical, administrative, physical) and what it does (preventive, detective, corrective, ...).",
    "notes": [
-    "**Two independent questions:** form (technical, administrative, physical) and function (preventive, detective, corrective, deterrent, compensating). Encryption is technical and preventive; a log review procedure is administrative and detective. A control can serve more than one function.",
-    "**Every control has both labels.** A security policy, for example, is an administrative and preventive control. Encryption is technical and preventive; an IDS is technical and detective; backups are technical and corrective; segmentation instead of patching is technical and compensating.",
-    "**Labels vary between sources.** Some materials swap 'types' and 'categories', or add directive and operational/managerial rows. What matters is that controls have two classifications, whatever they are called.",
-    "**Use classification to align the solution to the business:** check you have a mix of control forms and functions (not only preventive) for each risk. Applied in the Kopitiam card case, fill a grid of physical/technical/administrative against preventive/detective/corrective to see which are missing."
+    {
+     "h": "Two independent questions",
+     "items": [
+      "**Form**: technical, administrative, physical",
+      "**Function**: preventive, detective, corrective, deterrent, compensating",
+      "A control can serve **more than one function**"
+     ]
+    },
+    {
+     "h": "Every control has both labels",
+     "items": [
+      "**Security policy** → administrative + preventive",
+      "**Log review procedure** → administrative + detective",
+      "**Encryption** → technical + preventive",
+      "**IDS** → technical + detective",
+      "**Backups** → technical + corrective",
+      "**Segmentation instead of patching** → technical + compensating"
+     ]
+    },
+    {
+     "h": "Labels vary between sources",
+     "items": [
+      "Some materials **swap 'types' and 'categories'**",
+      "Some add **directive** and **operational/managerial** rows"
+     ],
+     "foot": "What matters is that controls have **two classifications**, whatever they are called."
+    },
+    {
+     "h": "Align the solution to the business",
+     "items": [
+      "Check you have a **mix of control forms and functions** for each risk (not only preventive)",
+      "**Kopitiam card case** → fill a grid of physical/technical/administrative against preventive/detective/corrective to see which are missing"
+     ]
+    }
    ],
    "terms": [
     {
@@ -529,13 +841,85 @@
    ],
    "summary": "Resisting attacks on the confidentiality and integrity of data relies on cryptography: symmetric and asymmetric encryption, hashing, HMAC, digital signatures and certificates.",
    "notes": [
-    "**Choose the primitive for the security objective.** Cryptography includes encryption, hashes, HMAC, signatures, certificates and key management; access control and network segregation provide additional protection.",
-    "**Symmetric encryption** uses a shared secret and is efficient for bulk confidentiality. **Asymmetric cryptography** uses public/private key pairs for operations such as key establishment, authentication and signatures. The lecture’s large speed difference illustrates relative cost, not a fixed multiplier for every algorithm and machine.",
-    "**Encryption:** plaintext plus a key and algorithm produces ciphertext. For public-key confidentiality, encrypt to the recipient’s public key; the recipient decrypts with the private key. Signing and verification are separate operations, not a generic instruction to encrypt with either key. Encryption alone does not establish integrity.",
-    "**Hashing:** a one-way function produces a fixed-length digest. Comparing with a trusted digest helps detect changes; an attacker who can replace both the data and digest defeats an unkeyed check. Different inputs can collide, so not every change is guaranteed a distinct hash. The lecture contrasts MD5 with SHA-2 and SHA-3; CRC and check digits detect errors rather than malicious tampering.",
-    "**HMAC** combines a shared secret with hashing to detect modification and authenticate a key holder. Anyone holding that secret can create the tag, so it cannot distinguish one holder from another for non-repudiation.",
-    "**Digital signatures** use a private signing key and public verification key to support integrity, origin authentication and non-repudiation evidence. A **certificate** binds a public key to a subject under an issuer’s signature. Check the issuer and certificate before trusting the claimed identity; Netrust is the lecture’s CA example.",
-    "**Correct use matters:** administrators configure TLS/FTP-SSL endpoints, developers use crypto libraries correctly, and keys must be protected. A strong algorithm does not repair weak key handling or an incorrect trust decision."
+    {
+     "h": "Choose primitive for security objective",
+     "items": [
+      {
+       "t": "**Cryptography includes**:",
+       "sub": [
+        "encryption",
+        "hashes",
+        "HMAC",
+        "signatures",
+        "certificates",
+        "key management"
+       ]
+      },
+      "**Access control and network segregation** provide additional protection"
+     ]
+    },
+    {
+     "h": "Symmetric vs asymmetric",
+     "items": [
+      "**Symmetric encryption**: shared secret; efficient for **bulk confidentiality**",
+      "**Asymmetric cryptography**: public/private key pairs, for **key establishment, authentication and signatures**",
+      "The lecture's large **speed difference** illustrates relative cost, not a fixed multiplier for every algorithm and machine"
+     ]
+    },
+    {
+     "h": "Encryption",
+     "items": [
+      "**Plaintext + key + algorithm** → ciphertext",
+      "**Public-key confidentiality** → encrypt to the recipient's public key; recipient decrypts with the private key",
+      "**Signing and verification are separate operations**, not a generic instruction to encrypt with either key",
+      "**Encryption alone does not establish integrity**"
+     ]
+    },
+    {
+     "h": "Hashing",
+     "items": [
+      "**One-way function** → fixed-length digest",
+      "**Compare with a trusted digest** → helps detect changes",
+      "An attacker who can **replace both the data and digest** defeats an unkeyed check",
+      "**Collisions**: different inputs can collide, so not every change is guaranteed a distinct hash",
+      "Lecture contrasts **MD5** with **SHA-2** and **SHA-3**",
+      "**CRC and check digits** detect errors rather than malicious tampering"
+     ]
+    },
+    {
+     "h": "HMAC",
+     "items": [
+      "**Shared secret + hashing**",
+      "**Detects modification** and **authenticates a key holder**",
+      "Anyone holding that secret can create the tag → **cannot distinguish one holder from another**, so no non-repudiation"
+     ]
+    },
+    {
+     "h": "Digital signatures and certificates",
+     "items": [
+      "**Digital signature**: private signing key + public verification key",
+      {
+       "t": "Signatures support:",
+       "sub": [
+        "integrity",
+        "origin authentication",
+        "non-repudiation evidence"
+       ]
+      },
+      "**Certificate**: binds a public key to a subject under an **issuer's signature**",
+      "**Check the issuer and certificate** before trusting the claimed identity",
+      "**Netrust** → the lecture's CA example"
+     ]
+    },
+    {
+     "h": "Correct use matters",
+     "items": [
+      "**Administrators** configure TLS/FTP-SSL endpoints",
+      "**Developers** use crypto libraries correctly",
+      "**Keys must be protected**"
+     ],
+     "foot": "A strong algorithm does not repair **weak key handling** or an **incorrect trust decision**."
+    }
    ],
    "terms": [
     {
@@ -625,13 +1009,71 @@
    ],
    "summary": "Keys must be generated, stored and agreed safely (HSM, random generators, Diffie-Hellman), and TLS and VPNs use them to protect data in transit.",
    "notes": [
-    "**Protect keys as well as data.** The lecture recommends HSMs for long-term keys and random bit generators or authenticated key agreement for symmetric/session keys. It introduces FIPS 140-2 Levels 1–4 and CloudHSM as examples of increasing physical and authentication protection; these examples do not replace a threat assessment.",
-    "**Unpredictable key material matters.** The lecture’s seeded Python example shows determinism: the same seed repeats the sequence. Key generation needs a cryptographic generator with adequate entropy, not an ordinary reproducible random sequence. The lecture illustrates entropy sources with HSM noise sources and Cloudflare lava lamps.",
-    "**Forward secrecy:** recorded sessions using long-term RSA key transport can be exposed if that private key is later stolen. Authenticated ephemeral Diffie-Hellman derives per-session secrets without transmitting them directly. With ephemeral secrets erased, later theft of the long-term key does not reveal those past sessions; unauthenticated DH alone does not prove peer identity.",
-    "**TLS protects one connection between its endpoints.** If it terminates at the DMZ web server, plaintext is available there; a second TLS hop does not remove that exposure. It can be end-to-end when its endpoints are the actual producer and consumer. The lecture illustrates handshake round-trip savings but uses imprecise version labels; do not memorise fixed message counts.",
-    "**Field encryption can extend protection across intermediaries.** The lecture illustrates encrypting a password plus nonce for the bank’s final consumer. The nonce addresses replay only when checked appropriately. A proxy that decrypts traffic can inspect plaintext and becomes part of the trust boundary; a diagram alone is not a complete crypto protocol.",
-    "**VPN:** an encrypted tunnel over public networks gives confidentiality and integrity; IPsec traditionally, TLS for SSL VPN. Forms: site-to-site and point-to-site; transport vs tunnel mode.",
-    "**VPN placement is a trust-boundary trade-off.** DMZ termination exposes the endpoint and keys in the outer zone but permits an inner control boundary. Internal termination keeps keys deeper inside yet may bypass DMZ inspection. Neither placement automatically makes keys safe or grants unrestricted access: authentication, routing and authorisation still matter."
+    {
+     "h": "Protect keys as well as data",
+     "items": [
+      "**HSMs** → for long-term keys",
+      "**Random bit generators or authenticated key agreement** → for symmetric/session keys",
+      "**FIPS 140-2 Levels 1–4** and **CloudHSM** → examples of increasing physical and authentication protection",
+      "These examples **do not replace a threat assessment**"
+     ]
+    },
+    {
+     "h": "Unpredictable key material",
+     "items": [
+      "**Seeded Python example** shows determinism: the same seed repeats the sequence",
+      "Key generation needs a **cryptographic generator with adequate entropy**, not an ordinary reproducible random sequence",
+      "**Entropy sources** illustrated by HSM noise sources and **Cloudflare lava lamps**"
+     ]
+    },
+    {
+     "h": "Forward secrecy",
+     "items": [
+      "**Problem**: recorded sessions using long-term **RSA key transport** can be exposed if that private key is later stolen",
+      "**Authenticated ephemeral Diffie-Hellman** → derives per-session secrets without transmitting them directly",
+      "With **ephemeral secrets erased**, later theft of the long-term key does not reveal those past sessions",
+      "**Unauthenticated DH** alone does not prove peer identity"
+     ]
+    },
+    {
+     "h": "TLS protects one connection",
+     "items": [
+      "TLS protects one connection **between its endpoints**",
+      "**Terminates at the DMZ web server** → plaintext is available there",
+      "A **second TLS hop** does not remove that exposure",
+      "**End-to-end** only when its endpoints are the actual producer and consumer",
+      "Lecture illustrates **handshake round-trip savings** but uses imprecise version labels; do not memorise fixed message counts"
+     ]
+    },
+    {
+     "h": "Field encryption across intermediaries",
+     "items": [
+      "**Field encryption** can extend protection across intermediaries",
+      "Lecture example: encrypt a **password plus nonce** for the bank's final consumer",
+      "**Nonce** addresses replay only when checked appropriately",
+      "A **proxy that decrypts traffic** can inspect plaintext and becomes part of the trust boundary",
+      "A diagram alone is **not a complete crypto protocol**"
+     ]
+    },
+    {
+     "h": "VPN",
+     "items": [
+      "**Encrypted tunnel over public networks** → confidentiality and integrity",
+      "**IPsec** traditionally; **TLS** for SSL VPN",
+      "**Forms**: site-to-site and point-to-site",
+      "**Modes**: transport vs tunnel"
+     ]
+    },
+    {
+     "h": "VPN placement trade-off",
+     "lead": "Placement is a trust-boundary trade-off.",
+     "items": [
+      "**DMZ termination** → exposes the endpoint and keys in the outer zone, but permits an inner control boundary",
+      "**Internal termination** → keeps keys deeper inside, yet may bypass DMZ inspection",
+      "Neither placement automatically makes keys safe or grants unrestricted access",
+      "**Authentication, routing and authorisation** still matter"
+     ]
+    }
    ],
    "terms": [
     {
@@ -711,11 +1153,60 @@
    ],
    "summary": "Access control (identify, authenticate, authorize, with audit and administration) and segregated networks limit who can reach what.",
    "notes": [
-    "**Access control chain:** Identification (state who you are) -> Authentication (prove it) -> Authorization (who is allowed what type of access to which objects). Audit trail and administration surround it. It is a baseline security control.",
-    "**Authentication factors:** know (password/passphrase), have (OTP token), are (physiological or behavioural biometrics such as fingerprint, iris, handwriting or gait). MFA combines independent factor types; two passwords are still one factor type.",
-    "**Segregation limits movement.** Split a flat network into zones such as DMZ, internal, user and development, with controlled connections. A compromised host then has fewer reachable targets; permitted paths still need authentication and authorisation.",
-    "**Out-of-band network:** a segregated LAN for logging and a dedicated device and segregated network for system administration, so management traffic is separate from business traffic. The class exercise on a vendor using TeamViewer asks you to spot how an easy outbound remote tool can bypass firewall design.",
-    "**Summary of resisting attacks:** cryptography, access control and network segregation."
+    {
+     "h": "Access control chain",
+     "ordered": true,
+     "items": [
+      "**Identification** → state who you are",
+      "**Authentication** → prove it",
+      "**Authorization** → who is allowed what type of access to which objects"
+     ],
+     "foot": "**Audit trail and administration** surround it. It is a **baseline security control**."
+    },
+    {
+     "h": "Authentication factors",
+     "items": [
+      "**Know** → password/passphrase",
+      "**Have** → OTP token",
+      {
+       "t": "**Are** → physiological or behavioural biometrics",
+       "sub": [
+        "fingerprint",
+        "iris",
+        "handwriting",
+        "gait"
+       ]
+      },
+      "**MFA** combines **independent factor types**",
+      "**Two passwords** are still one factor type"
+     ]
+    },
+    {
+     "h": "Segregation limits movement",
+     "items": [
+      "Split a **flat network** into zones: **DMZ, internal, user, development**",
+      "**Controlled connections** between zones",
+      "A compromised host then has **fewer reachable targets**",
+      "Permitted paths still need **authentication and authorisation**"
+     ]
+    },
+    {
+     "h": "Out-of-band network",
+     "items": [
+      "**Segregated LAN for logging**",
+      "**Dedicated device and segregated network** for system administration",
+      "→ **management traffic is separate from business traffic**",
+      "**TeamViewer class exercise**: a vendor's easy outbound remote tool can **bypass firewall design**"
+     ]
+    },
+    {
+     "h": "Resisting attacks: summary",
+     "items": [
+      "**Cryptography**",
+      "**Access control**",
+      "**Network segregation**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -788,11 +1279,64 @@
    ],
    "summary": "Beyond resisting attacks, technical controls detect them (IDS, signatures, HMAC), react to them (revoke, IPS, block exfiltration) and recover (tested, protected backups).",
    "notes": [
-    "**Detecting attacks:** detect data tampering with digital signatures and HMAC, and detect intrusions as they occur with an IDS. IDS can be on hosts or networks and can use different monitoring methodologies.",
-    "**HIDS vs NIDS:** a host-based IDS is installed on each protected system and monitors system calls, file system access, registry changes and host I/O to detect anomalous activity. A network-based IDS has sensors on firewalls and routers and watches network traffic for attacks; placement of sensors is a design choice.",
-    "**IDS versus IPS:** a passive network IDS analyses copied traffic and alerts; an inline IPS can drop suspected attacks. Here “offline” means outside the forwarding path, not delayed or disconnected. HIDS observes host activity. Blocking introduces a false-positive and availability trade-off.",
-    "**Reacting to attacks:** revoke access, use IDPS to block, and block data exfiltration.",
-    "**Recovery:** test restoration and protect backup copies with offline storage, access controls and WORM where appropriate. WORM prevents rewriting retained data; it does not prevent theft or guarantee that the original copy was clean. Golden images provide a known-good base for rebuilding systems."
+    {
+     "h": "Detecting attacks",
+     "items": [
+      "**Data tampering** → detect with digital signatures and HMAC",
+      "**Intrusions as they occur** → detect with an IDS",
+      "IDS can be on **hosts or networks** and can use different **monitoring methodologies**"
+     ]
+    },
+    {
+     "h": "HIDS vs NIDS",
+     "items": [
+      {
+       "t": "**Host-based IDS (HIDS)**: installed on each protected system; detects anomalous activity by monitoring",
+       "sub": [
+        "system calls",
+        "file system access",
+        "registry changes",
+        "host I/O"
+       ]
+      },
+      "**Network-based IDS (NIDS)**: sensors on **firewalls and routers**; watches network traffic for attacks",
+      "**Placement of sensors** is a design choice"
+     ]
+    },
+    {
+     "h": "IDS versus IPS",
+     "items": [
+      "**Passive network IDS** → analyses copied traffic and **alerts**",
+      "**Inline IPS** → can **drop** suspected attacks",
+      "**\"Offline\"** here means outside the forwarding path, not delayed or disconnected",
+      "**HIDS** observes host activity",
+      "**Blocking** introduces a **false-positive and availability trade-off**"
+     ]
+    },
+    {
+     "h": "Reacting to attacks",
+     "items": [
+      "**Revoke access**",
+      "**Use IDPS to block**",
+      "**Block data exfiltration**"
+     ]
+    },
+    {
+     "h": "Recovery",
+     "items": [
+      "**Test restoration**",
+      {
+       "t": "**Protect backup copies** with",
+       "sub": [
+        "offline storage",
+        "access controls",
+        "WORM where appropriate"
+       ]
+      },
+      "**WORM** prevents rewriting retained data; it does not prevent theft or guarantee that the original copy was clean",
+      "**Golden images** → a known-good base for rebuilding systems"
+     ]
+    }
    ],
    "terms": [
     {
@@ -867,12 +1411,72 @@
    ],
    "summary": "Four principles (defence-in-depth, least common mechanism, least privilege, complete mediation) guide control choices; reference architectures show them applied.",
    "notes": [
-    "**Defence-in-depth:** multiple layers of protection so that if one is breached, others still protect, since no single measure is foolproof. E.g. access control plus encryption protecting confidential data.",
-    "**Least common mechanism:** minimise protection mechanisms shared across users, because shared paths can be channels for unauthorised information exchange. Examples: segregated logging LAN, dedicated admin device and network, different crypto keys for different purposes, compartmentalised functions per role.",
-    "**Least privilege:** give minimum permissions for the minimum time needed. Limits the damage when vulnerabilities are exploited. An application server gets network access, read on one database table and write to a log file, and never superuser.",
-    "**Complete mediation:** every access needs a valid authorisation decision. The lecture warns against cached decisions because revoked rights may otherwise remain effective. A successful login does not authorise every later object or operation.",
-    "**Reference architectures:** AWS DDoS-resilient design layers Route 53, CloudFront, WAF, API Gateway, load balancing and auto-scaling in front of private-subnet EC2 (defence-in-depth against DoS). Mobile security uses MDM (enforces policy on devices) and MAM (controls specific apps and their data).",
-    "**Summary:** security = CIA plus non-repudiation, authenticity, authorization, accountability; risk = function(likelihood, impact); treat with controls and principles. The IROne exercise practises asset, threat/vulnerability pairs and mitigations."
+    {
+     "h": "Defence-in-depth",
+     "items": [
+      "**Multiple layers of protection** → if one is breached, others still protect",
+      "No single measure is **foolproof**",
+      "e.g. **access control plus encryption** protecting confidential data"
+     ]
+    },
+    {
+     "h": "Least common mechanism",
+     "items": [
+      "**Minimise protection mechanisms shared across users**",
+      "Shared paths can be **channels for unauthorised information exchange**",
+      {
+       "t": "**Examples**:",
+       "sub": [
+        "segregated logging LAN",
+        "dedicated admin device and network",
+        "different crypto keys for different purposes",
+        "compartmentalised functions per role"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Least privilege",
+     "items": [
+      "**Minimum permissions for the minimum time** needed",
+      "**Limits the damage** when vulnerabilities are exploited",
+      "e.g. an **application server** gets network access, read on one database table and write to a log file, and **never superuser**"
+     ]
+    },
+    {
+     "h": "Complete mediation",
+     "items": [
+      "**Every access** needs a valid authorisation decision",
+      "Lecture warns against **cached decisions** → revoked rights may otherwise remain effective",
+      "A **successful login** does not authorise every later object or operation"
+     ]
+    },
+    {
+     "h": "Reference architectures",
+     "items": [
+      {
+       "t": "**AWS DDoS-resilient design** (defence-in-depth against DoS) layers, in front of private-subnet EC2:",
+       "sub": [
+        "Route 53",
+        "CloudFront",
+        "WAF",
+        "API Gateway",
+        "load balancing",
+        "auto-scaling"
+       ]
+      },
+      "**Mobile security**: **MDM** → enforces policy on devices; **MAM** → controls specific apps and their data"
+     ]
+    },
+    {
+     "h": "Topic summary",
+     "items": [
+      "**Security** = CIA plus non-repudiation, authenticity, authorization, accountability",
+      "**Risk** = function(likelihood, impact)",
+      "**Treat** with controls and principles",
+      "**IROne exercise** → practises asset, threat/vulnerability pairs and mitigations"
+     ]
+    }
    ],
    "terms": [
     {

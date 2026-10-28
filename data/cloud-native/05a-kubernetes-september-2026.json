@@ -23,10 +23,51 @@
    ],
    "summary": "Why containers beat older deployment models, and what Kubernetes does and does not do.",
    "notes": [
-    "**Images standardise packaging; orchestration manages running instances.** An image fixes the application and dependencies; a registry distributes it; a runtime starts isolated processes from it. Replacing versioned images supports repeatable releases and rollbacks, while host compatibility, configuration and data still affect behaviour.",
-    "**Declare workloads; configure the automation they need.** Kubernetes places Pods, maintains declared replicas, supports probes and rolling updates, and provides storage, configuration, discovery and access-control primitives. Autoscaling requires metrics and policy; uninterrupted updates require readiness, spare capacity and compatible releases.",
-    "**Kubernetes vs PaaS: K8s is not a PaaS.** It imposes no language or framework and supplies no databases, message queues or service marketplace, and you choose your own logging and monitoring. Platforms built on it (e.g. OpenShift) add those layers, so an architect must still select and integrate the surrounding services.",
-    "**Why adopt it:** developer velocity, declarative configuration, online self-healing, shared reusable tooling, scaling of software and teams, and abstraction from the underlying infrastructure."
+    {
+     "h": "Images vs orchestration",
+     "lead": "Images standardise packaging; orchestration manages running instances.",
+     "items": [
+      "**Image** → fixes the application and dependencies",
+      "**Registry** → distributes it",
+      "**Runtime** → starts isolated processes from it",
+      "**Replacing versioned images** → repeatable releases and rollbacks"
+     ],
+     "foot": "Host compatibility, configuration and data **still affect behaviour**."
+    },
+    {
+     "h": "What Kubernetes does",
+     "lead": "Declare workloads; configure the automation they need.",
+     "items": [
+      "**Places Pods**",
+      "**Maintains declared replicas**",
+      "**Supports probes and rolling updates**",
+      "**Provides primitives** for storage, configuration, discovery and access control",
+      "**Autoscaling requires** metrics and policy",
+      "**Uninterrupted updates require** readiness, spare capacity and compatible releases"
+     ]
+    },
+    {
+     "h": "Kubernetes vs PaaS",
+     "lead": "K8s is not a PaaS.",
+     "items": [
+      "**No language or framework** imposed",
+      "**Supplies no** databases, message queues or service marketplace",
+      "**Logging and monitoring**: you choose your own",
+      "**Platforms built on it** (e.g. OpenShift) add those layers"
+     ],
+     "foot": "An architect must still **select and integrate the surrounding services**."
+    },
+    {
+     "h": "Why adopt Kubernetes",
+     "items": [
+      "**Developer velocity**",
+      "**Declarative configuration**",
+      "**Online self-healing**",
+      "**Shared reusable tooling**",
+      "**Scaling** of software and teams",
+      "**Abstraction** from the underlying infrastructure"
+     ]
+    }
    ],
    "terms": [
     {
@@ -70,9 +111,31 @@
    ],
    "summary": "Kubernetes alongside the other orchestrators, Docker Swarm and Apache Mesos with Marathon.",
    "notes": [
-    "**The lecture compares Docker Swarm, Mesos/Marathon and Kubernetes.** All illustrate cluster scheduling, but their scope differs: Swarm focuses on Docker services, Mesos allocates resources to frameworks, and Kubernetes integrates workload controllers and service objects. Treat this as a comparison of designs rather than a current product popularity ranking.",
-    "**Swarm vs Mesos vs Kubernetes:** Swarm is Docker's native, simple clustering driven by Compose files. Mesos is a general cluster resource manager (like an OS kernel, master/slave) where frameworks such as Marathon do the container scheduling. Kubernetes bundles scheduler, controllers, discovery and networking objects into one platform with managed offerings on every major cloud, which is why the course builds on it.",
-    "The name Kubernetes is Greek for pilot or helmsman, the one steering the ship of containers."
+    {
+     "h": "Three orchestrators compared",
+     "lead": "Docker Swarm, Mesos/Marathon and Kubernetes all illustrate cluster scheduling, but their scope differs:",
+     "items": [
+      "**Swarm** → focuses on Docker services",
+      "**Mesos** → allocates resources to frameworks",
+      "**Kubernetes** → integrates workload controllers and service objects"
+     ],
+     "foot": "A **comparison of designs**, not a current product popularity ranking."
+    },
+    {
+     "h": "Swarm vs Mesos vs Kubernetes",
+     "items": [
+      "**Docker Swarm** → Docker's native, simple clustering, driven by **Compose files**",
+      "**Mesos** → general cluster resource manager, like an OS kernel (master/slave); frameworks such as **Marathon** do the container scheduling",
+      "**Kubernetes** → bundles scheduler, controllers, discovery and networking objects into one platform; **managed offerings on every major cloud**"
+     ],
+     "foot": "That is why the course builds on Kubernetes."
+    },
+    {
+     "h": "The name Kubernetes",
+     "items": [
+      "**Greek** for pilot or helmsman → the one steering the ship of containers"
+     ]
+    }
    ],
    "terms": [
     {
@@ -105,10 +168,58 @@
    ],
    "summary": "The control-plane (master) components, node components and add-ons, and the core K8s objects.",
    "notes": [
-    "**A cluster splits into a control plane that decides and nodes that execute.** Control plane: API server (the only front door, used by kubectl and all components), etcd (distributed key-value store holding all cluster state), scheduler (places pods on nodes) and controller manager (the brain that drives actual state toward desired state).",
-    "**Each worker node runs three things:** kubelet (agent that starts, stops and monitors the node's pods via the runtime), kube-proxy (network rules so Service traffic reaches pods) and a container runtime (a compatible container runtime, such as containerd or CRI-O). Add-ons include CoreDNS for service discovery, a dashboard, Metrics Server and cluster logging.",
-    "**The declarative reconcile loop is the heart of K8s:** you submit a spec via kubectl, the API server stores it in etcd, controllers compare desired vs actual state and act, the scheduler assigns new pods, and kubelets start them. This is what yields self-healing and scaling.",
-    "**Core objects:** Pod (containers sharing IP, storage, resources and lifecycle), ReplicaSet/Deployment (desired state: replicas, pod template, health checks), Service (stable virtual IP and DNS name for a group of pods), PersistentVolume/PVC (durable storage) and Label (key-value tags used to select objects). Minikube, kubeadm or a cloud can host the cluster."
+    {
+     "h": "Control plane components",
+     "lead": "A cluster splits into a control plane that decides and nodes that execute.",
+     "items": [
+      "**API server** → the only front door, used by kubectl and all components",
+      "**etcd** → distributed key-value store holding all cluster state",
+      "**Scheduler** → places pods on nodes",
+      "**Controller manager** → the brain that drives actual state toward desired state"
+     ]
+    },
+    {
+     "h": "Worker node components",
+     "lead": "Each worker node runs three things:",
+     "items": [
+      "**kubelet** → agent that starts, stops and monitors the node's pods via the runtime",
+      "**kube-proxy** → network rules so Service traffic reaches pods",
+      "**Container runtime** → a compatible container runtime, such as containerd or CRI-O",
+      {
+       "t": "**Add-ons**:",
+       "sub": [
+        "CoreDNS for service discovery",
+        "dashboard",
+        "Metrics Server",
+        "cluster logging"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Declarative reconcile loop",
+     "lead": "The heart of K8s.",
+     "items": [
+      "**Submit** a spec via kubectl",
+      "**API server** stores it in etcd",
+      "**Controllers** compare desired vs actual state and act",
+      "**Scheduler** assigns new pods",
+      "**Kubelets** start them"
+     ],
+     "ordered": true,
+     "foot": "This is what yields **self-healing and scaling**."
+    },
+    {
+     "h": "Core objects",
+     "items": [
+      "**Pod** → containers sharing IP, storage, resources and lifecycle",
+      "**ReplicaSet/Deployment** → desired state: replicas, pod template, health checks",
+      "**Service** → stable virtual IP and DNS name for a group of pods",
+      "**PersistentVolume/PVC** → durable storage",
+      "**Label** → key-value tags used to select objects"
+     ],
+     "foot": "**Minikube, kubeadm or a cloud** can host the cluster."
+    }
    ],
    "terms": [
     {
@@ -198,10 +309,45 @@
    ],
    "summary": "The networking problems K8s solves and how Pods, Services, Namespaces and Ingress fit together, ending with the shape of a manifest.",
    "notes": [
-    "**Use distinct objects for distinct network concerns.** Pods are replaceable workloads; Services discover and balance their endpoints; Ingress describes HTTP routing. Namespaces group resources for management and policy, but need RBAC and supported NetworkPolicies for access restrictions.",
-    "**Pod design rules:** a pod never spans nodes and gets its own routable IP; put only tightly coupled containers together (a main container plus helpers), one process per container, and split anything that need not share a machine so it can scale and fail independently.",
-    "**Service vs Ingress:** a typical Service offers a stable internal IP/DNS and selects ready Pod endpoints by label. An Ingress defines host/path routing to Services; an installed Ingress controller implements it. The controller may route directly to Pod endpoints, so this is a logical routing model rather than a claim about every packet hop.",
-    "**Every K8s object is described declaratively in YAML:** apiVersion, kind, metadata (name, namespace, labels), spec (desired state you declare) and status (actual state K8s reports). You hand K8s the descriptor and it pulls images and spreads containers across nodes, presenting the datacentre as one deployment platform."
+    {
+     "h": "Distinct objects, distinct network concerns",
+     "items": [
+      "**Pods** → replaceable workloads",
+      "**Services** → discover and balance their endpoints",
+      "**Ingress** → describes HTTP routing",
+      "**Namespaces** → group resources for management and policy; need **RBAC** and supported **NetworkPolicies** for access restrictions"
+     ]
+    },
+    {
+     "h": "Pod design rules",
+     "items": [
+      "**Never spans nodes**; gets its own routable IP",
+      "**Only tightly coupled containers together** (a main container plus helpers)",
+      "**One process per container**",
+      "**Split** anything that need not share a machine, so it can scale and fail independently"
+     ]
+    },
+    {
+     "h": "Service vs Ingress",
+     "items": [
+      "**Service** → stable internal IP/DNS; selects ready Pod endpoints by label",
+      "**Ingress** → defines host/path routing to Services",
+      "**Ingress controller** (installed) → implements it; may route directly to Pod endpoints"
+     ],
+     "foot": "A **logical routing model**, not a claim about every packet hop."
+    },
+    {
+     "h": "Declarative YAML descriptor",
+     "lead": "Every K8s object is described declaratively in YAML:",
+     "items": [
+      "**apiVersion**",
+      "**kind**",
+      "**metadata** → name, namespace, labels",
+      "**spec** → desired state you declare",
+      "**status** → actual state K8s reports"
+     ],
+     "foot": "You hand K8s the descriptor; it **pulls images and spreads containers across nodes**, presenting the datacentre as **one deployment platform**."
+    }
    ],
    "terms": [
     {
@@ -284,10 +430,44 @@
    ],
    "summary": "Running Kubernetes locally with Minikube, a Deployment manifest, and the managed offerings on GCP, AWS and Azure, plus config via ConfigMap.",
    "notes": [
-    "**Choose the cluster by operating purpose.** The lecture’s single-node Minikube setup is for local learning and testing, not a production HA design. Self-managed clusters offer more control but require operation of the control plane, nodes, upgrades and recovery.",
-    "**Managed offerings reduce cluster operations:** GKE on Google Cloud, EKS on AWS and AKS on Azure. ECS is a separate AWS orchestrator rather than Kubernetes. Provider responsibilities vary by mode; worker capacity, workload security and application availability still require customer design. Treat the lecture’s pricing and setup commands as examples, not stable service guarantees.",
-    "**A Deployment manifest ties it together:** replicas say how many pods, the selector says how to find them by label, and the template says what a pod looks like. The selector must match the template labels or the Deployment cannot track its pods. Expose it with a Service (e.g. NodePort for local testing).",
-    "**Separate configuration from the image.** ConfigMaps hold ordinary settings; Secrets hold sensitive configuration with suitable access and encryption controls. Mounted configuration or environment injection supports one image across environments. Updating configuration may require reload logic or a Pod restart."
+    {
+     "h": "Choose the cluster by operating purpose",
+     "items": [
+      "**Minikube** (single-node, the lecture's setup) → local learning and testing, **not a production HA design**",
+      "**Self-managed clusters** → more control, but you operate the control plane, nodes, upgrades and recovery"
+     ]
+    },
+    {
+     "h": "Managed Kubernetes offerings",
+     "lead": "Reduce cluster operations.",
+     "items": [
+      "**GKE** → Google Cloud",
+      "**EKS** → AWS",
+      "**AKS** → Azure",
+      "**ECS** → a separate AWS orchestrator, **not Kubernetes**",
+      "**Provider responsibilities vary by mode**; worker capacity, workload security and application availability still require customer design"
+     ],
+     "foot": "Treat the lecture's pricing and setup commands as **examples, not stable service guarantees**."
+    },
+    {
+     "h": "Deployment manifest",
+     "items": [
+      "**replicas** → how many pods",
+      "**selector** → how to find them by label",
+      "**template** → what a pod looks like",
+      "**Selector must match the template labels**, or the Deployment cannot track its pods",
+      "**Expose** with a Service (e.g. NodePort for local testing)"
+     ]
+    },
+    {
+     "h": "Configuration separate from image",
+     "items": [
+      "**ConfigMaps** → ordinary settings",
+      "**Secrets** → sensitive configuration, with suitable access and encryption controls",
+      "**Mounted configuration or environment injection** → one image across environments",
+      "**Updating configuration** may require reload logic or a Pod restart"
+     ]
+    }
    ],
    "terms": [
     {
@@ -343,10 +523,48 @@
    ],
    "summary": "Mapping distributed-system concerns and a typical cloud native application onto Kubernetes features and objects.",
    "notes": [
-    "**Kubernetes supports distributed-system design; it does not finish it.** Configure replicas, placement, health checks, security and metrics. Spread a cluster across suitable zones where supported; use multiple clusters and explicit traffic/data recovery design for regional resilience.",
-    "**A typical cloud native app maps onto K8s building blocks:** Ingress and API gateway at the edge, CDN for static content, containerised stateless services and event-driven services, stateful services on persistent volumes, tiered data stores (SQL, NoSQL, object storage), monitoring via DaemonSets, and analytics workloads on the cluster.",
-    "**Objects around a workload inside a Namespace:** a Deployment replicates Pods; ConfigMaps and Secrets supply config; Volumes/PVCs supply storage; a ServiceAccount gives identity; a Service routes traffic; a NetworkPolicy restricts who can talk; a ResourceQuota caps consumption; Jobs/CronJobs run batch work.",
-    "**Stateless vs stateful:** stateless services scale freely as Deployments; stateful parts need persistent volumes or a managed data tier so data outlives pod restarts."
+    {
+     "h": "K8s supports, doesn't finish, design",
+     "lead": "Kubernetes supports distributed-system design; it does not finish it.",
+     "items": [
+      "**Configure**: replicas, placement, health checks, security, metrics",
+      "**Zonal resilience** → spread a cluster across suitable zones where supported",
+      "**Regional resilience** → multiple clusters plus explicit traffic/data recovery design"
+     ]
+    },
+    {
+     "h": "Typical cloud native app on K8s building blocks",
+     "items": [
+      "**Edge** → Ingress and API gateway",
+      "**CDN** → static content",
+      "**Containerised stateless services** and **event-driven services**",
+      "**Stateful services** → persistent volumes",
+      "**Tiered data stores** → SQL, NoSQL, object storage",
+      "**Monitoring** → via DaemonSets",
+      "**Analytics workloads** → on the cluster"
+     ]
+    },
+    {
+     "h": "Objects around a workload (Namespace)",
+     "lead": "Inside a Namespace:",
+     "items": [
+      "**Deployment** → replicates Pods",
+      "**ConfigMaps and Secrets** → supply config",
+      "**Volumes/PVCs** → supply storage",
+      "**ServiceAccount** → gives identity",
+      "**Service** → routes traffic",
+      "**NetworkPolicy** → restricts who can talk",
+      "**ResourceQuota** → caps consumption",
+      "**Jobs/CronJobs** → run batch work"
+     ]
+    },
+    {
+     "h": "Stateless vs stateful",
+     "items": [
+      "**Stateless** → scale freely as Deployments",
+      "**Stateful** → persistent volumes or a managed data tier, so data outlives pod restarts"
+     ]
+    }
    ],
    "terms": [
     {
@@ -390,10 +608,83 @@
    ],
    "summary": "Concluding takeaways, K8s design patterns, scaling, state management and how Ingress, Service and Deployment link via labels.",
    "notes": [
-    "**Red Hat's top-10 design patterns group into four levels:** Foundational (Health Probe, Predictable Demands, Automated Placement), Structural (Init Container, Sidecar), Behavioural (Batch Job, Stateful Service, Service Discovery) and Higher-level (Controller, Operator). Sidecar vs Init Container: a sidecar helps the main container for the pod's whole life (logging, proxying); an init container finishes setup before the app starts.",
-    "**State management:** a container's own filesystem is temporary. Durable data goes through a PersistentVolumeClaim bound to a PersistentVolume; a pod-level volume can be shared by containers in the same pod.",
-    "**Traffic and recovery use different mechanisms.** Ingress rules identify a Service and its selected endpoints. A failed liveness probe can restart a container inside the same Pod; a lost Pod is replaced by its controller. Readiness determines traffic eligibility. A configured autoscaler changes replica count from metrics; none of these guarantees spare capacity or zero downtime.",
-    "**Takeaway:** K8s gives developer velocity, immutability, scaling, scheduling, storage, load balancing and monitoring, integrates with GCP, AWS and Azure, and is open source."
+    {
+     "h": "Red Hat's top-10 design patterns",
+     "lead": "Grouped into four levels:",
+     "items": [
+      {
+       "t": "**Foundational**",
+       "sub": [
+        "Health Probe",
+        "Predictable Demands",
+        "Automated Placement"
+       ]
+      },
+      {
+       "t": "**Structural**",
+       "sub": [
+        "Init Container",
+        "Sidecar"
+       ]
+      },
+      {
+       "t": "**Behavioural**",
+       "sub": [
+        "Batch Job",
+        "Stateful Service",
+        "Service Discovery"
+       ]
+      },
+      {
+       "t": "**Higher-level**",
+       "sub": [
+        "Controller",
+        "Operator"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Sidecar vs Init Container",
+     "items": [
+      "**Sidecar** → helps the main container for the pod's whole life (logging, proxying)",
+      "**Init container** → finishes setup before the app starts"
+     ]
+    },
+    {
+     "h": "State management",
+     "items": [
+      "**Container's own filesystem** → temporary",
+      "**Durable data** → PersistentVolumeClaim bound to a PersistentVolume",
+      "**Pod-level volume** → can be shared by containers in the same pod"
+     ]
+    },
+    {
+     "h": "Traffic vs recovery mechanisms",
+     "lead": "Traffic and recovery use different mechanisms.",
+     "items": [
+      "**Ingress rules** → identify a Service and its selected endpoints",
+      "**Failed liveness probe** → restarts a container inside the same Pod",
+      "**Lost Pod** → replaced by its controller",
+      "**Readiness** → determines traffic eligibility",
+      "**Configured autoscaler** → changes replica count from metrics"
+     ],
+     "foot": "None of these **guarantees spare capacity or zero downtime**."
+    },
+    {
+     "h": "Takeaway: what K8s gives",
+     "items": [
+      "**Developer velocity**",
+      "**Immutability**",
+      "**Scaling**",
+      "**Scheduling**",
+      "**Storage**",
+      "**Load balancing**",
+      "**Monitoring**",
+      "**Integrates** with GCP, AWS and Azure",
+      "**Open source**"
+     ]
+    }
    ],
    "terms": [
     {

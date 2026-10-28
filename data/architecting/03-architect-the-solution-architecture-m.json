@@ -24,10 +24,61 @@
    ],
    "summary": "A method defines when, who, what and how; the architecture work sits inside a Unified Process style lifecycle and flows from requirements to logical to physical architecture.",
    "notes": [
-    "**A method is four things:** When (phases and iterations), Who (roles: responsibilities of a person or team), What (work products: information produced or used) and How (activities, each a group of tasks; a task is a unit of work with a meaningful result).",
-    "**The lifecycle is the Unified Process family** (RUP from IBM, OpenUP, Agile UP, Enterprise UP): phases Inception, Elaboration, Construction, Transition, each with iterations. Requirements effort peaks early, architecture peaks in elaboration, development in construction, while test and project management run throughout.",
-    "**Architecting is iterative, not a one-off.** The flow is Define Requirements, then Outline Logical Architecture, then Detail Logical Architecture and Outline Physical Architecture, then Detail Physical Architecture. Outline work happens in the architecture discipline and detailing leans into development.",
-    "The reference method is Eeles and Cripps, The Process of Software Architecting, which focuses on how to architect (requirements, logical and physical architecture, role of the architect) rather than on software architecture concepts."
+    {
+     "h": "A method is four things",
+     "items": [
+      "**When** → phases and iterations",
+      "**Who** → roles: responsibilities of a person or team",
+      "**What** → work products: information produced or used",
+      "**How** → activities, each a group of tasks; a **task** is a unit of work with a meaningful result"
+     ]
+    },
+    {
+     "h": "Lifecycle: the Unified Process family",
+     "items": [
+      {
+       "t": "**Family** →",
+       "sub": [
+        "RUP (from IBM)",
+        "OpenUP",
+        "Agile UP",
+        "Enterprise UP"
+       ]
+      },
+      {
+       "t": "**Phases** (each with iterations):",
+       "sub": [
+        "Inception",
+        "Elaboration",
+        "Construction",
+        "Transition"
+       ]
+      },
+      "**Requirements** effort peaks **early**",
+      "**Architecture** peaks in **elaboration**",
+      "**Development** peaks in **construction**",
+      "**Test and project management** run **throughout**"
+     ]
+    },
+    {
+     "h": "Architecting is iterative, not a one-off",
+     "ordered": true,
+     "items": [
+      "**Define Requirements**",
+      "**Outline Logical Architecture**",
+      "**Detail Logical Architecture** and **Outline Physical Architecture**",
+      "**Detail Physical Architecture**"
+     ],
+     "foot": "**Outline** work happens in the **architecture discipline**; **detailing** leans into **development**."
+    },
+    {
+     "h": "Reference method",
+     "items": [
+      "**Eeles and Cripps**, The Process of Software Architecting",
+      "Focuses on **how to architect** → requirements, logical and physical architecture, role of the architect",
+      "**Rather than** on software architecture concepts"
+     ]
+    }
    ],
    "terms": [
     {
@@ -67,10 +118,67 @@
    ],
    "summary": "The first tasks of Define Requirements build the shared understanding: who cares, what the words mean, and what is inside and outside the system.",
    "notes": [
-    "**Define Requirements has 10 tasks:** 1 Collect Stakeholder Requests, 2 Capture Common Vocabulary, 3 Define System Context, 4 Outline Functional Requirements, 5 Outline Non-Functional Requirements, 6 Prioritize Requirements, 7 Detail Functional Requirements, 8 Detail Non-Functional Requirements, 9 Update Solution Architecture Document, 10 Review Requirements with Stakeholders. Every task is described by roles, inputs, outputs and architect-specific tips.",
-    "**Collect stakeholder requests:** the architect makes sure the technical stakeholders are included (system administrator, owners of external systems) and that qualities and constraints are captured, not just features. The architect also helps prioritise by explaining the cost and time-to-market impact of one request over another. In IROne: system owner, customer, system administrator, show/park/hotel operators, reservation agent, enterprise architect.",
-    "**Common vocabulary (glossary):** define terms once and consistently, especially technical ones (IROne: Reservation, Amenity, Reservation Agent, Amenity Operator).",
-    "**System context** has three steps: identify actors (include external systems such as the payment gateway), identify actor locations (if an actor is found at several locations, introduce a new actor per location), and identify data flows between actors, including external systems, and the system. IROne locations: Show, Hotel, Park and Central Office; the central office holds owner, administrator, agents and the payment system."
+    {
+     "h": "Define Requirements: 10 tasks",
+     "ordered": true,
+     "items": [
+      "Collect Stakeholder Requests",
+      "Capture Common Vocabulary",
+      "Define System Context",
+      "Outline Functional Requirements",
+      "Outline Non-Functional Requirements",
+      "Prioritize Requirements",
+      "Detail Functional Requirements",
+      "Detail Non-Functional Requirements",
+      "Update Solution Architecture Document",
+      "Review Requirements with Stakeholders"
+     ],
+     "foot": "Every task is described by **roles, inputs, outputs** and **architect-specific tips**."
+    },
+    {
+     "h": "Collect stakeholder requests",
+     "items": [
+      "Architect makes sure **technical stakeholders are included** → system administrator, owners of external systems",
+      "Captures **qualities and constraints**, not just features",
+      "**Helps prioritise** → explains the **cost and time-to-market impact** of one request over another",
+      {
+       "t": "**IROne stakeholders**:",
+       "sub": [
+        "system owner",
+        "customer",
+        "system administrator",
+        "show/park/hotel operators",
+        "reservation agent",
+        "enterprise architect"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Common vocabulary (glossary)",
+     "items": [
+      "**Define terms once and consistently**, especially **technical** ones",
+      "**IROne** → Reservation, Amenity, Reservation Agent, Amenity Operator"
+     ]
+    },
+    {
+     "h": "System context: three steps",
+     "ordered": true,
+     "items": [
+      "**Identify actors** → include **external systems** such as the **payment gateway**",
+      "**Identify actor locations** → if an actor is found at **several locations**, introduce a **new actor per location**",
+      "**Identify data flows** between actors (including external systems) and the system"
+     ]
+    },
+    {
+     "h": "IROne locations",
+     "items": [
+      "**Show**",
+      "**Hotel**",
+      "**Park**",
+      "**Central Office** → holds owner, administrator, agents and the payment system"
+     ]
+    }
    ],
    "terms": [
     {
@@ -110,9 +218,36 @@
    ],
    "summary": "Outline what the system does for each actor and which qualities it must meet, stating clearly what is out of scope.",
    "notes": [
-    "**Functional requirements are outlined per actor from the system context,** including technical users (operator, administrator), and the architect confirms what is not required. IROne: Search Slot, Reserve Slot, Administer Reservations, View Sales Report, each with its primary actors.",
-    "**NFRs name qualities and constraints.** IROne targets search availability of 99.9%, other availability of 99%, search response below 3 seconds, other responses below 5 seconds, 1000 concurrent users, accessibility, and web-service integration. These are outlines: detail the workload, measurement period and acceptance conditions before sizing or testing.",
-    "**Outline first, detail later:** these tasks capture breadth quickly; only architecturally significant items are detailed after prioritisation."
+    {
+     "h": "Outline functional requirements",
+     "items": [
+      "Outlined **per actor** from the **system context**",
+      "Include **technical users** → operator, administrator",
+      "Architect **confirms what is not required**",
+      "**IROne** → Search Slot, Reserve Slot, Administer Reservations, View Sales Report (each with its **primary actors**)"
+     ]
+    },
+    {
+     "h": "NFRs name qualities and constraints",
+     "lead": "IROne targets:",
+     "items": [
+      "**Search availability** → 99.9%",
+      "**Other availability** → 99%",
+      "**Search response** → below 3 seconds",
+      "**Other responses** → below 5 seconds",
+      "**Concurrent users** → 1000",
+      "**Accessibility**",
+      "**Web-service integration**"
+     ],
+     "foot": "These are **outlines**: detail the **workload, measurement period and acceptance conditions** before sizing or testing."
+    },
+    {
+     "h": "Outline first, detail later",
+     "items": [
+      "**Outline tasks** → capture **breadth** quickly",
+      "**Detail** only **architecturally significant** items, **after prioritisation**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -152,11 +287,87 @@
    ],
    "summary": "Pick the architecturally significant requirements, detail them as use cases and NFR scenarios, record them in the Solution Architecture Document, then review with stakeholders.",
    "notes": [
-    "**Architecturally significant requirements (ASRs)** are those that: (1) relate to critical functionality without which there is no viable system (use the 80/20 rule), (2) relate to a critical quality such as performance, (3) relate to a critical constraint such as integration with a specific external system, or (4) carry a particular technical or architectural risk. The architect articulates the trade-offs during prioritisation.",
-    "**Detail functional requirements as use cases** focusing on the significant ones: description, primary and secondary actors, main flow, alternative flows (e.g. fail to validate, fail to reserve, fail to pay, each returning to a defined step), preconditions and postconditions. The architect also helps define data items and system-wide functions such as online help.",
-    "**An NFR scenario has six parts:** source, stimulus, artifact, environment, response and response measure. For availability, identify the fault and affected system, state normal or degraded conditions, describe detection and recovery, and specify the allowed interruption or degraded-service interval.",
-    "**Solution Architecture Document (SAD)** is owned by the architect and based on ISO/IEC/IEEE 42010 (formerly IEEE 1471). Structure: Introduction, Scope (stakeholders and their requests), Architectural Decisions, Architectural Mechanisms, Architectural Representation, Traceability (requirements linked to solution elements).",
-    "**Review with stakeholders:** baseline the artefacts and make sure technical questions are answered; changes flow through a change request and request log, and the outcome is a review record. Exercise 1 (Student Health System) practises detailed significant use cases, treating the system as a black box with no tiers or technology, including inputs, outputs and information reads and writes."
+    {
+     "h": "Architecturally significant requirements (ASRs)",
+     "lead": "Requirements that:",
+     "ordered": true,
+     "items": [
+      "Relate to **critical functionality** without which there is **no viable system** (use the **80/20 rule**)",
+      "Relate to a **critical quality** such as **performance**",
+      "Relate to a **critical constraint** such as **integration with a specific external system**",
+      "Carry a particular **technical or architectural risk**"
+     ],
+     "foot": "The architect **articulates the trade-offs** during prioritisation."
+    },
+    {
+     "h": "Detail functional requirements as use cases",
+     "lead": "Focus on the **significant** ones. Each use case has:",
+     "items": [
+      "**Description**",
+      "**Primary and secondary actors**",
+      "**Main flow**",
+      {
+       "t": "**Alternative flows**, each returning to a defined step, e.g.:",
+       "sub": [
+        "fail to validate",
+        "fail to reserve",
+        "fail to pay"
+       ]
+      },
+      "**Preconditions and postconditions**",
+      "Architect also helps define **data items** and **system-wide functions** such as **online help**"
+     ]
+    },
+    {
+     "h": "NFR scenario: six parts",
+     "items": [
+      "**Source**",
+      "**Stimulus**",
+      "**Artifact**",
+      "**Environment**",
+      "**Response**",
+      "**Response measure**"
+     ]
+    },
+    {
+     "h": "Availability scenario",
+     "items": [
+      "Identify the **fault** and **affected system**",
+      "State **normal or degraded conditions**",
+      "Describe **detection and recovery**",
+      "Specify the **allowed interruption** or **degraded-service interval**"
+     ]
+    },
+    {
+     "h": "Solution Architecture Document (SAD)",
+     "lead": "**Owned by the architect**; based on **ISO/IEC/IEEE 42010** (formerly **IEEE 1471**). Structure:",
+     "ordered": true,
+     "items": [
+      "**Introduction**",
+      "**Scope** → stakeholders and their requests",
+      "**Architectural Decisions**",
+      "**Architectural Mechanisms**",
+      "**Architectural Representation**",
+      "**Traceability** → requirements linked to solution elements"
+     ]
+    },
+    {
+     "h": "Review with stakeholders",
+     "items": [
+      "**Baseline the artefacts**",
+      "Make sure **technical questions are answered**",
+      "**Changes** flow through a **change request** and **request log**",
+      "**Outcome** → a **review record**"
+     ]
+    },
+    {
+     "h": "Exercise 1 (Student Health System)",
+     "items": [
+      "Practises **detailed significant use cases**",
+      "Treat the system as a **black box** → **no tiers or technology**",
+      "Include **inputs, outputs** and **information reads and writes**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -239,10 +450,80 @@
    ],
    "summary": "The logical architecture activity outlines then details functional and deployment elements; it starts by surveying reusable assets and recording decisions.",
    "notes": [
-    "**Logical architecture has two views, each outlined then detailed.** Functional: subsystem, component, interface, operation, operation signature, mapping to data, pre/post-conditions. Deployment: location, node, deployment unit, connection. Outline gives the structure; detail adds signatures, contracts and assignments. Roles: Solution, Software, Data and Infrastructure Architect.",
-    "**The ten tasks:** 1 Survey Architecture Assets, 2 Define Architecture Overview, 3 Outline Functional Elements, 4 Outline Deployment Elements, 5 Verify Architecture, 6 Detail Functional Elements, 7 Detail Deployment Elements, 8 Validate Architecture, 9 Update Solution Architecture Document, 10 Review Architecture with Stakeholders. The same ten-task list repeats for the physical activity.",
-    "**Survey assets before designing:** look for reusable assets such as reference patterns and reference architectures. If a reference architecture or packaged solution is used, the architect may spend less effort on logical and more on physical.",
-    "**Document architecture decisions and constraints as justification** referenced in later phases. The template is: Issue, Decision, Assumptions, Alternatives, Justification. IROne example: develop a custom rules engine because only about 30 rules (at most 40) are expected; alternatives were buying a commercial engine (overkill, not cost effective) or embedding rules in code (violates separation of concerns and decoupling, harder to maintain)."
+    {
+     "h": "Logical architecture: two views",
+     "lead": "Each view is **outlined then detailed**.",
+     "items": [
+      {
+       "t": "**Functional** view:",
+       "sub": [
+        "subsystem",
+        "component",
+        "interface",
+        "operation",
+        "operation signature",
+        "mapping to data",
+        "pre/post-conditions"
+       ]
+      },
+      {
+       "t": "**Deployment** view:",
+       "sub": [
+        "location",
+        "node",
+        "deployment unit",
+        "connection"
+       ]
+      },
+      "**Outline** gives the **structure**; **detail** adds **signatures, contracts and assignments**",
+      "**Roles** → Solution, Software, Data and Infrastructure Architect"
+     ]
+    },
+    {
+     "h": "The ten tasks",
+     "ordered": true,
+     "items": [
+      "Survey Architecture Assets",
+      "Define Architecture Overview",
+      "Outline Functional Elements",
+      "Outline Deployment Elements",
+      "Verify Architecture",
+      "Detail Functional Elements",
+      "Detail Deployment Elements",
+      "Validate Architecture",
+      "Update Solution Architecture Document",
+      "Review Architecture with Stakeholders"
+     ],
+     "foot": "The **same ten-task list repeats** for the **physical** activity."
+    },
+    {
+     "h": "Survey assets before designing",
+     "items": [
+      "Look for **reusable assets** → **reference patterns** and **reference architectures**",
+      "If a **reference architecture or packaged solution** is used → architect may spend **less effort on logical** and **more on physical**"
+     ]
+    },
+    {
+     "h": "Document architecture decisions",
+     "lead": "Decisions and constraints are **justification** referenced in later phases. Template:",
+     "ordered": true,
+     "items": [
+      "**Issue**",
+      "**Decision**",
+      "**Assumptions**",
+      "**Alternatives**",
+      "**Justification**"
+     ]
+    },
+    {
+     "h": "IROne decision: custom rules engine",
+     "items": [
+      "**Decision** → develop a **custom rules engine**",
+      "**Why** → only about **30 rules** (at most **40**) are expected",
+      "**Alternative: buy a commercial engine** → overkill, not cost effective",
+      "**Alternative: embed rules in code** → violates **separation of concerns** and **decoupling**, harder to maintain"
+     ]
+    }
    ],
    "terms": [
     {
@@ -310,9 +591,62 @@
    ],
    "summary": "Draw an overview of layers and zones from the system context, then identify boundary, control and entity components per use case.",
    "notes": [
-    "**The architecture overview starts from the system context and adds subsystems.** It must show all actors and subsystems, cover the key logical structure (layers, locations and their relationships) and use consistent terms. A web-based IROne is layered: Presentation, Control (with Rules) and Data, with an Integration layer alongside, placed in zones (Internet, Internal Zone 1 with web, application, rules and integration tiers, Internal Zone 2 with hotel, show, park and payment systems). A thick-client variant has client-side storage.",
-    "**Outline functional elements by classifying components in three types** (robustness analysis). Boundary: interface to a primary actor, or to an external system to send or get data. Control: coordination logic, one controller per use case, split into sub-controllers only if too complex. Entity: encapsulates and manages the information.",
-    "**Reserve Slot example:** Reservation UI (boundary) talks to Reserve Slot Control (control), which uses Reservation Rules Checker, the hotel, show, park and payment system interfaces (boundary) and the Reservation Slot (entity). Reuse and review components identified for earlier use cases."
+    {
+     "h": "Architecture overview",
+     "items": [
+      "**Starts from the system context** and **adds subsystems**",
+      "Must show **all actors and subsystems**",
+      "Cover the **key logical structure** → layers, locations and their relationships",
+      "Use **consistent terms**"
+     ]
+    },
+    {
+     "h": "Web-based IROne overview",
+     "items": [
+      {
+       "t": "**Layered**:",
+       "sub": [
+        "Presentation",
+        "Control (with Rules)",
+        "Data",
+        "Integration layer alongside"
+       ]
+      },
+      {
+       "t": "**Placed in zones**:",
+       "sub": [
+        "**Internet**",
+        "**Internal Zone 1** → web, application, rules and integration tiers",
+        "**Internal Zone 2** → hotel, show, park and payment systems"
+       ]
+      },
+      "**Thick-client variant** → has **client-side storage**"
+     ]
+    },
+    {
+     "h": "Outline functional elements: three component types",
+     "lead": "Classify components (**robustness analysis**):",
+     "items": [
+      "**Boundary** → interface to a **primary actor**, or to an **external system** to send or get data",
+      "**Control** → **coordination logic**; **one controller per use case**, split into **sub-controllers** only if too complex",
+      "**Entity** → **encapsulates and manages the information**"
+     ]
+    },
+    {
+     "h": "Reserve Slot example",
+     "items": [
+      "**Reservation UI** (boundary) → talks to **Reserve Slot Control** (control)",
+      {
+       "t": "**Reserve Slot Control** uses:",
+       "sub": [
+        "**Reservation Rules Checker**",
+        "**hotel, show, park and payment system interfaces** (boundary)",
+        "**Reservation Slot** (entity)"
+       ]
+      },
+      "**Reuse and review** components identified for earlier use cases"
+     ]
+    }
    ],
    "terms": [
     {
@@ -391,10 +725,75 @@
    ],
    "summary": "Place logical components on logical nodes and locations, then verify and validate the architecture and review it with stakeholders.",
    "notes": [
-    "**Outline deployment elements:** identify locations and nodes from the existing IT environment, architecture decisions, NFRs and system context. At this stage nodes are purely logical containers (Client PC in Internet; web, application, rules, integration and database servers in Central Office).",
-    "**Detail functional elements:** define component interfaces with operations and signatures, contracts (preconditions and postconditions) and the logical data model. **Detail deployment elements:** assign components (via subsystems) to nodes and define connections between nodes and locations.",
-    "**Verify (task 5) vs validate (task 8):** verification is a review of the outlined architecture, checking that cross-cutting concerns are handled consistently and capturing resulting decisions (plan, kickoff, individual review, verification meeting, rework follow-up). Validation is led by the architect and plans the session, creates an architectural proof-of-concept to reduce risk (from a conceptual sketch to a working prototype) and reviews the architecture, documenting findings, risks and recommendations.",
-    "**Close out:** update the Solution Architecture Document (architect is responsible) and review with stakeholders, ensuring products are baselined and technical questions answered."
+    {
+     "h": "Outline deployment elements",
+     "items": [
+      "Identify **locations and nodes**",
+      {
+       "t": "**From**:",
+       "sub": [
+        "existing IT environment",
+        "architecture decisions",
+        "NFRs",
+        "system context"
+       ]
+      },
+      "At this stage nodes are **purely logical containers**",
+      "**Internet** → Client PC",
+      "**Central Office** → web, application, rules, integration and database servers"
+     ]
+    },
+    {
+     "h": "Detail functional elements",
+     "items": [
+      "**Component interfaces** → operations and signatures",
+      "**Contracts** → preconditions and postconditions",
+      "**Logical data model**"
+     ]
+    },
+    {
+     "h": "Detail deployment elements",
+     "items": [
+      "**Assign components** (via subsystems) **to nodes**",
+      "**Define connections** between nodes and locations"
+     ]
+    },
+    {
+     "h": "Verify (task 5)",
+     "lead": "**Verification** is a **review of the outlined architecture**:",
+     "items": [
+      "Checks **cross-cutting concerns** are handled **consistently**",
+      "Captures **resulting decisions**",
+      {
+       "t": "**Steps**:",
+       "sub": [
+        "plan",
+        "kickoff",
+        "individual review",
+        "verification meeting",
+        "rework follow-up"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Validate (task 8)",
+     "lead": "**Validation** is **led by the architect**:",
+     "ordered": true,
+     "items": [
+      "**Plans** the session",
+      "Creates an **architectural proof-of-concept** to **reduce risk** (from a **conceptual sketch** to a **working prototype**)",
+      "**Reviews** the architecture",
+      "**Documents** findings, risks and recommendations"
+     ]
+    },
+    {
+     "h": "Close out",
+     "items": [
+      "**Update the Solution Architecture Document** (architect is responsible)",
+      "**Review with stakeholders** → products **baselined**, **technical questions answered**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -434,9 +833,44 @@
    ],
    "summary": "The physical activity repeats the ten tasks but chooses concrete technology, mapping each logical element onto physical ones.",
    "notes": [
-    "**Survey assets and decide technology:** record constraints as decisions. IROne: run in a Java EE server; decision use IBM WebSphere Application Server over Oracle WebLogic or Microsoft .NET Server, justified by existing skills in developing and deploying on WebSphere.",
-    "**Logical-to-physical mapping has three patterns.** One to one: a single physical element satisfies the full specification. One to many: one logical element realised by several physical elements, e.g. for availability. Many to one: several logical elements realised by one physical element, e.g. a packaged application.",
-    "**IROne’s chosen Java EE mapping:** person-facing boundaries become JSPs and servlets; system boundaries use JMS; controls become session EJBs; entities use JPA. Reserve Slot maps to a UI, servlet delegate, EJB facade and rules checker, JMS interfaces, and a JPA entity. This is one technology choice, not a universal mapping rule."
+    {
+     "h": "Survey assets and decide technology",
+     "items": [
+      "**Record constraints as decisions**",
+      "**IROne constraint** → run in a **Java EE server**",
+      "**Decision** → use **IBM WebSphere Application Server**",
+      "**Alternatives** → Oracle WebLogic, Microsoft .NET Server",
+      "**Justification** → existing **skills** in developing and deploying on WebSphere"
+     ]
+    },
+    {
+     "h": "Logical-to-physical mapping: three patterns",
+     "items": [
+      "**One to one** → a **single physical element** satisfies the **full specification**",
+      "**One to many** → one logical element realised by **several physical elements**, e.g. for **availability**",
+      "**Many to one** → several logical elements realised by **one physical element**, e.g. a **packaged application**"
+     ]
+    },
+    {
+     "h": "IROne's chosen Java EE mapping",
+     "items": [
+      "**Person-facing boundaries** → JSPs and servlets",
+      "**System boundaries** → JMS",
+      "**Controls** → session EJBs",
+      "**Entities** → JPA",
+      {
+       "t": "**Reserve Slot** maps to:",
+       "sub": [
+        "a UI",
+        "servlet delegate",
+        "EJB facade and rules checker",
+        "JMS interfaces",
+        "a JPA entity"
+       ]
+      }
+     ],
+     "foot": "This is **one technology choice**, not a universal mapping rule."
+    }
    ],
    "terms": [
     {
@@ -504,10 +938,59 @@
    ],
    "summary": "Define physical nodes sized to the NFRs, deploy components to them, specify integration endpoints, and summarise the deliverables.",
    "notes": [
-    "**Physical deployment elements:** for each logical location define how many physical instances; for each logical node define the physical node(s); specify hardware and software for each; and size nodes to meet the non-functional requirements. IROne: web server (IBM pSeries, 2 x 2.0 GHz, 16 GB, AIX, Apache), application server (4 x 2.0 GHz, 32 GB, WebSphere, DB2, Java programs for rules), integration server (2 x 2.0 GHz, 16 GB, IBM MQ Series).",
-    "**Detail deployment:** show packages (WAR, JAR) deployed to nodes and manifesting the classes. The same logical design can be redeployed in a microservice style, e.g. a Reservation Service, Reservation Database and Integration Service on Amazon EC2 via ECS with Spring Boot in Docker images.",
-    "**Integration endpoints** record source, destination, protocol, format and transformation. The example uses HTTP/HTTPS with HTML/JSP on client–web and web–application links, and JMS with XML to show, hotel and park systems. Its transformation flags identify adapter work; two links having different formats alone does not explain the exact mapping needed.",
-    "**Deliverables of the method:** system context; functional and non-functional requirements; logical architecture overview, functional model and deployment model; physical architecture overview, functional model and deployment model. Exercise 2 applies the physical steps to the Student Health System."
+    {
+     "h": "Physical deployment elements",
+     "items": [
+      "For each **logical location** → define **how many physical instances**",
+      "For each **logical node** → define the **physical node(s)**",
+      "Specify **hardware and software** for each",
+      "**Size nodes** to meet the **non-functional requirements**"
+     ]
+    },
+    {
+     "h": "IROne physical nodes",
+     "items": [
+      "**Web server** → IBM pSeries, 2 x 2.0 GHz, 16 GB, AIX, Apache",
+      "**Application server** → 4 x 2.0 GHz, 32 GB, WebSphere, DB2, Java programs for rules",
+      "**Integration server** → 2 x 2.0 GHz, 16 GB, IBM MQ Series"
+     ]
+    },
+    {
+     "h": "Detail deployment",
+     "items": [
+      "Show **packages (WAR, JAR)** deployed to nodes and **manifesting the classes**",
+      {
+       "t": "Same logical design can be **redeployed in a microservice style**, e.g.:",
+       "sub": [
+        "Reservation Service",
+        "Reservation Database",
+        "Integration Service",
+        "on **Amazon EC2** via **ECS**, with **Spring Boot** in **Docker** images"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Integration endpoints",
+     "lead": "Record:",
+     "items": [
+      "**Source**, **destination**, **protocol**, **format**, **transformation**",
+      "**Client–web** and **web–application** links → **HTTP/HTTPS** with **HTML/JSP**",
+      "**To show, hotel and park systems** → **JMS** with **XML**",
+      "**Transformation flags** → identify **adapter work**"
+     ],
+     "foot": "Two links having **different formats alone** does not explain the **exact mapping** needed."
+    },
+    {
+     "h": "Deliverables of the method",
+     "items": [
+      "**System context**",
+      "**Functional and non-functional requirements**",
+      "**Logical architecture** → overview, functional model, deployment model",
+      "**Physical architecture** → overview, functional model, deployment model"
+     ],
+     "foot": "**Exercise 2** applies the physical steps to the **Student Health System**."
+    }
    ],
    "terms": [
     {

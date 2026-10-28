@@ -24,10 +24,63 @@
    ],
    "summary": "Defines architectural vs design patterns and surveys the main catalogues of cloud patterns an architect can borrow from.",
    "notes": [
-    "**A pattern is a named, reusable solution to a recurring problem in a context.** Architectural patterns capture high-level ideas aimed at qualities like performance limits, availability and business risk; design patterns are the more local, formalised best-practice templates. Using them lowers risk and gives the team a shared vocabulary.",
-    "**Cloud patterns evolved with the platform:** the VM era (IaaS stack), the container era (Kubernetes control plane and nodes), then cloud native (customer-centric, agile, automated delivery, products not projects, heavy open source).",
-    "**Several catalogues cover the same ground with different groupings.** Microsoft's A-Z cloud design patterns (Circuit Breaker, CQRS, Sharding, Sidecar, Strangler, Valet Key ...) are regrouped Fowler-style into Design and Implementation, Data Management and Performance, and Availability and Resilience. Richardson's microservices.io organises by application, application-infrastructure and infrastructure patterns; Erl's by concern (scaling, reliability, data, security, monitoring).",
-    "**Practical use:** pick the catalogue that matches your problem category, then quote the pattern's problem, mechanism and trade-offs when justifying a design."
+    {
+     "h": "What a pattern is",
+     "lead": "A named, reusable solution to a recurring problem in a context.",
+     "items": [
+      "**Architectural patterns** → **high-level ideas** aimed at qualities like **performance limits**, **availability** and **business risk**",
+      "**Design patterns** → the more **local, formalised best-practice templates**",
+      "**Benefit** → **lowers risk** and gives the team a **shared vocabulary**"
+     ]
+    },
+    {
+     "h": "Cloud patterns evolved with the platform",
+     "ordered": true,
+     "items": [
+      "**VM era** → **IaaS stack**",
+      "**Container era** → **Kubernetes control plane and nodes**",
+      {
+       "t": "**Cloud native**",
+       "sub": [
+        "customer-centric",
+        "agile",
+        "automated delivery",
+        "**products not projects**",
+        "heavy **open source**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Pattern catalogues",
+     "lead": "Several catalogues cover the same ground with different groupings.",
+     "items": [
+      {
+       "t": "**Microsoft's A-Z cloud design patterns**",
+       "sub": [
+        "**Circuit Breaker**, **CQRS**, **Sharding**, **Sidecar**, **Strangler**, **Valet Key** ..."
+       ]
+      },
+      {
+       "t": "**Regrouped Fowler-style** into:",
+       "sub": [
+        "**Design and Implementation**",
+        "**Data Management and Performance**",
+        "**Availability and Resilience**"
+       ]
+      },
+      "**Richardson's microservices.io** → organises by **application**, **application-infrastructure** and **infrastructure** patterns",
+      "**Erl's** → by concern: **scaling, reliability, data, security, monitoring**"
+     ]
+    },
+    {
+     "h": "Practical use of catalogues",
+     "ordered": true,
+     "items": [
+      "**Pick the catalogue** that matches your **problem category**",
+      "**Quote the pattern's problem, mechanism and trade-offs** when **justifying a design**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -67,11 +120,71 @@
    ],
    "summary": "How cloud native layers good code, DDD, microservices and Kubernetes, plus container patterns (sidecar, adapter, ambassador, chain) and microservice/event-driven pattern families.",
    "notes": [
-    "**Cloud native is layered:** clean code, inside domain-driven design, inside microservice principles (optimised for change), inside Kubernetes patterns (automatable containers at scale), allowing a polyglot world where each service chooses its own language and database.",
-    "**A well-designed container** is a single-concern, disposable, immutable, self-contained, small Linux process that is API-driven and observable. Immutability and disposability are what make scaling, rolling updates and self-healing safe.",
-    "**Sidecar family:** a helper container in the same pod adds cross-cutting features (logging, proxying, config) without touching app code. Adapter normalises the app's output (e.g. monitoring format); Ambassador proxies outbound connections (e.g. to the right DB per environment). A container chain fixes the start/stop order of sidecars and main app.",
-    "**Microservice pattern families** group into decomposition, database per service, gateway/aggregation, sync chains vs async pub/sub messaging, shared data (an early decoupling stage), event sourcing and CQRS, and Erl's API/proxy/versioning patterns.",
-    "**Event-driven microservices** coordinate through events on a broker (e.g. Kafka): one service publishes, the next reacts, and an event store feeds databases and analytics. A typical stack adds gateway, config server, discovery, circuit breaker with load balancing, a DB per service, messaging and central logging."
+    {
+     "h": "Cloud native is layered",
+     "ordered": true,
+     "items": [
+      "**Clean code**",
+      "inside **domain-driven design**",
+      "inside **microservice principles** → **optimised for change**",
+      "inside **Kubernetes patterns** → **automatable containers at scale**"
+     ],
+     "foot": "Allowing a **polyglot world** where each service **chooses its own language and database**."
+    },
+    {
+     "h": "A well-designed container",
+     "items": [
+      "**Single-concern**",
+      "**Disposable**",
+      "**Immutable**",
+      "**Self-contained**",
+      "**Small Linux process**",
+      "**API-driven**",
+      "**Observable**"
+     ],
+     "foot": "**Immutability and disposability** make **scaling, rolling updates and self-healing** safe."
+    },
+    {
+     "h": "Sidecar family",
+     "items": [
+      "**Sidecar** → helper container **in the same pod** adds **cross-cutting features** (**logging, proxying, config**) **without touching app code**",
+      "**Adapter** → **normalises the app's output** (e.g. **monitoring format**)",
+      "**Ambassador** → **proxies outbound connections** (e.g. to the **right DB per environment**)",
+      "**Container chain** → fixes the **start/stop order** of sidecars and main app"
+     ]
+    },
+    {
+     "h": "Microservice pattern families",
+     "items": [
+      "**Decomposition**",
+      "**Database per service**",
+      "**Gateway/aggregation**",
+      "**Sync chains** vs **async pub/sub messaging**",
+      "**Shared data** → an **early decoupling stage**",
+      "**Event sourcing** and **CQRS**",
+      "**Erl's API/proxy/versioning** patterns"
+     ]
+    },
+    {
+     "h": "Event-driven microservices",
+     "items": [
+      "**Coordinate through events** on a **broker** (e.g. **Kafka**)",
+      "**One service publishes**, the **next reacts**",
+      "**Event store** feeds **databases and analytics**",
+      {
+       "t": "**Typical stack adds**:",
+       "sub": [
+        "gateway",
+        "config server",
+        "discovery",
+        "circuit breaker with load balancing",
+        "a DB per service",
+        "messaging",
+        "central logging"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -144,10 +257,46 @@
    ],
    "summary": "Event sourcing (state as events) with its pros and cons, then service mesh and circuit breaker as ways to make inter-service calls reliable.",
    "notes": [
-    "**Event sourcing makes the event history authoritative.** Append an OrderCreated or OrderApproved event atomically, then reconstruct state by replay. In the lecture, the event store also exposes durable subscriptions, avoiding a separate state-write and message-publish operation. A separate external broker still needs reliable delivery integration; event sourcing alone does not make unrelated systems commit atomically.",
-    "**Separate write correctness from read freshness.** The event append can be atomic while projections and subscribers catch up asynchronously. Audit history and replay help recovery and analytics; evolving events, rebuilding views and growing storage add complexity.",
-    "**Service mesh moves inter-service plumbing out of the app:** requests flow through proxies in a dedicated infrastructure layer, running alongside each service as sidecars, forming a mesh network.",
-    "**Circuit breaker prevents cascading failure.** When a synchronous callee is down or slow, callers hold threads, exhaust resources and fail too. A proxy counts successes and failures and, past an error-rate threshold, trips so calls fail immediately; an API gateway should protect itself this way."
+    {
+     "h": "Event sourcing",
+     "lead": "Makes the event history authoritative.",
+     "items": [
+      "**Append** an **OrderCreated** or **OrderApproved** event **atomically**",
+      "**Reconstruct state by replay**",
+      "**Lecture**: the **event store** also exposes **durable subscriptions** → avoids a separate **state-write and message-publish** operation",
+      "**Separate external broker** → still needs **reliable delivery integration**"
+     ],
+     "foot": "Event sourcing alone does **not** make **unrelated systems commit atomically**."
+    },
+    {
+     "h": "Write correctness vs read freshness",
+     "items": [
+      "**Event append** → can be **atomic**",
+      "**Projections and subscribers** → **catch up asynchronously**",
+      "**Audit history and replay** → help **recovery** and **analytics**",
+      "**Complexity** → **evolving events**, **rebuilding views**, **growing storage**"
+     ]
+    },
+    {
+     "h": "Service mesh",
+     "lead": "Moves inter-service plumbing out of the app.",
+     "items": [
+      "**Requests flow through proxies**",
+      "**Dedicated infrastructure layer**",
+      "**Proxies run alongside each service** as **sidecars**",
+      "**Together** → form a **mesh network**"
+     ]
+    },
+    {
+     "h": "Circuit breaker",
+     "lead": "Prevents cascading failure.",
+     "items": [
+      "**Problem** → when a **synchronous callee** is **down or slow**, callers **hold threads**, **exhaust resources** and **fail too**",
+      "**Proxy counts successes and failures**",
+      "**Past an error-rate threshold** → **trips** so calls **fail immediately**",
+      "**API gateway** should **protect itself** this way"
+     ]
+    }
    ],
    "terms": [
     {
@@ -225,10 +374,46 @@
    ],
    "summary": "Database-per-service vs shared database, then CQRS for cross-service queries and saga (choreography vs orchestration) for cross-service transactions.",
    "notes": [
-    "**Database per service vs shared database.** Per service keeps data private behind an API for loose coupling and independent evolution, but cross-service queries and transactions get hard. A shared DB gives local ACID and easy joins but couples services, so if you share, do it within a domain boundary only.",
-    "**CQRS separates command and query models.** The lecture builds an Order History view from events published by owning services. This materialised view makes cross-service reads efficient but can lag behind writes. CQRS need not require event sourcing or physically separate databases in every implementation.",
-    "**CQRS plus event sourcing** gives atomic operations, history for analytics, separate scalable read and write models and slim read DTOs; the cost is extra infrastructure and complexity if models are poorly designed.",
-    "**Saga answers cross-service transactions:** a sequence of local transactions with compensating transactions on failure. Choreography has services react to each other's events (e.g. Order Created, then Credit Reserved or Credit Limit Exceeded) with no controller; orchestration uses a central orchestrator sending commands (Reserve Credit). Choreography suits simple flows; orchestration suits many steps or branching. A saga is not one isolated ACID transaction: intermediate results can be visible, and compensation is a new business operation."
+    {
+     "h": "Database per service vs shared database",
+     "items": [
+      "**Per service** → data **private behind an API** → **loose coupling** and **independent evolution**",
+      "**Per service cost** → **cross-service queries and transactions** get hard",
+      "**Shared DB** → **local ACID** and **easy joins**, but **couples services**",
+      "**If you share** → do it **within a domain boundary only**"
+     ]
+    },
+    {
+     "h": "CQRS",
+     "lead": "Separates command and query models.",
+     "items": [
+      "**Lecture example** → builds an **Order History view** from **events published by owning services**",
+      "**Materialised view** → makes **cross-service reads efficient**",
+      "**Cost** → can **lag behind writes**",
+      "**Not required** in every implementation → **event sourcing** or **physically separate databases**"
+     ]
+    },
+    {
+     "h": "CQRS plus event sourcing",
+     "items": [
+      "**Atomic operations**",
+      "**History for analytics**",
+      "**Separate scalable read and write models**",
+      "**Slim read DTOs**",
+      "**Cost** → **extra infrastructure**, and **complexity** if models are **poorly designed**"
+     ]
+    },
+    {
+     "h": "Saga: cross-service transactions",
+     "items": [
+      "**Saga** → a **sequence of local transactions** with **compensating transactions** on failure",
+      "**Choreography** → services **react to each other's events** (e.g. **Order Created**, then **Credit Reserved** or **Credit Limit Exceeded**), **no controller**",
+      "**Orchestration** → a **central orchestrator** sending **commands** (**Reserve Credit**)",
+      "**Choreography suits** → **simple flows**",
+      "**Orchestration suits** → **many steps** or **branching**"
+     ],
+     "foot": "A saga is **not one isolated ACID transaction**: **intermediate results can be visible**, and **compensation is a new business operation**."
+    }
    ],
    "terms": [
     {
@@ -303,9 +488,41 @@
    ],
    "summary": "Why one data server is not enough and the three ways to split data across shards.",
    "notes": [
-    "**Why shard:** a single data server runs into limits on storage, compute under concurrent queries, network bandwidth and geography (legal, compliance or latency reasons to keep data near users). Sharding splits data across servers.",
-    "**Three strategies, chosen by access pattern.** Lookup: a map routes by shard key (e.g. tenant ID), so tenants can be placed or moved, good for multi-tenancy and residency. Range: sequential keys keep related data together (orders by month), good for range queries but prone to hotspots. Hash: a hash of the key spreads distinct keys and can reduce hotspots, but range queries touch many shards.",
-    "**Balance by actual traffic, not record counts alone.** One very hot key can still dominate a hash shard. Consider key distribution, tenant growth, rebalancing and the cost of cross-shard queries."
+    {
+     "h": "Why shard",
+     "lead": "A single data server runs into limits:",
+     "items": [
+      "**Storage**",
+      "**Compute** under **concurrent queries**",
+      "**Network bandwidth**",
+      "**Geography** → **legal, compliance or latency** reasons to keep data **near users**"
+     ],
+     "foot": "**Sharding splits data across servers**."
+    },
+    {
+     "h": "Three strategies, by access pattern",
+     "items": [
+      "**Lookup** → a **map routes by shard key** (e.g. **tenant ID**); tenants can be **placed or moved** → good for **multi-tenancy** and **residency**",
+      "**Range** → **sequential keys** keep **related data together** (**orders by month**) → good for **range queries** but prone to **hotspots**",
+      "**Hash** → a **hash of the key** spreads **distinct keys**, can **reduce hotspots** → but **range queries touch many shards**"
+     ]
+    },
+    {
+     "h": "Balance by actual traffic",
+     "lead": "Not by record counts alone.",
+     "items": [
+      "**One very hot key** can still **dominate a hash shard**",
+      {
+       "t": "**Consider**:",
+       "sub": [
+        "key distribution",
+        "tenant growth",
+        "rebalancing",
+        "cost of **cross-shard queries**"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -364,11 +581,104 @@
    ],
    "summary": "The isolate-vs-share continuum for architecture, schema, storage and deployment, plus SaaS managed-service capabilities and maturity levels.",
    "notes": [
-    "**Multi-tenancy shares application or infrastructure resources among tenants while keeping their data and access logically separated.** One codebase can serve many customers with tenant-specific configuration. Isolation and sharing vary by layer; choose the mix from cost, customisation, security and control requirements.",
-    "**It applies at every layer.** Architecture: physical, VM, runtime, application, storage, then sub-tenancy (everything shared). Deployment: bare-metal/VM (most isolation), VM images, then containers sharing one OS (simplest management).",
-    "**Schema options:** separated DB (a DB per tenant; easy, strongest isolation, but few tenants per server and cost rises fast, so use when tenants need isolation and will pay), separated schema (one DB, a schema per tenant), shared schema (TenantID column with predefined custom fields; maximises tenants per server but gives sparse tables, so use when co-mingling is acceptable and custom fields are predictable).",
-    "**Choosing a data store** hinges on structured vs unstructured, query needs (key/value is weak for complex queries), aggregation, scale-out, transactions, backup/DR and security/audit.",
-    "**SaaS operations:** providers need business support (billing, contracts, price plans), provisioning/metering/SLA and portability. SaaS maturity climbs from level 0 (outsourcing) through ASP stages and single-app SaaS to level 5 dynamic business apps-as-a-service."
+    {
+     "h": "Multi-tenancy",
+     "lead": "Shares application or infrastructure resources among tenants while keeping their data and access logically separated.",
+     "items": [
+      "**One codebase** serves **many customers** with **tenant-specific configuration**",
+      "**Isolation and sharing vary by layer**",
+      {
+       "t": "**Choose the mix from**:",
+       "sub": [
+        "cost",
+        "customisation",
+        "security",
+        "control requirements"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Applies at every layer",
+     "items": [
+      {
+       "t": "**Architecture** (ordered):",
+       "sub": [
+        "physical",
+        "VM",
+        "runtime",
+        "application",
+        "storage",
+        "**sub-tenancy** (everything shared)"
+       ]
+      },
+      {
+       "t": "**Deployment**:",
+       "sub": [
+        "**bare-metal/VM** → **most isolation**",
+        "**VM images**",
+        "**containers** sharing **one OS** → **simplest management**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Schema options",
+     "items": [
+      {
+       "t": "**Separated DB** → a **DB per tenant**",
+       "sub": [
+        "easy, **strongest isolation**",
+        "but **few tenants per server** and **cost rises fast**",
+        "use when tenants **need isolation and will pay**"
+       ]
+      },
+      "**Separated schema** → **one DB**, a **schema per tenant**",
+      {
+       "t": "**Shared schema** → **TenantID column** with **predefined custom fields**",
+       "sub": [
+        "**maximises tenants per server**",
+        "but gives **sparse tables**",
+        "use when **co-mingling is acceptable** and **custom fields are predictable**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Choosing a data store",
+     "lead": "Hinges on:",
+     "items": [
+      "**Structured vs unstructured**",
+      "**Query needs** → **key/value** is **weak for complex queries**",
+      "**Aggregation**",
+      "**Scale-out**",
+      "**Transactions**",
+      "**Backup/DR**",
+      "**Security/audit**"
+     ]
+    },
+    {
+     "h": "SaaS operations",
+     "items": [
+      {
+       "t": "**Providers need**:",
+       "sub": [
+        "**business support** (billing, contracts, price plans)",
+        "**provisioning/metering/SLA**",
+        "**portability**"
+       ]
+      },
+      {
+       "t": "**SaaS maturity climbs**:",
+       "sub": [
+        "**level 0** → **outsourcing**",
+        "**ASP stages**",
+        "**single-app SaaS**",
+        "**level 5** → **dynamic business apps-as-a-service**"
+       ]
+      }
+     ]
+    }
    ],
    "terms": [
     {
@@ -451,10 +761,43 @@
    ],
    "summary": "Four places to combine data from many microservices for one screen: client, API gateway, composite microservice, or database.",
    "notes": [
-    "**The question is where to assemble one screen's data from many services:** client, API gateway, composite microservice, or database. Each moves the logic further from the UI and adds cost.",
-    "**Client vs API aggregation:** client-side calls can render parts of a screen as each result arrives but expose coordination to the client. Gateway aggregation reduces external round trips and hides internals. A complete combined response may wait for its slowest required backend; use deliberate timeouts or partial results where the experience allows them.",
-    "**Microservice ('business tier'):** a composite service applies real-time business logic during aggregation, with finer control and less gateway dependence, at the cost of an extra hop, more code, more failure points and reactive/callback code for parallel calls.",
-    "**Database ('data tier'):** pre-aggregate into an operational data store (often a document DB) for the most flexible, analytics-enriched views such as customer 360, paying with complexity, duplicated data and ETL or change data capture."
+    {
+     "h": "Where to assemble one screen's data",
+     "lead": "One screen's data from many services:",
+     "items": [
+      "**Client**",
+      "**API gateway**",
+      "**Composite microservice**",
+      "**Database**"
+     ],
+     "ordered": true,
+     "foot": "Each **moves the logic further from the UI** and **adds cost**."
+    },
+    {
+     "h": "Client vs API aggregation",
+     "items": [
+      "**Client-side calls** → can **render parts of a screen as each result arrives**, but **expose coordination to the client**",
+      "**Gateway aggregation** → **reduces external round trips** and **hides internals**",
+      "**Complete combined response** → may **wait for its slowest required backend**",
+      "**Mitigation** → **deliberate timeouts** or **partial results** where the experience allows them"
+     ]
+    },
+    {
+     "h": "Microservice ('business tier')",
+     "items": [
+      "**Composite service** applies **real-time business logic** during aggregation",
+      "**Pros** → **finer control**, **less gateway dependence**",
+      "**Cost** → **extra hop**, **more code**, **more failure points**, **reactive/callback code** for **parallel calls**"
+     ]
+    },
+    {
+     "h": "Database ('data tier')",
+     "items": [
+      "**Pre-aggregate** into an **operational data store** (often a **document DB**)",
+      "**Most flexible, analytics-enriched views** → such as **customer 360**",
+      "**Cost** → **complexity**, **duplicated data**, **ETL** or **change data capture**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -530,10 +873,44 @@
    ],
    "summary": "Capabilities needed to coordinate multi-service flows and the closing cloud-native design checklist and summary map.",
    "notes": [
-    "**Coordinating multi-service flows needs:** state management (outputs kept in a persistent store safe from failure), transaction control, post-call coordination (collect each call's success or failure and decide the next step), timeout handling (a per-microflow timer raising an event on the event bus) and configurability of timers and compensations.",
-    "**Choose coordination from the invariant.** 2PC coordinates an atomic distributed commit but can hold locks and block during failures; participants must support the protocol. A saga uses local commits and business compensations, reducing synchronous coordination at the cost of intermediate states and recovery logic. Neither choice is universally best.",
-    "**Cloud-native design checklist:** app design and tenancy model; scale and zero-downtime upgrades; data store redundancy, partitioning and caching; security (encryption, token auth, auditing, SSO); integration formats and per-tenant SLAs; middleware (config, queues, discovery, monitoring).",
-    "**Overall:** software services rest on Economics (cost and revenue models), Service Architecture (multi-tenancy, capacity, data/service/security patterns) and Operational Structure (monitoring, billing, deployment, SLA, compliance, risk)."
+    {
+     "h": "Coordinating multi-service flows needs",
+     "items": [
+      "**State management** → outputs kept in a **persistent store** safe from failure",
+      "**Transaction control**",
+      "**Post-call coordination** → collect each call's **success or failure** and **decide the next step**",
+      "**Timeout handling** → a **per-microflow timer** raising an event on the **event bus**",
+      "**Configurability** of **timers and compensations**"
+     ]
+    },
+    {
+     "h": "2PC vs saga",
+     "lead": "Choose coordination from the invariant.",
+     "items": [
+      "**2PC** → coordinates an **atomic distributed commit**, but can **hold locks** and **block during failures**; participants must **support the protocol**",
+      "**Saga** → **local commits** and **business compensations**, **reducing synchronous coordination**, at the cost of **intermediate states** and **recovery logic**"
+     ],
+     "foot": "Neither choice is **universally best**."
+    },
+    {
+     "h": "Cloud-native design checklist",
+     "items": [
+      "**App design** and **tenancy model**",
+      "**Scale** and **zero-downtime upgrades**",
+      "**Data store** → **redundancy, partitioning, caching**",
+      "**Security** → **encryption, token auth, auditing, SSO**",
+      "**Integration formats** and **per-tenant SLAs**",
+      "**Middleware** → **config, queues, discovery, monitoring**"
+     ]
+    },
+    {
+     "h": "Overall: software services rest on",
+     "items": [
+      "**Economics** → **cost and revenue models**",
+      "**Service Architecture** → **multi-tenancy**, **capacity**, **data/service/security patterns**",
+      "**Operational Structure** → **monitoring, billing, deployment, SLA, compliance, risk**"
+     ]
+    }
    ],
    "terms": [
     {

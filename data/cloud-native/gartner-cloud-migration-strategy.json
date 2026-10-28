@@ -23,10 +23,56 @@
    ],
    "summary": "States the note's key findings and recommendations, gives survey evidence that modernization spending is rising, and explains why picking the wrong approach is costly.",
    "notes": [
-    "**Pick the approach from the problem, not from fashion.** Leaders often modernize or migrate without establishing why the app obstructs the business, so the chosen approach misses the root cause. Wrong choices lead to budget overruns, late delivery, little benefit, process disruption, unmaintainable code or a cancelled programme.",
-    "**Portfolios decay, so modernization spend is rising.** Apps lose business fit, innovation support and agility while getting costlier, more complex and riskier. In the 2023 CIO survey 46% planned more modernization spend, 50% more cloud-platform spend and 47% less legacy-infrastructure spend.",
-    "**There is no one-size-fits-all fix.** Gartner's method is a cause-effect analysis using six drivers, followed by an evaluation framework to choose per application.",
-    "**Modernization is not always cloud migration.** Most efforts involve cloud, but a COBOL app can be rearchitected to Java and stay on the mainframe, or replaced by an on-premises COTS package."
+    {
+     "h": "Pick from the problem, not fashion",
+     "items": [
+      "**Common mistake** → leaders **modernize or migrate** without establishing **why the app obstructs the business**",
+      "**Result** → the chosen approach **misses the root cause**",
+      {
+       "t": "**Wrong choices lead to**:",
+       "sub": [
+        "**budget overruns**",
+        "**late delivery**",
+        "**little benefit**",
+        "**process disruption**",
+        "**unmaintainable code**",
+        "a **cancelled programme**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "Portfolios decay, spend is rising",
+     "items": [
+      "**Apps lose** → **business fit**, **innovation support**, **agility**",
+      "**Apps get** → **costlier**, **more complex**, **riskier**",
+      {
+       "t": "**2023 CIO survey**:",
+       "sub": [
+        "**46%** planned **more modernization spend**",
+        "**50%** more **cloud-platform spend**",
+        "**47%** **less legacy-infrastructure spend**"
+       ]
+      }
+     ]
+    },
+    {
+     "h": "No one-size-fits-all fix",
+     "ordered": true,
+     "lead": "Gartner's method:",
+     "items": [
+      "**Cause-effect analysis** using **six drivers**",
+      "**Evaluation framework** to **choose per application**"
+     ]
+    },
+    {
+     "h": "Modernization ≠ cloud migration",
+     "lead": "Modernization is not always cloud migration; most efforts involve cloud, but:",
+     "items": [
+      "**COBOL app** → **rearchitected to Java** and **stays on the mainframe**",
+      "**Or replaced** by an **on-premises COTS package**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -62,10 +108,41 @@
    ],
    "summary": "Defines the five approaches, covers which application layers each can change, lists the three alternatives for legacy apps, and introduces the two diagnostic questions.",
    "notes": [
-    "**Five approaches change different scopes.** Rehost moves infrastructure; replatform changes runtime with minimal compatibility edits; rearchitect restructures existing code while preserving behaviour; rebuild rewrites it, possibly like-for-like; replace adopts COTS or SaaS. Compare the affected layer before comparing implementation cost.",
-    "**Match approach to layer.** Rehost and replatform change technology only; rearchitect changes technology and architecture but has limited value for functional problems; rebuild and replace can change functions and features and also technology and architecture.",
-    "**Three alternatives apply when modernization is not worth it,** usually decided in a portfolio assessment. Retain: leave as is for now (too much effort or risk, or near retirement). Encapsulate: expose data and functions as services through an API while hiding the internals. Retire: decommission, often as part of a replace.",
-    "**Rehost vs rebuild in one line:** rehost is cheapest and least risky but changes almost nothing; rebuild offers the most flexibility but costs the most and carries the most risk."
+    {
+     "h": "Five approaches, different scopes",
+     "items": [
+      "**Rehost** → **moves infrastructure**",
+      "**Replatform** → **changes runtime** with **minimal compatibility edits**",
+      "**Rearchitect** → **restructures existing code** while **preserving behaviour**",
+      "**Rebuild** → **rewrites** it, possibly **like-for-like**",
+      "**Replace** → adopts **COTS or SaaS**"
+     ],
+     "foot": "Compare the **affected layer** before comparing **implementation cost**."
+    },
+    {
+     "h": "Match approach to layer",
+     "items": [
+      "**Rehost, replatform** → change **technology only**",
+      "**Rearchitect** → changes **technology and architecture**; **limited value for functional problems**",
+      "**Rebuild, replace** → can change **functions and features**, and also **technology and architecture**"
+     ]
+    },
+    {
+     "h": "Three alternatives to modernization",
+     "lead": "When modernization is not worth it, usually decided in a portfolio assessment.",
+     "items": [
+      "**Retain** → **leave as is for now** (**too much effort or risk**, or **near retirement**)",
+      "**Encapsulate** → **expose data and functions as services** through an **API** while **hiding the internals**",
+      "**Retire** → **decommission**, often as **part of a replace**"
+     ]
+    },
+    {
+     "h": "Rehost vs rebuild in one line",
+     "items": [
+      "**Rehost** → **cheapest** and **least risky**, but **changes almost nothing**",
+      "**Rebuild** → **most flexibility**, but **costs the most** and carries the **most risk**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -157,9 +234,56 @@
    ],
    "summary": "Describes the three business and three IT drivers of modernization, maps them to the application layer most likely causing the problem, and presents Gartner's framework rating each approach.",
    "notes": [
-    "**Define the issue with six drivers.** Business: business fit (no longer meets requirements), innovation (blocks new opportunities), agility (cannot keep pace with change at acceptable cost and risk). IT: cost (too high relative to value), complexity (hurts maintainability and the cost and risk of change), risk (security, compliance, supportability, scalability, skills shortage on old platforms). Usually a mix of both tips the decision.",
-    "**Drivers suggest a cause; investigate before selecting.** Technology often contributes to cost, complexity or risk; functionality to business fit or innovation; architecture to agility or complexity. These are probable links, not a one-to-one diagnosis. Evidence may reveal more than one layer.",
-    "**Then choose the approach that can change that layer.** Technology faults: rehost, replatform or rearchitect. Architecture faults: rearchitect (or rebuild). Functionality faults: rebuild or replace. Gartner's framework also rates each approach on value, time to value, disruption, cost of change and risk: rehost is low on all of them, rebuild is the most flexible but highest cost and risk, and replace has high value with the greatest business disruption."
+    {
+     "h": "Six drivers define the issue",
+     "items": [
+      {
+       "t": "**Business drivers**",
+       "sub": [
+        "**Business fit** → **no longer meets requirements**",
+        "**Innovation** → **blocks new opportunities**",
+        "**Agility** → **cannot keep pace with change** at **acceptable cost and risk**"
+       ]
+      },
+      {
+       "t": "**IT drivers**",
+       "sub": [
+        "**Cost** → **too high relative to value**",
+        "**Complexity** → hurts **maintainability** and the **cost and risk of change**",
+        "**Risk** → **security, compliance, supportability, scalability**, **skills shortage on old platforms**"
+       ]
+      }
+     ],
+     "foot": "Usually **a mix of both** tips the decision."
+    },
+    {
+     "h": "Drivers suggest a cause",
+     "lead": "Investigate before selecting.",
+     "items": [
+      "**Technology** → often contributes to **cost, complexity or risk**",
+      "**Functionality** → **business fit** or **innovation**",
+      "**Architecture** → **agility** or **complexity**",
+      "**Probable links**, **not a one-to-one diagnosis**",
+      "**Evidence** may reveal **more than one layer**"
+     ]
+    },
+    {
+     "h": "Choose the approach that changes that layer",
+     "items": [
+      "**Technology faults** → **rehost, replatform or rearchitect**",
+      "**Architecture faults** → **rearchitect** (or **rebuild**)",
+      "**Functionality faults** → **rebuild** or **replace**"
+     ]
+    },
+    {
+     "h": "Gartner's framework ratings",
+     "lead": "Each approach rated on value, time to value, disruption, cost of change and risk.",
+     "items": [
+      "**Rehost** → **low on all of them**",
+      "**Rebuild** → **most flexible** but **highest cost and risk**",
+      "**Replace** → **high value** with the **greatest business disruption**"
+     ]
+    }
    ],
    "terms": [
     {
@@ -223,9 +347,34 @@
    ],
    "summary": "Lists the considerations to weigh when shortlisting approaches and recommends modernizing component by component.",
    "notes": [
-    "**Weigh five consequences before committing:** potential business value (often overestimated, e.g. expecting a replatform to improve business fit), time to value, business disruption (retraining, process redesign; SaaS replacement is high), cost of change, and execution risk.",
-    "**Agree scope with stakeholders.** Shortlist approaches that address the actual problem, then compare outcomes, disruption, time, cost and execution risk. Choose a proportionate change rather than the most extensive one.",
-    "**Modernize incrementally.** The target can be a component rather than a whole app; Gartner recommends going component by component rather than big bang, and different components may need different approaches (some a rebuild, others just a replatform)."
+    {
+     "h": "Weigh five consequences",
+     "lead": "Before committing:",
+     "items": [
+      "**Potential business value** → **often overestimated** (e.g. expecting a **replatform** to improve **business fit**)",
+      "**Time to value**",
+      "**Business disruption** → **retraining**, **process redesign**; **SaaS replacement is high**",
+      "**Cost of change**",
+      "**Execution risk**"
+     ]
+    },
+    {
+     "h": "Agree scope with stakeholders",
+     "ordered": true,
+     "items": [
+      "**Shortlist approaches** that address the **actual problem**",
+      "**Compare** → **outcomes, disruption, time, cost, execution risk**",
+      "**Choose a proportionate change** rather than the **most extensive** one"
+     ]
+    },
+    {
+     "h": "Modernize incrementally",
+     "items": [
+      "**Target** can be a **component** rather than a **whole app**",
+      "**Gartner recommends** → **component by component** rather than **big bang**",
+      "**Different components**, **different approaches** → some a **rebuild**, others just a **replatform**"
+     ]
+    }
    ],
    "terms": [
     {
