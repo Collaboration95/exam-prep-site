@@ -89,11 +89,25 @@
    "check": [
     {
      "q": "The Purchase client and the Purchase service both need the same Order entity classes, and the Purchase and Delivery services both need customer details. Which kind of reusable asset fits each need?",
-     "a": "Share the Order entities through a **shared library** used by the Purchase client and service: that is reuse of classes at a small scale. Get customer details from a **Customer service** that Purchase and Delivery both call, because that is reuse of a business capability across features. The library ties client and service releases together, and the service adds a remote call, so each choice has a cost."
+     "a": {
+      "items": [
+       "**Order entities** → a **shared library** used by the Purchase client and service → **reuse of classes** at a **small scale**",
+       "**Customer details** → a **Customer service** that Purchase and Delivery both call → **reuse of a business capability** across features"
+      ],
+      "foot": "Each choice has a cost: the **library ties client and service releases together**; the **service adds a remote call**."
+     }
     },
     {
      "q": "A platform team must build ten new services quickly, all with the same web conventions, configuration and request handling. Should it reuse a service, a framework or a shared library?",
-     "a": "A framework, such as Spring Boot in the lecture: frameworks are reused to build many clients and services and give them a common structure and behaviour. A service provides a capability at runtime, not a way to build services, and a library supplies classes without imposing the overall structure. The catch is that a good framework is expensive to design, so it pays off only when many services will use it."
+     "a": {
+      "lead": "**A framework**, such as **Spring Boot** in the lecture.",
+      "items": [
+       "**Framework** → reused to **build many clients and services**, giving them a **common structure and behaviour**",
+       "**Not a service** → provides a **capability at runtime**, not a way to build services",
+       "**Not a library** → supplies **classes** without **imposing the overall structure**"
+      ],
+      "foot": "**Catch**: a good framework is **expensive to design** → pays off only when **many services** will use it."
+     }
     }
    ],
    "visuals": [
@@ -223,19 +237,48 @@
    "check": [
     {
      "q": "A proposed Customer service can scale only when the Order service scales with it, because the two share an in-process session cache. Which reusable-service characteristic does this break, and what would you change?",
-     "a": "It breaks horizontal scalability without depending on other services, and loose coupling. Give each service its own state and talk through its interface or messages, which the lecture calls the loosest coupling. The cost is some duplicated data and having to accept eventual consistency between the two."
+     "a": {
+      "items": [
+       "**Breaks**: **horizontal scalability without depending on other services**, and **loose coupling**",
+       "**Change**: give each service **its own state**; talk through its **interface** or **messages** (the lecture's **loosest coupling**)"
+      ],
+      "foot": "**Cost**: some **duplicated data** and accepting **eventual consistency** between the two."
+     }
     },
     {
      "q": "A team used DDD to find well-bounded services, but each release still takes a week of manual packaging and deployment. A manager blames the domain design. Do you agree?",
-     "a": "Mostly no. DDD produces designs that satisfy the IDEALS principles except **Deployability**, which comes from DevOps automation of packaging and deployment, so the fix is pipelines, not boundaries. The manager would have a point only if the boundaries force several services to be released in lockstep, because that is a coupling problem in the design."
+     "a": {
+      "lead": "**Mostly no.**",
+      "items": [
+       "**DDD** produces designs that satisfy the **IDEALS** principles **except Deployability**",
+       "**Deployability** comes from **DevOps automation** of **packaging and deployment** → fix is **pipelines, not boundaries**"
+      ],
+      "foot": "The manager would have a point only if the boundaries force several services to be **released in lockstep** → that is a **coupling problem** in the design."
+     }
     },
     {
      "q": "In a code review, a domain entity class imports the database driver and saves itself. Which onion-architecture rule does this break, and why does it matter for a reusable service?",
-     "a": "Dependencies must point toward the centre: inner layers define interfaces and outer layers implement them, so the application core compiles and runs without infrastructure. Define a repository interface in the core and implement it in the outer layer. The core can then be tested and reused with a different store, at the cost of one more interface and adapter."
+     "a": {
+      "items": [
+       "**Rule broken**: **dependencies must point toward the centre**",
+       "**Inner layers define interfaces**; **outer layers implement** them → the **application core** compiles and runs **without infrastructure**",
+       "**Fix** → define a **repository interface** in the core and implement it in the **outer layer**",
+       "**Why it matters** → the core can then be **tested** and **reused with a different store**"
+      ],
+      "foot": "**Cost**: one more **interface and adapter**."
+     }
     },
     {
      "q": "While modelling a service with DDD, a team adds RetryPolicy and HttpClientWrapper classes to the domain model. Should these be there?",
-     "a": "No. DDD focuses squarely on domain objects and leaves out non-domain concerns, while OOAD would add design and framework objects in later stages. Retry and HTTP handling still need designing, but in the outer layers around the domain model. Mixing them in blurs the ubiquitous language and ties the core to infrastructure."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**DDD** focuses squarely on **domain objects** and leaves out **non-domain concerns**",
+       "**OOAD**, by contrast, would add **design and framework objects** in later stages",
+       "**Retry and HTTP handling** still need designing → in the **outer layers** around the domain model",
+       "**Mixing them in** → blurs the **ubiquitous language** and **ties the core to infrastructure**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -368,15 +411,43 @@
    "check": [
     {
      "q": "You receive a 60-entity domain model for a new platform and two weeks to propose services. Do you start by designing aggregates or by drawing bounded contexts?",
-     "a": "Bounded contexts first. Strategic design is coarse-grained: it divides the domain into contexts, sets each one's ubiquitous language and classifies core and subdomains. Aggregates are tactical, fine-grained clusters inside one context, so designing them first risks clusters that cut across what should be separate contexts. Revisit the context boundaries once aggregate design shows where invariants really sit."
+     "a": {
+      "lead": "**Bounded contexts first.**",
+      "items": [
+       "**Strategic design** = **coarse-grained**: divides the domain into **contexts**, sets each one's **ubiquitous language**, classifies **core and subdomains**",
+       "**Aggregates** = **tactical**, **fine-grained** clusters **inside one context**",
+       "**Aggregates first** → risks clusters that **cut across** what should be **separate contexts**"
+      ],
+      "foot": "**Revisit** the context boundaries once aggregate design shows where **invariants** really sit."
+     }
     },
     {
      "q": "When a backlog item is committed to a sprint, the resource-management context must update team availability. A teammate proposes that resource management reads the core context's tables directly. What would you use instead, and why?",
-     "a": "Have the core publish a domain event such as BacklogItemCommitted and let resource management react to it in its own transaction. Each context keeps its own schema and model, so the core can change its tables without breaking a consumer. The price is eventual consistency: availability is updated shortly after the commit, not in the same transaction."
+     "a": {
+      "lead": "Use a **domain event**, not direct table reads.",
+      "items": [
+       "**Core publishes a domain event**, e.g. **BacklogItemCommitted**",
+       "**Resource management reacts** to it in its **own transaction**",
+       "**Why**: each context keeps its **own schema and model** → the core can **change its tables** without breaking a consumer"
+      ],
+      "foot": "**Price**: **eventual consistency** → availability is updated **shortly after** the commit, not in the same transaction."
+     }
     },
     {
      "q": "An e-commerce firm wins business through its pricing and recommendation engine; identity, billing and notifications look like everyone else's. Which is the core domain, and what does that classification change in your design?",
-     "a": "Pricing and recommendation is the core domain: it is the context critical to the business. Identity, billing and notifications are supporting or generic subdomains. Classifying them tells you where the model needs the most refinement, and which generic contexts are candidates to split out and reuse across systems."
+     "a": {
+      "items": [
+       "**Core domain**: **pricing and recommendation** → the context **critical to the business**",
+       "**Supporting or generic subdomains**: **identity**, **billing**, **notifications**",
+       {
+        "t": "**What the classification changes**:",
+        "sub": [
+         "where the model needs **the most refinement**",
+         "which **generic contexts** are candidates to **split out and reuse across systems**"
+        ]
+       }
+      ]
+     }
     }
    ],
    "visuals": [
@@ -513,19 +584,62 @@
    "check": [
     {
      "q": "Underwriting, Claims and Inspections all use the word 'Policy'. An architect proposes one canonical Policy entity shared by all three teams. Do you agree?",
-     "a": "No. Inside each bounded context, Policy has a specific meaning and does specific things, so a single shared entity has to carry every context's attributes and rules and becomes coupled to all three teams. DDD segregates them into separate models with their own ubiquitous language and translates at the boundaries. The cost is that business and technical people must agree explicitly on what Policy means in each context."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Inside each bounded context**, **Policy** has a **specific meaning** and does **specific things**",
+       "**One shared entity** → must carry **every context's attributes and rules** → **coupled to all three teams**",
+       "**DDD** → **segregates** them into **separate models** with their **own ubiquitous language**, **translating at the boundaries**"
+      ],
+      "foot": "**Cost**: **business and technical people** must agree **explicitly** on what Policy means in each context."
+     }
     },
     {
      "q": "Two teams share one repository and one database schema for the Claims bounded context, and both change its interfaces. What problems would you expect, and what does the lecture prescribe?",
-     "a": "Expect conflicting changes to the model and interfaces, unclear ownership, and schema changes from one team breaking the other. The lecture prescribes one team per bounded context (a team may own several), a separate repository with source, acceptance and unit tests together, a separate schema, and interfaces defined by the owning team. If the context is too big for one team, the boundary itself is probably wrong."
+     "a": {
+      "items": [
+       {
+        "t": "**Expected problems**:",
+        "sub": [
+         "**conflicting changes** to the model and interfaces",
+         "**unclear ownership**",
+         "**schema changes** from one team **breaking the other**"
+        ]
+       },
+       {
+        "t": "**Lecture prescribes**:",
+        "sub": [
+         "**one team per bounded context** (a team may own several)",
+         "a **separate repository** with **source, acceptance and unit tests** together",
+         "a **separate schema**",
+         "**interfaces defined by the owning team**"
+        ]
+       }
+      ],
+      "foot": "If the context is **too big for one team**, the **boundary itself is probably wrong**."
+     }
     },
     {
      "q": "Every new feature adds entities to one shared domain model. The test suite now takes hours and teams disagree about what 'Account' means. Diagnose the problem and propose a fix.",
-     "a": "It is a Big Ball of Mud: tangled models, blurred language and no explicit boundaries. Split the entities by functional cohesion into bounded contexts, each with one ubiquitous language, so 'Account' can mean different things in different contexts. Each context gets a smaller test set and can become the boundary for a service, repository, schema and team. The split costs integration work between contexts that used to share objects."
+     "a": {
+      "items": [
+       "**Diagnosis: Big Ball of Mud** → **tangled models**, **blurred language**, **no explicit boundaries**",
+       "**Fix**: split the entities by **functional cohesion** into **bounded contexts**, each with **one ubiquitous language** → 'Account' can mean different things in different contexts",
+       "**Each context** → a **smaller test set**; can become the boundary for a **service**, **repository**, **schema** and **team**"
+      ],
+      "foot": "**Cost**: **integration work** between contexts that used to **share objects**."
+     }
     },
     {
      "q": "A group of developers tries to find bounded contexts from the existing database schema alone, without domain experts. What is the risk?",
-     "a": "The schema reflects the current, possibly tangled, model, so it tends to reproduce the Big Ball of Mud rather than the business's own boundaries. The lecture requires domain experts, whose mental model drives entity extraction, and developers who engage with business aspects instead of being consumed by technology. The schema is useful evidence, but the boundaries should come from iterating on a combined model with the experts."
+     "a": {
+      "items": [
+       "**Schema reflects the current, possibly tangled, model** → tends to **reproduce the Big Ball of Mud** rather than the **business's own boundaries**",
+       "**Lecture requires domain experts** → their **mental model drives entity extraction**",
+       "**Developers** must **engage with business aspects** instead of being **consumed by technology**"
+      ],
+      "foot": "The schema is **useful evidence**, but boundaries should come from **iterating on a combined model** with the experts."
+     }
     }
    ],
    "visuals": [
@@ -663,19 +777,45 @@
    "check": [
     {
      "q": "From the scenario 'the product owner commits a backlog item to a sprint only if it is scheduled for release and a quorum of team members approved', a junior developer makes Quorum an entity. Do you agree?",
-     "a": "Probably not. Nouns are candidate entities, but the lecture warns that some nouns are properties of an entity, and here quorum approval is a pre-condition on the commitment. Model it as part of the commitment rule. It would become an entity only if individual approvals must be tracked and changed over time."
+     "a": {
+      "lead": "**Probably not.**",
+      "items": [
+       "**Nouns are candidate entities**, but some nouns are **properties of an entity** (lecture warning)",
+       "**Quorum approval** here is a **pre-condition on the commitment** → model it as **part of the commitment rule**"
+      ],
+      "foot": "It would become an **entity** only if **individual approvals** must be **tracked and changed over time**."
+     }
     },
     {
      "q": "A team records its ubiquitous language as a glossary document kept apart from the code and tests. What does the lecture's approach add?",
-     "a": "Restate the concrete scenarios as executable Given/When/Then specifications that serve as acceptance tests. The language then stays tied to verifiable behaviour, such as the backlog item becoming committed and the BacklogItemCommitted event being created. A separate glossary drifts from the code without anyone noticing."
+     "a": {
+      "items": [
+       "**Restate the concrete scenarios** as **executable Given/When/Then specifications** → serve as **acceptance tests**",
+       "**Language stays tied to verifiable behaviour**, e.g. the backlog item **becoming committed** and the **BacklogItemCommitted event** being created"
+      ],
+      "foot": "A **separate glossary drifts** from the code without anyone noticing."
+     }
     },
     {
      "q": "In the Scrum tool split, Discussion appears in both the core context and the collaboration context. A reviewer flags it as duplication to remove. How do you respond?",
-     "a": "It is not a defect. Each bounded context has its own ubiquitous language and model, so the same name can mean and do different things in each. Merging them would recreate a shared model that couples the core to collaboration features. What is needed is an explicit mapping between them wherever the two contexts interact."
+     "a": {
+      "lead": "**It is not a defect.**",
+      "items": [
+       "**Each bounded context** has its **own ubiquitous language and model** → the **same name** can **mean and do different things** in each",
+       "**Merging them** → recreates a **shared model** that **couples the core to collaboration** features"
+      ],
+      "foot": "What is needed is an **explicit mapping** between them wherever the two contexts **interact**."
+     }
     },
     {
      "q": "Another product line also needs tenant billing with accounts and payments, which the Scrum tool already has in its billing context. What does the lecture's procedure suggest?",
-     "a": "Split a bounded context further if the resulting contexts are more reusable across systems. Keep billing as a separate generic subdomain with no dependency on project-management concepts, so the other product can reuse it. The billing context then needs a stable interface and an owner who serves both consumers."
+     "a": {
+      "items": [
+       "**Procedure**: **split a bounded context further** if the resulting contexts are **more reusable across systems**",
+       "**Keep billing** as a **separate generic subdomain** with **no dependency on project-management concepts** → the other product can **reuse** it"
+      ],
+      "foot": "The billing context then needs a **stable interface** and an **owner who serves both consumers**."
+     }
     }
    ],
    "visuals": [
@@ -852,19 +992,61 @@
    "check": [
     {
      "q": "A teammate proposes merging MaidOrderManager and MaidLoanManager into a single ServiceOrderManager, because both have plans, usages and bills. Do you agree?",
-     "a": "No. Customer orders and agency-to-agency loans are different business functions with different parties and plans (OnceAFortnight, OnceAWeek and TwiceAWeek for customers; Weekly and Monthly for loans), so each has its own ubiquitous language: MaidUsage and MaidUsagePlan against MaidLoanUsage and MaidLoanPlan. A merged context would change for two unrelated reasons and blur those terms. The cost of keeping them apart is some parallel structure."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Different business functions**: **customer orders** vs **agency-to-agency loans**, with **different parties and plans**",
+       {
+        "t": "**Plans**",
+        "sub": [
+         "**Customers**: **OnceAFortnight**, **OnceAWeek**, **TwiceAWeek**",
+         "**Loans**: **Weekly**, **Monthly**"
+        ]
+       },
+       {
+        "t": "**Own ubiquitous language each**",
+        "sub": [
+         "**MaidUsage** and **MaidUsagePlan**",
+         "against **MaidLoanUsage** and **MaidLoanPlan**"
+        ]
+       },
+       "**Merged context** → would **change for two unrelated reasons** and **blur those terms**"
+      ],
+      "foot": "**Cost** of keeping them apart: some **parallel structure**."
+     }
     },
     {
      "q": "Maid2Order adds a new digital-wallet payment method. Using the lecture's sample solution, which contexts change, and which should not?",
-     "a": "Only PaymentManager: add a new ElectronicPayment specialisation alongside BankTransfer, PayNow and CreditCardPayment, still producing a Receipt. BillingManager, MaidOrderManager and MaidLoanManager do not change, because they deal with bills and a payment simply settles a Bill. If they did need to change, that would show the payment details had leaked across the boundary."
+     "a": {
+      "items": [
+       "**Changes: only PaymentManager** → add a new **ElectronicPayment** specialisation alongside **BankTransfer**, **PayNow** and **CreditCardPayment**, still producing a **Receipt**",
+       "**Unchanged**: **BillingManager**, **MaidOrderManager**, **MaidLoanManager** → they deal with **bills**, and a payment simply **settles a Bill**"
+      ],
+      "foot": "If they did need to change, that would show the **payment details had leaked across the boundary**."
+     }
     },
     {
      "q": "A teammate proposes moving MaidUsageBill, MaidLoanBill and PlatformMonthlyBill into BillingManager so that every bill type lives in one place. Do you agree?",
-     "a": "No. Each specific bill belongs to the context whose business activity produces it, and BillingManager holds only the common Bill they lead to. Pulling the specific types in would make BillingManager depend on ordering, loan and platform-usage rules, so it would change whenever they do and could not be reused elsewhere. The cost of the lecture's design is a translation from each specific bill to Bill at the boundary."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Each specific bill** belongs to the **context whose business activity produces it**",
+       "**BillingManager** holds only the **common Bill** they lead to",
+       "**Pulling the specific types in** → BillingManager **depends on ordering, loan and platform-usage rules** → **changes whenever they do** and **cannot be reused** elsewhere"
+      ],
+      "foot": "**Cost** of the lecture's design: a **translation** from each specific bill to **Bill** at the boundary."
+     }
     },
     {
      "q": "In the sample solution, Customer in CustomerManager holds only the customer's particulars. Where should the customer's current usage plan live, and why?",
-     "a": "In MaidOrderManager, as a MaidUsage under a MaidUsagePlan that refers to the customer. Ordering is that context's responsibility, so CustomerManager stays small and reusable. The two contexts are linked by a reference, not a shared object, which means a screen showing both needs data from two services."
+     "a": {
+      "lead": "In **MaidOrderManager**, as a **MaidUsage** under a **MaidUsagePlan** that **refers to the customer**.",
+      "items": [
+       "**Why**: **ordering** is that context's responsibility → **CustomerManager stays small and reusable**",
+       "**The two contexts are linked by a reference**, not a **shared object**"
+      ],
+      "foot": "**Cost**: a screen showing both needs **data from two services**."
+     }
     }
    ],
    "visuals": [
@@ -994,11 +1176,37 @@
    "check": [
     {
      "q": "A platform's web, mobile, backend and partner services are built by different teams, each with its own way of calling the others and handling errors. What problem does this create, and what does the lecture recommend?",
-     "a": "Interactions are inconsistent, so every pair of systems needs custom integration, and the same behaviour is rebuilt many times. The lecture says the platform provider should use frameworks to standardise common behaviours and the interactions between services and clients. The cost is the design effort of the framework and less freedom for teams with unusual needs."
+     "a": {
+      "items": [
+       "**Problem**: **inconsistent interactions** → every pair of systems needs **custom integration**, and the **same behaviour is rebuilt** many times",
+       "**Lecture recommends**: the **platform provider** uses **frameworks** to **standardise common behaviours** and the **interactions between services and clients**"
+      ],
+      "foot": "**Cost**: the **design effort** of the framework and **less freedom** for teams with unusual needs."
+     }
     },
     {
      "q": "A ministry plans for each agency to build its own citizen-facing services and infrastructure, since each serves a different group. Using the SGTS case, argue against this, and say what is given up.",
-     "a": "Separate stacks duplicate effort, give citizens an inconsistent experience and make it hard to exchange data across agencies. SGTS puts a common platform of tools and services on common infrastructure, so agencies build faster, with a more secure, consistent and connected experience and easier data exchange for policy insights. Agencies give up some freedom and depend on the central platform's roadmap and availability."
+     "a": {
+      "items": [
+       {
+        "t": "**Against separate stacks**:",
+        "sub": [
+         "**duplicate effort**",
+         "**inconsistent experience** for citizens",
+         "hard to **exchange data across agencies**"
+        ]
+       },
+       {
+        "t": "**SGTS**: a **common platform** of tools and services on **common infrastructure** → agencies:",
+        "sub": [
+         "**build faster**",
+         "give a **more secure, consistent and connected experience**",
+         "get **easier data exchange** for **policy insights**"
+        ]
+       }
+      ],
+      "foot": "**Given up**: agencies lose some **freedom** and **depend on the central platform's roadmap and availability**."
+     }
     }
    ]
   },
@@ -1104,19 +1312,62 @@
    "check": [
     {
      "q": "Users of your framework fall into two groups: beginners who want one call to send a payment, and experts who need control over retries and the wire format. How do you serve both?",
-     "a": "Use a layered architecture: a lower layer with rich, low-level types exposes all the power, and a higher layer wraps it in convenient calls for the common case. That makes simple things simple and complex things possible, which a single-layer API cannot do. The cost is designing and keeping two consistent layers."
+     "a": {
+      "lead": "Use a **layered architecture**.",
+      "items": [
+       "**Lower layer** → **rich, low-level types**, exposes **all the power**",
+       "**Higher layer** → wraps it in **convenient calls** for the **common case**",
+       "**Result** → **simple things simple, complex things possible**, which a **single-layer API** cannot do"
+      ],
+      "foot": "**Cost**: designing and keeping **two consistent layers**."
+     }
     },
     {
      "q": "A three-person team is building a framework for its own applications; a 20-person team is building one for external partners. Which framework-design process model fits each?",
-     "a": "The small team fits the model in which designers alternate between building applications on the framework and consolidating good extensions, provided they can budget effort for revision. The larger group targeting external users fits the more popular model: designers design and test, application builders extend it and give feedback, and designers revise. That model only works if designers have enough time set aside for the revisions."
+     "a": {
+      "items": [
+       {
+        "t": "**Small team** (three people, own applications) → the model in which designers **alternate**",
+        "sub": [
+         "between **building applications on the framework**",
+         "and **consolidating good extensions**",
+         "provided they can **budget effort for revision**"
+        ]
+       },
+       {
+        "t": "**Larger group targeting external users** (20 people, partners) → the **more popular** model",
+        "sub": [
+         "**designers design and test**",
+         "**application builders extend it** and **give feedback**",
+         "**designers revise**"
+        ]
+       }
+      ],
+      "foot": "That model only works if designers have **enough time set aside for the revisions**."
+     }
     },
     {
      "q": "Partners are pressing for a framework, and the team wants to publish v1 to all of them after one internal application has used it. Advise.",
-     "a": "Hold back: one application is unlikely to be representative, and publishing while the design is still changing means unstable interfaces ripple into every partner's code. Validate it through a few small pilot projects and release once suggestions for improvement become rare. Partners wait longer but avoid painful rework, and 'you can always add, you cannot ever remove' argues against shipping half-finished parts just to have them."
+     "a": {
+      "lead": "**Hold back.**",
+      "items": [
+       "**One application** is unlikely to be **representative**",
+       "**Publishing while the design is still changing** → **unstable interfaces ripple** into every partner's code",
+       "**Instead**: validate through a **few small pilot projects**; **release once suggestions for improvement become rare**"
+      ],
+      "foot": "Partners **wait longer** but **avoid painful rework**, and **'you can always add, you cannot ever remove'** argues against shipping **half-finished parts** just to have them."
+     }
     },
     {
      "q": "A design review finds that one module of the framework names things and handles errors differently from the rest. Why is this a concern, and when could it be justified?",
-     "a": "Consistency across the framework promotes productivity and lets knowledge transfer from one part to another, and a deviation signals that the part is genuinely different. An accidental inconsistency sends that signal falsely and confuses users. It is justified only when the module really has a unique consideration, and then the difference should be deliberate and documented."
+     "a": {
+      "items": [
+       "**Consistency** across the framework → promotes **productivity** and lets **knowledge transfer** from one part to another",
+       "**A deviation signals** that the part is **genuinely different**",
+       "**Accidental inconsistency** → sends that signal **falsely** → **confuses users**"
+      ],
+      "foot": "**Justified only** when the module really has a **unique consideration** → then the difference should be **deliberate and documented**."
+     }
     }
    ],
    "visuals": [
@@ -1261,19 +1512,62 @@
    "check": [
     {
      "q": "To obey DRY, a teammate proposes a common-domain library of Customer, Order and Payment classes used by all 12 services. Do you agree?",
-     "a": "No. A shared domain library couples every service to it: one change forces coordinated changes and redeployments across all 12, which undermines independent release and blurs bounded contexts. The lecture's rule is not to violate DRY within a service but to be relaxed about DRY across services. The price is some duplicated code, which is cheaper than lockstep releases."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Shared domain library couples every service** to it → **one change** forces **coordinated changes and redeployments** across all **12**",
+       "→ undermines **independent release** and **blurs bounded contexts**",
+       "**Lecture's rule**: **don't violate DRY within a service**; be **relaxed about DRY across services**"
+      ],
+      "foot": "**Price**: some **duplicated code**, which is cheaper than **lockstep releases**."
+     }
     },
     {
      "q": "Your platform will publish client libraries for its APIs. Option A: the API team writes a smart client that handles discovery, failures and logging, and all callers must use it. Option B: thin SDKs maintained separately, with callers choosing when to upgrade. Choose.",
-     "a": "Option B for a platform with varied consumers. Like the AWS SDKs, it keeps clients loosely coupled to the server and lets them upgrade on their own schedule. Option A, the Netflix style, gets clients running quickly and reliably but couples them tightly, invites server logic into the client, and limits technology choices if it is mandated. A could suit a single organisation on one technology stack that values uniform resilience."
+     "a": {
+      "lead": "**Option B** for a platform with **varied consumers**.",
+      "items": [
+       "**Option B**, like the **AWS SDKs** → keeps clients **loosely coupled** to the server; they **upgrade on their own schedule**",
+       {
+        "t": "**Option A**, the **Netflix style**",
+        "sub": [
+         "gets clients running **quickly and reliably**",
+         "but **couples them tightly**, **invites server logic into the client**",
+         "and **limits technology choices** if it is **mandated**"
+        ]
+       }
+      ],
+      "foot": "**A** could suit a **single organisation** on **one technology stack** that values **uniform resilience**."
+     }
     },
     {
      "q": "After a fix to a shared library, three services that did not need the fix have to be rebuilt and redeployed, and a Python client cannot use the library at all. Which drawbacks are these, and what would reduce them?",
-     "a": "A new library version cannot be deployed without redeploying the whole process, and the library is language-specific, so technology heterogeneity is lost. Shared communication code is a coupling point, much like regenerated RMI stubs. Reduce it by not sharing code across service boundaries, separating transport-protocol code from service-specific code, and letting clients decide when to upgrade."
+     "a": {
+      "items": [
+       "**Drawback 1**: a **new library version** cannot be deployed **without redeploying the whole process**",
+       "**Drawback 2**: the library is **language-specific** → **technology heterogeneity is lost**",
+       "**Shared communication code** = a **coupling point**, much like **regenerated RMI stubs**",
+       {
+        "t": "**Reduce by**:",
+        "sub": [
+         "**not sharing code across service boundaries**",
+         "**separating transport-protocol code** from **service-specific code**",
+         "**letting clients decide when to upgrade**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "The team that owns the Order service also writes its client library, and order-validation rules have started to appear in the library. What is the risk?",
-     "a": "Server logic is creeping into the client library, which the lecture says is especially likely when the same team owns both. The server's cohesion breaks down, and fixing a rule now means changing and rolling out many clients instead of one service. Keep the rules in the service and limit the library to making calls convenient."
+     "a": {
+      "items": [
+       "**Server logic creeping into the client library** → especially likely when the **same team owns both** (lecture)",
+       "**Server's cohesion breaks down**",
+       "**Fixing a rule** → changing and **rolling out many clients** instead of **one service**"
+      ],
+      "foot": "**Fix**: keep the **rules in the service**; limit the library to **making calls convenient**."
+     }
     }
    ],
    "visuals": [
@@ -1314,27 +1608,165 @@
  "exam_angles": [
   {
    "q": "A ride-hailing platform's NotificationService defines every notification type itself, including TripAssigned, FareReceipt, DriverPayoutReady and PromoOffer, each with content specific to another service's responsibility. The company wants to reuse it in its new food-delivery platform without major adaptation. Identify the most likely cause of poor reusability, propose a countermeasure by revising the domain model, and give its main drawback.",
-   "a": "Cause: the service is not cohesive or single-minded. It holds knowledge that belongs to the Trip, Payment, Payout and Marketing contexts, so it is coupled to this platform's domain. Countermeasure: make it a generic subdomain that models only generic concepts, such as a notification with recipient, channel, template and delivery status, and move each specific notification's content into the context that owns the event, which requests sending through a published interface or by publishing domain events. Drawback: every owning service now has to compose its own notifications, and there is more integration and some repeated formatting code across services."
+   "a": {
+    "items": [
+     {
+      "t": "**Cause**: the service is **not cohesive or single-minded**",
+      "sub": [
+       "holds knowledge that belongs to the **Trip**, **Payment**, **Payout** and **Marketing** contexts",
+       "→ **coupled to this platform's domain**"
+      ]
+     },
+     {
+      "t": "**Countermeasure**: make it a **generic subdomain** that models only **generic concepts**",
+      "sub": [
+       "e.g. a **notification** with **recipient**, **channel**, **template** and **delivery status**",
+       "move each specific notification's **content** into the **context that owns the event**",
+       "that context **requests sending** through a **published interface** or by **publishing domain events**"
+      ]
+     },
+     {
+      "t": "**Drawback**",
+      "sub": [
+       "every **owning service** now has to **compose its own notifications**",
+       "**more integration** and some **repeated formatting code** across services"
+      ]
+     }
+    ],
+    "ordered": true
+   }
   },
   {
    "q": "A logistics company has one shared model in which 'Shipment' means a customer order in Sales, a truck load in Dispatch and a customs declaration in Compliance. One team of 25 owns the code and a single database. Propose a restructuring of contexts, teams, repositories and data, and name one new problem it creates.",
-   "a": "Split into Sales, Dispatch and Compliance bounded contexts, each with its own ubiquitous language, so 'Shipment' gets a precise meaning in each, for example Order, Load and Declaration, or the same name with separate models. Give each context one owning team, its own repository with code and acceptance and unit tests, its own schema and interfaces defined by that team. Integrate through explicit interfaces or domain events, not shared tables. New problem: a change that spans contexts now needs coordination and translation between models, with eventual consistency instead of one local transaction."
+   "a": {
+    "items": [
+     {
+      "t": "**Contexts**: split into **Sales**, **Dispatch** and **Compliance** bounded contexts, each with its **own ubiquitous language**",
+      "sub": [
+       "'Shipment' gets a **precise meaning** in each, e.g. **Order**, **Load** and **Declaration**",
+       "or the **same name** with **separate models**"
+      ]
+     },
+     {
+      "t": "**Teams, repositories, data**: per context",
+      "sub": [
+       "**one owning team**",
+       "its **own repository** with **code** and **acceptance and unit tests**",
+       "its **own schema**",
+       "**interfaces defined by that team**"
+      ]
+     },
+     "**Integration**: through **explicit interfaces** or **domain events**, **not shared tables**",
+     "**New problem**: a change that **spans contexts** needs **coordination and translation** between models → **eventual consistency** instead of **one local transaction**"
+    ],
+    "ordered": true
+   }
   },
   {
    "q": "In the Scrum tool, the product owner commits a backlog item to a sprint; it must already be scheduled for release, a quorum must approve, and if it is in another sprint it must be uncommitted first. Write the Given/When/Then specification, identify the aggregate or aggregates involved, and say how both sprints learn about the change.",
-   "a": "Given a backlog item scheduled for release, its product owner, a target sprint and quorum approval; When the product owner commits it to the sprint; Then it is committed to the sprint and a BacklogItemCommitted event is created. The commitment rule sits with the backlog item, the aggregate whose invariant it is, and the sprint is referenced rather than changed in the same transaction. The previous sprint and the new sprint learn of it by reacting to the domain event, which keeps each transaction small but makes their views eventually consistent. The scenario wording also becomes part of the context's ubiquitous language and doubles as an acceptance test."
+   "a": {
+    "items": [
+     {
+      "t": "**Given/When/Then**",
+      "sub": [
+       "**Given** a backlog item **scheduled for release**, its **product owner**, a **target sprint** and **quorum approval**",
+       "**When** the product owner **commits** it to the sprint",
+       "**Then** it is **committed to the sprint** and a **BacklogItemCommitted** event is created"
+      ]
+     },
+     {
+      "t": "**Aggregate**: the **backlog item**",
+      "sub": [
+       "the **commitment rule** sits with it, as the aggregate whose **invariant** it is",
+       "the **sprint** is **referenced**, not changed in the **same transaction**"
+      ]
+     },
+     {
+      "t": "**How both sprints learn**: the **previous sprint** and the **new sprint** react to the **domain event**",
+      "sub": [
+       "keeps each **transaction small**",
+       "but makes their views **eventually consistent**"
+      ]
+     }
+    ],
+    "ordered": true,
+    "foot": "The scenario wording also becomes part of the context's **ubiquitous language** and doubles as an **acceptance test**."
+   }
   },
   {
    "q": "Maid2Order adds corporate customers: a company subscribes to maid services for several offices and wants one monthly invoice. Using the lecture's seven-context solution, place the new concepts, justify each placement, and name one context that should not change.",
-   "a": "The corporate customer and its offices belong in CustomerManager as a kind of Customer, because that context holds the party's particulars. The per-office services stay in MaidOrderManager as MaidUsage under usage plans, because ordering rules live there. The single monthly invoice belongs in BillingManager, whose common Bill can consolidate the usage bills. PaymentManager should not change, since it simply settles a Bill. If corporate contracts turn out to have very different rules, a separate context may be justified, at the cost of more integration."
+   "a": {
+    "items": [
+     "**Corporate customer and its offices** → **CustomerManager**, as a **kind of Customer** → that context holds the **party's particulars**",
+     "**Per-office services** → stay in **MaidOrderManager** as **MaidUsage** under **usage plans** → **ordering rules** live there",
+     "**Single monthly invoice** → **BillingManager** → its **common Bill** can **consolidate the usage bills**",
+     "**Should not change: PaymentManager** → it simply **settles a Bill**"
+    ],
+    "ordered": true,
+    "foot": "If **corporate contracts** turn out to have **very different rules**, a **separate context** may be justified, at the cost of **more integration**."
+   }
   },
   {
    "q": "A platform's 15 services all need (a) customer-profile lookups, (b) the same request logging, tracing and configuration conventions, and (c) a Money value class. Choose service, framework or shared library for each, and state the risk of each choice.",
-   "a": "(a) A Customer service: reuse of a business capability, scaled and released independently; the risk is remote-call latency and failures, so callers need timeouts. (b) A framework, which standardises common behaviour for building many services; the risk is that it is expensive to design well and ties services to its release cycle. (c) A shared library for a small, stable value class; the risk is coupling and language lock-in, so share only stable technical types and keep domain models within each service."
+   "a": {
+    "items": [
+     {
+      "t": "**(a) A Customer service**",
+      "sub": [
+       "**reuse of a business capability**, **scaled and released independently**",
+       "**Risk**: **remote-call latency and failures** → callers need **timeouts**"
+      ]
+     },
+     {
+      "t": "**(b) A framework**",
+      "sub": [
+       "**standardises common behaviour** for **building many services**",
+       "**Risk**: **expensive to design well**; **ties services to its release cycle**"
+      ]
+     },
+     {
+      "t": "**(c) A shared library**",
+      "sub": [
+       "for a **small, stable value class**",
+       "**Risk**: **coupling** and **language lock-in** → share only **stable technical types**; keep **domain models within each service**"
+      ]
+     }
+    ],
+    "ordered": true
+   }
   },
   {
    "q": "A four-person platform team must deliver an integration framework for 30 partner companies in nine months. Propose the design process and the qualities you would check, and name the pitfall you fear most.",
-   "a": "Analyse example integrations from several representative partners, design scenario-first from sample client code, and build a whitebox version for them. Pilot it with two or three partners, collect feedback (the external-user process model), make the framework more blackbox, and release widely only when suggestions become rare. Check simplicity, low barrier of entry, self-documenting names, a layered design for power users, consistency, testability and backward compatibility. The biggest pitfall is premature release under schedule pressure with unrepresentative examples, since unstable interfaces would then ripple into 30 partners' code."
+   "a": {
+    "items": [
+     {
+      "t": "**Design process**",
+      "sub": [
+       "**analyse example integrations** from **several representative partners**",
+       "**design scenario-first** from **sample client code**",
+       "build a **whitebox** version for them",
+       "**pilot** it with **two or three partners**, **collect feedback** (the **external-user process model**)",
+       "make the framework **more blackbox**",
+       "**release widely** only when **suggestions become rare**"
+      ]
+     },
+     {
+      "t": "**Qualities to check**",
+      "sub": [
+       "**simplicity**, **low barrier of entry**, **self-documenting names**",
+       "a **layered design** for **power users**",
+       "**consistency**, **testability**, **backward compatibility**"
+      ]
+     },
+     {
+      "t": "**Biggest pitfall**: **premature release** under **schedule pressure** with **unrepresentative examples**",
+      "sub": [
+       "**unstable interfaces** would then **ripple into 30 partners' code**"
+      ]
+     }
+    ],
+    "ordered": true
+   }
   }
  ]
 }

@@ -65,11 +65,27 @@
    "check": [
     {
      "q": "An app moves from one server to 6 load-balanced instances in the cloud, and users start losing their shopping carts between requests. What changed in the persistence problem?",
-     "a": "Each instance was keeping cart state locally, which worked with one server but fails when requests land on different instances. In a distributed deployment you must decide which state is shared, where it lives and how it survives an instance failure. Moving carts to a shared store fixes it, at the cost of a network call per request and a new component that must be available."
+     "a": {
+      "items": [
+       "**One server**: each instance kept **cart state locally** → worked",
+       "**6 load-balanced instances**: requests land on **different instances** → local state fails, carts lost",
+       "**Distributed deployment** → you must decide which state is **shared**, **where it lives** and how it **survives an instance failure**",
+       "**Fix**: move carts to a **shared store**"
+      ],
+      "foot": "**Cost**: a **network call per request** + a **new component** that must be available."
+     }
     },
     {
      "q": "A team starting a new cloud app with modest load plans four different databases from day one 'because that's cloud-native'. Do you agree?",
-     "a": "No. Cloud deployment makes data distribution an explicit choice, not a requirement to use many stores. A single managed relational database may be enough at first. Add stores, partitioning or replication when access patterns, scale or availability requirements justify the extra operational complexity."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Cloud deployment** makes **data distribution** an **explicit choice**, not a requirement to use many stores",
+       "**Start simple**: a single **managed relational database** may be enough at first",
+       "**Add** stores, **partitioning** or **replication** when **access patterns**, **scale** or **availability requirements** justify it"
+      ],
+      "foot": "**Trade-off**: each addition brings **extra operational complexity**."
+     }
     }
    ]
   },
@@ -164,15 +180,37 @@
    "check": [
     {
      "q": "A legacy hierarchical database makes a new 'all orders for product X across customers' report very slow, because data is reached from customer records down. Why does the relational model help here?",
-     "a": "Navigational models tie access to the physical tree, so a query that doesn't follow the parent-child path has to traverse everything. The relational model separates how data is presented from how it is stored, so the same normalised tables can be joined in whatever direction a new query needs. The cost is join work at query time."
+     "a": {
+      "items": [
+       "**Navigational models** tie access to the **physical tree** → a query that doesn't follow the **parent-child path** has to **traverse everything**",
+       "**Relational model** separates how data is **presented** from how it is **stored**",
+       "→ the same **normalised tables** can be **joined** in whatever **direction** a new query needs"
+      ],
+      "foot": "**Cost**: **join work** at query time."
+     }
     },
     {
      "q": "A team wants an object database because 'mapping our class hierarchy to tables is painful'. What does history suggest, and what would you propose?",
-     "a": "Object databases did address the object-relational mismatch, but they never won market share, and ORM tools solved much of the mismatch on top of mature relational databases, for example by flattening an inheritance hierarchy into one table with a type column. Propose an ORM over a relational database, or a document store if the objects really are self-contained aggregates."
+     "a": {
+      "lead": "**Propose an ORM over a relational database**, or a **document store** if the objects really are **self-contained aggregates**.",
+      "items": [
+       "**History**: **object databases** did address the **object-relational mismatch**, but never won **market share**",
+       "**ORM tools** solved much of the mismatch on top of **mature relational databases**",
+       "**Example**: flatten an **inheritance hierarchy** into **one table** with a **type column**"
+      ]
+     }
     },
     {
      "q": "A finance system needs precise reporting, star schemas and strict integrity, and is expected to grow tenfold in 5 years. Is a relational database still a sound choice?",
-     "a": "Yes for the requirements: it is mature and precise, with normalisation, ACID and SQL for reporting. The risk is its main weakness, being expensive to scale for very large distributed workloads. Plan for that growth (bigger instances, read replicas, partitioning, or NewSQL later) rather than giving up integrity now."
+     "a": {
+      "lead": "**Yes** for the requirements.",
+      "items": [
+       "**Mature and precise**: **normalisation**, **ACID**, **SQL** for reporting",
+       "**Risk**: its main weakness → **expensive to scale** for very large **distributed workloads**",
+       "**Plan for that growth**: **bigger instances**, **read replicas**, **partitioning**, or **NewSQL** later"
+      ],
+      "foot": "Plan for growth rather than **giving up integrity** now."
+     }
     }
    ]
   },
@@ -269,15 +307,37 @@
    "check": [
     {
      "q": "Using the search example from the lecture, explain why a relational database was a poor fit for a keyword-to-URL lookup at web scale.",
-     "a": "The workload is a huge, read-mostly lookup spread across many servers, with no need for multi-record transactions, many entities or integrity constraints. A relational database would provide features the workload doesn't use while making the distribution it does need costly. Where joins and transactions matter, the balance reverses."
+     "a": {
+      "items": [
+       "**Workload**: a huge, **read-mostly lookup** spread across **many servers**",
+       "**No need** for **multi-record transactions**, many **entities** or **integrity constraints**",
+       "**Relational database** → provides **features the workload doesn't use** + makes the **distribution** it does need **costly**"
+      ],
+      "foot": "Where **joins and transactions** matter, the **balance reverses**."
+     }
     },
     {
      "q": "An IoT platform ingests 50,000 sensor readings a second, and each device type sends a different set of fields. Which of the V's are causing pressure, and what do they point to?",
-     "a": "Velocity (real-time ingestion needs distributed persistence for throughput), Volume (scale out on commodity or cloud servers, not one big server) and Variety (fields differ by device, so a non-static schema helps). Together they point to a distributed NoSQL store for the raw readings. Keep any transactional data, such as billing, wherever its integrity needs are best met."
+     "a": {
+      "lead": "**Velocity, Volume, Variety** together point to a **distributed NoSQL store** for the **raw readings**.",
+      "items": [
+       "**Velocity**: **real-time ingestion** needs **distributed persistence** for **throughput**",
+       "**Volume**: **scale out** on **commodity or cloud servers**, not one big server",
+       "**Variety**: fields differ by device → a **non-static schema** helps"
+      ],
+      "foot": "Keep any **transactional data**, such as **billing**, wherever its **integrity needs** are best met."
+     }
     },
     {
      "q": "A 5-person team proposes a graph database, a document store, a cache and a relational database for an app with 2,000 users. When is polyglot persistence a bad idea, and what would you do?",
-     "a": "When the gain from a better storage fit is smaller than the cost of programming and operating each extra technology, which is likely here given the team size and load. Start with fewer stores, add one only when an access pattern clearly needs it, and wrap data access in services so a later change has limited impact."
+     "a": {
+      "lead": "**Bad idea when** the **gain** from a better **storage fit** is smaller than the **cost of programming and operating** each extra technology, likely here given the **team size** and **load**.",
+      "items": [
+       "**Start with fewer stores**",
+       "**Add one** only when an **access pattern** clearly needs it",
+       "**Wrap data access in services** → a later change has **limited impact**"
+      ]
+     }
     }
    ]
   },
@@ -346,15 +406,36 @@
    "check": [
     {
      "q": "Invoices are always read and written as a whole, with header and line items together, and the format varies by country. Document store or normalised relational tables?",
-     "a": "A document store: each invoice is a natural aggregate that maps to one document, so reads need no joins and the varying fields don't need schema changes. You give up easy cross-invoice constraints and ad-hoc joins, for example reporting across customers and products, which may need a separate reporting store."
+     "a": {
+      "lead": "**A document store.**",
+      "items": [
+       "**Natural aggregate**: each invoice **maps to one document** → reads need **no joins**",
+       "**Varying fields** → no **schema changes** needed"
+      ],
+      "foot": "**Give up**: easy **cross-invoice constraints** and **ad-hoc joins** (e.g. **reporting across customers and products**) → may need a separate **reporting store**."
+     }
     },
     {
      "q": "A social app's 'people you may know' query joins the friendships table to itself three levels deep and is slow. Which pattern fits, and what should you check before switching?",
-     "a": "A graph store, because the question is relationship traversal across nodes and edges rather than repeated joins. Check that the real workload is traversal-heavy and benchmark it with realistic data and indexes; graph stores are not universally faster than joins. Keep other data, such as profiles, in whatever store suits it."
+     "a": {
+      "lead": "**A graph store**: the question is **relationship traversal** across **nodes and edges**, rather than **repeated joins**.",
+      "items": [
+       "**Check** that the real workload is **traversal-heavy**",
+       "**Benchmark** it with **realistic data** and **indexes** → graph stores are **not universally faster** than joins",
+       "**Keep other data**, such as **profiles**, in whatever store suits it"
+      ]
+     }
     },
     {
      "q": "In a column-family store, customer rows have a profile family and an order-history family. A screen reads only the profile. Why does the grouping matter?",
-     "a": "Columns in a family are assumed to be read together and are stored together, so reading the profile doesn't pull the large order history. Rows can stay sparse, since customers without orders cost nothing. Choose families from the access patterns, because a screen that needs both families in one read loses this benefit."
+     "a": {
+      "items": [
+       "**Column family**: columns assumed to be **read together** are **stored together** → reading the profile doesn't pull the large **order history**",
+       "**Sparse rows**: customers **without orders cost nothing**",
+       "**Choose families from the access patterns**"
+      ],
+      "foot": "A screen that needs **both families in one read** loses this benefit."
+     }
     }
    ],
    "visuals": [
@@ -452,19 +533,54 @@
    "check": [
     {
      "q": "A game needs a real-time global leaderboard updated thousands of times a second. Which store type fits, and what would you keep elsewhere?",
-     "a": "An in-memory key-value store with sorted structures such as rankings, because a leaderboard is direct keyed access that must be very fast. Keep durable data such as player accounts and purchases in a durable store, since a cache can lose data on failure unless persistence is configured."
+     "a": {
+      "lead": "**An in-memory key-value store** with **sorted structures** such as **rankings**.",
+      "items": [
+       "**Why**: a leaderboard is **direct keyed access** that must be **very fast**",
+       "**Keep elsewhere**: **durable data** such as **player accounts** and **purchases** → a **durable store**"
+      ],
+      "foot": "A **cache can lose data on failure** unless **persistence is configured**."
+     }
     },
     {
      "q": "A team picks a column-family store because 'we'll have terabytes of data'. Is size a good reason, and what should decide it?",
-     "a": "No. Data size alone doesn't decide the store family. Decide from the queries and update patterns: column-family for row-key access to large sparse records grouped into families, documents for nested aggregates, relational for joins and constraints. Model the access patterns, then benchmark the real queries."
+     "a": {
+      "lead": "**No. Data size alone** doesn't decide the **store family**.",
+      "items": [
+       {
+        "t": "**Decide from** the **queries** and **update patterns**",
+        "sub": [
+         "**Column-family**: **row-key access** to large **sparse records** grouped into families",
+         "**Documents**: **nested aggregates**",
+         "**Relational**: **joins** and **constraints**"
+        ]
+       },
+       "**Model the access patterns**, then **benchmark the real queries**"
+      ]
+     }
     },
     {
      "q": "A payments company needs SQL, strong ACID transactions and horizontal scale across regions. Is NewSQL the obvious answer?",
-     "a": "It is a candidate, because NewSQL aims to combine relational and SQL semantics with distributed scale. Evaluate the coordination cost: distributed guarantees add latency, especially across regions. Compare it with a sharded relational design and with NoSQL products that offer transactions at the scope you need."
+     "a": {
+      "lead": "**A candidate**, not the obvious answer.",
+      "items": [
+       "**NewSQL** aims to combine **relational and SQL semantics** with **distributed scale**",
+       "**Evaluate the coordination cost**: **distributed guarantees** add **latency**, especially **across regions**",
+       "**Compare** with a **sharded relational design** and with **NoSQL products** that offer **transactions** at the **scope** you need"
+      ]
+     }
     },
     {
      "q": "An analyst asks to run sales reports on the operational column-family store 'because both are columnar, like the warehouse'. What is the misunderstanding?",
-     "a": "A column-family store groups sparse, row-keyed records for operational access. An analytical columnar warehouse is a SQL store built for large scans and aggregations. They solve different workloads, so heavy reports on the operational store would perform poorly and compete with live traffic. Feed a warehouse for analytics instead."
+     "a": {
+      "lead": "They **solve different workloads**.",
+      "items": [
+       "**Column-family store**: groups **sparse, row-keyed records** for **operational access**",
+       "**Analytical columnar warehouse**: a **SQL store** built for **large scans** and **aggregations**",
+       "**Heavy reports** on the operational store → **perform poorly** + **compete with live traffic**"
+      ],
+      "foot": "**Feed a warehouse** for analytics instead."
+     }
     }
    ],
    "visuals": [
@@ -595,19 +711,50 @@
    "check": [
     {
      "q": "An app is overwhelmed by writes. A teammate proposes adding read replicas with master-slave replication. Will it help? What would?",
-     "a": "No. Replicas add read capacity, but every write still goes to the single leader, so the write bottleneck stays. Shard by a suitable key so independent writes go to different servers. Peer-to-peer replication may help some workloads, but each update still has to propagate and may need conflict handling."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Replicas** add **read capacity**, but **every write** still goes to the **single leader** → **write bottleneck stays**",
+       "**Shard** by a suitable key → **independent writes** go to **different servers**",
+       "**Peer-to-peer replication** may help some workloads, but each update still has to **propagate** and may need **conflict handling**"
+      ]
+     }
     },
     {
      "q": "A regional retailer stores Singapore and Malaysia orders together and has one global product list. How would you distribute each kind of data?",
-     "a": "Shard orders by country so each node handles its own reads and writes, spreading both volume and write load. Replicate the product list to every node, because it is read-heavy and shared, and single-leader replication fits since writes are rare. Cross-country reports now need to query several shards."
+     "a": {
+      "items": [
+       "**Orders** → **shard by country**: each node handles its **own reads and writes**, spreading both **volume** and **write load**",
+       "**Product list** → **replicate to every node**: **read-heavy** and **shared**; **single-leader replication** fits since **writes are rare**"
+      ],
+      "foot": "**Trade-off**: **cross-country reports** now need to **query several shards**."
+     }
     },
     {
      "q": "A bank's product team wants eventual consistency 'everywhere, for scale'. Where would you allow it and where not?",
-     "a": "Keep authoritative balances and transfers transactional (ACID), because temporarily inconsistent balances are wrong and costly. Allow eventual consistency (BASE) for derived views such as an activity feed, analytics or a product listing, where a briefly stale read does little harm. State the consistency requirement per operation instead of setting one policy for the whole system."
+     "a": {
+      "items": [
+       "**ACID (transactional)**: **authoritative balances** and **transfers** → **temporarily inconsistent** balances are **wrong and costly**",
+       "**Eventual consistency (BASE)**: **derived views** such as an **activity feed**, **analytics** or a **product listing** → a **briefly stale read** does little harm"
+      ],
+      "foot": "State the **consistency requirement per operation** instead of setting **one policy** for the whole system."
+     }
     },
     {
      "q": "After switching to peer-to-peer replication, two regions accept conflicting updates to the same customer record during a network split. What caused this, and what are the options?",
-     "a": "Multiple writers with asynchronous propagation favour availability, so both regions accepted writes and the copies diverged. Options are a conflict-resolution rule such as last-writer-wins or merging, routing each record's writes to a home region, or coordinated writes for that data, which cost latency and availability during a split."
+     "a": {
+      "items": [
+       "**Cause**: **multiple writers** + **asynchronous propagation** favour **availability** → both regions **accepted writes** and the **copies diverged**",
+       {
+        "t": "**Options**",
+        "sub": [
+         "**Conflict-resolution rule**: **last-writer-wins** or **merging**",
+         "**Home region**: route each record's writes to it",
+         "**Coordinated writes** for that data → cost **latency** and **availability during a split**"
+        ]
+       }
+      ]
+     }
     }
    ],
    "visuals": [
@@ -713,15 +860,34 @@
    "check": [
     {
      "q": "A load-balanced web fleet must share user-uploaded files between instances. Which storage fits, and why not a block volume attached to one VM?",
-     "a": "A network file system if the app needs shared file semantics, or object storage if it can use object APIs, which also lets web and mobile clients fetch the files. A block volume is normally a disk for one attached VM, not a shared filesystem, and concurrent writers need explicit support and coordination."
+     "a": {
+      "lead": "**A network file system** if the app needs **shared file semantics**, or **object storage** if it can use **object APIs**.",
+      "items": [
+       "**Object storage** also lets **web and mobile clients** fetch the files",
+       "**Not a block volume**: normally a **disk for one attached VM**, not a **shared filesystem**",
+       "**Concurrent writers** on it need **explicit support** and **coordination**"
+      ]
+     }
     },
     {
      "q": "A team stores its database files on the VM's local instance disk because it is fastest. What is the risk, and what would you change?",
-     "a": "Instance-store disk is ephemeral: data can disappear on stop, termination or host failure. Put database files on a persistent block volume with suitable retention and backups, or use a managed database. Keep local disk for scratch data that can be regenerated."
+     "a": {
+      "items": [
+       "**Risk**: **instance-store disk** is **ephemeral** → data can disappear on **stop**, **termination** or **host failure**",
+       "**Change**: put database files on a **persistent block volume** with suitable **retention** and **backups**, or use a **managed database**",
+       "**Local disk**: keep for **scratch data** that can be **regenerated**"
+      ]
+     }
     },
     {
      "q": "Images must be served to a web app, a mobile app and a partner's batch job. Why is object storage the natural fit?",
-     "a": "Object storage is reached through a standard web API, so every channel and service model uses it the same way without mounting a disk. It is also the most flexible and widely used option. The trade-off is that it isn't a normal filesystem, so apps that expect file locking or in-place edits need changes."
+     "a": {
+      "items": [
+       "**Object storage** is reached through a **standard web API** → every **channel** and **service model** uses it the same way, **without mounting a disk**",
+       "Also the **most flexible** and **widely used** option"
+      ],
+      "foot": "**Trade-off**: it isn't a **normal filesystem** → apps that expect **file locking** or **in-place edits** need changes."
+     }
     }
    ],
    "visuals": [
@@ -825,11 +991,25 @@
    "check": [
     {
      "q": "A team wants to install a database on a VM instead of using the provider's managed relational database 'to keep control'. When is that justified?",
-     "a": "When compatibility, a needed extension or version, or a capability missing from the managed option justifies the operating burden. Otherwise managed is the better default: it offloads much maintenance, patching, backup and availability work. Either way, the customer still designs access, schemas, capacity and recovery."
+     "a": {
+      "lead": "**Justified when compatibility**, a needed **extension or version**, or a **capability missing** from the managed option justifies the **operating burden**.",
+      "items": [
+       "**Otherwise managed is the better default**: offloads much **maintenance**, **patching**, **backup** and **availability** work",
+       "**Either way**, the customer still designs **access**, **schemas**, **capacity** and **recovery**"
+      ]
+     }
     },
     {
      "q": "An e-commerce app needs a session cache, a catalogue with varying product attributes, sales analytics and 'customers who bought this also bought' recommendations. Match each to a store type and give the reason.",
-     "a": "Session cache: in-memory key-value, because it is fast keyed access to disposable data. Catalogue: document or key-value, because attributes vary per product and items are read whole. Analytics: a columnar SQL warehouse for scans and aggregations. Recommendations: a graph store for relationship traversal. Each extra store adds operational cost, so drop one if a simpler store meets the need."
+     "a": {
+      "items": [
+       "**Session cache** → **in-memory key-value**: **fast keyed access** to **disposable data**",
+       "**Catalogue** → **document or key-value**: **attributes vary** per product and items are **read whole**",
+       "**Analytics** → **columnar SQL warehouse**: **scans and aggregations**",
+       "**Recommendations** → **graph store**: **relationship traversal**"
+      ],
+      "foot": "Each extra store adds **operational cost** → **drop one** if a **simpler store** meets the need."
+     }
     }
    ]
   }
@@ -837,23 +1017,106 @@
  "exam_angles": [
   {
    "q": "Design the persistence strategy for a cloud-native e-commerce platform with a catalogue (varying attributes), carts that must survive a cache failure, orders, recommendations and product images. Justify each store and say which one you would drop if the team were only 4 people.",
-   "a": "Orders: a managed relational database for ACID transactions. Catalogue: a document store for flexible attributes read as whole items. Carts: a durable key-value store, or the relational database, with a cache in front, since carts must survive cache loss. Recommendations: a graph store for traversal. Images: object storage served through a CDN. With 4 people, drop the graph store and compute recommendations in batch from the order database, and consider keeping the catalogue relational, because each extra store adds programming and operational complexity."
+   "a": {
+    "items": [
+     "**Orders** → **managed relational database**: **ACID transactions**",
+     "**Catalogue** → **document store**: **flexible attributes** read as **whole items**",
+     "**Carts** → **durable key-value store**, or the relational database, with a **cache in front** → carts must **survive cache loss**",
+     "**Recommendations** → **graph store**: **traversal**",
+     "**Images** → **object storage** served through a **CDN**",
+     {
+      "t": "**With 4 people**",
+      "sub": [
+       "**Drop the graph store** → compute recommendations in **batch** from the **order database**",
+       "Consider keeping the **catalogue relational**"
+      ]
+     }
+    ],
+    "foot": "Each extra store adds **programming and operational complexity**."
+   }
   },
   {
    "q": "A regional retailer's single relational database can't keep up with growing order writes across Singapore and Malaysia. A teammate proposes read replicas. Evaluate that, then propose how to scale the data tier and name two side effects to monitor.",
-   "a": "Read replicas won't fix a write bottleneck, because all writes still go to one leader. Shard orders by country so each node serves its own reads and writes, and replicate the shared, read-heavy product list to both nodes with single-leader replication. Keep payment data under ACID and accept eventual consistency only where the business allows. Monitor replica lag on the product list (stale prices) and cross-shard query cost for regional reports."
+   "a": {
+    "items": [
+     {
+      "t": "**Read replicas? No**",
+      "sub": [
+       "Won't fix a **write bottleneck** → all writes still go to **one leader**"
+      ]
+     },
+     {
+      "t": "**Scale the data tier**",
+      "sub": [
+       "**Shard orders by country** → each node serves its **own reads and writes**",
+       "**Replicate** the **shared, read-heavy product list** to both nodes with **single-leader replication**",
+       "Keep **payment data under ACID**; accept **eventual consistency** only where the **business allows**"
+      ]
+     },
+     {
+      "t": "**Two side effects to monitor**",
+      "sub": [
+       "**Replica lag** on the product list (**stale prices**)",
+       "**Cross-shard query cost** for **regional reports**"
+      ]
+     }
+    ],
+    "ordered": true
+   }
   },
   {
    "q": "Recommend data stores for a global banking ledger and for a social media status feed, and explain why the SQL versus NoSQL label alone doesn't settle the choice.",
-   "a": "The ledger needs transactional invariants and durability, so a relational or NewSQL store fits, weighing distributed coordination cost against scale needs. The feed tolerates briefly stale replicas and needs high write and read scale, so a distributed NoSQL store with eventual consistency fits. The label doesn't settle it, because NoSQL products vary in transaction scope and relational systems can distribute. Decide from per-operation consistency requirements, access patterns and coordination cost."
+   "a": {
+    "items": [
+     "**Ledger** → a **relational or NewSQL store** fits: needs **transactional invariants** and **durability**; weigh **distributed coordination cost** against **scale needs**",
+     "**Feed** → a **distributed NoSQL store** with **eventual consistency**: tolerates **briefly stale replicas**, needs high **write and read scale**",
+     {
+      "t": "**Why the label doesn't settle it**",
+      "sub": [
+       "**NoSQL products vary** in **transaction scope**",
+       "**Relational systems can distribute**"
+      ]
+     }
+    ],
+    "foot": "Decide from **per-operation consistency requirements**, **access patterns** and **coordination cost**."
+   }
   },
   {
    "q": "A manager says 'NoSQL replaced relational databases, so all new systems should be NoSQL.' Using the V's of big data and the web-search example, explain why NoSQL emerged and argue whether the claim holds.",
-   "a": "NoSQL emerged because variety needed flexible schemas, volume needed scale-out on commodity servers, and velocity needed distributed throughput. The web-search lookup needed none of the joins or multi-record transactions that relational systems provide. The claim doesn't hold: relational databases remain the natural fit for constraints, joins and ACID transactions. Polyglot persistence uses each model where it fits and accepts the complexity only when the benefit is larger."
+   "a": {
+    "items": [
+     {
+      "t": "**Why NoSQL emerged**",
+      "sub": [
+       "**Variety** → needed **flexible schemas**",
+       "**Volume** → needed **scale-out** on **commodity servers**",
+       "**Velocity** → needed **distributed throughput**"
+      ]
+     },
+     "**Web-search lookup**: needed none of the **joins** or **multi-record transactions** that relational systems provide",
+     "**Claim doesn't hold**: relational databases remain the **natural fit** for **constraints**, **joins** and **ACID transactions**",
+     "**Polyglot persistence**: use **each model where it fits**"
+    ],
+    "foot": "Accept the **complexity** only when the **benefit is larger**."
+   }
   },
   {
    "q": "An image-processing service has 10 worker VMs. Choose storage for temporary processing scratch space, the job database's data files, configuration shared by all workers, and finished images served to web and mobile apps. Then say what breaks if the shared configuration is put on one VM's block volume.",
-   "a": "Scratch: ephemeral instance disk, since it can be regenerated. Database files: a persistent block volume with retention and backups, or a managed database. Shared configuration: a network file system. Finished images: object storage reached through its API by both apps. A block volume is normally attached to one VM, so the other 9 workers couldn't read the configuration, and that VM's failure would take the configuration with it."
+   "a": {
+    "items": [
+     "**Scratch** → **ephemeral instance disk**: it can be **regenerated**",
+     "**Database files** → **persistent block volume** with **retention** and **backups**, or a **managed database**",
+     "**Shared configuration** → **network file system**",
+     "**Finished images** → **object storage**, reached through its **API** by both apps",
+     {
+      "t": "**Shared config on one VM's block volume**",
+      "sub": [
+       "A block volume is normally **attached to one VM** → the **other 9 workers** couldn't read the configuration",
+       "**That VM's failure** would take the configuration with it"
+      ]
+     }
+    ]
+   }
   }
  ]
 }

@@ -121,15 +121,38 @@
    "check": [
     {
      "q": "A photo app expects 50,000 uploads a day at an average of 3 MB, and keeps 3 copies of each photo. Apply the capacity-planning model to estimate storage growth.",
-     "a": "Forecast workload: 50,000 uploads a day. Workload-to-resource relationship: 3 MB x 3 copies = 9 MB per upload. Derived capacity: about 450 GB a day (decimal units), or roughly 164 TB a year, plus indexes, logs, overhead and headroom. Each input is an assumption to monitor: if the upload rate or photo size grows, the estimate scales with it."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Forecast workload**: 50,000 uploads a day",
+       "**Workload-to-resource relationship**: 3 MB x 3 copies = **9 MB per upload**",
+       "**Derived capacity**: about **450 GB a day** (decimal units), or roughly **164 TB a year**",
+       "**Plus** indexes, logs, overhead and headroom"
+      ],
+      "foot": "Each input is an **assumption to monitor**: if the upload rate or photo size grows, the estimate scales with it."
+     }
     },
     {
      "q": "CPU graphs have risen steadily for months. The business asks what happens if sign-ups double. Can you answer from the system metrics alone?",
-     "a": "No. CPU shows the symptom, not the driver. You need application-level metrics (sign-ups, uploads, API calls per key) and how each relates to resource use, so you can turn a business forecast into a resource forecast. Start collecting them alongside the system metrics, and fit the relationship from history."
+     "a": {
+      "lead": "**No.** CPU shows the **symptom**, not the **driver**.",
+      "items": [
+       "You need **application-level metrics**: sign-ups, uploads, API calls per key",
+       "**How each relates to resource use** → turn a **business forecast** into a **resource forecast**",
+       "**Start collecting** them alongside the system metrics, and **fit the relationship from history**"
+      ]
+     }
     },
     {
      "q": "A new system has no production data yet, and the vendor publishes a benchmark for similar hardware. Which data source would you use, and what is the risk?",
-     "a": "Use the vendor benchmark as a starting point, and self-benchmark the significant scenarios if you can. The risk is that the vendor's workload and configuration differ from yours, so its numbers may not transfer. Once the system runs, switch to monitoring data, which is the best source."
+     "a": {
+      "lead": "**Use the vendor benchmark as a starting point.**",
+      "items": [
+       "**Self-benchmark** the significant scenarios if you can",
+       "**Risk**: the vendor's **workload and configuration** differ from yours → its numbers may not transfer",
+       "Once the system runs → switch to **monitoring data**, which is the **best source**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -221,11 +244,29 @@
    "check": [
     {
      "q": "An application writes 20 GB of logs a day and must keep them for 90 days. The busiest day so far produced 35 GB. How much log storage do you plan for?",
-     "a": "Disk is cumulative: plan for everything retained over 90 days, not the peak day. At the average, 20 x 90 = 1.8 TB. Since some days reach 35 GB, add headroom or forecast growth in the daily rate, plus overhead for indexes and any replicas."
+     "a": {
+      "lead": "**Disk is cumulative**: plan for everything retained over 90 days, not the peak day.",
+      "ordered": true,
+      "items": [
+       "**At the average**: 20 x 90 = **1.8 TB**",
+       "**Some days reach 35 GB** → add **headroom** or forecast **growth in the daily rate**",
+       "**Plus overhead** for indexes and any replicas"
+      ]
+     }
     },
     {
      "q": "Transactions start at 1M a month and grow 10% a month, with 24-month retention and 1 MB per record. A teammate estimates 24 x 1M x 1 MB = 24 TB. Do you agree?",
-     "a": "No. That ignores growth. Monthly volume is a geometric series: 1M x (1.1^24 - 1) / 0.1, about 88.5M transactions, or about 88.5 TB, so the teammate's figure is less than a third of the need. Add fixed overhead, indexes and replicas, and revisit the forecast as actual growth is observed."
+     "a": {
+      "lead": "**No**: that ignores growth.",
+      "ordered": true,
+      "items": [
+       "Monthly volume is a **geometric series**: 1M x (1.1^24 - 1) / 0.1",
+       "→ about **88.5M transactions**, or about **88.5 TB**",
+       "→ the teammate's figure is **less than a third** of the need",
+       "**Add** fixed overhead, indexes and replicas"
+      ],
+      "foot": "**Revisit the forecast** as actual growth is observed."
+     }
     },
     {
      "q": "After two years, does 24-month retention mean a growing system's storage stops growing?",
@@ -233,7 +274,15 @@
     },
     {
      "q": "Your 88.5 TB data estimate covers records only. The database adds indexes of about 30% of data size and keeps one full replica. What is the real storage need?",
-     "a": "88.5 x 1.3 for indexes is about 115 TB; doubled for the replica, about 230 TB, plus the fixed OS and database baseline and a buffer. Size data feeds and overheads separately and state the assumptions, so each can be revised."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Indexes**: 88.5 x 1.3 → about **115 TB**",
+       "**Replica**: doubled → about **230 TB**",
+       "**Plus** the fixed OS and database baseline and a buffer"
+      ],
+      "foot": "**Size data feeds and overheads separately** and state the assumptions, so each can be revised."
+     }
     }
    ]
   },
@@ -312,15 +361,36 @@
    "check": [
     {
      "q": "Storage use rises steadily month by month. A different metric, order volume, spikes every December. Which forecasting approach suits each?",
-     "a": "Storage is trending, so fit a regression (linear or exponential) and extrapolate. Orders are seasonal, so model the yearly cycle explicitly, for example by comparing each December with previous ones. A simple moving average or exponential smoothing would smooth out the December spike rather than predict it."
+     "a": {
+      "items": [
+       "**Storage is trending** → fit a **regression** (linear or exponential) and extrapolate",
+       "**Orders are seasonal** → model the **yearly cycle** explicitly, for example by comparing each December with previous ones"
+      ],
+      "foot": "A simple **moving average** or **exponential smoothing** would smooth out the December spike rather than predict it."
+     }
     },
     {
      "q": "After a merger, traffic stepped up permanently by 40%. Your exponential-smoothing forecast with alpha = 0.1 still lags far behind. Why, and what would you change?",
-     "a": "A low alpha gives little weight to the latest observation, so the forecast adjusts slowly to a real level change. Raise alpha so it reacts faster, or refit from the post-merger data. A high alpha also chases noise, so choose it for how quickly real change happens."
+     "a": {
+      "items": [
+       "**Why**: a **low alpha** gives little weight to the latest observation → the forecast adjusts slowly to a real **level change**",
+       "**Fix**: **raise alpha** so it reacts faster, or **refit** from the post-merger data"
+      ],
+      "foot": "A **high alpha** also chases noise, so choose it for how quickly real change happens."
+     }
     },
     {
      "q": "A linear fit says the disk fills on day 70 and an exponential fit says day 55. Today is day 20, and procurement takes 7 weeks. When do you order?",
-     "a": "Now. Seven weeks is 49 days. The linear forecast leaves 50 days, with almost no margin, and the exponential one leaves 35, which is already too late. Both are extrapolations with error, so plan on the earlier date plus a buffer, and keep comparing the fits with new readings."
+     "a": {
+      "lead": "**Order now.**",
+      "ordered": true,
+      "items": [
+       "**Lead time**: seven weeks is **49 days**",
+       "**Linear forecast** leaves **50 days** → almost no margin",
+       "**Exponential forecast** leaves **35** → already **too late**"
+      ],
+      "foot": "Both are **extrapolations with error**, so plan on the **earlier date plus a buffer**, and keep comparing the fits with new readings."
+     }
     }
    ],
    "visuals": [
@@ -433,19 +503,47 @@
    "check": [
     {
      "q": "A service averages 200 requests/s, peaks at 900 requests/s on Monday mornings, and its data grows by 5 GB a day. How do you size the servers and the disk?",
-     "a": "Servers are peak-driven: size for 900 requests/s at the response target, plus headroom for a node failure. Average load is irrelevant to that. Disk is cumulative: size for 5 GB a day over the retention period, plus overhead. Using the average for servers, or the peak for disk, would get both wrong."
+     "a": {
+      "items": [
+       "**Servers are peak-driven**: size for **900 requests/s** at the response target, plus **headroom for a node failure**; average load is irrelevant to that",
+       "**Disk is cumulative**: size for **5 GB a day** over the **retention period**, plus overhead"
+      ],
+      "foot": "Using the average for servers, or the peak for disk, would get both wrong."
+     }
     },
     {
      "q": "The benchmark shows 17.04 tps on 1 machine, 30.81 on 2 and 55.76 on 4. A teammate plans 8 machines for 136 tps. Do you agree?",
-     "a": "No. Each doubling has given about 1.8x, not 2x, so 8 machines might give about 101 tps if the trend holds, and it may get worse. The application servers' CPU was already at 95-98% at maximum load. Benchmark 8 machines, or fit a scalability model, before committing."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Each doubling** has given about **1.8x**, not 2x",
+       "→ 8 machines might give about **101 tps** if the trend holds, and it may get worse",
+       "The **application servers' CPU** was already at **95-98%** at maximum load"
+      ],
+      "foot": "**Benchmark 8 machines**, or fit a **scalability model**, before committing."
+     }
     },
     {
      "q": "A reporting scenario is 4 times slower than the reference benchmark of 55.76 tps on 4 machines, and the business needs 30 report requests/s. Is 4 machines enough?",
-     "a": "No. Estimated throughput is 55.76 / 4, about 13.9 tps, less than half the need. Adding machines will not scale linearly, so reduce the scenario's cost (precompute, cache, optimise queries) as well as adding capacity, and benchmark the actual report."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Estimated throughput**: 55.76 / 4 → about **13.9 tps**, less than half the need",
+       "Adding machines will **not scale linearly**"
+      ],
+      "foot": "**Reduce the scenario's cost** (precompute, cache, optimise queries) as well as adding capacity, and **benchmark the actual report**."
+     }
     },
     {
      "q": "At maximum TPS, the application servers' CPU sits at 97% and the database server's at 2%. A teammate proposes a bigger database server. Respond.",
-     "a": "Disagree. The application tier is the bottleneck, and the database is almost idle. A bigger database adds nothing until the application tier is scaled out or made cheaper per request. Re-measure afterwards, because the bottleneck may then move to the database."
+     "a": {
+      "lead": "**Disagree.**",
+      "items": [
+       "The **application tier is the bottleneck**; the database is almost idle",
+       "A bigger database adds nothing until the application tier is **scaled out** or made **cheaper per request**"
+      ],
+      "foot": "**Re-measure** afterwards, because the bottleneck may then **move to the database**."
+     }
     }
    ],
    "visuals": [
@@ -570,19 +668,48 @@
    "check": [
     {
      "q": "A workload is 90% parallel. Going from 10 to 20 servers, how much speedup do you gain, and what is the ceiling?",
-     "a": "Amdahl's law: S(10) = 1 / (0.1 + 0.09), about 5.26; S(20) = 1 / (0.1 + 0.045), about 6.90. Doubling the servers gives only about 31% more speedup, and the ceiling is 1 / (1 - 0.9) = 10, however many you add. Reducing the serial part pays more than adding servers."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Amdahl's law**: S(10) = 1 / (0.1 + 0.09) → about **5.26**",
+       "S(20) = 1 / (0.1 + 0.045) → about **6.90**",
+       "→ doubling the servers gives only about **31% more speedup**",
+       "**Ceiling** = 1 / (1 - 0.9) = **10**, however many you add"
+      ],
+      "foot": "**Reducing the serial part** pays more than adding servers."
+     }
     },
     {
      "q": "Throughput rises up to 8 nodes, then falls at 12. Which model explains this, and what does it say about the cause?",
-     "a": "USL, not Amdahl: Amdahl's speedup flattens but never falls. The decline comes from the crosstalk (coherency) term, kappa: nodes spend more and more effort coordinating with each other. Fit sigma and kappa to the measurements to find the peak, and reduce cross-node coordination if you need to scale further."
+     "a": {
+      "lead": "**USL, not Amdahl**: Amdahl's speedup flattens but never falls.",
+      "items": [
+       "**Cause of the decline**: the **crosstalk (coherency) term, kappa** → nodes spend more and more effort **coordinating** with each other",
+       "**Fit sigma and kappa** to the measurements → find the **peak**",
+       "**Reduce cross-node coordination** if you need to scale further"
+      ]
+     }
     },
     {
      "q": "The parallel fraction P was measured with a load test that sent only login requests. Should you trust the resulting scaling prediction?",
-     "a": "No. P depends on the workload mix: logins may parallelise well, while checkouts update shared data serially. An unrepresentative test gives the wrong P and the wrong server count. Repeat the test with a production-like mix."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**P depends on the workload mix**: logins may parallelise well, while **checkouts update shared data serially**",
+       "**Unrepresentative test** → the wrong P → the wrong server count"
+      ],
+      "foot": "Repeat the test with a **production-like mix**."
+     }
     },
     {
      "q": "Load tests show that a single shared stock-count row is updated on every order. How does that affect scaling, and what would you change?",
-     "a": "Every order serialises on that row, which lowers the parallel fraction P and caps speedup at 1 / (1 - P). Reduce the serial part, for example by partitioning the stock count or updating it asynchronously, and accept the trade-off in exactness or consistency of the count."
+     "a": {
+      "items": [
+       "**Effect**: every order **serialises** on that row → lowers the **parallel fraction P** → caps speedup at **1 / (1 - P)**",
+       "**Change**: **reduce the serial part**, for example by **partitioning** the stock count or updating it **asynchronously**"
+      ],
+      "foot": "Accept the trade-off in **exactness or consistency** of the count."
+     }
     }
    ],
    "visuals": [
@@ -693,15 +820,38 @@
    "check": [
     {
      "q": "With the lecture's mix, 4 machines give an estimated 38.8 tps. The forecast peak is 50 tps. How many machines would you plan for?",
-     "a": "50 / 38.8 is about 1.29 times the capacity, so a linear estimate says about 5.2 machines. Scaling has been sub-linear (about 1.8x per doubling), so plan to benchmark 6 or more with the production mix, then add headroom for a node failure. The weighted estimate is a simplified starting point, not deployable capacity."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Linear estimate**: 50 / 38.8 → about **1.29 times** the capacity → about **5.2 machines**",
+       "**Scaling has been sub-linear** (about 1.8x per doubling) → plan to **benchmark 6 or more** with the production mix",
+       "Then add **headroom for a node failure**"
+      ],
+      "foot": "The **weighted estimate** is a simplified starting point, not deployable capacity."
+     }
     },
     {
      "q": "If Payment's share rose from 5% to 10% (taking 5% from Login), what happens to overall throughput?",
-     "a": "Within the lecture's weighted estimate, replacing 5% Login with Payment changes the total by 0.05 x (13.94 - 55.76) = -2.091 tps, giving about 36.7 tps. The actual production effect requires mixed-load measurement."
+     "a": {
+      "ordered": true,
+      "items": [
+       "Within the lecture's **weighted estimate**, replacing 5% Login with Payment changes the total by 0.05 x (13.94 - 55.76) = **-2.091 tps**",
+       "→ about **36.7 tps**"
+      ],
+      "foot": "The actual production effect requires **mixed-load measurement**."
+     }
     },
     {
      "q": "You have neither a reference benchmark nor a production system. How do you get sizing data?",
-     "a": "Run simulated load tests (for example with JMeter or Artillery): define the scenarios, the mix and the arrival rates, then measure response time and throughput as load increases. Once a production system exists, switch to its monitoring data, which is the best source."
+     "a": {
+      "lead": "**Run simulated load tests** (for example with **JMeter** or **Artillery**).",
+      "ordered": true,
+      "items": [
+       "**Define** the scenarios, the mix and the arrival rates",
+       "**Measure** response time and throughput as load increases"
+      ],
+      "foot": "Once a production system exists, switch to its **monitoring data**, which is the best source."
+     }
     }
    ],
    "visuals": [
@@ -817,15 +967,35 @@
    "check": [
     {
      "q": "A team sized its servers from a one-hour sample taken on a Tuesday afternoon. What is the risk?",
-     "a": "The sample hides daily and weekly cycles. If the real peak is Monday morning, as in the Flickr example, the servers will be undersized exactly when demand is highest. Measure over weeks, identify the recurring peak, and size for it."
+     "a": {
+      "items": [
+       "**Risk**: the sample hides **daily and weekly cycles**",
+       "If the real peak is **Monday morning**, as in the **Flickr** example → servers **undersized** exactly when demand is highest"
+      ],
+      "foot": "**Measure over weeks**, identify the **recurring peak**, and size for it."
+     }
     },
     {
      "q": "A service used only in Asia expands to Europe. How might the load pattern change?",
-     "a": "Time zones shift and blend the peaks: the European peak arrives hours after the Asian one, so the service is busy for more hours each day, and the peaks may overlap. Re-measure after the launch, and size for the combined peak, not either region alone."
+     "a": {
+      "items": [
+       "**Time zones shift and blend the peaks**: the European peak arrives hours after the Asian one",
+       "→ the service is busy for **more hours each day**, and the peaks **may overlap**"
+      ],
+      "foot": "**Re-measure** after the launch, and size for the **combined peak**, not either region alone."
+     }
     },
     {
      "q": "Monday peak busy processes follow the trend y = 42.75x + 726, where x is weeks. Your servers handle 1,600 busy processes in total, and procurement takes 7 weeks. When do you run out, and when must you order?",
-     "a": "Solve 42.75x + 726 = 1,600: x is about 20.4, so capacity runs out around week 20. With a 7-week lead time plus a buffer, order by about week 12 or 13. Check the trend against new weekly peaks, since a steeper trend moves the date earlier."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Solve** 42.75x + 726 = 1,600 → x is about **20.4**",
+       "→ capacity **runs out around week 20**",
+       "With a **7-week lead time plus a buffer** → **order by about week 12 or 13**"
+      ],
+      "foot": "Check the trend against **new weekly peaks**, since a **steeper trend** moves the date earlier."
+     }
     }
    ]
   },
@@ -931,15 +1101,44 @@
    "check": [
     {
      "q": "New instances take 5 minutes to start, and traffic doubles within 3 minutes at 9 am every weekday. How should the scaling work?",
-     "a": "Reactive scaling will always be late, because demand doubles before new instances are ready. Use scheduled scaling from the historical pattern, adding capacity shortly before 9 am, and scale up aggressively for unexpected surges. Scale down conservatively afterwards, since briefly holding spare capacity costs little compared with failing users."
+     "a": {
+      "lead": "Use **scheduled scaling** from the historical pattern.",
+      "items": [
+       "**Reactive scaling will always be late** → demand doubles before new instances are ready",
+       "**Add capacity shortly before 9 am**",
+       "**Scale up aggressively** for unexpected surges",
+       "**Scale down conservatively** afterwards → briefly holding spare capacity costs little compared with failing users"
+      ]
+     }
     },
     {
      "q": "Two nodes handle 120 requests/s. Scale-out triggers above 55/node and scale-in below 45/node. Why might adding one node cause ping-pong?",
-     "a": "Before scale-out each handles 60/s; after adding a third, each handles 40/s, below the 45/s scale-in threshold. Removing one returns to 60/s. Set thresholds and adjustments so the new state does not immediately trigger the opposite action; use cooldown as well."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Before scale-out**: each handles 60/s",
+       "**After adding a third**: each handles 40/s → below the 45/s **scale-in threshold**",
+       "**Removing one** returns to 60/s"
+      ],
+      "foot": "Set **thresholds and adjustments** so the new state does not immediately trigger the opposite action; use **cooldown** as well."
+     }
     },
     {
      "q": "The forecast says capacity runs out in 6 weeks. The procurement template totals about 7 weeks, plus 1 week to get downtime approved. What do you do now, and what do you change for next time?",
-     "a": "You are already late for the normal process. Look for interim capacity (temporary cloud capacity, expedited delivery, or reducing or throttling demand), and start procurement immediately, running the downtime approval in parallel. Next time, trigger procurement from the forecast with the full lead time plus a buffer. Buying very early has its own cost, tying up money and missing price drops, so plan the date rather than stockpiling."
+     "a": {
+      "lead": "**You are already late** for the normal process.",
+      "items": [
+       {
+        "t": "**Now**",
+        "sub": [
+         "Look for **interim capacity**: temporary cloud capacity, expedited delivery, or reducing or throttling demand",
+         "**Start procurement immediately**, running the **downtime approval in parallel**"
+        ]
+       },
+       "**Next time**: trigger procurement from the **forecast** with the **full lead time plus a buffer**"
+      ],
+      "foot": "Buying very early has its own cost, **tying up money** and **missing price drops**, so plan the date rather than **stockpiling**."
+     }
     }
    ],
    "visuals": [
@@ -1000,23 +1199,102 @@
  "exam_angles": [
   {
    "q": "A database disk has 280 GB used of 500 GB, and the last 20 days of readings fit a linear trend of about 4.35 GB a day. Procurement takes about 7 weeks, plus 1 week for downtime approval. When does the disk fill, and when must you act? What could make the forecast wrong?",
-   "a": "(500 - 280) / 4.35 is about 51 days, roughly 7 weeks, so the disk fills at about the point a normal 7-week procurement would deliver. With a buffer, and possibly the extra week for downtime approval, you must act now. What could go wrong: growth may be exponential rather than linear, which brings the date forward; logs and indexes may grow faster than the data; and 20 days of history is short. Compare linear and exponential fits, keep revising with new readings, and plan from the earlier date."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**Time to fill**: (500 - 280) / 4.35 → about **51 days**, roughly **7 weeks**",
+     "→ the disk fills at about the point a normal **7-week procurement** would deliver",
+     "With a **buffer**, and possibly the extra week for **downtime approval** → you must **act now**",
+     {
+      "t": "**What could go wrong**",
+      "sub": [
+       "Growth may be **exponential rather than linear** → brings the date forward",
+       "**Logs and indexes** may grow faster than the data",
+       "**20 days of history is short**"
+      ]
+     }
+    ],
+    "foot": "**Compare linear and exponential fits**, keep revising with new readings, and **plan from the earlier date**."
+   }
   },
   {
    "q": "Estimate storage for 1 million transactions a month growing 10% a month, retained for 2 years, at 1 MB per record, with indexes adding 30% and one replica. Then explain what happens to storage in year 3.",
-   "a": "The first 24 months hold 1M x (1.1^24 - 1) / 0.1, about 88.5M records, or 88.5 TB. With 30% for indexes that is about 115 TB, and with the replica about 230 TB, plus the fixed OS and database baseline and a buffer. In year 3, the oldest months expire, but each new month (about 9.8M records by month 25) is far larger than the month it replaces (1M), so storage keeps growing. Forecast the moving 24-month window, not a one-off total."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**First 24 months**: 1M x (1.1^24 - 1) / 0.1 → about **88.5M records**, or **88.5 TB**",
+     "With **30% for indexes** → about **115 TB**",
+     "With the **replica** → about **230 TB**",
+     "**Plus** the fixed OS and database baseline and a buffer",
+     {
+      "t": "**Year 3**: storage **keeps growing**",
+      "sub": [
+       "The oldest months **expire**",
+       "But each new month (about **9.8M records** by month 25) is far larger than the month it replaces (**1M**)"
+      ]
+     }
+    ],
+    "foot": "Forecast the **moving 24-month window**, not a one-off total."
+   }
   },
   {
    "q": "The 4-machine reference benchmark gives 55.76 tps. Slowness factors are Login 1.0, Search 2.0, Details 1.5, Cart 1.5, Checkout 2.0 and Payment 4.0, and the mix is 30/20/15/20/10/5%. The forecast peak is 45 tps, and the business wants to survive one machine failure. Estimate the capacity and recommend a machine count.",
-   "a": "Weighted estimate: 16.73 + 5.58 + 5.58 + 7.43 + 2.79 + 0.70, about 38.8 tps on 4 machines, short of 45 tps. Scaling has been sub-linear (about 1.8x per doubling), so 45 tps needs more than a proportional 4.6 machines; and to survive one failure, the survivors must still deliver 45 tps. If the 1.8x-per-doubling trend holds, 5 machines give about 47 tps, so plan for 6 (5 survivors after a failure), and confirm it by benchmarking with the production mix. The estimate assumes uniform slowness across tiers and the benchmark's configuration, so validate it with a mixed load test."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**Weighted estimate**: 16.73 + 5.58 + 5.58 + 7.43 + 2.79 + 0.70 → about **38.8 tps** on 4 machines, short of 45 tps",
+     "**Sub-linear scaling** (about 1.8x per doubling) → 45 tps needs more than a proportional **4.6 machines**",
+     "**Survive one failure** → the survivors must still deliver 45 tps",
+     "If the 1.8x-per-doubling trend holds, **5 machines** give about **47 tps**",
+     "→ **plan for 6** (5 survivors after a failure), and confirm it by **benchmarking with the production mix**"
+    ],
+    "foot": "The estimate assumes **uniform slowness across tiers** and the **benchmark's configuration**, so validate it with a **mixed load test**."
+   }
   },
   {
    "q": "Load tests measure 1,000 req/s on 1 node, 1,800 on 2, 3,000 on 4 and 3,200 on 8. Explain the pattern, estimate what 16 nodes would give, and recommend what to do.",
-   "a": "Returns diminish quickly: 4 to 8 nodes adds only 7%. That suggests a large serial part (shared data, quotas) and possibly crosstalk. Amdahl caps speedup at 1 / (1 - P), and USL allows throughput to fall past a peak, so 16 nodes may give little or even less than 3,200 req/s. Fit USL's sigma and kappa to these points to find the peak, and don't buy 16 nodes without testing. Better value comes from reducing the serial work, such as shared-row updates or cross-node coordination, and rerunning the tests with a production-like mix."
+   "a": {
+    "items": [
+     "**Pattern**: returns diminish quickly; 4 to 8 nodes adds only **7%**",
+     "**Suggests** a large **serial part** (shared data, quotas) and possibly **crosstalk**",
+     {
+      "t": "**16 nodes** may give little or even **less than 3,200 req/s**",
+      "sub": [
+       "**Amdahl** caps speedup at 1 / (1 - P)",
+       "**USL** allows throughput to **fall past a peak**"
+      ]
+     },
+     {
+      "t": "**Recommend**",
+      "sub": [
+       "**Fit USL's sigma and kappa** to these points → find the peak",
+       "**Don't buy 16 nodes** without testing",
+       "Better value comes from **reducing the serial work**, such as **shared-row updates** or **cross-node coordination**",
+       "**Rerun the tests** with a production-like mix"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "Design an auto-scaling policy for a web tier with a Monday 9 am peak of 900 requests/s, nodes that handle 100 requests/s at the response target, and a 3-minute start-up time. Include thresholds that avoid ping-pong.",
-   "a": "Use scheduled scaling from the weekly trend to reach about 10 nodes before 9 am: 9 for the load, plus 1 for headroom. React to surprises by scaling up aggressively, since start-up takes 3 minutes, and scale down conservatively with a cooldown. Thresholds, for example: scale out above 80 requests/s per node, scale in below 50. Check them: 4 nodes at 80 is 320 requests/s, which spread over 5 nodes gives 64, above the scale-in threshold; 5 nodes at 50 is 250, which over 4 nodes gives 62.5, below the scale-out threshold. So neither action immediately triggers the other. Revisit the thresholds as the Monday trend grows."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**Scheduled scaling** from the weekly trend → about **10 nodes** before 9 am: 9 for the load, plus 1 for headroom",
+     "**React to surprises**: scale up **aggressively**, since start-up takes 3 minutes; scale down **conservatively** with a **cooldown**",
+     "**Thresholds**, for example: scale out above **80 requests/s per node**, scale in below **50**",
+     {
+      "t": "**Check them** for ping-pong",
+      "sub": [
+       "4 nodes at 80 = 320 requests/s, spread over 5 nodes, gives **64** → above the scale-in threshold",
+       "5 nodes at 50 = 250, over 4 nodes, gives **62.5** → below the scale-out threshold",
+       "So **neither action immediately triggers the other**"
+      ]
+     }
+    ],
+    "foot": "**Revisit the thresholds** as the Monday trend grows."
+   }
   }
  ]
 }

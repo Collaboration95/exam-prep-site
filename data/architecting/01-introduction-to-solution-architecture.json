@@ -77,15 +77,39 @@
    "check": [
     {
      "q": "A team's architecture document is a single diagram of its internal services and their calls. A reviewer says it is not yet an architecture description. Do you agree?",
-     "a": "Agree. Architecture covers components and their relationships to each other **and to the environment**, plus the principles that guide design and evolution. The diagram shows no external users or systems and no principles telling future teams how the system may change. Add a context view and the guiding principles and decisions; the component diagram stays as one part."
+     "a": {
+      "lead": "**Agree**: a diagram of internal services alone is not yet an architecture description.",
+      "items": [
+       "**Architecture** = components + their relationships to each other **and to the environment** + the **principles** that guide design and evolution",
+       "**Missing environment**: the diagram shows no external users or systems",
+       "**Missing principles**: nothing tells future teams how the system may change"
+      ],
+      "foot": "Fix: add a **context view** and the **guiding principles and decisions**; the component diagram stays as one part."
+     }
     },
     {
      "q": "A bank's new architect wants the event-streaming platform she used at her last job. The bank is heavily regulated and its operations team knows only relational databases. Which influences on the architecture conflict, and how should she proceed?",
-     "a": "The architect's own experience is pulling against the organisation (regulation, team skills) and the technical environment. Her preference alone is not a justification, because architecture is shaped by all four influences: stakeholders, organisation, architect's experience and technical environment. She should show which requirements the platform meets better and what the training and operating cost would be. If no quality requirement needs it, the familiar option is the safer choice."
+     "a": {
+      "lead": "**Conflict**: the architect's own experience is pulling against the **organisation** (regulation, team skills) and the **technical environment**.",
+      "items": [
+       "**Four influences** shape architecture: stakeholders, organisation, architect's experience and technical environment → her preference alone is not a justification",
+       "**Show the benefit**: which requirements the platform meets better",
+       "**Show the cost**: what the training and operating cost would be"
+      ],
+      "foot": "If no quality requirement needs it, the **familiar option is the safer choice**."
+     }
     },
     {
      "q": "A project manager wants to skip the architecture review to save two weeks because the design 'looks fine'. Argue for or against.",
-     "a": "Against skipping it, though the review can be scaled down. In the lecture's survey, the top reported benefit of reviews was early risk identification (88%), followed by quality assessment and avoiding costly design problems. Reviews also surface requirement conflicts and capture rationale while changes are still cheap. If the system closely repeats a proven design, a lighter review focused on the new parts may be enough."
+     "a": {
+      "lead": "**Against skipping it**, though the review can be scaled down.",
+      "items": [
+       "**Early risk identification (88%)**: the top reported benefit of reviews in the lecture's survey",
+       "Followed by **quality assessment** and **avoiding costly design problems**",
+       "Reviews also surface **requirement conflicts** and capture **rationale** while changes are still cheap"
+      ],
+      "foot": "If the system closely repeats a **proven design**, a **lighter review** focused on the new parts may be enough."
+     }
     }
    ]
   },
@@ -229,15 +253,36 @@
    "check": [
     {
      "q": "Your claims-processing solution would benefit from a document database, but the enterprise architecture's technology standards approve only two relational databases. What do you do as solution architect?",
-     "a": "Work within the EA guidance by default, because EA constrains solution architecture. If a specific requirement really cannot be met with the approved options, make the case to the enterprise architect with that evidence rather than diverging quietly. The trade-off is landscape-wide: every exception adds technology variety that the enterprise must support."
+     "a": {
+      "lead": "**Work within the EA guidance** by default, because **EA constrains solution architecture**.",
+      "items": [
+       "**Evidence-based exception**: if a specific requirement really cannot be met with the approved options, make the case to the **enterprise architect** with that evidence",
+       "**Don't diverge quietly**"
+      ],
+      "foot": "The trade-off is **landscape-wide**: every exception adds **technology variety** that the enterprise must support."
+     }
     },
     {
      "q": "A document titled 'Solution Architecture' lists class names, method signatures and the ORM library to use. What is it really, and what is missing?",
-     "a": "It is detailed design: implementable detail plus the choice of implementation tools. Solution architecture should first show, at a logical level, how components work together to meet the business requirements and expected qualities, within the EA's standards and patterns. Without that, nobody can check whether the classes add up to a solution that meets the quality targets."
+     "a": {
+      "lead": "It is **detailed design**: implementable detail plus the choice of **implementation tools**.",
+      "items": [
+       "**Missing SA**: shows, at a **logical level**, how components work together to meet the **business requirements** and **expected qualities**",
+       "**Within EA**: that view sits inside the EA's **standards and patterns**"
+      ],
+      "foot": "Without that, nobody can check whether the classes add up to a solution that meets the **quality targets**."
+     }
     },
     {
      "q": "A 'CustomerUtils' module does address formatting, credit scoring and email sending, and five other modules call it directly. Assess it and propose a change.",
-     "a": "It has low cohesion (unrelated jobs in one place) and high coupling (many modules depend on it), so a change to credit scoring can break the email callers. Split it into cohesive components, each behind an interface that hides its detail (encapsulation). The cost is more components and interfaces to manage, which pays off only if these parts change independently."
+     "a": {
+      "items": [
+       "**Low cohesion**: unrelated jobs in one place",
+       "**High coupling**: many modules depend on it → a change to credit scoring can break the email callers",
+       "**Fix**: split it into **cohesive components**, each behind an **interface** that hides its detail (**encapsulation**)"
+      ],
+      "foot": "Cost: more components and interfaces to manage → pays off only if these parts **change independently**."
+     }
     }
    ],
    "visuals": [
@@ -342,15 +387,37 @@
    "check": [
     {
      "q": "Halfway through construction the lead architect is moved to another project, yet the team keeps evolving the design confidently. What does this say about the architect?",
-     "a": "It is a sign of a good architect: one who is dispensable. They documented a viable architecture and shared enough knowledge for the team to proceed without them. Compare an architect who leaves before the team understands the design: that is the 'disappears during construction' failure, and the team stalls or erodes the design."
+     "a": {
+      "lead": "It is a sign of a **good architect**: one who is **dispensable**.",
+      "items": [
+       "**Documented** a viable architecture",
+       "**Shared enough knowledge** for the team to proceed without them",
+       "**Compare**: an architect who leaves before the team understands the design = the **'disappears during construction'** failure → the team stalls or **erodes the design**"
+      ]
+     }
     },
     {
      "q": "An architect delivers an elegant event-driven design. The team has no messaging experience and the budget allows one operations engineer. Critique it.",
-     "a": "The design fails on viability: the architect is responsible for a solution that can be implemented **and operated**, and this one exceeds the skill and cost constraints. Re-evaluate the feasible options against those constraints and pick the best one that fits, or include training and support costs in the plan. A simpler design may give up some scalability, so state that trade-off to the stakeholders."
+     "a": {
+      "lead": "The design fails on **viability**.",
+      "items": [
+       "**Architect's responsibility**: a solution that can be implemented **and operated**",
+       "**Problem**: this one exceeds the **skill and cost constraints**",
+       "**Fix**: re-evaluate the **feasible options** against those constraints and pick the best one that fits, or include **training and support costs** in the plan"
+      ],
+      "foot": "A simpler design may give up some **scalability** → state that **trade-off** to the stakeholders."
+     }
     },
     {
      "q": "To hit a deadline, the project manager wants to drop the security design work. How should the architect respond?",
-     "a": "The architect supports the project manager on delivery but is responsible for building security, reliability and maintainability into the solution. Make the risk and its later cost visible, then offer a scaled option such as covering only the highest-risk flows now. Quietly accepting the cut would trade a schedule gain for an unviable solution."
+     "a": {
+      "items": [
+       "**Role**: the architect supports the project manager on delivery, but is responsible for building **security, reliability and maintainability** into the solution",
+       "**Make the risk visible**, and its later cost",
+       "**Offer a scaled option**: e.g. cover only the **highest-risk flows** now"
+      ],
+      "foot": "Quietly accepting the cut would trade a **schedule gain** for an **unviable solution**."
+     }
     }
    ]
   },
@@ -418,15 +485,40 @@
    "check": [
     {
      "q": "A ticketing team encrypts every database column. Checkout response time rises from 1.2 s to 2.8 s against a 2 s target. What kind of quality relationship is this, and how would you resolve it?",
-     "a": "It is an inverse relationship: security (confidentiality) against performance efficiency (time behaviour), for this design and workload. Rank the competing scenarios in the utility tree, then target the measure: encrypt the sensitive fields rather than everything, and remeasure against the 2 s target. The relationship depends on the design, so a narrower security measure may satisfy both."
+     "a": {
+      "lead": "**Inverse relationship**: security (**confidentiality**) against performance efficiency (**time behaviour**), for this design and workload.",
+      "items": [
+       "**Rank** the competing scenarios in the **utility tree**",
+       "**Target the measure**: encrypt the **sensitive fields** rather than everything",
+       "**Remeasure** against the 2 s target"
+      ],
+      "ordered": true,
+      "foot": "The relationship **depends on the design** → a narrower security measure may satisfy both."
+     }
     },
     {
      "q": "Two utility-tree leaves: (a) 'catalogue page loads in under 2 s with 500 users', ranked (H,L); (b) 'if the payment provider fails, switch to the backup provider within 30 s', ranked (H,H). You have time to prototype one. Which, and why?",
-     "a": "Prototype (b). Both are important, but (b) is also high-risk to achieve, so it needs the most architectural attention and evidence. (a) is important but low-risk and can probably be met with known techniques. If load testing later shows (a) is harder than assumed, its rank should change."
+     "a": {
+      "lead": "**Prototype (b).**",
+      "items": [
+       "**Both are important**",
+       "**(b) is also high-risk** to achieve → needs the most **architectural attention and evidence**",
+       "**(a) is low-risk**: important but can probably be met with **known techniques**"
+      ],
+      "foot": "If **load testing** later shows (a) is harder than assumed, its **rank should change**."
+     }
     },
     {
      "q": "A stakeholder writes 'the system must be highly available'. Turn it into a utility-tree leaf and explain what that gains.",
-     "a": "For example: 'When site 1 loses power during business hours, traffic is redirected to site 2 within 3 seconds and no confirmed bookings are lost.' Now the requirement is measurable, can be ranked by (importance, risk) and can be checked against the architecture. As a slogan, any design could claim to meet it."
+     "a": {
+      "lead": "Leaf, for example: 'When site 1 loses power during business hours, traffic is redirected to site 2 within 3 seconds and no confirmed bookings are lost.'",
+      "items": [
+       "**Measurable**: the requirement now has a test",
+       "**Rankable** by (**importance, risk**)",
+       "**Checkable** against the architecture"
+      ],
+      "foot": "As a **slogan**, any design could claim to meet it."
+     }
     }
    ],
    "visuals": [
@@ -577,15 +669,35 @@
    "check": [
     {
      "q": "After a disk failure, an order system kept taking orders from a mirrored disk. A later power cut lost the last 10 minutes of orders, and recovery took 2 hours. Which reliability sub-characteristics held up and which did not?",
-     "a": "Fault tolerance held up: the system kept operating despite the disk fault. Recoverability fell short, because data was lost and re-establishing service took 2 hours, and availability suffered during that time. The fixes differ: recoverability needs protected, frequent recovery points and faster restore, not more disk mirroring."
+     "a": {
+      "items": [
+       "**Fault tolerance: held up** → the system kept operating despite the disk fault",
+       "**Recoverability: fell short** → data was lost and re-establishing service took 2 hours",
+       "**Availability: suffered** during that time"
+      ],
+      "foot": "The fixes differ: recoverability needs **protected, frequent recovery points** and **faster restore**, not more disk mirroring."
+     }
     },
     {
      "q": "An attacker logs in with a stolen password and changes another customer's delivery address. Which security sub-characteristics are broken?",
-     "a": "Authenticity, because the identity was not the one claimed, and integrity, because data was changed without authorisation. Accountability also suffers, since the logs attribute the action to the victim. Stronger authentication addresses authenticity; checking that a user may modify **that** record addresses integrity."
+     "a": {
+      "items": [
+       "**Authenticity**: the identity was not the one claimed → fix with **stronger authentication**",
+       "**Integrity**: data was changed without authorisation → fix by checking that a user may modify **that** record",
+       "**Accountability**: also suffers, since the logs attribute the action to the victim"
+      ]
+     }
     },
     {
      "q": "A change to the tax calculation breaks three unrelated screens, and nobody can tell from the logs why. Which maintainability sub-characteristics are weak, and what would you fix first?",
-     "a": "Modularity is weak, because a change in one component affected others, and so is analyzability, because the team cannot diagnose the fault or predict the impact of a change. Testability is probably weak too, since no test caught it. Isolate the tax logic behind an interface first to contain future changes, then improve logging to make faults diagnosable."
+     "a": {
+      "items": [
+       "**Modularity: weak** → a change in one component affected others",
+       "**Analyzability: weak** → the team cannot diagnose the fault or predict the impact of a change",
+       "**Testability: probably weak** → no test caught it"
+      ],
+      "foot": "Fix first: **isolate the tax logic behind an interface** to contain future changes, then **improve logging** to make faults diagnosable."
+     }
     }
    ],
    "visuals": [
@@ -681,15 +793,36 @@
    "check": [
     {
      "q": "A start-up has 3 months to launch before a competitor and expects to rewrite the product within 18 months. A teammate insists on a fully modular, horizontally scalable design. Do you agree?",
-     "a": "Mostly not. The business qualities here, a short time to market and a short projected lifetime, reduce the value of upfront investment in modifiability and scalability. Build the simplest design that meets the launch-critical qualities, keeping clean boundaries where they cost little. If the product is expected to live long or grow suddenly, the answer changes."
+     "a": {
+      "lead": "**Mostly not.**",
+      "items": [
+       "**Business qualities**: a short **time to market** and a short **projected lifetime** → reduce the value of upfront investment in **modifiability** and **scalability**",
+       "**Build the simplest design** that meets the **launch-critical qualities**",
+       "Keep **clean boundaries** where they cost little"
+      ],
+      "foot": "If the product is expected to **live long** or **grow suddenly**, the answer changes."
+     }
     },
     {
      "q": "A government records system must run for 15 years across several hardware refreshes. Which product qualities gain priority, and what do you give up?",
-     "a": "A long projected lifetime raises the priority of modifiability, scalability and portability, so the system survives changes in platform and demand. You give up some time to market and spend more upfront on abstraction and standard interfaces. With a short lifetime, the same investment would be hard to justify."
+     "a": {
+      "items": [
+       "**Long projected lifetime** → raises the priority of **modifiability, scalability and portability**, so the system survives changes in platform and demand",
+       "**You give up**: some **time to market**, and you spend more **upfront** on **abstraction** and **standard interfaces**"
+      ],
+      "foot": "With a **short lifetime**, the same investment would be hard to justify."
+     }
     },
     {
      "q": "A product installs in one click, but users cannot complete their main task. Which quality models explain this?",
-     "a": "Installability is a product quality under portability; completing the task is quality in use, especially effectiveness. Scoring well on one says nothing about the other. Evaluate both: product qualities describe the software, while quality in use judges it with real users in context."
+     "a": {
+      "items": [
+       "**Installability**: a **product quality** under **portability**",
+       "**Completing the task**: **quality in use**, especially **effectiveness**",
+       "Scoring well on one says nothing about the other → **evaluate both**"
+      ],
+      "foot": "**Product qualities** describe the software, while **quality in use** judges it with **real users in context**."
+     }
     }
    ]
   }
@@ -697,23 +830,115 @@
  "exam_angles": [
   {
    "q": "A hospital group's enterprise architecture mandates one identity provider and an approved set of hosting regions. You are solution architect for a new telemedicine app, and a developer has already produced class diagrams and picked libraries. (a) Which decisions here belong to EA, SA and detailed design? (b) The developer's design skips the identity provider to save time. What do you do?",
-   "a": "(a) The identity provider and hosting regions are EA decisions: strategic direction that constrains the solution. How the app's components collaborate to meet its qualities, and how it integrates with the identity provider, is solution architecture. Classes and libraries are detailed design, and they must fit inside the SA. (b) Align the design with EA. Bypassing the mandated identity provider breaks an enterprise constraint and creates a separate set of credentials to secure. Redesign the integration, or raise a justified exception with the enterprise architect if a requirement truly cannot be met. Record the decision either way."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**(a) EA, SA or detailed design**",
+      "sub": [
+       "**EA**: the identity provider and hosting regions → **strategic direction** that constrains the solution",
+       "**SA**: how the app's components collaborate to meet its **qualities**, and how it **integrates with the identity provider**",
+       "**Detailed design**: classes and libraries → must **fit inside the SA**"
+      ]
+     },
+     {
+      "t": "**(b) Align the design with EA**",
+      "sub": [
+       "Bypassing the mandated identity provider → breaks an **enterprise constraint** and creates a **separate set of credentials** to secure",
+       "**Redesign the integration**, or raise a **justified exception** with the enterprise architect if a requirement truly cannot be met",
+       "**Record the decision** either way"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A brilliant architect rarely attends team meetings. The team cannot build the design within budget and keeps asking him how two components should interact. Critique the situation and propose remedies.",
-   "a": "This combines several failure patterns: an ivory-tower architect, an absent architect during construction, and a 'perfect' architecture that exceeds cost constraints, so the solution is not viable. A good architect earns the team's trust, documents an implementable architecture and its rationale, supports detailed design and construction, and leaves the team able to proceed without him. Remedies: re-evaluate the options against the budget and skills, document the component interactions and decisions, and hold regular design sessions with the team."
+   "a": {
+    "items": [
+     {
+      "t": "**Failure patterns** combined here",
+      "sub": [
+       "**Ivory-tower architect**",
+       "**Absent architect** during construction",
+       "**'Perfect' architecture** that exceeds **cost constraints** → the solution is not **viable**"
+      ]
+     },
+     {
+      "t": "**A good architect**",
+      "sub": [
+       "Earns the team's **trust**",
+       "Documents an **implementable architecture** and its **rationale**",
+       "Supports **detailed design and construction**",
+       "Leaves the team **able to proceed without him**"
+      ]
+     },
+     {
+      "t": "**Remedies**",
+      "sub": [
+       "**Re-evaluate the options** against the budget and skills",
+       "**Document** the component interactions and decisions",
+       "Hold **regular design sessions** with the team"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A mobile banking app must show balances within 1 s for 95% of requests. Security wants step-up authentication on every screen. (a) Name the quality relationship. (b) Write two utility-tree leaves with plausible ranks. (c) Propose a resolution and say what you give up.",
-   "a": "(a) An inverse relationship between security (authenticity, confidentiality) and performance efficiency and usability, under this design. (b) For example: 'balance view returns within 1 s for 95% of requests at peak' (H,M), and 'a transfer above a set amount requires a second factor before it executes' (H,L). (c) Apply step-up authentication to risky operations such as transfers and payee changes, not to every screen, so balance views stay fast. You give up some protection on low-risk screens. The utility-tree ranking makes that trade-off explicit and reviewable."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**(a) Inverse relationship**",
+      "sub": [
+       "**Security** (authenticity, confidentiality) against **performance efficiency** and **usability**, under this design"
+      ]
+     },
+     {
+      "t": "**(b) Utility-tree leaves**, for example",
+      "sub": [
+       "'balance view returns within 1 s for 95% of requests at peak' **(H,M)**",
+       "'a transfer above a set amount requires a second factor before it executes' **(H,L)**"
+      ]
+     },
+     {
+      "t": "**(c) Resolution**: step-up authentication on **risky operations** only",
+      "sub": [
+       "Such as **transfers and payee changes**, not every screen → balance views stay fast",
+       "**You give up**: some protection on **low-risk screens**",
+       "The **utility-tree ranking** makes that trade-off **explicit and reviewable**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A flash-sale platform expects 50,000 users in the first 10 minutes, takes payment through one external gateway, and changes its catalogue daily. Build a utility-tree fragment with three leaves, rank them, and say which drives the architecture first.",
-   "a": "Leaves, for example: Performance: 'product page under 2 s for 95% of requests at 50,000 users in 10 minutes' (H,H). Availability: 'if the payment gateway times out, orders are held and confirmed within 5 minutes without double charging' (H,H). Modifiability: 'a catalogue change is published in under 1 hour without a deployment' (M,L). The high-importance, high-risk leaves come first: peak performance and payment failure handling shape the structure. The catalogue leaf can be met with known techniques. Evaluate the architecture by whether it makes each high-ranked scenario achievable."
+   "a": {
+    "lead": "**Utility-tree fragment**, leaves for example:",
+    "items": [
+     "**Performance (H,H)**: 'product page under 2 s for 95% of requests at 50,000 users in 10 minutes'",
+     "**Availability (H,H)**: 'if the payment gateway times out, orders are held and confirmed within 5 minutes without double charging'",
+     "**Modifiability (M,L)**: 'a catalogue change is published in under 1 hour without a deployment' → can be met with **known techniques**",
+     "**Comes first**: the **high-importance, high-risk** leaves → **peak performance** and **payment failure handling** shape the structure"
+    ],
+    "foot": "**Evaluate** the architecture by whether it makes each **high-ranked scenario** achievable."
+   }
   },
   {
    "q": "A teammate says the only security requirement for a payments system is confidentiality, so TLS plus encrypted storage is enough. Do you agree? Use the ISO 25010 security sub-characteristics.",
-   "a": "Disagree. TLS and encryption mainly address confidentiality and part of integrity. Payments also need integrity of stored amounts, authenticity (the payer is who they claim), non-repudiation (a customer cannot credibly deny a transfer they made) and accountability (each action is traced to one user). Each needs different mechanisms, such as strong authentication, signed or well-audited transactions, and per-user audit logs. Prioritise them with measurable scenarios rather than one blanket control."
+   "a": {
+    "lead": "**Disagree.** TLS and encryption mainly address **confidentiality** and part of **integrity**. Payments also need:",
+    "items": [
+     "**Integrity**: of stored amounts",
+     "**Authenticity**: the payer is who they claim",
+     "**Non-repudiation**: a customer cannot credibly deny a transfer they made",
+     "**Accountability**: each action is traced to one user",
+     "**Different mechanisms** for each: **strong authentication**, **signed or well-audited transactions**, and **per-user audit logs**"
+    ],
+    "foot": "**Prioritise** them with **measurable scenarios** rather than one blanket control."
+   }
   }
  ]
 }

@@ -118,15 +118,38 @@
    "check": [
     {
      "q": "A team moved from VMs to containers to cut scale-out time, but new replicas still take 90 seconds to serve traffic. What is the likely cause, and what would you check?",
-     "a": "Containers skip booting a guest OS because they share the host kernel, but pulling a large image, loading dependencies and initialising the application can still dominate startup. Check the image size and pull time, and how long the application takes to warm up. Smaller images and lighter initialisation help more than changing the isolation boundary."
+     "a": {
+      "items": [
+       "**Containers skip booting a guest OS** because they **share the host kernel**",
+       "**Likely cause**: **pulling a large image**, **loading dependencies** and **initialising the application** can still **dominate startup**",
+       "**Check**: **image size** and **pull time**, and how long the application takes to **warm up**"
+      ],
+      "foot": "**Smaller images** and **lighter initialisation** help more than changing the **isolation boundary**."
+     }
     },
     {
      "q": "A legacy app needs a Windows kernel feature, and a second workload from a different tenant must run on the same hosts with strong separation. VMs or containers for each?",
-     "a": "VMs for both. The legacy app needs its own OS, which a container sharing the host kernel cannot provide, and a hypervisor boundary gives stronger separation between tenants than process-level isolation. You give up the lighter weight and faster startup of containers, which matter less for these two requirements."
+     "a": {
+      "lead": "**VMs for both.**",
+      "items": [
+       "**Legacy app** needs **its own OS** → a container **sharing the host kernel** cannot provide it",
+       "**Hypervisor boundary** → **stronger separation between tenants** than **process-level isolation**"
+      ],
+      "foot": "You give up the **lighter weight** and **faster startup** of containers, which matter less for these two requirements."
+     }
     },
     {
      "q": "A company with a 3-person IT team wants to migrate to the cloud this year but has no cloud skills. Should it run the migration itself or use a managed cloud service, and what is the catch?",
-     "a": "A managed cloud service fits: a provider takes on migration, configuration, optimisation, security and maintenance, usually on subscription, so the small team gets cloud benefits without building every skill first. The catch is the ongoing subscription cost and dependence on the provider. The contract must be in place before migrating, and the company still owns its data and decisions."
+     "a": {
+      "lead": "**A managed cloud service** fits.",
+      "items": [
+       "A provider takes on **migration, configuration, optimisation, security and maintenance**, usually on **subscription**",
+       "→ the **small team** gets cloud benefits without **building every skill first**",
+       "**Catch**: the **ongoing subscription cost** and **dependence on the provider**",
+       "The **contract** must be in place **before migrating**"
+      ],
+      "foot": "The company still **owns its data and decisions**."
+     }
     }
    ],
    "visuals": [
@@ -228,15 +251,53 @@
    "check": [
     {
      "q": "A university wants a private IaaS cloud on its own hardware and asks what a hypervisor alone would be missing. Using OpenStack's components, explain.",
-     "a": "A hypervisor runs VMs, but an IaaS cloud also needs networking, block and object storage, identity, VM images, a self-service dashboard and orchestration. OpenStack supplies these (for example Neutron, Cinder, Swift, Keystone, Glance, Horizon, Heat) on top of compute (Nova). Without them, users still depend on administrators to wire each VM together, which fails on-demand self-service."
+     "a": {
+      "lead": "A **hypervisor runs VMs**, but an **IaaS cloud** needs more.",
+      "items": [
+       {
+        "t": "**OpenStack** supplies these on top of **compute (Nova)**, for example:",
+        "sub": [
+         "**networking** (**Neutron**)",
+         "**block storage** (**Cinder**) and **object storage** (**Swift**)",
+         "**identity** (**Keystone**)",
+         "**VM images** (**Glance**)",
+         "a **self-service dashboard** (**Horizon**)",
+         "**orchestration** (**Heat**)"
+        ]
+       },
+       "**Without them** → users still depend on **administrators** to wire each VM together → fails **on-demand self-service**"
+      ]
+     }
     },
     {
      "q": "A security team won't allow extra agents on production servers but wants the servers' configuration managed as code. Does Ansible fit, and what does it still need?",
-     "a": "Yes: Ansible is agentless, so no resident agent has to be installed on each target. It still needs a reachable management connection, credentials, and whatever prerequisites its modules require on the target. The security team's concern then shifts to protecting those credentials and the control node."
+     "a": {
+      "lead": "**Yes**: Ansible is **agentless**.",
+      "items": [
+       "**No resident agent** has to be installed on each target",
+       {
+        "t": "**Still needs**:",
+        "sub": [
+         "a **reachable management connection**",
+         "**credentials**",
+         "whatever **prerequisites its modules require** on the target"
+        ]
+       }
+      ],
+      "foot": "The security team's concern then shifts to protecting those **credentials** and the **control node**."
+     }
     },
     {
      "q": "An engineer calls an Ansible playbook a Heat template 'because both are YAML' and wants to feed the playbook to Heat. What is wrong?",
-     "a": "YAML is only the file syntax. Ansible runs a playbook's ordered tasks; Heat interprets HOT templates to orchestrate OpenStack resources. Each tool needs its own format. Either can describe infrastructure as code, so choose by whether you need OpenStack-native orchestration or general provisioning and configuration across systems."
+     "a": {
+      "lead": "**YAML is only the file syntax.**",
+      "items": [
+       "**Ansible** runs a **playbook's ordered tasks**",
+       "**Heat** interprets **HOT templates** to **orchestrate OpenStack resources**",
+       "Each tool needs **its own format**"
+      ],
+      "foot": "Either can describe **infrastructure as code**: choose by whether you need **OpenStack-native orchestration** or **general provisioning and configuration** across systems."
+     }
     }
    ],
    "visuals": [
@@ -375,15 +436,40 @@
    "check": [
     {
      "q": "A team's API uses a managed database, a queue and CI/CD, and needs no OS changes. A second system is a backup server that needs custom storage drivers. Which fits PaaS and which IaaS?",
-     "a": "The API fits PaaS: it consumes managed platform services, and the platform takes over deployment, scaling and runtime management. The backup server needs server-level control of drivers and storage, so it fits IaaS. With PaaS the team still configures access and secures its own code."
+     "a": {
+      "items": [
+       "**API → PaaS**: consumes **managed platform services**; the platform takes over **deployment, scaling and runtime management**",
+       "**Backup server → IaaS**: needs **server-level control** of **drivers and storage**"
+      ],
+      "foot": "With PaaS the team still **configures access** and **secures its own code**."
+     }
     },
     {
      "q": "A vendor pitch says moving to PaaS will 'cut delivery time from months to hours'. How would you treat this claim in a business case?",
-     "a": "As an illustrative benefit, not a guaranteed saving. PaaS removes server setup and platform operations, which can shorten delivery a great deal, but the real gain depends on how much of the current delay is infrastructure work rather than design, testing or approvals. Measure the current lead time and its causes before promising a figure."
+     "a": {
+      "lead": "As an **illustrative benefit**, not a **guaranteed saving**.",
+      "items": [
+       "**PaaS removes server setup** and **platform operations** → can shorten delivery a great deal",
+       "**Real gain** depends on how much of the current delay is **infrastructure work** rather than **design, testing or approvals**",
+       "**Measure** the **current lead time** and its **causes** before promising a figure"
+      ]
+     }
     },
     {
      "q": "A multi-tenant SaaS platform plans to run every customer's code in containers on shared hosts. A security reviewer objects. What is the concern, and what are the options?",
-     "a": "Containers isolate processes through kernel namespaces and cgroups but share the host kernel, so a kernel exploit can reach other tenants. VMs isolate at the hardware level through a hypervisor and come with established security tooling. The options are VM-per-tenant (stronger isolation, more overhead), or containers grouped onto VMs by tenant, which keeps most of the containers' speed."
+     "a": {
+      "items": [
+       "**Concern**: containers isolate processes through **kernel namespaces and cgroups** but **share the host kernel** → a **kernel exploit** can reach **other tenants**",
+       "**VMs** isolate at the **hardware level** through a **hypervisor** and come with **established security tooling**",
+       {
+        "t": "**Options**:",
+        "sub": [
+         "**VM-per-tenant** → **stronger isolation**, **more overhead**",
+         "**containers grouped onto VMs by tenant** → keeps most of the containers' **speed**"
+        ]
+       }
+      ]
+     }
     }
    ]
   },
@@ -489,15 +575,39 @@
    "check": [
     {
      "q": "A firm must leave its data centre in 4 months and its apps are over-provisioned. Lift-and-shift or lift-and-optimise?",
-     "a": "Lift-and-shift for most apps, because the deadline and low initial change matter most. It will carry the over-provisioning into the cloud, so budget for right-sizing and optimisation after cutover. Lift-and-optimise would lower ongoing TCO and improve ROI sooner, but it takes longer and costs more up front, which the 4-month window doesn't allow."
+     "a": {
+      "lead": "**Lift-and-shift** for most apps.",
+      "items": [
+       "The **deadline** and **low initial change** matter most",
+       "It **carries the over-provisioning** into the cloud → budget for **right-sizing and optimisation after cutover**",
+       "**Lift-and-optimise** → lower **ongoing TCO** and **improves ROI sooner**, but **takes longer** and **costs more up front**"
+      ],
+      "foot": "The **4-month window** doesn't allow lift-and-optimise."
+     }
     },
     {
      "q": "A business owner says 'our app is too expensive, let's rewrite it as microservices'. Using the six drivers, what would you check before agreeing?",
-     "a": "Diagnose first. If the driver is cost (infrastructure too expensive for the value), Rehost or Replatform may fix it far more cheaply. A rewrite is justified when the drivers are business fit, innovation or agility, meaning the app can't meet needs or change fast enough. A cause-effect analysis shows whether the problem is functional, architectural or technological, and the option should fix that cause."
+     "a": {
+      "lead": "**Diagnose first.**",
+      "items": [
+       "**Driver is cost** (infrastructure too expensive for the value) → **Rehost** or **Replatform** may fix it far more cheaply",
+       "**Rewrite justified** when the drivers are **business fit, innovation or agility** → the app can't **meet needs** or **change fast enough**",
+       "**Cause-effect analysis** → shows whether the problem is **functional, architectural or technological**",
+       "The option should **fix that cause**"
+      ]
+     }
     },
     {
      "q": "The migration roadmap lists 'do not move' and 'decommission' as paths alongside lift-and-shift and refactor. Why is it worth assessing every application before picking a default path?",
-     "a": "Migration is a decision per application. Some apps are better left in place or switched off, and moving them wastes effort and adds cloud cost. Discovering and assessing each app first, then planning and sequencing by dependency, avoids migrating something only to retire it later. The cost is the time spent on discovery before anything moves."
+     "a": {
+      "lead": "**Migration is a decision per application.**",
+      "items": [
+       "Some apps are better **left in place** or **switched off** → moving them **wastes effort** and adds **cloud cost**",
+       "**Discover and assess** each app first, then **plan and sequence by dependency**",
+       "→ avoids **migrating something only to retire it later**"
+      ],
+      "foot": "Cost: the time spent on **discovery** before anything moves."
+     }
     }
    ],
    "visuals": [
@@ -615,15 +725,46 @@
    "check": [
     {
      "q": "A bank wants its transaction system on a managed cloud database but cannot touch the business logic. Rehost or Replatform?",
-     "a": "Replatform: it swaps the platform (the database) with minimal compatibility changes while code structure and features stay the same. Rehost would move the app with its existing self-managed database unchanged. Replatform adds testing for database compatibility in exchange for less database operations work."
+     "a": {
+      "lead": "**Replatform.**",
+      "items": [
+       "**Swaps the platform** (the database) with **minimal compatibility changes**; **code structure and features** stay the same",
+       "**Rehost** would move the app with its existing **self-managed database unchanged**"
+      ],
+      "foot": "Replatform adds **testing for database compatibility** in exchange for **less database operations work**."
+     }
     },
     {
      "q": "After a Rehost, the business asks why the app's features and slow reports didn't improve. Is the migration a failure?",
-     "a": "No, if the goal was infrastructure. Rehost changes only where the app runs, so its benefits are infrastructure ones: scaling at peaks, less hardware upkeep, redundancy, remote access and the provider's security posture. Faster reports or new features need Replatform (for example a managed analytics service) or deeper options. Set those expectations in the business case."
+     "a": {
+      "lead": "**No**, if the goal was **infrastructure**.",
+      "items": [
+       "**Rehost changes only where the app runs** → its benefits are **infrastructure** ones",
+       {
+        "t": "**Rehost benefits**:",
+        "sub": [
+         "**scaling at peaks**",
+         "**less hardware upkeep**",
+         "**redundancy**",
+         "**remote access**",
+         "the provider's **security posture**"
+        ]
+       },
+       "**Faster reports or new features** → need **Replatform** (e.g. a **managed analytics service**) or deeper options"
+      ],
+      "foot": "Set those **expectations in the business case**."
+     }
     },
     {
      "q": "A retailer's app runs fine but the database can't cope with holiday peaks, and the code must not change. What option fits, and what would push you further along the spectrum?",
-     "a": "Replatform onto a managed database and auto-scaling, which addresses the peaks without touching code structure. If the code itself blocks scaling, for example through shared state in the app tier, Replatform won't be enough and Rearchitect becomes the option, at higher cost and risk."
+     "a": {
+      "lead": "**Replatform** onto a **managed database** and **auto-scaling**.",
+      "items": [
+       "Addresses the **peaks** without touching **code structure**",
+       "**What pushes further**: the **code itself blocks scaling** (e.g. **shared state in the app tier**) → Replatform won't be enough → **Rearchitect**"
+      ],
+      "foot": "Rearchitect comes at **higher cost and risk**."
+     }
     }
    ],
    "visuals": [
@@ -769,15 +910,38 @@
    "check": [
     {
      "q": "An app's features are fine, but one module can't scale and every change is risky because of technical debt. A teammate proposes Rebuild. Do you agree?",
-     "a": "Rearchitect is the better fit. It restructures the existing code without changing external behaviour, for example by extracting the bottleneck module so it scales independently, and it reduces technical debt. Rebuild rewrites everything and carries the highest cost and risk, which is justified only when new capabilities such as mobile-first, IoT or AI are needed."
+     "a": {
+      "lead": "**Rearchitect** is the better fit, not Rebuild.",
+      "items": [
+       "**Rearchitect**: restructures the existing code **without changing external behaviour** → e.g. **extract the bottleneck module** so it **scales independently**",
+       "It reduces **technical debt**",
+       "**Rebuild**: **rewrites everything**, carries the **highest cost and risk**"
+      ],
+      "foot": "Rebuild is justified only when **new capabilities** such as **mobile-first, IoT or AI** are needed."
+     }
     },
     {
      "q": "A mainframe holds valuable pricing logic that a new mobile app needs, but the mainframe is too risky to change this year. Retain, Encapsulate or Rebuild?",
-     "a": "Encapsulate: expose the pricing data and functions as APIs so the mobile app can use them without rewriting the internals. Plain Retain would leave the logic inaccessible to the new app, and Rebuild is the risk the business wants to avoid. The cost is that the legacy system stays in place, and its performance and availability now limit the new app."
+     "a": {
+      "lead": "**Encapsulate.**",
+      "items": [
+       "Expose the **pricing data and functions as APIs** → the mobile app uses them **without rewriting the internals**",
+       "**Plain Retain** → leaves the logic **inaccessible** to the new app",
+       "**Rebuild** → the **risk** the business wants to avoid"
+      ],
+      "foot": "Cost: the **legacy system stays in place**, and its **performance and availability** now **limit the new app**."
+     }
     },
     {
      "q": "A department's expense tool is home-grown, offers nothing unique, and its developer has left. Which option fits, and what goes with it?",
-     "a": "Replace with a COTS or SaaS product, taking current requirements into account, and Retire the old tool as part of the move. It is not a differentiator, so owning code adds no value. The cost is that users adapt to the product's workflow, and data has to be migrated before decommissioning."
+     "a": {
+      "lead": "**Replace** with a **COTS or SaaS** product, and **Retire** the old tool as part of the move.",
+      "items": [
+       "Take **current requirements** into account",
+       "**Not a differentiator** → **owning code adds no value**"
+      ],
+      "foot": "Cost: **users adapt** to the product's **workflow**, and **data has to be migrated** before **decommissioning**."
+     }
     }
    ]
   },
@@ -872,15 +1036,37 @@
    "check": [
     {
      "q": "Rebuild scores highest on value in Gartner's comparison. Why is it not the default answer?",
-     "a": "It also has the highest cost of change, the highest risk and a long time to value. If the diagnosed drivers only call for infrastructure or platform fixes, Rehost or Replatform give faster, cheaper, lower-risk results. Choose the lightest option that fixes the drivers, and keep Rebuild for when business logic or UX must change."
+     "a": {
+      "items": [
+       "Rebuild also has the **highest cost of change**, the **highest risk** and a **long time to value**",
+       "**Diagnosed drivers only call for infrastructure or platform fixes** → **Rehost** or **Replatform** give **faster, cheaper, lower-risk** results",
+       "**Choose the lightest option** that **fixes the drivers**"
+      ],
+      "foot": "Keep **Rebuild** for when **business logic or UX must change**."
+     }
     },
     {
      "q": "Leadership wants the first cloud migration to be the system with the biggest projected ROI, a customer-facing billing platform. How do you respond?",
-     "a": "Push back. The seven-step plan says to start simple and prioritise learning over ROI: the first project should be low-risk and highly instructive, because early success builds skills and buy-in. A billing platform is strategically important and high-risk, so a failure would set back the whole programme. Migrate it in a later wave, once the landing zone and operating model have been proven."
+     "a": {
+      "lead": "**Push back.**",
+      "items": [
+       "**Seven-step plan**: **start simple** and **prioritise learning over ROI**",
+       "**First project** should be **low-risk** and **highly instructive** → **early success** builds **skills and buy-in**",
+       "**Billing platform** is **strategically important** and **high-risk** → a failure would **set back the whole programme**"
+      ],
+      "foot": "Migrate it in a **later wave**, once the **landing zone** and **operating model** have been proven."
+     }
     },
     {
      "q": "Two candidate first workloads score the same on architecture, security, availability and performance. One team is eager, the other was told to migrate. Which would you pick?",
-     "a": "The eager team's workload. Team enthusiasm is one of the eight classification criteria because migrations need the owning team's engagement, and a willing team makes an early success and useful lessons more likely. The other workload can follow once there is a proven pattern to copy."
+     "a": {
+      "lead": "**The eager team's workload.**",
+      "items": [
+       "**Team enthusiasm** is one of the **eight classification criteria** → migrations need the **owning team's engagement**",
+       "**A willing team** → an **early success** and **useful lessons** more likely",
+       "The other workload can follow once there is a **proven pattern to copy**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -989,15 +1175,43 @@
    "check": [
     {
      "q": "Six months into migration, a CFO sees costs higher than before and wants to stop. What is the likely explanation, and what would you show?",
-     "a": "The migration bubble: duplicate environments, training, consultants, tools and lease penalties raise costs temporarily before old infrastructure is retired and optimisation starts. Show lifetime TCO against the baseline and the dates when on-premises costs stop. If the business case never showed savings, or retirement keeps slipping, the CFO's concern is valid."
+     "a": {
+      "lead": "**The migration bubble.**",
+      "items": [
+       "**Costs rise temporarily**: **duplicate environments, training, consultants, tools and lease penalties**",
+       "→ until **old infrastructure is retired** and **optimisation** starts",
+       "**Show**: **lifetime TCO** against the **baseline**, and the **dates when on-premises costs stop**"
+      ],
+      "foot": "The CFO's concern is valid if the **business case never showed savings**, or **retirement keeps slipping**."
+     }
     },
     {
      "q": "An app processes citizens' health records and must stay within national borders. The preferred provider has no local region. How does this assessment concern affect the plan?",
-     "a": "Jurisdiction and regulation can rule out regions or providers, so that provider is excluded for this app no matter what else it offers. Options include another provider with a local region, a private or hybrid placement for the records, or keeping the app on premises (Retain). Encryption and privacy controls are still needed, but they don't remove a data-location rule."
+     "a": {
+      "lead": "**Jurisdiction and regulation** can **rule out regions or providers** → that provider is **excluded** for this app, no matter what else it offers.",
+      "items": [
+       {
+        "t": "**Options**:",
+        "sub": [
+         "**another provider** with a **local region**",
+         "a **private or hybrid placement** for the records",
+         "keep the app **on premises** (**Retain**)"
+        ]
+       },
+       "**Encryption and privacy controls** are still needed, but they **don't remove** a **data-location rule**"
+      ]
+     }
     },
     {
      "q": "A portfolio analysis assigns Rehost to an app with 2 years of remaining life and high audit risk. Which assessment concerns would make you question that choice?",
-     "a": "Architecture (life expectancy) and risk (audit, contractual). With 2 years left, Retain or Retire may cost less than migrating, and audit risk means checking compliance in the target environment before moving. The planning framework expects each app's R to come from these concerns, not from a default."
+     "a": {
+      "lead": "**Architecture** (**life expectancy**) and **risk** (**audit, contractual**).",
+      "items": [
+       "**2 years left** → **Retain** or **Retire** may cost less than migrating",
+       "**Audit risk** → check **compliance in the target environment** before moving",
+       "The **planning framework** expects each app's **R** to come from these **concerns**, not from a **default**"
+      ]
+     }
     }
    ]
   },
@@ -1080,15 +1294,37 @@
    "check": [
     {
      "q": "A company's CRM is not a differentiator, has simple processes, and needs specialist skills it cannot hire. What sourcing and hosting model would you suggest?",
-     "a": "All three sourcing factors point to a partner, and the hosting would most likely be SaaS. That makes it effectively a Replace decision. The company gives up deep customisation and control of the roadmap, which is acceptable for a non-differentiating capability."
+     "a": {
+      "lead": "**Partner** sourcing, most likely **SaaS** hosting → effectively a **Replace** decision.",
+      "items": [
+       "**All three sourcing factors** point to a **partner**",
+       "**Gives up**: **deep customisation** and **control of the roadmap**"
+      ],
+      "foot": "Acceptable for a **non-differentiating** capability."
+     }
     },
     {
      "q": "A trading firm's pricing engine is its main differentiator and has complex logic, but it needs rare low-latency skills. The sourcing factors conflict. How do you decide?",
-     "a": "Differentiation carries the most weight (60% in the example), so the engine stays internally sourced even though skills point to a partner. Address the skills gap by hiring or training, or use a partner only for specialised infrastructure work. Validate the decision with stakeholders, because the weights are a decision aid, not a rule."
+     "a": {
+      "lead": "**Keep the engine internally sourced.**",
+      "items": [
+       "**Differentiation carries the most weight** (**60%** in the example) → outweighs **skills** pointing to a **partner**",
+       "**Skills gap** → **hiring or training**, or use a **partner** only for **specialised infrastructure work**"
+      ],
+      "foot": "**Validate with stakeholders**: the weights are a **decision aid**, not a rule."
+     }
     },
     {
      "q": "Using the example weights, a capability scores differentiation 3, complexity 2 and skills 1. What does the result suggest, and what should you do with it?",
-     "a": "3 × 0.6 + 2 × 0.2 + 1 × 0.2 = 2.4, which leans toward internal sourcing in the example. Skills is scored inversely, so the 1 means highly specialised skills are needed, which is a real gap to plan for. Validate against actual skills and constraints, and test risky choices with a proof of concept."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Score**: 3 × 0.6 + 2 × 0.2 + 1 × 0.2 = **2.4**",
+       "**Result** → leans toward **internal sourcing** in the example",
+       "**Skills is scored inversely** → the **1** means **highly specialised skills** are needed → a real **gap to plan for**",
+       "**Validate** against **actual skills and constraints**, and test risky choices with a **proof of concept**"
+      ]
+     }
     }
    ]
   }
@@ -1096,23 +1332,108 @@
  "exam_angles": [
   {
    "q": "A hospital's 15-year-old on-premises patient scheduling system slows down at morning peaks. The code is stable and meets business needs, but the database server is end-of-life, and patient data must stay in the country. Recommend a migration option, justify it with the drivers, and name two risks to manage.",
-   "a": "The drivers are risk (end-of-life platform) and scalability, not business fit, so Replatform: move to a managed database and auto-scaling in an in-country region, with minimal code change. Rebuild would add cost and risk without fixing anything the business needs. Manage database compatibility (test on the new engine, ideally with a proof of concept) and compliance (jurisdiction, privacy, encryption). Budget for the migration bubble while both environments run."
+   "a": {
+    "lead": "**Replatform**: move to a **managed database** and **auto-scaling** in an **in-country region**, with **minimal code change**.",
+    "items": [
+     "**Drivers**: **risk** (**end-of-life platform**) and **scalability**, not **business fit**",
+     "**Not Rebuild** → would add **cost and risk** without fixing anything the business needs",
+     {
+      "t": "**Two risks to manage**:",
+      "sub": [
+       "**database compatibility** → test on the new engine, ideally with a **proof of concept**",
+       "**compliance** → **jurisdiction, privacy, encryption**"
+      ]
+     }
+    ],
+    "foot": "Budget for the **migration bubble** while **both environments run**."
+   }
   },
   {
    "q": "A firm must exit its data centre in 6 months, with 80 apps, many over-provisioned. The CFO expects savings in year one. Compare lift-and-shift and lift-and-optimise, recommend a mix, and respond to the CFO.",
-   "a": "Lift-and-shift needs the least initial change and fits the deadline, but it carries over-provisioning and inefficiency. Lift-and-optimise lowers ongoing TCO but takes longer and costs more up front. Recommend lift-and-shift for most apps, sequenced by dependency and risk, with optimisation only for a few high-cost apps that can be done in time, and right-sizing after cutover. Tell the CFO that year one includes the migration bubble (duplicate environments, training, lease penalties), so savings depend on retirement and optimisation afterwards."
+   "a": {
+    "items": [
+     {
+      "t": "**Lift-and-shift**",
+      "sub": [
+       "needs the **least initial change** and **fits the deadline**",
+       "but **carries over-provisioning** and **inefficiency**"
+      ]
+     },
+     {
+      "t": "**Lift-and-optimise**",
+      "sub": [
+       "**lowers ongoing TCO**",
+       "but **takes longer** and **costs more up front**"
+      ]
+     },
+     {
+      "t": "**Recommended mix**",
+      "sub": [
+       "**lift-and-shift for most apps**, **sequenced by dependency and risk**",
+       "**optimisation** only for a **few high-cost apps** that can be done in time",
+       "**right-sizing after cutover**"
+      ]
+     },
+     {
+      "t": "**To the CFO**: year one includes the **migration bubble**",
+      "sub": [
+       "**duplicate environments, training, lease penalties**",
+       "**savings** depend on **retirement and optimisation** afterwards"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "Design a portfolio assessment for an organisation with 200 applications and a 2-year programme. How would you decide each app's R, and which app would you migrate first?",
-   "a": "Establish a baseline: the drivers, an inventory and dependency map, and the application concerns (performance, architecture, financial, risk, operations, security and compliance). Diagnose each app's problem with the six drivers, then assign the lightest R that fixes it, using the sourcing and hosting scoring to decide who runs it and where. Choose the first migration on the eight criteria: low-risk, instructive, with an enthusiastic team, not the highest ROI. Then iterate in waves and compare TCO against the baseline."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**Establish a baseline**",
+      "sub": [
+       "the **drivers**",
+       "an **inventory** and **dependency map**",
+       "the **application concerns**: **performance, architecture, financial, risk, operations, security and compliance**"
+      ]
+     },
+     "**Diagnose** each app's problem with the **six drivers**",
+     "**Assign the lightest R** that fixes it, using the **sourcing and hosting scoring** to decide **who runs it and where**",
+     "**Choose the first migration** on the **eight criteria**: **low-risk**, **instructive**, with an **enthusiastic team**, **not the highest ROI**",
+     "**Iterate in waves** and compare **TCO against the baseline**"
+    ]
+   }
   },
   {
    "q": "An insurer's 30-year-old policy system holds valuable rules, is nearly impossible to change, and is due to be replaced by a SaaS product in 3 years. A new mobile app needs policy data now. Choose between Retain, Encapsulate and Rebuild, and say what changes if the SaaS project is cancelled.",
-   "a": "Encapsulate: expose policy data and functions through APIs so the mobile app can use them now, hiding the internals, while the system stays in place until the planned Replace. Rebuild would duplicate work the SaaS replacement will make redundant, and plain Retain would leave the mobile app without data. The legacy system's availability and performance now limit the mobile app. If the SaaS project is cancelled, revisit the drivers: a Rearchitect or Rebuild behind the same APIs becomes the long-term path, and the APIs let you swap the implementation without breaking the app."
+   "a": {
+    "lead": "**Encapsulate**: expose **policy data and functions through APIs**, hiding the internals.",
+    "items": [
+     "The mobile app can use them **now**; the system **stays in place** until the **planned Replace**",
+     "**Not Rebuild** → would **duplicate work** the **SaaS replacement** will make redundant",
+     "**Not plain Retain** → would leave the mobile app **without data**",
+     "**Risk**: the legacy system's **availability and performance** now **limit the mobile app**",
+     {
+      "t": "**If the SaaS project is cancelled**: **revisit the drivers**",
+      "sub": [
+       "a **Rearchitect or Rebuild behind the same APIs** becomes the **long-term path**",
+       "the **APIs** let you **swap the implementation** without **breaking the app**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A team migrating a 3-tier app proposes containers instead of VMs for the web and app tiers, keeping the database on a VM. Evaluate the proposal, including where containers would be the wrong choice.",
-   "a": "Reasonable for stateless web and app tiers: containers are lighter, usually start faster, package the app consistently, and let each tier scale on its own. Keep the database on a VM or move it to a managed database if it needs OS-level tuning or strong isolation. Containers would be the wrong choice where a workload needs a different OS kernel or strong tenant separation, because they share the host kernel. Actual startup gains depend on image size and application initialisation."
+   "a": {
+    "lead": "**Reasonable** for **stateless web and app tiers**.",
+    "items": [
+     "**Containers**: **lighter**, usually **start faster**, **package the app consistently**, and let **each tier scale on its own**",
+     "**Database**: keep it on a **VM** or move it to a **managed database** if it needs **OS-level tuning** or **strong isolation**",
+     "**Wrong choice** where a workload needs a **different OS kernel** or **strong tenant separation** → containers **share the host kernel**"
+    ],
+    "foot": "Actual **startup gains** depend on **image size** and **application initialisation**."
+   }
   }
  ]
 }

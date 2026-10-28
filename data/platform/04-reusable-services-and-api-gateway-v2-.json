@@ -133,19 +133,57 @@
    "check": [
     {
      "q": "A team splits a monolith by turning each in-process method call into a remote call one for one. A single page now makes 40 remote calls and is slow. Diagnose the problem.",
-     "a": "Remote calls cost far more than in-process calls, so remote APIs need to be coarser-grained than the library-style interfaces they replaced. The services should expose fewer, larger operations around business capabilities, which may mean revisiting the boundaries. Moving responsibilities between services later is harder once they sit across process boundaries, so the split deserves care up front."
+     "a": {
+      "lead": "Remote calls **cost far more** than in-process calls → remote APIs need to be **coarser-grained** than the **library-style interfaces** they replaced.",
+      "items": [
+       "Services should expose **fewer, larger operations** around **business capabilities**",
+       "May mean **revisiting the boundaries**"
+      ],
+      "foot": "Moving responsibilities between services later is **harder** once they sit across **process boundaries**, so the split deserves **care up front**."
+     }
     },
     {
      "q": "Order and Inventory now own separate databases. A manager asks for 'one ACID transaction across both, like before'. How do you respond?",
-     "a": "Microservices favour decentralised data, where each service manages its own database and coordinates with others without a shared transaction. That means eventual consistency plus compensating operations, such as releasing stock if the order fails. If the business truly needs both changes to commit atomically, that suggests the data belongs in one service rather than a distributed transaction."
+     "a": {
+      "lead": "Microservices favour **decentralised data**: each service manages its **own database** and coordinates with others **without a shared transaction**.",
+      "items": [
+       "→ **eventual consistency** plus **compensating operations**, such as **releasing stock** if the order fails",
+       "If the business truly needs both changes to **commit atomically** → that suggests the data **belongs in one service** rather than a **distributed transaction**"
+      ]
+     }
     },
     {
      "q": "A company has separate UI, backend and database teams, and every new feature becomes a cross-team project needing budget approval. What does Conway's law predict about its system, and what would you change?",
-     "a": "The system will mirror those silos: layers owned by different teams, tangled together, with logic pushed into whichever part a team can touch. Organise cross-functional teams around business capabilities, each with the full range of skills from user experience to database, so each team's service matches a capability. Teams then own their service end to end, including running it."
+     "a": {
+      "items": [
+       {
+        "t": "**Prediction**: the system will **mirror those silos**",
+        "sub": [
+         "Layers **owned by different teams**, **tangled together**",
+         "Logic pushed into whichever part a team can touch"
+        ]
+       },
+       {
+        "t": "**Change**",
+        "sub": [
+         "Organise **cross-functional teams** around **business capabilities**, each with the **full range of skills** from **user experience** to **database**",
+         "→ each team's service **matches a capability**",
+         "Teams **own their service end to end**, including **running it**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "An architect proposes putting routing, message transformation and business rules into a central message bus so the services can stay simple. Critique the proposal.",
-     "a": "That is the enterprise-service-bus style, with smarts in the pipe. Microservices prefer smart endpoints and dumb pipes: the logic stays in cohesive services and the bus only routes messages. A smart central bus couples every service to one shared component and its team, so changes queue up there. The cost of the microservice style is that each service owns more of its own logic."
+     "a": {
+      "lead": "That is the **enterprise-service-bus** style, with **smarts in the pipe**.",
+      "items": [
+       "Microservices prefer **smart endpoints and dumb pipes**: the logic stays in **cohesive services** and the bus **only routes messages**",
+       "A smart central bus **couples every service** to **one shared component** and its team → changes **queue up** there"
+      ],
+      "foot": "Cost of the microservice style: each service **owns more of its own logic**."
+     }
     }
    ],
    "visuals": [
@@ -274,19 +312,48 @@
    "check": [
     {
      "q": "Your small Shipping team must integrate with a large, established ERP whose team will not change anything for you. Should Shipping be a Conformist or build an Anticorruption Layer?",
-     "a": "It depends on whether Shipping's model can live with the ERP's. If it can, and the team cannot sustain the effort of translating, conform: it is cheaper. If the ERP is a Big Ball of Mud that would distort Shipping's model, build an Anticorruption Layer that translates to Shipping's ubiquitous language, accepting the cost of maintaining the translation."
+     "a": {
+      "lead": "**It depends** on whether Shipping's model can live with the ERP's.",
+      "items": [
+       "**Conform** if it can, and the team cannot sustain the **effort of translating** → it is **cheaper**",
+       "**Build an Anticorruption Layer** if the ERP is a **Big Ball of Mud** that would **distort Shipping's model** → translates to Shipping's **ubiquitous language**"
+      ],
+      "foot": "ACL trade-off: accept the cost of **maintaining the translation**."
+     }
     },
     {
      "q": "Eight downstream contexts each maintain their own translation of the Customer context's model, and every Customer change breaks several of them. What should the Customer team offer instead?",
-     "a": "An Open Host Service, a protocol or set of services giving access to the context, with a Published Language such as a documented JSON Schema. Downstream teams can then consume and translate easily, and an anticorruption layer becomes less crucial for them. The Customer team takes on keeping that public interface stable and versioned."
+     "a": {
+      "lead": "An **Open Host Service** with a **Published Language**.",
+      "items": [
+       "**Open Host Service**: a **protocol or set of services** giving access to the context",
+       "**Published Language**: such as a documented **JSON Schema**",
+       "→ downstream teams can **consume and translate easily**; an **anticorruption layer** becomes **less crucial** for them"
+      ],
+      "foot": "Cost: the Customer team takes on keeping that **public interface stable and versioned**."
+     }
     },
     {
      "q": "Marketing wants a small piece of Billing's data, but Billing's model does not really provide what Marketing needs, and integrating would take months. What mapping fits?",
-     "a": "Separate Ways: integration would not give a significant payoff because the functionality sought is not fully provided by the source ubiquitous language. Marketing builds its own specialised solution. The cost is some duplicated capability, which is cheaper than months of integration."
+     "a": {
+      "lead": "**Separate Ways.**",
+      "items": [
+       "Integration would **not give a significant payoff**: the functionality sought is **not fully provided** by the source **ubiquitous language**",
+       "Marketing builds its **own specialised solution**"
+      ],
+      "foot": "Cost: some **duplicated capability**, which is cheaper than **months of integration**."
+     }
     },
     {
      "q": "Two teams propose a shared kernel of 40 classes so they can stop translating between their contexts. What concerns would you raise?",
-     "a": "A shared kernel should be a small common model, and even then it is hard to conceive and maintain, because it needs open communication and constant agreement between both teams. Forty classes would bind their release schedules together. A Customer-Supplier relationship, or an Open Host Service with a Published Language, keeps the teams more independent."
+     "a": {
+      "items": [
+       "A **shared kernel** should be a **small common model**",
+       "Even then it is **hard to conceive and maintain**: needs **open communication** and **constant agreement** between both teams",
+       "**Forty classes** → would **bind their release schedules** together"
+      ],
+      "foot": "Alternative: a **Customer-Supplier** relationship, or an **Open Host Service** with a **Published Language**, keeps the teams more **independent**."
+     }
     }
    ],
    "visuals": [
@@ -422,19 +489,61 @@
    "check": [
     {
      "q": "When an order is placed, the Loyalty context must add points. Loyalty is offline for 20 minutes every night for maintenance. Would you integrate with REST or messaging?",
-     "a": "Messaging. Order publishes a domain event and Loyalty processes it when it comes back, which removes the temporal coupling of a blocking REST call that would fail or stall orders during the outage. It needs at-least-once delivery and an idempotent receiver in Loyalty. The trade-off is that points appear later rather than immediately."
+     "a": {
+      "lead": "**Messaging.**",
+      "items": [
+       "Order publishes a **domain event**; Loyalty **processes it when it comes back**",
+       "→ removes the **temporal coupling** of a **blocking REST call** that would fail or stall orders during the outage",
+       "Needs **at-least-once delivery** and an **idempotent receiver** in Loyalty"
+      ],
+      "foot": "Trade-off: points appear **later** rather than immediately."
+     }
     },
     {
      "q": "After a broker redelivery, the Loyalty subscriber processes the same OrderPlaced event twice and awards double points. What is the fix?",
-     "a": "At-least-once delivery means redelivery is expected, so the receiver must be idempotent. Record processed event IDs and skip duplicates, or make the update safe to reapply, such as 'set points for order X' instead of 'add points'. Switching off redelivery would just swap duplicates for lost messages."
+     "a": {
+      "lead": "**At-least-once delivery** means redelivery is expected → the **receiver must be idempotent**.",
+      "items": [
+       "**Record processed event IDs** and **skip duplicates**",
+       "Or make the update **safe to reapply**: 'set points for order X' instead of 'add points'"
+      ],
+      "foot": "Switching off redelivery would just swap **duplicates** for **lost messages**."
+     }
     },
     {
      "q": "To save time, the Reporting context reads the Order context's tables directly. What is wrong with this?",
-     "a": "Database integration is the type to avoid. It couples Reporting to Order's internal storage, breaks the bounded context's encapsulation, and means any change to Order's schema can break Reporting without warning. Use Order's published API, or subscribe to its domain events and build Reporting's own read model, at the cost of some lag."
+     "a": {
+      "lead": "**Database integration is the type to avoid.**",
+      "items": [
+       "**Couples** Reporting to Order's **internal storage**",
+       "Breaks the bounded context's **encapsulation**",
+       "Any change to Order's **schema** can break Reporting **without warning**",
+       "**Fix**: use Order's **published API**, or subscribe to its **domain events** and build Reporting's own **read model**"
+      ],
+      "foot": "Cost: some **lag**."
+     }
     },
     {
      "q": "A team chose SOAP RPC between two contexts because the call looks just like a local procedure call. What risks does that hide, and what practices reduce them?",
-     "a": "The call still crosses the network, so it lacks robustness against latency, network failure and upstream failure, and it couples the client strongly to the service and protocol. The lecture's practices are an Open Host Service with a Published Language upstream and an Anticorruption Layer downstream. If the flow does not need an immediate answer, messaging would remove the temporal coupling."
+     "a": {
+      "items": [
+       {
+        "t": "**Hidden risks**: the call still **crosses the network**",
+        "sub": [
+         "Lacks **robustness** against **latency**, **network failure** and **upstream failure**",
+         "**Couples** the client strongly to the **service and protocol**"
+        ]
+       },
+       {
+        "t": "**Practices** from the lecture",
+        "sub": [
+         "**Open Host Service** with a **Published Language** upstream",
+         "**Anticorruption Layer** downstream"
+        ]
+       },
+       "If the flow does not need an **immediate answer** → **messaging** would remove the **temporal coupling**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -583,19 +692,49 @@
    "check": [
     {
      "q": "A Sprint aggregate holds direct object references to all its BacklogItems, which hold all their Tasks. Loading a sprint takes three seconds and concurrent edits often fail. What would you change?",
-     "a": "Design small aggregates and reference other aggregates by identity. Make BacklogItem its own aggregate that holds a SprintId value object, and have Sprint hold BacklogItemIds rather than objects. Smaller aggregates load faster, use less memory and succeed more often under concurrency. Changes that span both are then made through domain events in separate transactions, which means eventual consistency."
+     "a": {
+      "lead": "Design **small aggregates** and **reference other aggregates by identity**.",
+      "items": [
+       "Make **BacklogItem its own aggregate** that holds a **SprintId value object**",
+       "**Sprint holds BacklogItemIds** rather than objects",
+       "→ smaller aggregates **load faster**, use **less memory** and **succeed more often under concurrency**"
+      ],
+      "foot": "Changes that span both are then made through **domain events** in **separate transactions** → **eventual consistency**."
+     }
     },
     {
      "q": "The business says that when a backlog item is committed, the sprint's capacity must never be exceeded, checked at the same commit. Today Sprint and BacklogItem are separate aggregates updated by a domain event. What do you do?",
-     "a": "This invariant must hold within one transaction, and the delay of a domain event would allow unacceptable inconsistency. So consider merging the commitment data into one aggregate within the same bounded context, which the lecture advises when two must be updated immediately one after the other. The cost is a larger aggregate with more contention, so first check whether the business could accept detecting and correcting an over-commit instead."
+     "a": {
+      "lead": "This **invariant must hold within one transaction**; the delay of a **domain event** would allow **unacceptable inconsistency**.",
+      "items": [
+       "**Consider merging** the commitment data into **one aggregate** within the **same bounded context**",
+       "The lecture advises this when two must be **updated immediately one after the other**"
+      ],
+      "foot": "Cost: a **larger aggregate** with **more contention**, so first check whether the business could accept **detecting and correcting an over-commit** instead."
+     }
     },
     {
      "q": "In code review, the Order aggregate has only getters and setters, while an OrderService checks that the total does not exceed the credit limit and then sets the status. What is the problem?",
-     "a": "It is an anaemic domain model: business logic has leaked out of the aggregate into an application service. Other code paths can set the status without checking the rule, so the invariant is not protected inside the boundary. Move the rule into a method on Order, such as place(), that enforces it before changing state."
+     "a": {
+      "lead": "**Anaemic domain model**: business logic has leaked out of the aggregate into an **application service**.",
+      "items": [
+       "Other code paths can **set the status without checking the rule**",
+       "→ the **invariant is not protected** inside the **boundary**",
+       "**Fix**: move the rule into a method on Order, such as **place()**, that enforces it **before changing state**"
+      ]
+     }
     },
     {
      "q": "A team models Money as an entity with its own ID and table, and Customer as a value object. Critique the model.",
-     "a": "It is backwards. Money is a value object: it has no identity of its own, is immutable, and describes an amount. Customer is an entity with a unique identity whose attributes change over time. Making Money an entity adds needless IDs and invites shared mutable amounts, while making Customer a value object makes it impossible to track one customer across changes."
+     "a": {
+      "lead": "**It is backwards.**",
+      "items": [
+       "**Money is a value object**: **no identity** of its own, **immutable**, describes an amount",
+       "**Customer is an entity**: a **unique identity** whose attributes **change over time**",
+       "Making Money an entity → adds **needless IDs** and invites **shared mutable amounts**",
+       "Making Customer a value object → **impossible to track** one customer across changes"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -726,19 +865,48 @@
    "check": [
     {
      "q": "A service commits an Order and then publishes OrderPlaced as a separate step. Occasionally the process crashes between the two. What is the consequence, and what is the fix?",
-     "a": "The order exists but the event is lost, so subscribers such as Inventory and Billing never learn about it and stay stale. Commit the modified aggregate and the domain event in the same transaction, then deliver recorded events reliably afterwards, including after recovery. Subscribers still need to be idempotent, because that delivery can repeat."
+     "a": {
+      "lead": "The order exists but the **event is lost** → subscribers such as **Inventory** and **Billing** never learn about it and **stay stale**.",
+      "items": [
+       "**Fix**: commit the **modified aggregate** and the **domain event** in the **same transaction**",
+       "Then **deliver recorded events reliably** afterwards, including **after recovery**"
+      ],
+      "foot": "Subscribers still need to be **idempotent**, because that delivery can **repeat**."
+     }
     },
     {
      "q": "Shipping receives OrderPlaced events carrying only the orderId and calls the Order API back for the address and tenantId on every event. The Order API is now overloaded. What would you change?",
-     "a": "Make the event carry all the properties of the command that caused it, and enrich it with extra data such as tenantId and the delivery address, so consumers need not query the publisher. That removes the remote calls and decouples Shipping from Order's availability. The cost is larger events and an event schema that must be kept stable for every consumer."
+     "a": {
+      "items": [
+       "Make the event **carry all the properties of the command** that caused it",
+       "**Enrich** it with extra data such as **tenantId** and the **delivery address** → consumers need not **query the publisher**",
+       "→ removes the **remote calls** and **decouples Shipping** from Order's **availability**"
+      ],
+      "foot": "Cost: **larger events** and an **event schema** that must be **kept stable** for every consumer."
+     }
     },
     {
      "q": "On a forum, replies sometimes appear on other users' screens before the post they answer. Which property is violated, and what must the design guarantee?",
-     "a": "Causal consistency: causally related operations must be seen in the same order by every dependent node. A reply depends on its post, so its event must never be applied before the post's event. Give events an order within each conversation and have consumers apply them in that order, waiting for missing predecessors. Ordering every event globally would be stricter and more costly than needed."
+     "a": {
+      "lead": "**Causal consistency**: causally related operations must be seen **in the same order** by every **dependent node**.",
+      "items": [
+       "A **reply depends on its post** → its event must never be applied before the post's event",
+       "Give events an **order within each conversation**; consumers apply them in that order, **waiting for missing predecessors**"
+      ],
+      "foot": "**Ordering every event globally** would be stricter and more costly than needed."
+     }
     },
     {
      "q": "Maid2Order's MaidOrderManager must tell BillingManager through messaging when a customer's usage should be billed. Identify, name and shape the domain event.",
-     "a": "Start from the messaging context mapping and the business function that relies on it, billing a customer's maid usage, and ask what occurrence BillingManager needs to know about. Name it in the past tense, for example MaidUsageBillIssued, following the command that caused it. Give it the command's properties, such as the bill, customer and usage IDs, amount and period, and enrich it with anything Billing would otherwise query back for. A name like IssueBill would describe a request, not something that happened."
+     "a": {
+      "items": [
+       "**Start from the messaging context mapping** and the **business function** that relies on it (**billing a customer's maid usage**); ask what **occurrence** BillingManager needs to know about",
+       "**Name it in the past tense**, for example **MaidUsageBillIssued**, following the **command** that caused it",
+       "**Shape**: give it the command's properties, such as the **bill**, **customer** and **usage IDs**, **amount** and **period**, and **enrich** it with anything Billing would otherwise **query back** for"
+      ],
+      "ordered": true,
+      "foot": "A name like **IssueBill** would describe a **request**, not something that happened."
+     }
     }
    ],
    "visuals": [
@@ -829,15 +997,39 @@
    "check": [
     {
      "q": "In the car-rental example, the Rental Manager's aggregate was too large, and extending a rental updated the rental record directly. What did the redesign do, and what does it cost?",
-     "a": "It split the aggregate into smaller ones (Rent Ctrl and Rent Ext) and replaced the direct update with a Rental Extended domain event, so each transaction changes one small aggregate. That improves memory use, speed and transactional success. The cost is eventual consistency: for a short time the rental date is not yet updated."
+     "a": {
+      "items": [
+       "**Split the aggregate** into smaller ones: **Rent Ctrl** and **Rent Ext**",
+       "Replaced the direct update with a **Rental Extended domain event** → each transaction changes **one small aggregate**",
+       "→ improves **memory use**, **speed** and **transactional success**"
+      ],
+      "foot": "Cost: **eventual consistency**: for a short time the **rental date is not yet updated**."
+     }
     },
     {
      "q": "After that redesign, a teammate proposes one shared database for RentalMgr, VehicleMgr and CustomerMgr to make reporting easier. How do you respond?",
-     "a": "No. In the resulting architecture each service has its own transaction scope, data repository, database, team and code repository, and VehicleRented and VehicleReturned events are how they integrate. A shared database would recouple them through schema changes. Build reporting from those events into its own read model instead, accepting some lag."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "In the resulting architecture each service has its own **transaction scope**, **data repository**, **database**, **team** and **code repository**",
+       "**VehicleRented** and **VehicleReturned** events are how they **integrate**",
+       "A **shared database** would **recouple** them through **schema changes**"
+      ],
+      "foot": "Instead: build **reporting** from those events into its own **read model**, accepting some **lag**."
+     }
     },
     {
      "q": "For the workshop, design the aggregates of Maid2Order's MaidOrderManager. Which entity is a root, and what do the others reference?",
-     "a": "One defensible design makes MaidUsage the aggregate root for a customer's ordered service, holding the CustomerId and a MaidUsagePlanId by identity, since plans are a shared catalogue that changes independently. MaidUsageBill is its own aggregate referencing the MaidUsage by ID, so issuing a bill does not lock the usage. Changes propagate through events such as MaidUsageCreated and MaidUsageBillIssued. If a plan change must be reflected in the bill at the same commit, that is the signal to merge."
+     "a": {
+      "lead": "One defensible design:",
+      "items": [
+       "**MaidUsage = aggregate root** for a customer's ordered service, holding the **CustomerId** and a **MaidUsagePlanId** by **identity**",
+       "Why by identity: **plans** are a **shared catalogue** that changes **independently**",
+       "**MaidUsageBill** is its **own aggregate** referencing the MaidUsage by ID → **issuing a bill does not lock the usage**",
+       "Changes propagate through **events** such as **MaidUsageCreated** and **MaidUsageBillIssued**"
+      ],
+      "foot": "If a **plan change** must be reflected in the bill **at the same commit**, that is the signal to **merge**."
+     }
     }
    ],
    "visuals": [
@@ -933,15 +1125,36 @@
    "check": [
     {
      "q": "A new-customer flow currently creates the customer, then loyalty points, a welcome pack and a welcome email. Next quarter three other teams will add SMS, CRM and fraud-screening reactions. Orchestration or choreography?",
-     "a": "Choreography. The Customer service emits one event, and each new team subscribes without changing the Customer service, which keeps services loosely coupled. Orchestration would make Customer a growing 'god' service that knows every step. The cost is an implicit flow, so you must monitor that each reaction happens."
+     "a": {
+      "lead": "**Choreography.**",
+      "items": [
+       "The Customer service **emits one event**; each new team **subscribes** without changing the Customer service → services stay **loosely coupled**",
+       "**Orchestration** would make Customer a growing **'god' service** that knows every step"
+      ],
+      "foot": "Cost: an **implicit flow**, so you must **monitor** that each reaction happens."
+     }
     },
     {
      "q": "The onboarding flow is choreographed, and the operations team cannot tell whether a given customer ever received the welcome pack. What is missing?",
-     "a": "Choreography needs monitoring and tracking to confirm that the implicit flow completes as expected. Correlate the events for each customer with a shared ID and trace them, and alert when an expected reaction has not happened within a time limit. If visibility of progress is essential, orchestrate that part, since the lecture says the two can be mixed."
+     "a": {
+      "lead": "**Monitoring and tracking**: choreography needs them to confirm that the **implicit flow** completes as expected.",
+      "items": [
+       "**Correlate** the events for each customer with a **shared ID** and **trace** them",
+       "**Alert** when an expected reaction has not happened within a **time limit**"
+      ],
+      "foot": "If **visibility of progress** is essential, **orchestrate** that part, since the lecture says the two can be **mixed**."
+     }
     },
     {
      "q": "A refund process has strictly ordered steps, and support staff need to see exactly which step each refund has reached. Which approach fits, and what is its risk?",
-     "a": "Orchestration: an explicit flow in one coordinator gives a clear view of each refund's progress and enforces the order of steps, and it can use a rules engine. Its risk is an overly smart 'god' service. Keep the coordinator limited to directing the flow, and leave each step's business logic in the service that owns it."
+     "a": {
+      "lead": "**Orchestration.**",
+      "items": [
+       "**Explicit flow** in one **coordinator** → a clear view of each refund's **progress**",
+       "Enforces the **order of steps**, and can use a **rules engine**"
+      ],
+      "foot": "Risk: an overly smart **'god' service** → keep the coordinator limited to **directing the flow**, and leave each step's **business logic** in the service that owns it."
+     }
     }
    ],
    "visuals": [
@@ -1063,15 +1276,40 @@
    "check": [
     {
      "q": "The Gamification service is configured with the Multiplication service's IP address. Operations scale Multiplication to three instances, and later one instance restarts at a new address. What happens?",
-     "a": "Gamification keeps calling the one configured address, so the new instances get no traffic, and the call breaks once that instance moves. In virtualised or containerised environments instances are ephemeral, so services need a registry and a router that looks up available instances and load-balances. With server-side discovery the client calls a well-known router and never needs instance addresses."
+     "a": {
+      "items": [
+       "Gamification keeps calling **the one configured address** → the **new instances get no traffic**",
+       "The call **breaks** once that instance **moves**",
+       "**Why**: in **virtualised or containerised** environments instances are **ephemeral**",
+       "**Fix**: a **registry** and a **router** that looks up **available instances** and **load-balances**",
+       "**Server-side discovery** → the client calls a **well-known router** and never needs instance addresses"
+      ]
+     }
     },
     {
      "q": "A web app and a smartwatch app need differently shaped data from the same four services. What can an API gateway do for them, and what does it cost?",
-     "a": "The gateway can offer each client its optimal API, aggregate the four calls into one trip, translate the public protocol to internal ones, and hide how the application is partitioned. Clients get simpler and faster, and services can be split or moved behind it. The cost is client-specific gateway logic to maintain, and the gateway becomes a critical component that must be highly available."
+     "a": {
+      "lead": "The **gateway** can:",
+      "items": [
+       "Offer each client its **optimal API**",
+       "**Aggregate** the four calls into **one trip**",
+       "**Translate** the public protocol to **internal ones**",
+       "**Hide** how the application is **partitioned**",
+       "→ clients get **simpler and faster**; services can be **split or moved** behind it"
+      ],
+      "foot": "Cost: **client-specific gateway logic** to maintain, and the gateway becomes a **critical component** that must be **highly available**."
+     }
     },
     {
      "q": "After adding a gateway and a registry, the team scales each service to three instances. Which single points of failure remain in the lecture's sample architecture?",
-     "a": "The databases shared by each service's instances and the message broker both need high availability. The gateway and registry themselves must also be replicated, or they become new single points of failure. Scaling the stateless service instances alone does not remove these."
+     "a": {
+      "items": [
+       "**Databases** shared by each service's instances → need **high availability**",
+       "**Message broker** → needs **high availability**",
+       "**Gateway and registry** must themselves be **replicated**, or they become **new single points of failure**"
+      ],
+      "foot": "Scaling the **stateless service instances** alone does not remove these."
+     }
     }
    ],
    "visuals": [
@@ -1152,11 +1390,27 @@
    "check": [
     {
      "q": "A Feign client method looks just like a local method call. Can the calling code treat it as equally reliable?",
-     "a": "No. It still performs a remote HTTP call, with latency, timeouts and possible partial failure. Discovery and load balancing find a healthy instance, but timeouts, circuit breakers and safe retries are still needed. The convenience hides the network; it does not remove it."
+     "a": {
+      "lead": "**No.** It still performs a **remote HTTP call**.",
+      "items": [
+       "→ **latency**, **timeouts** and possible **partial failure**",
+       "**Discovery and load balancing** find a healthy instance",
+       "But **timeouts**, **circuit breakers** and **safe retries** are still needed"
+      ],
+      "foot": "The convenience **hides the network**; it does not remove it."
+     }
     },
     {
      "q": "A teammate says: 'Our services follow bounded contexts, so they are decoupled; we don't need context maps, aggregates or domain events.' How do you respond?",
-     "a": "Bounded contexts still use each other's entities and need to know about each other's events, so they are not totally decoupled. Context mappings model how they integrate, aggregates break direct references between services and set transaction scope, and domain events give loosely coupled integration. Without these, the coupling still exists, just undesigned and hidden in ad hoc calls and shared data."
+     "a": {
+      "lead": "Bounded contexts are **not totally decoupled**: they still **use each other's entities** and need to know about each other's **events**.",
+      "items": [
+       "**Context mappings** → model how they **integrate**",
+       "**Aggregates** → break **direct references** between services and set **transaction scope**",
+       "**Domain events** → **loosely coupled integration**"
+      ],
+      "foot": "Without these, the coupling still exists, just **undesigned** and hidden in **ad hoc calls** and **shared data**."
+     }
     }
    ]
   }
@@ -1164,27 +1418,126 @@
  "exam_angles": [
   {
    "q": "In an online-auction platform, the Bidding context's Auction aggregate holds every Bid placed on it, often thousands. A live leaderboard is computed by querying the Bidding database each time one of up to 50,000 concurrent viewers refreshes. You doubt viewers will see the latest bids promptly. Identify the most likely cause, propose a countermeasure by revising the domain model, and give its drawback.",
-   "a": "Cause: the oversized Auction aggregate makes every bid load and lock a large object graph, so bids contend and transactions slow down, and the leaderboard reads compete with bid writes on the same transactional store. Countermeasure: make Bid its own small aggregate referencing AuctionId, with Auction keeping only the invariants it must protect at commit, such as the current highest valid bid. Publish an enriched BidPlaced event in the same transaction as the bid, and let a Leaderboard context maintain its own read model from those events and push updates to viewers. Drawback: the leaderboard is eventually consistent, events must be applied in order per auction and processed idempotently, and there are more components to run and monitor."
+   "a": {
+    "items": [
+     {
+      "t": "**Cause**",
+      "sub": [
+       "**Oversized Auction aggregate** → every bid **loads and locks a large object graph** → bids **contend** and transactions **slow down**",
+       "**Leaderboard reads compete with bid writes** on the same **transactional store**"
+      ]
+     },
+     {
+      "t": "**Countermeasure** (revise the domain model)",
+      "sub": [
+       "Make **Bid its own small aggregate** referencing **AuctionId**",
+       "**Auction** keeps only the **invariants** it must protect at commit, such as the **current highest valid bid**",
+       "Publish an **enriched BidPlaced event** in the **same transaction** as the bid",
+       "A **Leaderboard context** maintains its own **read model** from those events and **pushes updates** to viewers"
+      ]
+     },
+     {
+      "t": "**Drawback**",
+      "sub": [
+       "The leaderboard is **eventually consistent**",
+       "Events must be applied **in order per auction** and processed **idempotently**",
+       "**More components** to run and monitor"
+      ]
+     }
+    ],
+    "ordered": true
+   }
   },
   {
    "q": "A platform has been split into Order, Inventory and Billing services, and Billing must also integrate with a legacy finance system that nobody will change. Design the context mappings and integration types, and justify each.",
-   "a": "Order depends on Inventory as a Customer-Supplier: Inventory, upstream, tries to meet Order's requests but has the final say. Inventory and Billing expose Open Host Services with a Published Language, such as JSON Schema, so downstream contexts can consume them with little translation. Billing protects its model from the legacy finance system with an Anticorruption Layer, accepting the cost of maintaining the translation. Avoid database or file integration. Use messaging with domain events where an immediate reply is not needed, with at-least-once delivery and idempotent receivers, and REST only where the caller needs an answer now."
+   "a": {
+    "items": [
+     "**Order depends on Inventory: Customer-Supplier**: Inventory, **upstream**, tries to meet Order's requests but has the **final say**",
+     "**Inventory and Billing expose Open Host Services** with a **Published Language**, such as **JSON Schema** → downstream contexts consume them with **little translation**",
+     "**Billing vs the legacy finance system: Anticorruption Layer** protects Billing's model, accepting the cost of **maintaining the translation**",
+     "**Avoid database or file integration**",
+     "**Messaging with domain events** where an **immediate reply** is not needed, with **at-least-once delivery** and **idempotent receivers**",
+     "**REST** only where the caller **needs an answer now**"
+    ]
+   }
   },
   {
    "q": "A customer places an order that must reduce stock held in an Inventory aggregate in another service. Design this with aggregates and domain events, and say what you would do if the business cannot accept delayed stock allocation.",
-   "a": "Order commits its change and an OrderPlaced event in one local transaction, referencing products by ID. The event, carrying the order lines and any data Inventory would otherwise query, is delivered reliably, and Inventory decrements stock in its own transaction, handling duplicates idempotently. A failure publishes a compensating outcome, such as StockReservationFailed, so the order can be cancelled. If allocation must be immediate, events cannot promise that: either move the reservation into the same aggregate and context, or reserve stock synchronously before confirming the order, accepting tighter coupling."
+   "a": {
+    "items": [
+     "**Order** commits its change and an **OrderPlaced event** in **one local transaction**, referencing products **by ID**",
+     "The event, carrying the **order lines** and any data Inventory would otherwise **query**, is **delivered reliably**",
+     "**Inventory** decrements stock in its **own transaction**, handling **duplicates idempotently**",
+     "A failure publishes a **compensating outcome**, such as **StockReservationFailed** → the order can be **cancelled**"
+    ],
+    "ordered": true,
+    "foot": "If allocation **must be immediate**, events cannot promise that: either **move the reservation into the same aggregate and context**, or **reserve stock synchronously** before confirming the order, accepting **tighter coupling**."
+   }
   },
   {
    "q": "A new-customer flow must create loyalty points, dispatch a welcome pack and send an email; legal now requires proof that every customer received the privacy email within 24 hours. Compare orchestration and choreography for this flow and recommend a design.",
-   "a": "Orchestration gives an explicit flow in the Customer service, which is simple and easy to audit, but it risks a 'god' service coupled to every step. Choreography has the Customer service emit one event that each service reacts to, which is loosely coupled and easy to extend, but the flow is implicit and must be monitored. A mixed design fits: choreograph the loyalty points and welcome pack, and orchestrate or explicitly track the privacy email, recording its completion against the customer ID and alerting if it is missing after 24 hours. The cost is two styles to understand and operate."
+   "a": {
+    "items": [
+     {
+      "t": "**Orchestration**",
+      "sub": [
+       "**Explicit flow** in the Customer service → **simple** and **easy to audit**",
+       "Risk: a **'god' service** coupled to every step"
+      ]
+     },
+     {
+      "t": "**Choreography**",
+      "sub": [
+       "The Customer service **emits one event** that each service reacts to → **loosely coupled**, **easy to extend**",
+       "But the flow is **implicit** and must be **monitored**"
+      ]
+     },
+     {
+      "t": "**Recommend: a mixed design fits**",
+      "sub": [
+       "**Choreograph** the loyalty points and welcome pack",
+       "**Orchestrate or explicitly track** the **privacy email**: record its **completion against the customer ID** and **alert** if it is missing after **24 hours**"
+      ]
+     }
+    ],
+    "foot": "Cost: **two styles** to understand and operate."
+   }
   },
   {
    "q": "At peak, 500 payments a minute are confirmed. Each confirmation must update the Order context and trigger a customer notification; the Notification service is available 99% of the time. Would you integrate by REST or messaging, and what must be true for your choice to be safe?",
-   "a": "Messaging. Publishing PaymentConfirmed lets Payment finish even when Notification is among its 1% of downtime, and the queued events catch up later; synchronous REST would make payment confirmation depend on Notification being up. For safety, the event must be committed with the payment state, delivered at least once, and handled by idempotent receivers in Order and Notification. The cost is that the order status and notification lag slightly behind the payment, so if the user's screen must show the result at once, read it from Payment directly."
+   "a": {
+    "lead": "**Messaging.**",
+    "items": [
+     "Publishing **PaymentConfirmed** lets Payment **finish** even when Notification is among its **1% of downtime**; the **queued events catch up later**",
+     "**Synchronous REST** would make payment confirmation **depend on Notification being up**",
+     {
+      "t": "**Safe only if** the event is",
+      "sub": [
+       "**Committed with the payment state**",
+       "**Delivered at least once**",
+       "Handled by **idempotent receivers** in Order and Notification"
+      ]
+     }
+    ],
+    "foot": "Cost: the order status and notification **lag slightly** behind the payment, so if the user's screen must show the result **at once**, **read it from Payment directly**."
+   }
   },
   {
    "q": "A prototype microservice system has a browser calling services by fixed address, one database per service shared by its instances, and a single message broker. It must now scale each service to several instances. Explain what to add and which failure points to address.",
-   "a": "Add a service registry and server-side discovery: clients call a router, here the API gateway, at a well-known location, and it looks up available instances and load-balances across them. The gateway also gives each client a suitable API, aggregates calls and translates protocols. Scaling instances leaves the shared databases and the message broker as single points of failure, so both need high availability, and the gateway and registry must themselves be replicated."
+   "a": {
+    "items": [
+     "**Add a service registry and server-side discovery**: clients call a **router**, here the **API gateway**, at a **well-known location** → it looks up **available instances** and **load-balances** across them",
+     "The **gateway** also gives each client a **suitable API**, **aggregates calls** and **translates protocols**",
+     {
+      "t": "**Single points of failure** left after scaling instances",
+      "sub": [
+       "The **shared databases** → need **high availability**",
+       "The **message broker** → needs **high availability**",
+       "The **gateway and registry** must themselves be **replicated**"
+      ]
+     }
+    ]
+   }
   }
  ]
 }

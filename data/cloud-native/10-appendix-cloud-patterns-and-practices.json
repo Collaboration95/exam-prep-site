@@ -103,11 +103,26 @@
    "check": [
     {
      "q": "In a design review, a teammate proposes a home-grown mechanism for letting clients upload files directly to storage with temporary access. You recognise it as a known pattern. Why does naming it matter?",
-     "a": "It is the Valet Key pattern. Naming it gives the team a shared vocabulary and brings the pattern's known problem, mechanism and trade-offs, such as limiting the scope and lifetime of the key, so the design is easier to justify and review. A home-grown version risks rediscovering those trade-offs in production."
+     "a": {
+      "lead": "It is the **Valet Key** pattern.",
+      "items": [
+       "**Naming it** gives the team a **shared vocabulary**",
+       "Brings the pattern's known **problem**, **mechanism** and **trade-offs**, such as limiting the **scope and lifetime of the key**",
+       "→ the design is easier to **justify** and **review**"
+      ],
+      "foot": "A **home-grown** version risks rediscovering those trade-offs **in production**."
+     }
     },
     {
      "q": "A team's problem is cascading failures between services. Which group of a cloud pattern catalogue would you search first, and what would you expect to find?",
-     "a": "The Availability and Resilience group, where patterns such as Circuit Breaker, Retry, Bulkhead and Health Endpoint Monitoring address failing dependencies. Catalogues group the same patterns differently, so pick the one whose grouping matches the problem category. Then compare the candidates' trade-offs instead of applying the first match."
+     "a": {
+      "lead": "The **Availability and Resilience** group.",
+      "items": [
+       "**Expect**: **Circuit Breaker**, **Retry**, **Bulkhead**, **Health Endpoint Monitoring** → address **failing dependencies**",
+       "**Catalogues group the same patterns differently** → pick the one whose grouping matches the **problem category**",
+       "**Compare the candidates' trade-offs** instead of applying the first match"
+      ]
+     }
     }
    ]
   },
@@ -207,15 +222,38 @@
    "check": [
     {
      "q": "Twelve services in four languages must all ship logs in one format and route database connections per environment. Would you build this into each app, or use container patterns?",
-     "a": "Container patterns: an adapter sidecar converts each app's log output to the standard format, and an ambassador sidecar proxies outbound database connections to the right target for each environment. Both work in any language without changing app code. The cost is extra containers per pod and a defined start and stop order (a container chain)."
+     "a": {
+      "lead": "**Container patterns**, not per-app code.",
+      "items": [
+       "**Adapter sidecar**: converts each app's **log output** to the **standard format**",
+       "**Ambassador sidecar**: **proxies outbound database connections** to the right target **for each environment**",
+       "Both work in **any language** without changing **app code**"
+      ],
+      "foot": "Cost: **extra containers per pod** and a defined **start and stop order** (a **container chain**)."
+     }
     },
     {
      "q": "A team patches running containers in place to fix a bug, and the next autoscaling event brings back the bug. Which container properties were ignored?",
-     "a": "Immutability and disposability. New instances start from the unchanged image, so in-place fixes are lost and instances drift apart. Build a new image with the fix and roll it out, so any instance can be killed and replaced by an identical one."
+     "a": {
+      "lead": "**Immutability** and **disposability**.",
+      "items": [
+       "New instances start from the **unchanged image** → **in-place fixes are lost** and instances **drift apart**",
+       "**Fix**: build a **new image** with the fix and **roll it out**",
+       "→ any instance can be **killed and replaced** by an identical one"
+      ]
+     }
     },
     {
      "q": "An order service must notify billing, shipping and analytics, and each team keeps asking the order team to add a new call. Which microservice pattern family helps?",
-     "a": "Event-driven asynchronous pub/sub messaging: the order service publishes events to a broker, and each consumer reacts on its own, so new consumers subscribe without changing the order service. An event store can also feed databases and analytics. The cost is eventual consistency and the need for central logging and tracing to follow a flow."
+     "a": {
+      "lead": "**Event-driven asynchronous pub/sub messaging**.",
+      "items": [
+       "The order service **publishes events** to a **broker**; each **consumer reacts on its own**",
+       "**New consumers subscribe** without changing the order service",
+       "An **event store** can also feed **databases** and **analytics**"
+      ],
+      "foot": "Cost: **eventual consistency**, and the need for **central logging and tracing** to follow a flow."
+     }
     }
    ],
    "visuals": [
@@ -323,15 +361,42 @@
    "check": [
     {
      "q": "A service saves an order to its database and then publishes 'OrderCreated' to a broker. Sometimes the save succeeds but the publish fails. How does the lecture's event-sourcing design avoid this, and what doesn't it solve?",
-     "a": "The event append is the state change: OrderCreated is written atomically to the event store, and subscribers read that committed history, so there is no separate save-then-publish step to fall out of sync. It doesn't make an external broker or a remote subscriber part of the same commit. Integrating with them still needs reliable delivery."
+     "a": {
+      "items": [
+       "**The event append is the state change**: **OrderCreated** is written **atomically** to the **event store**",
+       "**Subscribers** read that **committed history** → no separate **save-then-publish** step to fall out of sync",
+       "**Doesn't solve**: an **external broker** or a **remote subscriber** isn't part of the same commit → integrating with them still needs **reliable delivery**"
+      ]
+     }
     },
     {
      "q": "A team wants event sourcing for a simple product-catalogue service 'for the audit trail'. What would you weigh?",
-     "a": "Benefits: full history for audit, replay for recovery and analytics. Costs: querying current state is hard, often needing CQRS read models; views are eventually consistent; event schemas must evolve over time; and storage grows because all history is kept. For a simple catalogue, an audit log table may give enough history at a fraction of the complexity."
+     "a": {
+      "items": [
+       "**Benefits**: **full history** for **audit**; **replay** for **recovery** and **analytics**",
+       {
+        "t": "**Costs**",
+        "sub": [
+         "**Querying current state** is hard, often needing **CQRS read models**",
+         "Views are **eventually consistent**",
+         "**Event schemas must evolve** over time",
+         "**Storage grows** because all history is kept"
+        ]
+       }
+      ],
+      "foot": "For a **simple catalogue**, an **audit log table** may give enough history at a fraction of the complexity."
+     }
     },
     {
      "q": "When a recommendation service slows down, the product service's threads all wait on it, and the product pages fail too. Give the cause, a countermeasure and its drawback.",
-     "a": "The cause is synchronous calls to a slow callee, which hold threads until resources are exhausted, so the failure cascades. A circuit breaker counts failures and, past an error-rate threshold, trips so calls fail immediately, with a fallback such as showing the page without recommendations. The drawback is that while the breaker is open, even requests that might have succeeded are rejected, so thresholds and recovery probes need tuning."
+     "a": {
+      "items": [
+       "**Cause**: **synchronous calls** to a **slow callee** hold **threads** until **resources are exhausted** → the failure **cascades**",
+       "**Countermeasure**: a **circuit breaker** counts failures and, past an **error-rate threshold**, **trips** → calls **fail immediately**",
+       "**Fallback**: such as showing the page **without recommendations**",
+       "**Drawback**: while the breaker is **open**, even requests that **might have succeeded are rejected** → **thresholds** and **recovery probes** need tuning"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -440,19 +505,46 @@
    "check": [
     {
      "q": "Order and Customer services each own their database, and a support screen needs 'all orders with customer names'. Joining across the databases is not allowed. What are the options?",
-     "a": "API composition: a composer calls both services and joins the results in memory, which is simple but slow for large results. Or CQRS: build a read-optimised view from both services' events, which is fast but lags behind writes. Sharing tables would make the join easy but couples the services' releases."
+     "a": {
+      "items": [
+       "**API composition**: a **composer** calls both services and **joins the results in memory** → simple but **slow for large results**",
+       "**CQRS**: build a **read-optimised view** from both services' **events** → fast but **lags behind writes**",
+       "**Sharing tables**: would make the join easy but **couples the services' releases**"
+      ]
+     }
     },
     {
      "q": "An order flow has 7 steps with branching for credit checks, stock and fraud review. Choreography or orchestration for the saga?",
-     "a": "Orchestration: with many steps and branches, a central orchestrator keeps the flow in one place where it can be followed, monitored and changed. Choreography suits simple flows with few participants, because each service reacting to events avoids a coordinator but scatters the logic. The orchestrator must itself be durable and must not take over the services' business logic."
+     "a": {
+      "lead": "**Orchestration**.",
+      "items": [
+       "**Many steps and branches** → a **central orchestrator** keeps the flow in one place where it can be **followed**, **monitored** and **changed**",
+       "**Choreography** suits **simple flows** with **few participants**: each service **reacting to events** avoids a coordinator but **scatters the logic**"
+      ],
+      "foot": "The orchestrator must itself be **durable** and must **not take over the services' business logic**."
+     }
     },
     {
      "q": "A saga charges a card, then stock reservation fails, so the saga issues a refund. A teammate calls this 'a rollback'. Why is that misleading?",
-     "a": "The charge was committed and may already have been seen by the customer or the bank. A refund is a new business action with its own outcome and possible failure, not an erasure of history. Intermediate states are visible because a saga isn't one isolated ACID transaction. Persist saga progress and make each step and compensation safe to retry."
+     "a": {
+      "items": [
+       "**The charge was committed**: may already have been seen by the **customer** or the **bank**",
+       "**A refund is a new business action** with its own outcome and **possible failure**, not an **erasure of history**",
+       "**Intermediate states are visible**: a saga isn't one isolated **ACID transaction**",
+       "**Design**: **persist saga progress**; make each step and **compensation** **safe to retry**"
+      ]
+     }
     },
     {
      "q": "A team uses CQRS without event sourcing, updating the read view from the write database's changes. Is that valid?",
-     "a": "Yes. CQRS only separates the command and query models; it doesn't require event sourcing or separate physical databases in every implementation. Event sourcing pairs well with CQRS because the event store is poor at queries and supplies events to project. Without it, the team must still handle view lag and rebuilding the view."
+     "a": {
+      "lead": "**Yes.**",
+      "items": [
+       "**CQRS** only separates the **command** and **query models**; it doesn't require **event sourcing** or **separate physical databases** in every implementation",
+       "**Event sourcing pairs well** with CQRS: the event store is **poor at queries** and **supplies events to project**",
+       "**Without it**: the team must still handle **view lag** and **rebuilding the view**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -537,15 +629,37 @@
    "check": [
     {
      "q": "An orders table is sharded by order month, and every December the current shard is overloaded while the others sit idle. Diagnose this and propose a change.",
-     "a": "Range sharding on a sequential key puts all current writes on the newest shard, creating a hotspot. Hash sharding by order or customer ID would spread writes across shards. The cost is that queries by date range now fan out to every shard. Keep a separate date-indexed read view if month reports are frequent."
+     "a": {
+      "items": [
+       "**Diagnosis**: **range sharding** on a **sequential key** puts all current writes on the **newest shard** → a **hotspot**",
+       "**Change**: **hash sharding** by **order or customer ID** → spreads writes across shards",
+       "**Cost**: queries by **date range** now **fan out** to every shard",
+       "**Mitigation**: keep a separate **date-indexed read view** if **month reports** are frequent"
+      ]
+     }
     },
     {
      "q": "A multi-tenant SaaS has a few very large tenants and must keep EU tenants' data in the EU. Which sharding strategy fits, and why?",
-     "a": "Lookup sharding with tenant ID as the shard key: the map can place each tenant on a specific shard, in the right region for residency, and move a large tenant onto a dedicated shard. The cost is that the lookup map becomes a critical component and tenant moves need careful migration."
+     "a": {
+      "lead": "**Lookup sharding** with **tenant ID** as the **shard key**.",
+      "items": [
+       "The **map** can place each tenant on a **specific shard**",
+       "**Residency**: in the right **region**",
+       "**Large tenant** → move onto a **dedicated shard**"
+      ],
+      "foot": "Cost: the **lookup map** becomes a **critical component**, and **tenant moves** need careful **migration**."
+     }
     },
     {
      "q": "After hash sharding, one shard is still overloaded. Records are evenly spread. What is the likely cause?",
-     "a": "A hot key: one very busy tenant or item sends most of the traffic to its shard, and hashing spreads distinct keys, not the traffic on a single key. Balance by actual traffic, for example by moving that tenant to its own shard with a lookup or adding caching for it."
+     "a": {
+      "lead": "A **hot key**.",
+      "items": [
+       "One very busy **tenant or item** sends most of the **traffic** to its shard",
+       "**Hashing spreads distinct keys**, not the traffic on a single key",
+       "**Fix**: **balance by actual traffic**, for example by moving that tenant to **its own shard** with a **lookup**, or adding **caching** for it"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -701,15 +815,40 @@
    "check": [
     {
      "q": "A bank-grade client of a SaaS product demands strict isolation and will pay extra. Which schema option, and why not the cheaper ones?",
-     "a": "Separated database per tenant: strongest isolation, security and room for customisation, with the higher cost and fewer tenants per server covered by the premium. A separated schema shares a database engine, and a shared schema co-mingles rows by TenantID, which may not meet the client's isolation demand."
+     "a": {
+      "lead": "**Separated database per tenant**.",
+      "items": [
+       "**Strongest isolation**, **security** and room for **customisation**",
+       "**Higher cost** and **fewer tenants per server** → covered by the **premium**",
+       "**Separated schema**: shares a **database engine**",
+       "**Shared schema**: **co-mingles rows** by **TenantID**"
+      ],
+      "foot": "The cheaper options may **not meet the client's isolation demand**."
+     }
     },
     {
      "q": "A SaaS for small shops has 20,000 tenants, mostly on the same plan, and a few need extra fields. Which schema option fits, and what problem should you expect?",
-     "a": "A shared schema with a TenantID column maximises tenants per server, and predefined custom fields fit if the extra fields are predictable. If the design reserves generic custom columns that most tenants leave empty, tables become sparse. Co-mingled data also means every query must filter by tenant, so access control and testing must be strict."
+     "a": {
+      "lead": "A **shared schema** with a **TenantID** column.",
+      "items": [
+       "**Maximises tenants per server**",
+       "**Predefined custom fields** fit if the extra fields are **predictable**",
+       "**Problem**: reserved **generic custom columns** that most tenants leave empty → **sparse tables**",
+       "**Co-mingled data** → every query must **filter by tenant** → strict **access control** and **testing**"
+      ]
+     }
     },
     {
      "q": "A SaaS provider wants enterprise tenants on isolated infrastructure and small tenants sharing everything, all from one codebase. Is that a contradiction?",
-     "a": "No. Multi-tenancy is a continuum applied at each layer: deployment (bare-metal or VM versus shared containers), runtime, application and storage. One codebase with tenant-specific configuration can serve shared and isolated tiers. Moving toward isolation gives more security, control and customisation at higher cost, and moving toward sharing gives economies of scale."
+     "a": {
+      "lead": "**No.** Multi-tenancy is a **continuum** applied **at each layer**.",
+      "items": [
+       "**Layers**: **deployment** (**bare-metal or VM** versus **shared containers**), **runtime**, **application**, **storage**",
+       "**One codebase** with **tenant-specific configuration** can serve **shared** and **isolated tiers**",
+       "**Toward isolation**: more **security**, **control** and **customisation** at **higher cost**",
+       "**Toward sharing**: **economies of scale**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -816,15 +955,38 @@
    "check": [
     {
      "q": "A mobile app on slow networks needs a dashboard built from 5 services. Client or gateway aggregation?",
-     "a": "Gateway aggregation: one request instead of five suits limited bandwidth and weak devices, and it hides the internal services. The combined response waits for the slowest required service, so set timeouts and return partial results where the screen allows. Client aggregation would let parts render as they arrive, but it costs five round trips on a slow network."
+     "a": {
+      "lead": "**Gateway aggregation**.",
+      "items": [
+       "**One request instead of five** → suits **limited bandwidth** and **weak devices**",
+       "**Hides the internal services**",
+       "**Risk**: the combined response **waits for the slowest required service** → set **timeouts** and return **partial results** where the screen allows"
+      ],
+      "foot": "**Client aggregation** would let parts **render as they arrive**, but costs **five round trips** on a slow network."
+     }
     },
     {
      "q": "While a dashboard is aggregated, a discount must be calculated from loyalty tier and basket contents. Should that logic live in the gateway?",
-     "a": "No. Real-time business logic during aggregation belongs in a composite microservice in the business tier, not in the gateway, which should stay focused on routing and cross-cutting concerns. The composite service costs an extra hop, more code and more failure points, and parallel calls need reactive or callback code."
+     "a": {
+      "lead": "**No.** It belongs in a **composite microservice** in the **business tier**.",
+      "items": [
+       "**Real-time business logic** during aggregation goes there, not in the gateway",
+       "The **gateway** stays focused on **routing** and **cross-cutting concerns**",
+       "**Cost**: an **extra hop**, more **code**, more **failure points**; **parallel calls** need **reactive or callback** code"
+      ]
+     }
     },
     {
      "q": "A customer-360 view needs orders, support tickets and churn scores from analytics, and must load in under a second. Which aggregation pattern fits, and what does it cost?",
-     "a": "Database aggregation: pre-aggregate into an operational data store, often a document database, so the view loads with one read and can include analytics. It costs duplicated data, extra storage and ETL or change-data-capture pipelines, and the view is only as fresh as the last sync."
+     "a": {
+      "lead": "**Database aggregation**.",
+      "items": [
+       "**Pre-aggregate** into an **operational data store**, often a **document database**",
+       "→ the view loads with **one read** and can include **analytics**",
+       "**Cost**: **duplicated data**, **extra storage**, **ETL** or **change-data-capture** pipelines",
+       "**Freshness**: only as fresh as the **last sync**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -929,15 +1091,35 @@
    "check": [
     {
      "q": "A payment call from a composite service times out. A developer retries by creating a new payment. What could go wrong, and what is the safe approach?",
-     "a": "The timeout doesn't prove the payment failed: the provider may have charged before the response was lost, so a new payment can charge twice. Reuse a stable operation identifier and query or reconcile the original result before retrying or compensating. The coordination layer should keep that state in a persistent store safe from failure."
+     "a": {
+      "items": [
+       "**Risk**: the **timeout doesn't prove the payment failed**; the provider may have **charged** before the response was lost → a new payment can **charge twice**",
+       "**Safe approach**: reuse a **stable operation identifier**; **query or reconcile** the original result before **retrying or compensating**",
+       "**Coordination layer**: keeps that state in a **persistent store** safe from failure"
+      ]
+     }
     },
     {
      "q": "Two services in different teams must both commit or both abort a transfer. One proposes 2PC, the other a saga. What decides it?",
-     "a": "The invariant and the participants. 2PC gives an atomic distributed commit, but it holds locks, can block when a participant fails, and every participant must support the protocol. A saga uses local commits with business compensations, which reduces synchronous coupling but exposes intermediate states. If brief intermediate states are acceptable to the business, a saga usually fits independent services better."
+     "a": {
+      "lead": "**The invariant and the participants** decide it.",
+      "items": [
+       "**2PC**: **atomic distributed commit**, but **holds locks**, can **block** when a participant fails, and every participant must **support the protocol**",
+       "**Saga**: **local commits** with **business compensations** → reduces **synchronous coupling**, but **exposes intermediate states**"
+      ],
+      "foot": "If **brief intermediate states** are acceptable to the business, a **saga** usually fits **independent services** better."
+     }
     },
     {
      "q": "A composite flow calls 4 services, and one never responds. The flow hangs forever. Which coordination capabilities are missing?",
-     "a": "Timeout handling (a timer for each flow that raises an event when it expires), post-call coordination (collecting each call's success or failure and deciding the next step), and state management so progress survives a crash. Timers and compensations should also be configurable, because different steps need different limits."
+     "a": {
+      "items": [
+       "**Timeout handling**: a **timer for each flow** that **raises an event** when it expires",
+       "**Post-call coordination**: collecting each call's **success or failure** and deciding the **next step**",
+       "**State management**: progress **survives a crash**",
+       "**Configurable** timers and compensations: different steps need **different limits**"
+      ]
+     }
     }
    ]
   }
@@ -945,27 +1127,126 @@
  "exam_angles": [
   {
    "q": "Design order processing on microservices where placing an order must reserve customer credit in a separate Customer service. A teammate proposes a shared database to keep it simple. Evaluate that, then design the consistency mechanism and say what users may see.",
-   "a": "A shared database gives local ACID and easy joins, but it couples the two services' schemas and releases, so keep data private. Use a saga: Order creates a pending order, Customer reserves credit in its own local transaction, and Order approves or rejects. Choreograph it through events for this two-step flow, or orchestrate if steps will grow. Persist progress, use stable command identifiers and timeouts, and compensate (cancel the order) if credit fails. Users may briefly see a 'pending' order, because a saga exposes intermediate states."
+   "a": {
+    "items": [
+     {
+      "t": "**Shared database? No.**",
+      "sub": [
+       "Gives **local ACID** and **easy joins**",
+       "But **couples** the two services' **schemas and releases** → keep **data private**"
+      ]
+     },
+     {
+      "t": "**Saga** for consistency",
+      "sub": [
+       "**Order** creates a **pending** order",
+       "**Customer** reserves **credit** in its own **local transaction**",
+       "**Order approves or rejects**"
+      ]
+     },
+     "**Choreograph** it through **events** for this **two-step flow**, or **orchestrate** if steps will grow",
+     "**Reliability**: **persist progress**, use **stable command identifiers** and **timeouts**; **compensate** (**cancel the order**) if credit fails"
+    ],
+    "foot": "**What users may see**: a brief **'pending'** order, because a saga **exposes intermediate states**."
+   }
   },
   {
    "q": "A SaaS provider serves 5,000 small businesses and 4 regulated enterprise clients, two of which require in-country data. Propose a multi-tenancy, schema and sharding strategy, and state the trade-offs.",
-   "a": "Use a mixed position on the isolation-sharing continuum. Small tenants share a schema (TenantID with predefined custom fields) for economies of scale. Regulated tenants get a separated database, or VM-level isolation, charged as a premium tier. Use lookup sharding by tenant ID to place each tenant, including the in-country ones in local regions, and to move a large tenant to its own shard. Trade-offs: possibly sparse shared tables and strict tenant filtering on one side, higher infrastructure and operating cost for isolated tenants on the other, and a critical lookup map."
+   "a": {
+    "lead": "A **mixed position** on the **isolation-sharing continuum**.",
+    "items": [
+     "**Small tenants**: **shared schema** (**TenantID** with **predefined custom fields**) → **economies of scale**",
+     "**Regulated tenants**: **separated database**, or **VM-level isolation**, charged as a **premium tier**",
+     "**Lookup sharding** by **tenant ID**: places each tenant, including the **in-country** ones in **local regions**, and can move a **large tenant** to its own shard",
+     {
+      "t": "**Trade-offs**",
+      "sub": [
+       "Shared side: possibly **sparse shared tables** and **strict tenant filtering**",
+       "Isolated side: **higher infrastructure and operating cost**",
+       "A **critical lookup map**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "An order-history page must show data from Order, Kitchen, Delivery and Accounting services within 300 ms. API composition is too slow. Design the read side, and decide whether event sourcing is needed.",
-   "a": "Use a CQRS read model: an Order History view updated from the four services' domain events, so the page reads one pre-joined store. Explain that the view can lag writes, so a just-placed order may briefly be missing, and handle duplicate and out-of-order events and rebuilding the view. Event sourcing is optional. Adopt it only if authoritative event history for audit and recovery justifies the modelling and infrastructure cost; otherwise, publish events from each service's normal writes."
+   "a": {
+    "lead": "A **CQRS read model**; **event sourcing is optional**.",
+    "items": [
+     "**Order History view** updated from the **four services' domain events** → the page reads **one pre-joined store**",
+     "**View lag**: a **just-placed order** may briefly be missing",
+     "Handle **duplicate** and **out-of-order events** and **rebuilding the view**",
+     "**Event sourcing**: adopt only if **authoritative event history** for **audit and recovery** justifies the **modelling and infrastructure cost**",
+     "Otherwise **publish events** from each service's **normal writes**"
+    ]
+   }
   },
   {
    "q": "A slow downstream service took down an entire platform last month: gateway threads were exhausted and every API failed. Explain the failure, then design protection at the gateway and between services, naming one drawback.",
-   "a": "Synchronous calls to a slow callee held threads until the gateway ran out, so one dependency's slowness became everyone's outage. Add timeouts on every call, and a circuit breaker at the gateway and in callers that trips past an error-rate threshold so calls fail fast, with fallbacks or partial responses. Apply it consistently through sidecars or a service mesh rather than per-app code. Drawback: an open breaker rejects some requests that would have succeeded, and badly tuned thresholds can trip too often."
+   "a": {
+    "items": [
+     "**Failure**: **synchronous calls** to a **slow callee** held **threads** until the **gateway ran out** → one dependency's slowness became **everyone's outage**",
+     "**Timeouts** on every call",
+     "**Circuit breaker** at the **gateway** and in **callers**: trips past an **error-rate threshold** → calls **fail fast**, with **fallbacks** or **partial responses**",
+     "Apply it consistently through **sidecars** or a **service mesh** rather than per-app code"
+    ],
+    "foot": "**Drawback**: an **open breaker** rejects some requests that would have succeeded, and **badly tuned thresholds** can trip too often."
+   }
   },
   {
    "q": "A customer portal home page combines profile, orders, recommendations, support tickets and a churn score. Users are on mobile and desktop. Compare the four aggregation patterns for this page and recommend a combination.",
-   "a": "Client aggregation renders parts as they arrive on desktop but costs round trips on mobile and exposes coordination in the UI. Gateway aggregation gives mobile one request and hides internals, but waits for the slowest service. A composite microservice can apply business logic, such as ranking recommendations, at the cost of a hop and more failure points. Database aggregation (an operational data store) suits analytics-enriched data like the churn score, at the cost of duplication and ETL or CDC. Recommend gateway aggregation for mobile, with timeouts and partial results, and pre-aggregate the churn score and ticket summary in the data store."
+   "a": {
+    "lead": "**Recommend gateway aggregation** for mobile, with **timeouts** and **partial results**, and **pre-aggregate** the **churn score** and **ticket summary** in the data store.",
+    "items": [
+     {
+      "t": "**Client aggregation**",
+      "sub": [
+       "**Renders parts as they arrive** on desktop",
+       "Costs **round trips** on mobile and **exposes coordination in the UI**"
+      ]
+     },
+     {
+      "t": "**Gateway aggregation**",
+      "sub": [
+       "Gives mobile **one request** and **hides internals**",
+       "But **waits for the slowest service**"
+      ]
+     },
+     {
+      "t": "**Composite microservice**",
+      "sub": [
+       "Can apply **business logic**, such as **ranking recommendations**",
+       "Costs a **hop** and more **failure points**"
+      ]
+     },
+     {
+      "t": "**Database aggregation** (an **operational data store**)",
+      "sub": [
+       "Suits **analytics-enriched data** like the **churn score**",
+       "Costs **duplication** and **ETL or CDC**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A global app's data store has hit single-server limits on write throughput, and EU users' data must stay in the EU. Recommend a sharding approach and name two operational side effects to plan for.",
-   "a": "First confirm the limit: write compute, storage, bandwidth or geography. Use lookup sharding by region or tenant for EU residency, and within a region hash by customer ID to spread writes and avoid the hotspots that range sharding on dates would create. Side effects: cross-shard queries and reports get slower and more complex, and rebalancing when shards fill or a hot key appears needs data migration. Balance by actual traffic, not record counts."
+   "a": {
+    "items": [
+     "**First confirm the limit**: **write compute**, **storage**, **bandwidth** or **geography**",
+     "**Lookup sharding** by **region or tenant** → **EU residency**",
+     "**Within a region**: **hash by customer ID** → spreads writes and avoids the **hotspots** that **range sharding on dates** would create",
+     {
+      "t": "**Side effects**",
+      "sub": [
+       "**Cross-shard queries and reports** get slower and more complex",
+       "**Rebalancing** when shards fill or a **hot key** appears needs **data migration**"
+      ]
+     }
+    ],
+    "foot": "**Balance by actual traffic**, not record counts."
+   }
   }
  ]
 }

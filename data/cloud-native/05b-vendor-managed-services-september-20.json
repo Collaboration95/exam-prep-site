@@ -76,15 +76,36 @@
    "check": [
     {
      "q": "A CIO wants to pick the provider ranked highest in an analyst's Magic Quadrant and stop there. What does the ranking tell you, and what does it not?",
-     "a": "It gives an independent view of vendor viability and capability using weighted criteria such as overall viability, market responsiveness and product strength. It doesn't tell you whether the vendor fits this workload. Also check the regions you need, pricing, your team's skills and how specific services behave, and treat the ranking as one input among several."
+     "a": {
+      "items": [
+       "**Tells you**: an **independent view** of **vendor viability and capability**, using **weighted criteria** such as **overall viability**, **market responsiveness** and **product strength**",
+       "**Doesn't tell you**: whether the vendor **fits this workload**",
+       "**Also check**: the **regions** you need, **pricing**, your **team's skills** and how **specific services behave**"
+      ],
+      "foot": "Treat the ranking as **one input among several**."
+     }
     },
     {
      "q": "On the same provider, a team must run (a) a long-running order API that may later move to another cloud and (b) an image-resize task triggered a few hundred times a day. Managed Kubernetes, FaaS or VMs for each?",
-     "a": "(a) Managed Kubernetes: long-running containerised services keep their packaging and orchestration portable across clouds. (b) FaaS: short, event-driven, no servers to operate, and billed only per use at this volume. VMs would give the most control but the most to operate, which is justified only if a workload needs OS-level control."
+     "a": {
+      "items": [
+       "**(a) Order API → managed Kubernetes**: **long-running containerised services** keep their **packaging and orchestration portable** across clouds",
+       "**(b) Image resize → FaaS**: **short**, **event-driven**, **no servers to operate**, and **billed only per use** at this volume"
+      ],
+      "ordered": true,
+      "foot": "**VMs** would give the **most control** but the **most to operate** → justified only if a workload needs **OS-level control**."
+     }
     },
     {
      "q": "Two providers both list a 'managed message queue'. A teammate says they are interchangeable, so switching later will be easy. Do you agree?",
-     "a": "No. Providers offer overlapping building blocks, not identical semantics. Ordering, delivery guarantees, message size limits, access model, regions and operating boundaries can differ. State the capability you need, check each product against it, and keep provider-specific calls behind your own interface if switching is a real requirement."
+     "a": {
+      "lead": "**No.** Providers offer **overlapping building blocks**, not **identical semantics**.",
+      "items": [
+       "**Can differ**: **ordering**, **delivery guarantees**, **message size limits**, **access model**, **regions** and **operating boundaries**",
+       "**State the capability** you need and **check each product** against it",
+       "Keep **provider-specific calls behind your own interface** if **switching** is a real requirement"
+      ]
+     }
     }
    ]
   },
@@ -147,15 +168,35 @@
    "check": [
     {
      "q": "A media company must store millions of uploaded videos and serve them to users worldwide. Object, block or file storage, and why not the others?",
-     "a": "Object storage: it scales cheaply for large unstructured files, is reached over HTTP APIs, and suits media, backups and archives, ideally with a CDN for global delivery. Block storage is a low-latency disk for one VM and doesn't scale as shared media storage. File storage is a shared filesystem for VMs, which the web and mobile clients don't need."
+     "a": {
+      "lead": "**Object storage.**",
+      "items": [
+       "**Why**: it **scales cheaply** for large **unstructured files**, is reached over **HTTP APIs**, and suits **media**, **backups** and **archives**, ideally with a **CDN** for **global delivery**",
+       "**Not block**: a **low-latency disk for one VM** → doesn't scale as **shared media storage**",
+       "**Not file**: a **shared filesystem for VMs**, which the **web and mobile clients** don't need"
+      ]
+     }
     },
     {
      "q": "A lift-and-shift app on 8 VMs expects a shared directory, and its database needs a fast local disk. Which storage type for each?",
-     "a": "File storage for the shared directory, since many VMs can mount it without the app changing, which is typical for lift-and-shift. Block storage for the database disk, for low-latency attached volumes. Moving the shared directory to object storage later would scale better but needs code changes."
+     "a": {
+      "items": [
+       "**Shared directory → file storage**: many VMs can **mount** it **without the app changing**, which is typical for **lift-and-shift**",
+       "**Database disk → block storage**: **low-latency attached volumes**"
+      ],
+      "foot": "Moving the shared directory to **object storage** later would **scale better** but needs **code changes**."
+     }
     },
     {
      "q": "A web app behind a managed load balancer went down when its only zone failed, and an attack sent malformed HTTP requests that the network firewall didn't block. What was missing in each case?",
-     "a": "A load balancer only helps availability if healthy backend capacity remains, so the backends needed to be spread across zones. Network firewall rules filter connections, not HTTP content, so a WAF was needed to filter malicious HTTP requests. Being managed doesn't mean configured: capacity, placement and filtering are still design choices."
+     "a": {
+      "items": [
+       "**Zone failure**: a **load balancer** only helps **availability** if **healthy backend capacity** remains → the backends needed to be **spread across zones**",
+       "**Malformed HTTP**: **network firewall rules** filter **connections**, not **HTTP content** → a **WAF** was needed to filter **malicious HTTP requests**"
+      ],
+      "ordered": true,
+      "foot": "**Being managed doesn't mean configured**: **capacity**, **placement** and **filtering** are still **design choices**."
+     }
     }
    ],
    "visuals": [
@@ -265,19 +306,47 @@
    "check": [
     {
      "q": "An order event must be processed once by one of 10 worker instances, and also trigger an email, a loyalty update and an analytics record. Queue, pub/sub or both?",
-     "a": "Both. A queue distributes the order work among competing workers so each order is handled by one. Pub/sub fans the event out to independent subscribers (email, loyalty, analytics), usually with one queue per consumer group. Delivery can repeat in either case, so consumers must be idempotent."
+     "a": {
+      "lead": "**Both.**",
+      "items": [
+       "**Queue** → **distributes the order work** among **competing workers** → each order is **handled by one**",
+       "**Pub/sub** → **fans the event out** to **independent subscribers** (**email**, **loyalty**, **analytics**), usually with **one queue per consumer group**"
+      ],
+      "foot": "**Delivery can repeat** in either case → consumers must be **idempotent**."
+     }
     },
     {
      "q": "A queue redelivers a payment task after a worker times out, and the customer is charged twice. What is the fix, and why not simply ask for 'exactly-once' delivery?",
-     "a": "Make the business operation idempotent, for example by recording a stable payment identifier with its result so a retry returns the recorded outcome instead of charging again. Redelivery after a timeout is normal in messaging, and you can't rely on once-only delivery to guarantee once-only business effects."
+     "a": {
+      "items": [
+       "**Fix**: make the **business operation idempotent** → e.g. **record a stable payment identifier** with its **result**, so a **retry returns the recorded outcome** instead of **charging again**",
+       "**Why not exactly-once**: **redelivery after a timeout** is **normal in messaging**",
+       "You can't rely on **once-only delivery** to guarantee **once-only business effects**"
+      ]
+     }
     },
     {
      "q": "A team must replay the last 7 days of click events to rebuild a broken analytics view. Would a message queue or a stream suit this, and why?",
-     "a": "A stream: it keeps ordered event data for a retention period, so consumers can reprocess and replay from an earlier point. A queue normally removes a message once it has been processed, so there would be nothing to replay. The cost of a stream is retention storage and managing consumer positions."
+     "a": {
+      "lead": "**A stream.**",
+      "items": [
+       "**Stream** → keeps **ordered event data** for a **retention period** → consumers can **reprocess** and **replay** from an **earlier point**",
+       "**Queue** → normally **removes a message** once it has been **processed** → nothing to replay"
+      ],
+      "foot": "**Cost**: **retention storage** and managing **consumer positions**."
+     }
     },
     {
      "q": "A team building on managed services plans to add monitoring, identity and encryption 'after launch'. Why is that risky, and what should be in place at launch?",
-     "a": "Without identity management, access is likely too broad. Without managed key encryption, data protection depends on ad-hoc handling. Without monitoring, failures go unseen. Retrofitting each later is harder than defining them in IaC from day one. Use the provider's managed identity, key management and monitoring, provisioned through IaC, so they deploy consistently."
+     "a": {
+      "items": [
+       "**No identity management** → access is likely **too broad**",
+       "**No managed key encryption** → **data protection** depends on **ad-hoc handling**",
+       "**No monitoring** → **failures go unseen**",
+       "**Retrofitting** each later is harder than **defining them in IaC** from **day one**"
+      ],
+      "foot": "**At launch**: the provider's **managed identity**, **key management** and **monitoring**, **provisioned through IaC** so they **deploy consistently**."
+     }
     }
    ],
    "visuals": [
@@ -309,19 +378,77 @@
  "exam_angles": [
   {
    "q": "Map a cloud-native e-commerce architecture (product browsing, carts, orders, product images, order processing, notifications) onto categories of managed services on one provider, justifying each, and name the decision that most increases lock-in.",
-   "a": "Managed DNS and a load balancer with a WAF at the edge. Managed Kubernetes for the long-running services and FaaS for event handlers such as image resizing. A managed relational database for orders (ACID) and a NoSQL store for carts and sessions. Object storage with a CDN for images. A queue for order processing and pub/sub for notifications. Add monitoring, IaC, identity management and key management so operations and security are built in. The biggest lock-in usually comes from proprietary data and messaging services, because data and semantics don't move as easily as container images."
+   "a": {
+    "items": [
+     "**Edge** → **managed DNS** and a **load balancer** with a **WAF**",
+     "**Compute** → **managed Kubernetes** for the **long-running services**; **FaaS** for **event handlers** such as **image resizing**",
+     "**Data** → a **managed relational database** for **orders** (**ACID**); a **NoSQL store** for **carts and sessions**",
+     "**Images** → **object storage** with a **CDN**",
+     "**Messaging** → a **queue** for **order processing**; **pub/sub** for **notifications**",
+     "**Operations and security** → add **monitoring**, **IaC**, **identity management** and **key management** so they are **built in**"
+    ],
+    "foot": "**Biggest lock-in**: usually **proprietary data and messaging services**, because **data and semantics** don't move as easily as **container images**."
+   }
   },
   {
    "q": "A company plans to run on three major providers 'for portability'. Using the idea of overlapping building blocks, assess what will be portable and what will not, and recommend whether to proceed.",
-   "a": "Compare by capability categories such as managed Kubernetes, object storage and messaging, then check each service's semantics, regions and limits. Containers on Kubernetes keep packaging and orchestration portable. Data, identity, networking and proprietary managed-service APIs are not portable and need separate migration and integration work. Proceed only if a concrete benefit (regulation, resilience against a provider, a best-of-breed service) outweighs the cost of tripled skills and operations. Otherwise use one provider with an exit strategy."
+   "a": {
+    "items": [
+     "**Compare by capability categories** such as **managed Kubernetes**, **object storage** and **messaging**, then check each service's **semantics**, **regions** and **limits**",
+     "**Portable**: **containers on Kubernetes** keep **packaging and orchestration** portable",
+     "**Not portable**: **data**, **identity**, **networking** and **proprietary managed-service APIs** → need separate **migration and integration work**"
+    ],
+    "foot": "**Proceed only if** a **concrete benefit** (**regulation**, **resilience against a provider**, a **best-of-breed service**) outweighs the cost of **tripled skills and operations**; otherwise use **one provider** with an **exit strategy**."
+   }
   },
   {
    "q": "A team must choose storage for VM boot disks, a database's data files, shared engineering files mounted by 20 VMs, and 5 years of backup archives. Recommend a type for each, and say what happens if the team puts everything on block storage to keep things simple.",
-   "a": "Block storage for boot disks and database files, for low-latency attached volumes. File storage for the shared engineering files, since many VMs must mount them. Object storage for the backup archives, because it is cheap and durable at scale. With everything on block storage, the shared files can't easily be mounted by 20 VMs, and archives would cost much more than on object storage."
+   "a": {
+    "items": [
+     "**Boot disks** and **database files** → **block storage**: **low-latency attached volumes**",
+     "**Shared engineering files** → **file storage**: **many VMs must mount** them",
+     "**Backup archives** → **object storage**: **cheap** and **durable at scale**",
+     {
+      "t": "**Everything on block storage**",
+      "sub": [
+       "The **shared files** can't easily be **mounted by 20 VMs**",
+       "**Archives** would **cost much more** than on object storage"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A CTO says: 'Use managed services everywhere, so availability and security are the provider's job.' Argue for and against, and state what remains the team's responsibility.",
-   "a": "For: managed services offload patching, scaling, backups and much availability work, so teams can spend their effort on business code. Against: they increase lock-in through proprietary APIs, can cost more at scale, and tie you to the provider's SLA, which doesn't by itself meet an application SLA. The team still chooses capacity and availability options such as multi-zone placement, configures identity, permissions, encryption and retention, designs idempotent messaging, and tests recovery. Limit lock-in with open standards where it matters and keep an exit strategy."
+   "a": {
+    "items": [
+     {
+      "t": "**For**",
+      "sub": [
+       "**Managed services offload patching**, **scaling**, **backups** and much **availability** work",
+       "→ teams spend their effort on **business code**"
+      ]
+     },
+     {
+      "t": "**Against**",
+      "sub": [
+       "Increase **lock-in** through **proprietary APIs**",
+       "Can **cost more at scale**",
+       "Tie you to the **provider's SLA**, which doesn't by itself meet an **application SLA**"
+      ]
+     },
+     {
+      "t": "**Still the team's responsibility**",
+      "sub": [
+       "The team **chooses capacity** and **availability options** such as **multi-zone placement**",
+       "**Configures identity**, **permissions**, **encryption** and **retention**",
+       "Design **idempotent messaging**",
+       "**Test recovery**"
+      ]
+     }
+    ],
+    "foot": "**Limit lock-in** with **open standards** where it matters and keep an **exit strategy**."
+   }
   }
  ]
 }

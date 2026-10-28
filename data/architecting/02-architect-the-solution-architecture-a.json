@@ -79,11 +79,35 @@
    "check": [
     {
      "q": "Your firm has built five online-banking portals and is asked for a sixth, for a new bank. Separately, it is asked to architect a first-of-its-kind drone-delivery control system. How does your approach differ?",
-     "a": "For the sixth portal, lean heavily on reuse: earlier solutions, reference patterns and a banking reference architecture, while checking that they fit this bank's requirements. For the drone system there is no close precedent, so rely more on method and on assets that only partly apply, and on intuition backed by more validation. The risk also differs: reuse risks carrying over assumptions that no longer fit, while an innovative design risks unproven decisions."
+     "a": {
+      "items": [
+       {
+        "t": "**Sixth portal → lean heavily on reuse**",
+        "sub": [
+         "**Earlier solutions**, **reference patterns** and a **banking reference architecture**",
+         "Check that they **fit this bank's requirements**"
+        ]
+       },
+       {
+        "t": "**Drone system → no close precedent**",
+        "sub": [
+         "Rely more on **method** and on assets that only **partly apply**",
+         "**Intuition** backed by more **validation**"
+        ]
+       }
+      ],
+      "foot": "The risk differs: **reuse** risks carrying over assumptions that no longer fit; an **innovative design** risks **unproven decisions**."
+     }
     },
     {
      "q": "A team adopts a published retail e-commerce reference architecture for a B2B procurement system with multi-level approvals. What do they gain, and what must they check?",
-     "a": "They gain a proven structure that bundles many patterns, which cuts logical design effort. A reference architecture is tied to its domain, though, so check its fit: B2B approval workflows and integration with buyers' systems may not appear in a retail reference at all. Keep what fits, add patterns for the gaps, and record where you departed from the reference."
+     "a": {
+      "items": [
+       "**Gain**: a **proven structure** that bundles many **patterns** → cuts **logical design effort**",
+       "**Check fit**: a reference architecture is **tied to its domain** → B2B **approval workflows** and integration with **buyers' systems** may not appear in a retail reference at all",
+       "**Adapt**: keep what fits, **add patterns for the gaps**, and **record where you departed** from the reference"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -209,15 +233,37 @@
    "check": [
     {
      "q": "Staff on the internal network need controlled internet access, and internet customers need to reach the company's web servers. Which kind of proxy fits each, and what does each hide?",
-     "a": "Staff need a forward proxy: it gives firewall-restricted internal clients internet access and hides the clients' identity. Customers need a reverse proxy, typically in the DMZ, which fronts the internal servers and hides theirs. Using one for the other's job would expose the wrong side."
+     "a": {
+      "items": [
+       "**Staff → forward proxy**: gives firewall-restricted internal clients internet access; **hides the clients'** identity",
+       "**Customers → reverse proxy**: typically in the **DMZ**, fronts the internal servers; **hides theirs**"
+      ],
+      "foot": "Using one for the other's job would **expose the wrong side**."
+     }
     },
     {
      "q": "A design puts the web server, application server and database all in the DMZ 'to keep latency low'. Critique it.",
-     "a": "Everything is now exposed in the outer zone, so compromising the web server gives direct reach to the application and the data. Keep only the internet-facing reverse proxy or web tier in the DMZ, put the application and database servers behind an inner firewall, and permit only the traffic each needs. The cost is an extra network boundary and more firewall rules to manage, which buys a much smaller blast radius."
+     "a": {
+      "items": [
+       "**Problem**: everything is exposed in the **outer zone** → compromising the web server gives direct reach to the application and the data",
+       "**DMZ**: keep only the internet-facing **reverse proxy or web tier** there",
+       "**Inner firewall**: put the application and database servers behind it",
+       "**Permit only** the traffic each needs"
+      ],
+      "foot": "Cost: an extra **network boundary** and more **firewall rules** to manage → buys a much smaller **blast radius**."
+     }
     },
     {
      "q": "A field-inspection app must keep working in areas with no mobile signal and sync later. Thick or thin client, and what design questions does that raise?",
-     "a": "A thick client, because it needs local logic and storage to work offline. That raises the client-server design questions: how to split logic between client and server, how to manage state and reconcile changes made offline, and how to authenticate and authorise without a live connection. You give up easy updates and accept more data on devices, which must be protected."
+     "a": {
+      "lead": "**Thick client**: it needs local logic and storage to work **offline**. That raises the **client-server design questions**:",
+      "items": [
+       "**Logic split**: how to split logic between client and server",
+       "**State**: how to manage state and **reconcile** changes made offline",
+       "**Security**: how to **authenticate and authorise** without a live connection"
+      ],
+      "foot": "You give up **easy updates** and accept **more data on devices**, which must be protected."
+     }
     }
    ],
    "visuals": [
@@ -345,19 +391,49 @@
    "check": [
     {
      "q": "A ride-hailing platform runs in two data centres. During a network partition between them, which operations would you let answer with possibly stale data, and which would you make wait or reject: showing nearby drivers, updating a profile photo, charging the rider's card?",
-     "a": "Nearby drivers and profile photos can favour availability: slightly stale data is acceptable and reconciles later. Charging the card favours consistency: it should wait or fail rather than risk a double or lost charge. CAP is applied per operation during a partition, so state the acceptable staleness for each one rather than choosing by database label."
+     "a": {
+      "items": [
+       "**Nearby drivers, profile photos → favour availability**: slightly stale data is acceptable and reconciles later",
+       "**Charging the card → favour consistency**: wait or fail rather than risk a **double or lost charge**"
+      ],
+      "foot": "**CAP is applied per operation** during a partition → state the **acceptable staleness** for each one rather than choosing by database label."
+     }
     },
     {
      "q": "A teammate says: 'Our database is ACID, so it stays consistent even when the two regions lose contact.' Do you agree?",
-     "a": "No. ACID consistency means a transaction preserves the database's rules; CAP consistency means all nodes behave like one up-to-date copy during a partition. An ACID label says nothing about what the system does when regions cannot communicate. Check the product's replication and partition behaviour, and decide per operation whether to reject requests or serve stale data."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**ACID consistency**: a transaction preserves the **database's rules**",
+       "**CAP consistency**: all nodes behave like **one up-to-date copy** during a **partition**",
+       "An **ACID label** says nothing about what the system does when regions cannot communicate"
+      ],
+      "foot": "Check the product's **replication and partition behaviour**, and decide **per operation** whether to reject requests or serve stale data."
+     }
     },
     {
      "q": "A team picks a NoSQL document store for an invoicing system 'because NoSQL scales horizontally and SQL doesn't'. Invoices need atomic updates across customer, invoice and ledger records. Critique the choice.",
-     "a": "The reasoning uses a label, not the requirement. The lecture presents horizontal NoSQL and vertical SQL scaling as tendencies, not guarantees. The deciding need here is coordinated multi-record updates, which a relational ACID store supports directly. Check the expected volume and each product's actual transaction and scaling options. If volume were huge and the data naturally document-shaped, the balance could change."
+     "a": {
+      "lead": "The reasoning uses a **label, not the requirement**.",
+      "items": [
+       "**Tendencies, not guarantees**: the lecture presents **horizontal NoSQL** and **vertical SQL** scaling as tendencies",
+       "**Deciding need**: coordinated **multi-record updates** → a relational **ACID** store supports them directly",
+       "**Check**: the expected volume and each product's actual **transaction and scaling options**"
+      ],
+      "foot": "If volume were **huge** and the data naturally **document-shaped**, the balance could change."
+     }
     },
     {
      "q": "A company must push 2 GB software updates to 20,000 branch PCs over thin WAN links. Would a peer-to-peer style fit, and what concerns would you raise?",
-     "a": "It can fit: peers act as both clients and servers, so branches share pieces locally instead of all downloading from the centre (the BitTorrent pattern). Raise the style's concerns: authenticating and authorising peers, keeping updates consistent and untampered across peers, and the discovery service peers still rely on. If the links could handle a central download, a simpler client-server distribution avoids those problems."
+     "a": {
+      "lead": "**It can fit**: peers act as both clients and servers, so branches share pieces locally instead of all downloading from the centre (the **BitTorrent** pattern). Concerns to raise:",
+      "items": [
+       "**Authenticating and authorising peers**",
+       "**Consistency**: keeping updates consistent and **untampered** across peers",
+       "**Discovery service**: peers still rely on it"
+      ],
+      "foot": "If the links could handle a central download, a simpler **client-server** distribution avoids those problems."
+     }
     }
    ],
    "visuals": [
@@ -513,19 +589,49 @@
    "check": [
     {
      "q": "An order service must (a) hand each payment job to exactly one of several payment workers and (b) tell inventory, email and analytics that an order was placed. Which messaging style suits each?",
-     "a": "(a) A point-to-point queue: each message goes to one consumer, so workers share the jobs. (b) Publish/subscribe: each subscriber gets the event, and new subscribers can be added without changing the order service. In both cases delivery depends on configuration: use persistent messages, acknowledgements and durable subscriptions if consumers can be offline."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**(a) Point-to-point queue**: each message goes to **one consumer** → workers share the jobs",
+       "**(b) Publish/subscribe**: each subscriber gets the event → new subscribers can be added **without changing the order service**"
+      ],
+      "foot": "In both, delivery depends on **configuration**: use **persistent messages**, **acknowledgements** and **durable subscriptions** if consumers can be offline."
+     }
     },
     {
      "q": "Management wants a near-real-time sales dashboard combining three regional databases. An engineer proposes nightly FTP exports. Do you agree?",
-     "a": "No. File-level data flow suits large scheduled batches and legacy systems with few options; real-time reporting and dashboards are a database-level use case (views, federation or replication). The trade-off is that database-level integration couples you to the source schemas and needs database access. If the regions can only export files, you are forced to file level and must accept stale data."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**File-level data flow** suits large **scheduled batches** and **legacy systems** with few options",
+       "**Real-time reporting and dashboards** = a **database-level** use case (**views, federation or replication**)",
+       "**Trade-off**: database-level integration **couples you to the source schemas** and needs **database access**"
+      ],
+      "foot": "If the regions can **only export files**, you are forced to file level and must accept **stale data**."
+     }
     },
     {
      "q": "A 25-year-old application has no API, its source code is lost, and the business wants its data on a new web portal next quarter. What integration do you choose, and what are the risks?",
-     "a": "Presentation-level integration (screen scraping) is the realistic choice: it suits extending a legacy system to the web without source code. It is fragile, though: any screen change breaks it, and it is slow and limited to what the screens show. If its database turns out to be accessible, database-level data flow would be more robust."
+     "a": {
+      "lead": "**Presentation-level integration (screen scraping)** is the realistic choice: it suits extending a legacy system to the web without source code.",
+      "items": [
+       "**Fragile**: any screen change breaks it",
+       "**Slow**",
+       "**Limited** to what the screens show"
+      ],
+      "foot": "If its database turns out to be accessible, **database-level data flow** would be more robust."
+     }
     },
     {
      "q": "Checkout calls fraud check, inventory, loyalty points and email synchronously, one after another. The loyalty service is often slow, and checkout times out. What would you change?",
-     "a": "Keep fraud check and inventory as call-and-return, because the checkout result depends on them. Move loyalty and email to event-based messaging so a slow service no longer holds checkout. Synchronous calls couple the caller to the callee in time, while events decouple them. The cost is extra complexity and loyalty points that update a little later, so add retries and failure handling for the asynchronous path."
+     "a": {
+      "items": [
+       "**Keep call-and-return**: fraud check and inventory → the checkout result depends on them",
+       "**Move to event-based messaging**: loyalty and email → a slow service no longer holds checkout",
+       "**Why**: synchronous calls **couple the caller to the callee in time**, while events **decouple** them"
+      ],
+      "foot": "Cost: extra **complexity** and loyalty points that update a little later → add **retries and failure handling** for the asynchronous path."
+     }
     }
    ],
    "visuals": [
@@ -631,15 +737,36 @@
    "check": [
     {
      "q": "A news site's application servers run at 90% CPU, mostly serving images and scripts, and readers abroad see slow page loads. What would you change, following the web reference architecture?",
-     "a": "Move static content to object storage and serve it through a content delivery network. This takes static load off the application servers, which are left for dynamic content, and serves readers from the nearest edge location. It does not speed up slow dynamic pages, and updated content must reach the edge copies."
+     "a": {
+      "lead": "Move **static content** to **object storage** and serve it through a **content delivery network**.",
+      "items": [
+       "**Offload**: takes static load off the application servers → left for **dynamic content**",
+       "**Latency**: serves readers from the nearest **edge location**"
+      ],
+      "foot": "It does not speed up **slow dynamic pages**, and **updated content** must reach the edge copies."
+     }
     },
     {
      "q": "An e-commerce site keeps shopping carts in web-server memory. During a scale-in event, customers lose their carts. Diagnose and fix.",
-     "a": "The cart state lives in the instance that was removed. As in the e-commerce reference, put carts in a persistent session store that survives instance loss. Keep volatile session data and catalogue caching in a fast in-memory store. The cost is another component to run and a network hop per cart access, and in return any instance can serve any customer."
+     "a": {
+      "items": [
+       "**Diagnosis**: the cart state lives in the **instance that was removed**",
+       "**Fix**, as in the **e-commerce reference**: put carts in a **persistent session store** that survives instance loss",
+       "**Fast in-memory store**: for volatile session data and **catalogue caching**"
+      ],
+      "foot": "Cost: another component to run and a **network hop** per cart access → in return **any instance can serve any customer**."
+     }
     },
     {
      "q": "A bank moves from server-rendered pages to a single-page app calling APIs. A developer proposes moving the transfer-limit check into the browser to save a round trip. Do you agree?",
-     "a": "No. In a client-centric architecture, rendering and interaction move to the client, but server-side services must still enforce business rules and protect data, because client code can be bypassed. A browser-side check is fine for quick feedback, as long as the server repeats it."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Client-centric architecture**: rendering and interaction move to the client",
+       "**Server-side services** must still **enforce business rules** and protect data → client code **can be bypassed**"
+      ],
+      "foot": "A browser-side check is fine for **quick feedback**, as long as the **server repeats it**."
+     }
     }
    ]
   },
@@ -755,19 +882,54 @@
    "check": [
     {
      "q": "A retail system's search service is overloaded at peak, its order table has grown to 2 billion rows, and the promotions and payments teams keep blocking each other's releases. Which scale-cube axis addresses each problem?",
-     "a": "Search load: the X axis, cloning more identical instances behind a load balancer. The huge order table: the Z axis, partitioning data (for example by customer) so each instance handles a subset. The team collisions: the Y axis, splitting by function into separate services. Each has a cost: X needs stateless instances, Z complicates queries across partitions, and Y adds distributed operations."
+     "a": {
+      "items": [
+       "**Search load → X axis**: clone more **identical instances** behind a **load balancer**",
+       "**Huge order table → Z axis**: **partition data** (for example by customer) so each instance handles a subset",
+       "**Team collisions → Y axis**: split **by function** into separate services",
+       {
+        "t": "**Each has a cost**",
+        "sub": [
+         "**X** needs **stateless instances**",
+         "**Z** complicates **queries across partitions**",
+         "**Y** adds **distributed operations**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A team lists service instance addresses in configuration files. After auto-scaling is switched on, calls fail intermittently. Diagnose and fix.",
-     "a": "Instances are now ephemeral: new ones are missing from the files and removed ones are still being called. Add service discovery: clients call a router at a well-known location, which looks up available instances in a service registry. The registry then becomes critical infrastructure and needs its own high availability."
+     "a": {
+      "items": [
+       "**Diagnosis**: instances are now **ephemeral** → new ones are missing from the files and removed ones are still being called",
+       "**Fix: service discovery** → clients call a **router** at a **well-known location**, which looks up available instances in a **service registry**"
+      ],
+      "foot": "The registry then becomes **critical infrastructure** and needs its own **high availability**."
+     }
     },
     {
      "q": "All 40 integrations in a bank flow through one ESB instance, and an ESB upgrade took every channel offline for an evening. What risk did this expose, and what would you consider?",
-     "a": "The broker style's main risk: the central broker is a single point of failure and a potential bottleneck. Make the broker redundant and upgradable without an outage, and consider moving integrations that need no central orchestration to direct or event-based links. You give up some central governance in exchange for resilience."
+     "a": {
+      "lead": "The **broker style's main risk**: the central broker is a **single point of failure** and a potential **bottleneck**.",
+      "items": [
+       "Make the broker **redundant** and **upgradable without an outage**",
+       "Move integrations that need **no central orchestration** to **direct or event-based links**"
+      ],
+      "foot": "You give up some **central governance** in exchange for **resilience**."
+     }
     },
     {
      "q": "A 10-person team with one product and weekly releases is told to split its layered monolith into 30 microservices. Do you agree?",
-     "a": "Probably not yet. Microservices give independently deployable, scalable vertical slices, but they bring a dense web of dependencies and need service discovery, gateways and automation. With one team and a manageable release pace, that operational cost likely outweighs the benefit. Modularise the monolith first, and split out a service when a part needs independent scaling or more teams join."
+     "a": {
+      "lead": "**Probably not yet.**",
+      "items": [
+       "**Microservices give**: independently deployable, scalable **vertical slices**",
+       "**Cost**: a dense **web of dependencies**; needs **service discovery**, **gateways** and **automation**",
+       "**One team**, manageable release pace → operational cost likely **outweighs the benefit**"
+      ],
+      "foot": "**Modularise the monolith** first; split out a service when a part needs **independent scaling** or **more teams** join."
+     }
     }
    ],
    "visuals": [
@@ -892,19 +1054,47 @@
    "check": [
     {
      "q": "You must run 200 small instances of the same Linux service, and also host a legacy application that needs its own OS kernel version. Containers or VMs for each?",
-     "a": "Containers for the 200 instances: they share the host kernel and package only the application and its dependencies, so they are lighter and denser. A VM for the legacy application, because it needs its own guest OS. The trade-off is isolation: a VM has a guest OS boundary, while containers share one kernel."
+     "a": {
+      "items": [
+       "**200 instances → containers**: share the **host kernel** and package only the application and its dependencies → **lighter and denser**",
+       "**Legacy application → VM**: it needs its own **guest OS**"
+      ],
+      "foot": "The trade-off is **isolation**: a VM has a **guest OS boundary**, while containers **share one kernel**."
+     }
     },
     {
      "q": "A SaaS payroll provider hosts 300 client companies on shared infrastructure, and load spikes at each month end. Which cloud property addresses which concern?",
-     "a": "Multitenancy addresses sharing: each company's workloads and data must stay isolated in the common environment. Elasticity addresses the spike: resources are provisioned up for month end and back down afterwards. They interact: elastic capacity without good tenant isolation lets one tenant's spike degrade the others."
+     "a": {
+      "items": [
+       "**Multitenancy → sharing**: each company's workloads and data must stay **isolated** in the common environment",
+       "**Elasticity → the spike**: resources are **provisioned up** for month end and **back down** afterwards"
+      ],
+      "foot": "They interact: elastic capacity without good **tenant isolation** lets one tenant's spike **degrade the others**."
+     }
     },
     {
      "q": "An image-thumbnail job runs a few hundred times a day, with occasional bursts of several thousand. Serverless functions or always-on containers?",
-     "a": "Serverless fits: you supply the function and the platform runs and scales it, so you manage no servers and are not paying for idle capacity between bursts. You give up control over the runtime environment. If the load became steady and high, re-examine whether always-on instances are better value."
+     "a": {
+      "lead": "**Serverless fits.**",
+      "items": [
+       "**You supply the function**; the platform runs and scales it",
+       "**No servers** to manage",
+       "**No paying for idle capacity** between bursts"
+      ],
+      "foot": "You give up **control over the runtime environment**. If the load became **steady and high**, re-examine whether **always-on instances** are better value."
+     }
     },
     {
      "q": "A service blocks one thread per request while calling a slow partner API. Under peak load it stops responding entirely. What would the Reactive Manifesto suggest?",
-     "a": "Use asynchronous message passing, so a slow partner does not tie up a thread per request. This gives loose coupling and isolation, keeping the service responsive under varying load (elastic) and when the partner fails (resilient). The cost is a more complex programming and failure-handling model."
+     "a": {
+      "lead": "Use **asynchronous message passing**, so a slow partner does not tie up a **thread per request**.",
+      "items": [
+       "**Loose coupling and isolation**",
+       "**Elastic**: keeps the service responsive under varying load",
+       "**Resilient**: responsive when the partner fails"
+      ],
+      "foot": "Cost: a more complex **programming and failure-handling model**."
+     }
     }
    ],
    "visuals": [
@@ -1022,11 +1212,28 @@
    "check": [
     {
      "q": "An architect presents one large diagram mixing classes, servers, network zones and business process steps. Operations staff and developers both say it doesn't answer their questions. What would you change?",
-     "a": "Split it into views aimed at each stakeholder's concerns, as ISO/IEC/IEEE 42010 suggests: a physical or deployment view for operations, a development view for programmers, a logical view for functionality and a process view for performance. Tie them together with key scenarios. The cost is keeping several views consistent, which the scenarios help with."
+     "a": {
+      "lead": "Split it into **views** aimed at each **stakeholder's concerns**, as **ISO/IEC/IEEE 42010** suggests:",
+      "items": [
+       "**Physical or deployment view** → operations",
+       "**Development view** → programmers",
+       "**Logical view** → functionality",
+       "**Process view** → performance",
+       "**Key scenarios** → tie them together"
+      ],
+      "foot": "Cost: keeping several views **consistent**, which the scenarios help with."
+     }
     },
     {
      "q": "Three concerns are raised: an integrator asks about throughput between concurrent processes; a system engineer asks how components are installed across sites; programmers ask how code modules are organised for testing. Which 4+1 view answers each?",
-     "a": "The process view answers the integrator (performance, throughput, concurrency). The physical view answers the system engineer (topology, installation, delivery). The development view answers the programmers (code organisation, testing). Scenarios then check that the three views describe the same system."
+     "a": {
+      "items": [
+       "**Integrator → process view**: performance, throughput, concurrency",
+       "**System engineer → physical view**: topology, installation, delivery",
+       "**Programmers → development view**: code organisation, testing",
+       "**Scenarios**: check that the three views describe the **same system**"
+      ]
+     }
     },
     {
      "q": "A team defines a deployment viewpoint but supplies no deployment view. What is missing?",
@@ -1034,7 +1241,13 @@
     },
     {
      "q": "A security auditor asks which components run in the DMZ and which can talk to the database. Which viewpoint and notation would you use?",
-     "a": "The deployment viewpoint, using UML deployment diagrams, to map logical components to physical nodes. Add the infrastructure viewpoint, a network diagram, to show zones and permitted connections. A logical component diagram alone cannot answer the question, because it doesn't say where anything runs."
+     "a": {
+      "items": [
+       "**Deployment viewpoint**: **UML deployment diagrams** → map logical components to **physical nodes**",
+       "**Infrastructure viewpoint**: a **network diagram** → **zones** and **permitted connections**"
+      ],
+      "foot": "A **logical component diagram** alone cannot answer it, because it doesn't say **where anything runs**."
+     }
     }
    ],
    "visuals": [
@@ -1076,27 +1289,120 @@
  "exam_angles": [
   {
    "q": "A retailer's legacy inventory system offers only a nightly CSV export and read access to its database. A new web shop needs stock levels no more than 1 minute old, synchronous order placement, and order notifications to email, SMS and analytics. (a) Choose a communication style and integration level for each need. (b) The inventory team then forbids direct database access. What changes?",
-   "a": "(a) Stock: database-level data flow (replication or a view), because 1-minute freshness rules out the nightly file. Orders: application-level call and return through a web service, because the customer needs an immediate result. Notifications: publish/subscribe, so email, SMS and analytics subscribe independently and new channels need no change to the order service. Structurally, use a tiered client-server design with a reverse proxy in the DMZ. (b) Without database access, only the file export remains. Either negotiate an application-level interface on the inventory system or accept stale stock data and show availability as approximate. Document this as a constraint-driven decision with its business impact."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**(a) Style and level per need**",
+      "sub": [
+       "**Stock → database-level data flow** (replication or a view): **1-minute freshness** rules out the nightly file",
+       "**Orders → application-level call and return** through a **web service**: the customer needs an **immediate result**",
+       "**Notifications → publish/subscribe**: email, SMS and analytics subscribe independently; new channels need **no change to the order service**",
+       "**Structurally**: a **tiered client-server** design with a **reverse proxy in the DMZ**"
+      ]
+     },
+     {
+      "t": "**(b) No database access** → only the **file export** remains",
+      "sub": [
+       "Either **negotiate an application-level interface** on the inventory system",
+       "Or **accept stale stock data** and show availability as **approximate**",
+       "Document this as a **constraint-driven decision** with its **business impact**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A concert-ticketing platform runs in two regions. During an on-sale for 20,000 seats, the regions lose contact for 2 minutes. Which operations favour availability and which favour consistency? What does the customer see, and does an ACID database settle the question?",
-   "a": "Browsing events and seat maps can favour availability and accept briefly stale seat maps. Seat reservation and payment must favour consistency, or two regions could sell the same seat. During the partition, those operations wait or are refused in the region that cannot coordinate, and the customer sees a 'try again' or queue message. Reconcile holds when the link returns. ACID transactions guarantee rules within a transaction, but say nothing about partition behaviour, so the replication design must be checked separately."
+   "a": {
+    "items": [
+     "**Favour availability**: browsing events and **seat maps** → accept briefly stale seat maps",
+     "**Favour consistency**: **seat reservation and payment** → otherwise two regions could sell the same seat",
+     "**During the partition**: those operations **wait or are refused** in the region that cannot coordinate → the customer sees a **'try again' or queue message**",
+     "**When the link returns**: **reconcile holds**",
+     "**ACID doesn't settle it**: ACID transactions guarantee rules **within a transaction** but say nothing about **partition behaviour** → check the **replication design** separately"
+    ]
+   }
   },
   {
    "q": "A five-year-old monolith: during sales the catalogue gets 50 times the traffic of checkout; three teams work on it; a nightly report reads every table. Propose a decomposition using the scale cube and name two side effects to monitor.",
-   "a": "Y axis: split by business capability (catalogue, checkout, accounts), each service owning its data, so teams deploy independently. X axis: clone the catalogue service heavily for sales peaks without scaling checkout. Z axis: partition order data later if it grows too large. Add an API gateway and service discovery. The nightly report can no longer read every table; feed it from events or replicas. Side effects to monitor: cross-service consistency (orders referring to changed catalogue data), and latency and failures across the new network call chains, which need tracing and timeouts."
+   "a": {
+    "items": [
+     "**Y axis**: split by **business capability** (catalogue, checkout, accounts), each service **owning its data** → teams deploy independently",
+     "**X axis**: **clone the catalogue** service heavily for sales peaks without scaling checkout",
+     "**Z axis**: **partition order data** later if it grows too large",
+     "**Add** an **API gateway** and **service discovery**",
+     "**Nightly report**: can no longer read every table → feed it from **events or replicas**",
+     {
+      "t": "**Side effects to monitor**",
+      "sub": [
+       "**Cross-service consistency** (orders referring to changed catalogue data)",
+       "**Latency and failures** across the new **network call chains** → need **tracing and timeouts**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "Compare two organisations. A bank has 15 legacy core systems, and loan approval is a long process orchestrated across six of them. A start-up has one product, two teams and frequent releases. Would you lean towards broker/SOA or microservices for each, and why?",
-   "a": "The bank leans towards SOA with a broker: layered services over the existing operational systems, with process orchestration in the integration layer, reusing enterprise services. Make the broker redundant, because it is a single point of failure and a bottleneck risk. The start-up leans towards a modular monolith now and microservices later: independent vertical slices with their own data favour agility, but only once the team can support discovery, gateways and automation. The deciding factors are the number of systems to integrate, the complexity of orchestration and the team's operational maturity."
+   "a": {
+    "items": [
+     {
+      "t": "**Bank → SOA with a broker**",
+      "sub": [
+       "**Layered services** over the existing **operational systems**",
+       "**Process orchestration** in the **integration layer**, reusing **enterprise services**",
+       "Make the **broker redundant**: it is a **single point of failure** and a **bottleneck** risk"
+      ]
+     },
+     {
+      "t": "**Start-up → modular monolith now, microservices later**",
+      "sub": [
+       "Independent **vertical slices** with their **own data** favour **agility**",
+       "But only once the team can support **discovery, gateways and automation**"
+      ]
+     }
+    ],
+    "foot": "**Deciding factors**: the number of systems to integrate, the complexity of **orchestration** and the team's **operational maturity**."
+   }
   },
   {
    "q": "A new payments platform is reviewed by an auditor (where card data flows and who can reach it), operations (servers, sites, failover) and developers (module structure, build). How would you document the architecture, and how do you keep the views consistent?",
-   "a": "Follow 42010: list the stakeholders and their concerns, then choose viewpoints. Auditor: an information-structure view (class or ER model) for card data, plus deployment and infrastructure views showing zones and permitted connections. Operations: the physical or deployment view, with nodes, sites and failover paths. Developers: the development view and an application-structure view (packages, components). Use a process view for throughput and concurrency. Tie the views together with key scenarios such as 'authorise a card payment', and trace each scenario through every view."
+   "a": {
+    "lead": "Follow **42010**: list the **stakeholders** and their **concerns**, then choose **viewpoints**.",
+    "items": [
+     "**Auditor**: an **information-structure view** (class or ER model) for card data, plus **deployment and infrastructure views** showing **zones and permitted connections**",
+     "**Operations**: the **physical or deployment view**, with nodes, sites and **failover paths**",
+     "**Developers**: the **development view** and an **application-structure view** (packages, components)",
+     "**Process view**: for throughput and concurrency",
+     "**Consistency**: tie the views together with **key scenarios** such as 'authorise a card payment', and **trace each scenario through every view**"
+    ]
+   }
   },
   {
    "q": "An exam-results portal is idle most of the year, then 200,000 students log in during the first hour of results day. The results are personal data under strict regulation. Which reference-architecture options would you weigh, and what do you give up with each?",
-   "a": "The demand profile calls for elasticity: capacity that scales up for one hour and back down. That favours public cloud with containers on an elastic platform, or serverless functions for the read-heavy results lookup, which scale without managed servers. Data sensitivity pushes the other way, towards private or hybrid deployment, keeping the results store in a controlled environment and putting only the elastic front end in public cloud. Serverless gives up runtime control, and private hosting gives up elasticity, forcing you to provision for the peak. Judge the options by availability on results day, security, cost and responsiveness under the spike, the Reactive goal."
+   "a": {
+    "lead": "The demand profile calls for **elasticity**: capacity that scales up for one hour and back down.",
+    "items": [
+     {
+      "t": "**Public cloud, elastic**",
+      "sub": [
+       "**Containers** on an elastic platform",
+       "Or **serverless functions** for the **read-heavy results lookup**, which scale without managed servers",
+       "**Give up**: serverless gives up **runtime control**"
+      ]
+     },
+     {
+      "t": "**Private or hybrid deployment**: data sensitivity pushes the other way",
+      "sub": [
+       "Keep the **results store** in a **controlled environment**",
+       "Put only the **elastic front end** in public cloud",
+       "**Give up**: private hosting gives up **elasticity**, forcing you to **provision for the peak**"
+      ]
+     }
+    ],
+    "foot": "Judge the options by **availability** on results day, **security**, **cost** and **responsiveness** under the spike, the **Reactive** goal."
+   }
   }
  ]
 }

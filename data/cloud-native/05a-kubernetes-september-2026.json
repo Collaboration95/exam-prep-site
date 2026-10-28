@@ -90,15 +90,39 @@
    "check": [
     {
      "q": "A release is rolled back by redeploying the previous image, but the app still fails. Why didn't image immutability make the rollback safe?",
-     "a": "An immutable image restores the old application code exactly, but behaviour also depends on configuration and external data. If the new release ran a database migration the old code can't handle, a code-only rollback fails. Make schema changes backward-compatible, or plan a data recovery step alongside image rollbacks."
+     "a": {
+      "items": [
+       "An **immutable image** restores the old **application code** exactly",
+       "**Behaviour also depends on configuration** and **external data**",
+       "If the new release ran a **database migration** the old code can't handle → a **code-only rollback fails**",
+       "**Fix**: make **schema changes backward-compatible**, or plan a **data recovery step** alongside image rollbacks"
+      ]
+     }
     },
     {
      "q": "A team chose Kubernetes expecting it to give them a database, a message queue and logging out of the box, like their old PaaS. What do you tell them?",
-     "a": "Kubernetes is not a PaaS. It schedules, heals, scales and networks containers, but it supplies no databases, queues, service marketplace or built-in logging stack. They must choose and integrate those, for example as managed services, or adopt a platform built on Kubernetes that adds them. The upside is freedom of language and framework."
+     "a": {
+      "lead": "**Kubernetes is not a PaaS.**",
+      "items": [
+       "**It does**: **schedules**, **heals**, **scales** and **networks** containers",
+       "**It supplies no databases**, **queues**, **service marketplace** or **built-in logging stack**",
+       "**They must choose and integrate** those, e.g. as **managed services**, or adopt a **platform built on Kubernetes** that adds them"
+      ],
+      "foot": "**Upside**: freedom of **language and framework**."
+     }
     },
     {
      "q": "A team turned on autoscaling in Kubernetes, but pods never scale during load spikes. What is likely missing?",
-     "a": "Autoscaling needs metrics and a policy: a metrics source, resource requests or target metrics, and an autoscaler configured with sensible thresholds. Spare node capacity is also needed for new pods to be placed. Declaring replicas alone keeps a fixed count; Kubernetes only automates what has been configured."
+     "a": {
+      "lead": "Autoscaling needs **metrics** and a **policy**:",
+      "items": [
+       "A **metrics source**",
+       "**Resource requests** or **target metrics**",
+       "An **autoscaler** configured with sensible **thresholds**",
+       "**Spare node capacity** so new pods can be **placed**"
+      ],
+      "foot": "**Declaring replicas alone** keeps a **fixed count**; Kubernetes only automates what has been **configured**."
+     }
     }
    ]
   },
@@ -150,11 +174,23 @@
    "check": [
     {
      "q": "A 3-person team runs 4 services on Docker Compose today and asks whether to move to Swarm or Kubernetes. What would you recommend, and what decides it?",
-     "a": "Swarm is simpler and reuses their Compose files, which suits a small, stable Docker estate. Kubernetes has richer objects (Deployments, Services, Ingress, volumes, namespaces), managed offerings on every major cloud and a larger ecosystem, which matters if they expect to grow or need portability. The trade-off is learning and operating cost versus capability and future flexibility."
+     "a": {
+      "items": [
+       "**Swarm** → **simpler** and reuses their **Compose files** → suits a **small, stable Docker estate**",
+       "**Kubernetes** → richer objects (**Deployments**, **Services**, **Ingress**, **volumes**, **namespaces**), **managed offerings on every major cloud** and a larger **ecosystem** → matters if they expect to **grow** or need **portability**"
+      ],
+      "foot": "**Trade-off**: **learning and operating cost** versus **capability** and **future flexibility**."
+     }
     },
     {
      "q": "An organisation already runs big-data frameworks on a shared cluster and wants to add container scheduling. How do the Mesos and Kubernetes models differ for this?",
-     "a": "Mesos is a general resource manager that offers cluster resources to frameworks, with Marathon doing container scheduling as one framework among others such as data-processing ones. Kubernetes builds its own scheduler and controllers into the control plane and focuses on container workloads. Mesos fits sharing one cluster across heterogeneous frameworks; Kubernetes gives a more integrated container platform."
+     "a": {
+      "items": [
+       "**Mesos** → a **general resource manager** that **offers cluster resources to frameworks**; **Marathon** does **container scheduling** as **one framework among others**, such as **data-processing** ones",
+       "**Kubernetes** → builds its own **scheduler** and **controllers** into the **control plane**; focuses on **container workloads**"
+      ],
+      "foot": "**Mesos** fits **sharing one cluster** across **heterogeneous frameworks**; **Kubernetes** gives a more **integrated container platform**."
+     }
     }
    ],
    "visuals": []
@@ -250,15 +286,38 @@
    "check": [
     {
      "q": "You apply a Deployment with 3 replicas, and the pods stay 'Pending'. Trace where in the reconcile chain things stopped, and the likely cause.",
-     "a": "The API server stored the spec in etcd, and the controller created pod objects, which is why they exist as Pending. The scheduler has not assigned them to nodes, most likely because no node has enough free resources for their requests or none matches their constraints. Check scheduling events, node capacity and the pod's resource requests."
+     "a": {
+      "lead": "The chain stopped at the **scheduler**.",
+      "items": [
+       "**API server** stored the spec in **etcd** → done",
+       "**Controller** created **pod objects** → which is why they exist as **Pending**",
+       "**Scheduler** has **not assigned them to nodes** → stopped here",
+       "**Likely cause**: no node has enough **free resources** for their **requests**, or none matches their **constraints**",
+       "**Check scheduling events**, **node capacity** and the pod's **resource requests**"
+      ]
+     }
     },
     {
      "q": "A team runs a self-managed cluster with a single etcd member and no backups. What is the risk?",
-     "a": "etcd holds all cluster state and configuration. Losing it means the control plane no longer knows desired or current state, and the cluster can't be managed or rebuilt as it was. Run etcd replicated across failure domains and back it up regularly. A managed control plane shifts this duty to the provider."
+     "a": {
+      "items": [
+       "**etcd** holds **all cluster state** and **configuration**",
+       "**Losing it** → the control plane no longer knows **desired or current state**; the cluster can't be **managed or rebuilt** as it was",
+       "**Fix**: run etcd **replicated across failure domains** and **back it up regularly**"
+      ],
+      "foot": "A **managed control plane** shifts this duty to the **provider**."
+     }
     },
     {
      "q": "Pods on one node are running and healthy, but traffic sent to their Service never reaches them from other nodes. Which node component would you suspect first, and why not kubelet?",
-     "a": "kube-proxy, which programs the network rules that route Service traffic to pod endpoints. kubelet manages pod and container lifecycles, and the pods are running, so it is doing its job. Also check that the Service's selector matches the pod labels, because a mismatch gives the same symptom."
+     "a": {
+      "lead": "Suspect **kube-proxy** first.",
+      "items": [
+       "**kube-proxy** programs the **network rules** that route **Service traffic** to **pod endpoints**",
+       "**Not kubelet**: it manages **pod and container lifecycles**, and the pods are **running** → it is doing its job",
+       "**Also check** that the Service's **selector matches the pod labels** → a mismatch gives the **same symptom**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -374,19 +433,51 @@
    "check": [
     {
      "q": "A team puts its web app, a log shipper, and the reporting service it calls into the same pod 'to keep things together'. Which belong together, and why?",
-     "a": "The web app and the log shipper: the shipper is a tightly coupled helper that shares the app's lifecycle and storage. The reporting service should be its own pod, because containers in a pod share a node, IP and lifecycle, so they scale and fail together, and the reporting service needs to scale and update independently."
+     "a": {
+      "items": [
+       "**Same pod**: **web app + log shipper** → the shipper is a **tightly coupled helper** that shares the app's **lifecycle** and **storage**",
+       {
+        "t": "**Own pod**: the **reporting service**",
+        "sub": [
+         "Containers in a pod share a **node**, **IP** and **lifecycle** → they **scale and fail together**",
+         "The reporting service needs to **scale and update independently**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A frontend calls a backend by a pod IP copied from the console, and it breaks every few days. Why, and what is the fix?",
-     "a": "Pods are ephemeral: they get new IPs when replaced or rescheduled. Put a Service in front of the backend pods. It gives a stable IP and DNS name and load-balances across whichever ready pods match its label selector."
+     "a": {
+      "lead": "**Pods are ephemeral**: they get **new IPs** when **replaced or rescheduled**.",
+      "items": [
+       "**Fix**: put a **Service** in front of the backend pods",
+       "→ a **stable IP** and **DNS name**",
+       "→ **load-balances** across whichever **ready pods** match its **label selector**"
+      ]
+     }
     },
     {
      "q": "Three web services must share one public domain with paths /shop, /blog and /api. Would you expose each Service directly or use an Ingress?",
-     "a": "An Ingress: one external entry point with path-based routing to the three Services. Exposing each directly needs three external endpoints and gives no shared host or path routing. An Ingress needs an installed controller to implement its rules, which is one more component to run."
+     "a": {
+      "lead": "**An Ingress.**",
+      "items": [
+       "**One external entry point** with **path-based routing** to the three Services",
+       "**Exposing each directly** → needs **three external endpoints** and gives no **shared host** or **path routing**"
+      ],
+      "foot": "**Cost**: an Ingress needs an **installed controller** to implement its rules → **one more component** to run."
+     }
     },
     {
      "q": "Two teams share a cluster in separate Namespaces, and a security review assumes their traffic is isolated. Is it?",
-     "a": "No. Namespaces organise and scope resources but don't restrict traffic by themselves. Add NetworkPolicies (with a network plugin that supports them) to limit pod-to-pod traffic, RBAC to limit API access, and ResourceQuotas to stop one team starving the other."
+     "a": {
+      "lead": "**No.** Namespaces **organise** and **scope resources** but don't **restrict traffic** by themselves.",
+      "items": [
+       "**NetworkPolicies** (with a **network plugin** that supports them) → limit **pod-to-pod traffic**",
+       "**RBAC** → limit **API access**",
+       "**ResourceQuotas** → stop one team **starving** the other"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -498,19 +589,52 @@
    "check": [
     {
      "q": "A startup's production cluster is a single-node local setup like the one used in the lecture labs, because 'it works fine'. What would you tell them?",
-     "a": "One machine is one failure domain: a host failure or upgrade takes everything down, and that setup is designed for learning and testing, not HA. Move to a managed or properly designed self-managed cluster with multiple nodes across zones, and test node and control-plane recovery."
+     "a": {
+      "items": [
+       "**One machine is one failure domain**: a **host failure** or **upgrade** takes everything down",
+       "That setup is designed for **learning and testing**, not **HA**",
+       "**Move to** a **managed** or properly designed **self-managed cluster** with **multiple nodes across zones**",
+       "**Test node** and **control-plane recovery**"
+      ]
+     }
     },
     {
      "q": "A Deployment is applied but reports 0 of 3 pods available, even though pods with the app are running. What would you check first?",
-     "a": "That the selector's matchLabels match the pod template's labels. The Deployment finds and counts its pods by label, so a mismatch means it can't track the pods it should own. Also check that the Service selector uses the same labels so traffic reaches them."
+     "a": {
+      "lead": "Check that the **selector's matchLabels** match the **pod template's labels**.",
+      "items": [
+       "The Deployment **finds and counts its pods by label** → a mismatch means it can't **track the pods it should own**",
+       "**Also check** that the **Service selector** uses the **same labels** → so traffic reaches them"
+      ]
+     }
     },
     {
      "q": "A team changed a value in a ConfigMap, but the app still uses the old value an hour later. Why, and what are the options?",
-     "a": "The ConfigMap separates config from the image, but the running process may only read config at startup, and environment variables taken from a ConfigMap are not refreshed. Restart the pods through a rolling update, or mount the ConfigMap as a file and add reload logic. Sensitive values belong in Secrets with access and encryption controls."
+     "a": {
+      "items": [
+       "**Why**: the **ConfigMap** separates **config from the image**, but the running process may only **read config at startup**",
+       "**Environment variables** taken from a ConfigMap are **not refreshed**",
+       {
+        "t": "**Options**",
+        "sub": [
+         "**Restart the pods** through a **rolling update**",
+         "**Mount the ConfigMap as a file** and add **reload logic**"
+        ]
+       }
+      ],
+      "foot": "**Sensitive values** belong in **Secrets** with **access and encryption controls**."
+     }
     },
     {
      "q": "Self-managed Kubernetes or a managed Kubernetes service for a team of 4 running 15 services? What should decide it?",
-     "a": "Managed is the likely choice: the provider operates selected platform components, such as the control plane, so the small team avoids upgrades and control-plane recovery. Self-managed gives more control but leaves all cluster operations to the team. With either option, check the responsibility boundary: worker capacity, workload security and application availability still need the team's design."
+     "a": {
+      "lead": "**Managed** is the likely choice.",
+      "items": [
+       "**Managed**: the provider operates **selected platform components**, such as the **control plane** → the small team avoids **upgrades** and **control-plane recovery**",
+       "**Self-managed**: more **control**, but leaves **all cluster operations** to the team",
+       "**With either option, check the responsibility boundary**: **worker capacity**, **workload security** and **application availability** still need the team's **design**"
+      ]
+     }
     }
    ]
   },
@@ -587,15 +711,35 @@
    "check": [
     {
      "q": "A cluster spans three zones in one region. A manager says the app is now 'resilient to anything'. What does it cover and what doesn't it?",
-     "a": "Spreading replicas across zones covers the loss of a node or a zone, provided placement and spare capacity are configured. It doesn't cover a regional outage or a control-plane failure in that region. Regional resilience needs multiple clusters plus explicit traffic failover and data recovery design."
+     "a": {
+      "items": [
+       "**Covers**: **spreading replicas across zones** covers the loss of a **node** or a **zone**, provided **placement** and **spare capacity** are configured",
+       "**Doesn't cover**: a **regional outage** or a **control-plane failure** in that region",
+       "**Regional resilience** needs **multiple clusters** plus explicit **traffic failover** and **data recovery design**"
+      ]
+     }
     },
     {
      "q": "Map a stateless API, a nightly report, a per-node log collector and a database onto Kubernetes objects. Justify each.",
-     "a": "Stateless API: a Deployment with several replicas behind a Service, because it scales freely. Nightly report: a CronJob, for scheduled batch work. Log collector: a DaemonSet, so one runs on every node. Database: a StatefulSet with PVCs, or a managed external database, which is usually the better default because the provider handles backups, replication and patching."
+     "a": {
+      "items": [
+       "**Stateless API** → a **Deployment** with several **replicas** behind a **Service**: it **scales freely**",
+       "**Nightly report** → a **CronJob**: **scheduled batch work**",
+       "**Log collector** → a **DaemonSet**: one runs on **every node**",
+       "**Database** → a **StatefulSet** with **PVCs**, or a **managed external database**, usually the **better default** because the provider handles **backups**, **replication** and **patching**"
+      ]
+     }
     },
     {
      "q": "A compromised pod in one namespace could call the payment service and consumed all cluster CPU. Which objects around the workload would have limited this?",
-     "a": "A NetworkPolicy restricting who can reach the payment service, a ResourceQuota capping the namespace's consumption (with resource limits on pods), and a dedicated ServiceAccount with only the permissions the workload needs. These are configured controls: Kubernetes supplies them, but they are off unless you set them."
+     "a": {
+      "items": [
+       "**NetworkPolicy** → restricts who can reach the **payment service**",
+       "**ResourceQuota** → caps the **namespace's consumption** (with **resource limits** on pods)",
+       "**Dedicated ServiceAccount** → only the **permissions** the workload needs"
+      ],
+      "foot": "These are **configured controls**: Kubernetes supplies them, but they are **off unless you set them**."
+     }
     }
    ]
   },
@@ -707,19 +851,58 @@
    "check": [
     {
      "q": "An API pod's liveness probe calls the database. During a 5-minute database slowdown, every API pod restarts repeatedly. What went wrong, and how should the probes be set?",
-     "a": "Liveness failed because of a dependency, so restarts couldn't fix it and they added load during recovery. Liveness should detect only a process that needs a restart, such as a deadlock. Readiness should decide whether the pod can serve traffic, so dependency checks belong there, if anywhere."
+     "a": {
+      "items": [
+       "**What went wrong**: **liveness failed because of a dependency** → restarts couldn't fix it and they **added load during recovery**",
+       "**Liveness** → detect only a process that **needs a restart**, such as a **deadlock**",
+       "**Readiness** → decide whether the pod can **serve traffic** → **dependency checks** belong there, if anywhere"
+      ]
+     }
     },
     {
      "q": "Before an app starts, its database schema must be migrated, and throughout its life its logs must be shipped to a central store. Which pattern fits each?",
-     "a": "An init container for the migration, because it runs to completion before the app container starts. A sidecar for log shipping, because it runs alongside the app for the pod's whole life and shares its storage. Neither requires changing the app's code. Make the migration safe to run more than once, because pods restart."
+     "a": {
+      "items": [
+       "**Migration** → an **init container**: it **runs to completion** before the **app container starts**",
+       "**Log shipping** → a **sidecar**: it runs **alongside the app** for the **pod's whole life** and **shares its storage**",
+       "Neither requires changing the **app's code**"
+      ],
+      "foot": "Make the migration **safe to run more than once**, because **pods restart**."
+     }
     },
     {
      "q": "A stateful service writes data to its container filesystem, and the data disappears after a node failure. What is the fix, and what does a pod-level volume not solve?",
-     "a": "A container's filesystem lives and dies with the container. Use a PersistentVolumeClaim bound to a PersistentVolume so the data outlives the pod, and a replacement pod can remount it. A pod-level volume lets containers in the same pod share files, but it is still tied to the pod's lifetime."
+     "a": {
+      "items": [
+       "**Cause**: a container's **filesystem** lives and dies with the **container**",
+       "**Fix**: a **PersistentVolumeClaim** bound to a **PersistentVolume** → data **outlives the pod**, and a **replacement pod** can **remount** it",
+       "**Pod-level volume** → lets containers in the **same pod share files**, but is still **tied to the pod's lifetime**"
+      ]
+     }
     },
     {
      "q": "One of three replicas crashes during peak load and users see errors for a minute. Explain which mechanisms recover it, and why errors still happened.",
-     "a": "Readiness removes the failed pod from Service endpoints, kubelet restarts a crashed container, and the controller replaces a lost pod. Errors still happen if requests were in flight, if the 2 remaining replicas lack the capacity for peak load, or if there was no spare node capacity for a replacement. None of these mechanisms guarantees zero downtime without headroom and graceful shutdown."
+     "a": {
+      "items": [
+       {
+        "t": "**Recovery mechanisms**",
+        "sub": [
+         "**Readiness** removes the failed pod from **Service endpoints**",
+         "**kubelet** restarts a **crashed container**",
+         "The **controller** replaces a **lost pod**"
+        ]
+       },
+       {
+        "t": "**Why errors still happened**",
+        "sub": [
+         "Requests were **in flight**",
+         "The **2 remaining replicas** lacked the **capacity for peak load**",
+         "There was no **spare node capacity** for a **replacement**"
+        ]
+       }
+      ],
+      "foot": "None of these mechanisms **guarantees zero downtime** without **headroom** and **graceful shutdown**."
+     }
     }
    ]
   }
@@ -727,23 +910,90 @@
  "exam_angles": [
   {
    "q": "A retailer's monolith has outages during sales peaks that are 15 times normal traffic. Propose a Kubernetes-based design, justify the main objects you would use, and say what Kubernetes will not solve for you.",
-   "a": "Split the parts that peak, such as catalogue and checkout, into Deployments with several ready replicas spread across zones, Services for stable discovery, and an Ingress with an installed controller for external HTTP routing. Add autoscaling with metrics, resource requests and node headroom. Externalise state to a managed database and shared cache, and use readiness probes, graceful shutdown and rolling updates for deployments. Kubernetes won't supply the database, queue or monitoring stack, won't guarantee zero downtime without spare capacity, and won't fix a data tier that can't take the peak."
+   "a": {
+    "items": [
+     {
+      "t": "**Split the parts that peak**, such as **catalogue** and **checkout**",
+      "sub": [
+       "**Deployments** with several **ready replicas** spread **across zones**",
+       "**Services** for **stable discovery**",
+       "An **Ingress** with an **installed controller** for **external HTTP routing**"
+      ]
+     },
+     "**Autoscaling** with **metrics**, **resource requests** and **node headroom**",
+     "**Externalise state** to a **managed database** and **shared cache**",
+     "**Readiness probes**, **graceful shutdown** and **rolling updates** for deployments",
+     {
+      "t": "**Kubernetes won't**",
+      "sub": [
+       "**Supply** the **database**, **queue** or **monitoring stack**",
+       "**Guarantee zero downtime** without **spare capacity**",
+       "**Fix a data tier** that can't **take the peak**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A new node joins a cluster and someone deletes a pod by accident at the same moment. Explain, component by component, how the control plane and nodes return the system to its desired state, and which single component's loss would be most serious.",
-   "a": "The API server is the only entry point and records changes in etcd. The controller manager sees fewer replicas than declared and creates a replacement pod object. The scheduler places it on a node with capacity, possibly the new one. That node's kubelet starts it through the container runtime, and kube-proxy updates Service routing so traffic reaches it. Losing etcd would be most serious, because it holds all desired and current state, so it should be replicated and backed up."
+   "a": {
+    "items": [
+     "**API server**: the **only entry point**; **records changes** in **etcd**",
+     "**Controller manager**: sees **fewer replicas than declared** → creates a **replacement pod object**",
+     "**Scheduler**: places it on a node with **capacity**, possibly the **new one**",
+     "**kubelet** on that node: starts it through the **container runtime**",
+     "**kube-proxy**: updates **Service routing** so traffic reaches it"
+    ],
+    "ordered": true,
+    "foot": "**Most serious loss: etcd** → it holds **all desired and current state**, so it should be **replicated** and **backed up**."
+   }
   },
   {
    "q": "Design the external access path for three web microservices (/products, /orders, /payments) under one domain. Explain the role of each object, and say what changes if /payments must be reachable only from the orders service internally.",
-   "a": "Create a Deployment and a Service for each microservice, with selectors that match the pod labels, and one Ingress with path rules routing to the three Services, implemented by an installed Ingress controller. Services give stable backends, and the controller handles external HTTP routing. If /payments must be internal only, remove it from the Ingress, keep its Service internal, and add a NetworkPolicy that allows traffic only from the orders pods."
+   "a": {
+    "items": [
+     "**Per microservice**: a **Deployment** and a **Service**, with **selectors that match the pod labels** → Services give **stable backends**",
+     "**One Ingress** with **path rules** routing to the three Services",
+     "An **installed Ingress controller** implements it and handles **external HTTP routing**",
+     {
+      "t": "**If /payments must be internal only**",
+      "sub": [
+       "**Remove it from the Ingress**",
+       "**Keep its Service internal**",
+       "Add a **NetworkPolicy** that allows traffic **only from the orders pods**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "An organisation is choosing between a local single-node cluster, self-managed Kubernetes and a managed Kubernetes service for development and production of 20 services, with a 5-person platform team. Recommend a setup for each environment and justify it.",
-   "a": "Use a local single-node cluster for developer learning and testing only. For production, use managed Kubernetes: the provider runs selected platform components such as the control plane, so the small team avoids upgrades and control-plane recovery. Self-managed would give more control but leave all cluster operations to 5 people. Check the provider's responsibility boundary, since worker capacity, workload security and application availability still need design, and plan multiple zones for production."
+   "a": {
+    "items": [
+     "**Local single-node cluster** → **developer learning and testing only**",
+     {
+      "t": "**Production** → **managed Kubernetes**",
+      "sub": [
+       "The provider runs **selected platform components** such as the **control plane** → the small team avoids **upgrades** and **control-plane recovery**",
+       "**Self-managed** would give more **control** but leave **all cluster operations** to **5 people**",
+       "Plan **multiple zones** for production"
+      ]
+     },
+     "**Check the provider's responsibility boundary**: **worker capacity**, **workload security** and **application availability** still need **design**"
+    ]
+   }
   },
   {
    "q": "A team's Kubernetes design keeps database credentials in a ConfigMap, runs its database as a single pod with data on the container filesystem, and puts every team in one Namespace with no quotas. Critique the design and give corrected choices.",
-   "a": "Credentials in a ConfigMap aren't protected, so move them to Secrets with access and encryption controls, or to an external secret store. A database writing to its container filesystem loses data when the pod is replaced, so use a StatefulSet with PVCs, or preferably a managed database. One shared Namespace without quotas gives no governance, so give each team its own Namespace with RBAC, ResourceQuotas and NetworkPolicies. Keep services stateless so they scale as Deployments, and use one image per release with config injected per environment."
+   "a": {
+    "items": [
+     "**Credentials in a ConfigMap** aren't **protected** → move them to **Secrets** with **access and encryption controls**, or to an **external secret store**",
+     "**Database writing to its container filesystem** → **loses data** when the pod is **replaced** → a **StatefulSet** with **PVCs**, or preferably a **managed database**",
+     "**One shared Namespace without quotas** → **no governance** → give each team its **own Namespace** with **RBAC**, **ResourceQuotas** and **NetworkPolicies**",
+     "**Keep services stateless** → they **scale as Deployments**",
+     "**One image per release** with **config injected per environment**"
+    ]
+   }
   }
  ]
 }

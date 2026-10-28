@@ -117,19 +117,50 @@
    "check": [
     {
      "q": "A team designs a highly available Kubernetes control plane as 'one active master and one standby master'. What does this description hide?",
-     "a": "Each control-plane component has its own availability model. API servers can serve concurrently behind a load balancer, controllers and schedulers use leader election so only one acts at a time, and etcd needs a quorum, usually an odd number of members. A single active/standby pair can lose etcd quorum or leave API requests unserved, so design each component's replication and recovery separately."
+     "a": {
+      "lead": "Each **control-plane component** has its **own availability model**.",
+      "items": [
+       "**API servers**: serve **concurrently** behind a **load balancer**",
+       "**Controllers** and **schedulers**: **leader election** → only one acts at a time",
+       "**etcd**: needs a **quorum**, usually an **odd number of members**",
+       "**Active/standby pair** → can **lose etcd quorum** or leave **API requests unserved**"
+      ],
+      "foot": "Design each component's **replication** and **recovery** separately."
+     }
     },
     {
      "q": "A traditional web app keeps user sessions in each app server's memory and uses cookies to hold session IDs. A teammate says going cloud native means disabling cookies. Do you agree?",
-     "a": "No. A cookie can still carry a session identifier or token. The scaling problem is session state that lives only on one replaceable instance. Move sessions to a shared store, or use suitable client-held tokens, so any replica can serve the next request. The cookie transport and where the state lives are separate choices."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "A **cookie** can still carry a **session identifier** or **token**",
+       "**The scaling problem**: **session state** that lives only on **one replaceable instance**",
+       "**Fix**: move sessions to a **shared store**, or use suitable **client-held tokens** → **any replica** can serve the next request"
+      ],
+      "foot": "The **cookie transport** and **where the state lives** are **separate choices**."
+     }
     },
     {
      "q": "In the delivery toolchain (language, data store, build, deploy, release tracking), a team picks a vector database as its main store 'because it's modern'. The app records orders and payments. What is wrong?",
-     "a": "Each link in the toolchain should be justified by requirements. Orders and payments need transactions and integrity, which point to relational or NewSQL stores. A vector store serves similarity search, for example for RAG, and could sit alongside them. Modern options are added where they help, not as automatic replacements."
+     "a": {
+      "items": [
+       "Each **link in the toolchain** should be **justified by requirements**",
+       "**Orders and payments** need **transactions** and **integrity** → **relational** or **NewSQL** stores",
+       "**Vector store**: serves **similarity search**, for example for **RAG** → could sit **alongside** them"
+      ],
+      "foot": "**Modern options** are added **where they help**, not as **automatic replacements**."
+     }
     },
     {
      "q": "A company wants to replace its SOAP web services and ESB-based workflows. What cloud-native options does the instructor map them to, and what caution applies?",
-     "a": "SOAP services can become Kubernetes services exposed through API gateways with REST. ESB and BPEL orchestration can move toward events and lightweight orchestration, and in the instructor's list toward agent harnesses with evals and human validation. Replace selected integrations where requirements justify it, since none of these automatically replaces every working mechanism, and agent workflows need verification."
+     "a": {
+      "items": [
+       "**SOAP services** → **Kubernetes services** exposed through **API gateways** with **REST**",
+       "**ESB** and **BPEL orchestration** → **events** and **lightweight orchestration**",
+       "In the instructor's list, also → **agent harnesses** with **evals** and **human validation**"
+      ],
+      "foot": "**Caution**: replace **selected integrations** where **requirements justify** it, since none of these **automatically replaces** every working mechanism, and **agent workflows need verification**."
+     }
     }
    ],
    "visuals": [
@@ -239,15 +270,38 @@
    "check": [
     {
      "q": "A 6-person team wants independent deployment for three areas of its product but can't operate dozens of services. Microservices, monolith or something between?",
-     "a": "A microlith, the instructor's term for a coarse-grained deployable between a monolith and microservices: three independently deployable units, each with some independent scaling, and far fewer moving parts than fine-grained services. It suits teams without the operational maturity for many services. Split further later if one area needs it."
+     "a": {
+      "lead": "A **microlith**: the instructor's term for a **coarse-grained deployable** between a **monolith** and **microservices**.",
+      "items": [
+       "**Three independently deployable units**, each with some **independent scaling**",
+       "**Far fewer moving parts** than **fine-grained services**",
+       "Suits teams without the **operational maturity** for many services"
+      ],
+      "foot": "**Split further later** if one area needs it."
+     }
     },
     {
      "q": "A team says 'we moved from VMs to containers to functions, so we are now properly decomposed by business function'. Is that right?",
-     "a": "No. Packaging and decomposition are separate decisions. A VM can host several services, a container can hold a monolith, and a function can be one handler inside a service. Decompose by business capability and operating needs first, then choose the execution unit for each part. Replication and data partitioning are further, independent scaling decisions."
+     "a": {
+      "lead": "**No.** **Packaging** and **decomposition** are **separate decisions**.",
+      "items": [
+       "A **VM** can host **several services**, a **container** can hold a **monolith**, and a **function** can be **one handler** inside a service",
+       "**Decompose first** by **business capability** and **operating needs**, then choose the **execution unit** for each part",
+       "**Replication** and **data partitioning** are further, **independent scaling decisions**"
+      ]
+     }
     },
     {
      "q": "Decompose a streaming app's search, profile, playback-resume and title-row recommendations into services, choosing a data store for each with a reason.",
-     "a": "Search: a search index or document store for text queries. Profile: relational or key-value, for structured per-user data. Playback resume position: a fast key-value store, written often and read by user and title. Recommendations: a service fed by viewing events, which precomputes the title rows into a fast read store. Each store adds operational cost, so share stores where the access patterns match."
+     "a": {
+      "items": [
+       "**Search** → a **search index** or **document store**, for **text queries**",
+       "**Profile** → **relational** or **key-value**, for **structured per-user data**",
+       "**Playback resume position** → a fast **key-value store**: **written often**, read by **user and title**",
+       "**Recommendations** → a service fed by **viewing events**, which **precomputes** the **title rows** into a **fast read store**"
+      ],
+      "foot": "Each store adds **operational cost**, so **share stores** where the **access patterns match**."
+     }
     }
    ],
    "visuals": [
@@ -284,19 +338,89 @@
  "exam_angles": [
   {
    "q": "Decompose a Netflix-like streaming platform into a cloud-native architecture: identify services and data stores, how viewing events reach recommendations, how it is deployed, and how it scales on each axis.",
-   "a": "Services: search, profile, catalogue, recommendations and playback, each with a fitting store (search index, relational or key-value, document, precomputed fast reads, and key-value for resume position). Viewing events flow through a stream into recommendation processing, Kappa-style. Run stateless services as Kubernetes Deployments behind Services and an API gateway, using tokens or shared session state so any replica can serve. Scale by replication (more replicas), functional decomposition (hot services such as playback scale alone) and partitioning (shard user data by user ID). The costs are eventual consistency in recommendations and more services to operate."
+   "a": {
+    "items": [
+     {
+      "t": "**Services and stores**",
+      "sub": [
+       "**Search** → **search index**",
+       "**Profile** → **relational** or **key-value**",
+       "**Catalogue** → **document**",
+       "**Recommendations** → **precomputed fast reads**",
+       "**Playback** → **key-value** for **resume position**"
+      ]
+     },
+     "**Events**: **viewing events** flow through a **stream** into **recommendation processing**, **Kappa-style**",
+     "**Deployment**: **stateless services** as **Kubernetes Deployments** behind **Services** and an **API gateway**, using **tokens** or **shared session state** so **any replica** can serve",
+     {
+      "t": "**Scaling axes**",
+      "sub": [
+       "**Replication**: more replicas",
+       "**Functional decomposition**: hot services such as **playback** scale alone",
+       "**Partitioning**: **shard user data** by **user ID**"
+      ]
+     }
+    ],
+    "foot": "**Costs**: **eventual consistency** in recommendations and **more services to operate**."
+   }
   },
   {
    "q": "Modernise a traditional web app that uses server-side sessions in memory, SOAP services, an ESB for workflows and a relational database. Decide what to keep, what to change and why.",
-   "a": "Keep the relational database for transactional data and keep cookies, but move sessions to a shared store or tokens so replicas are replaceable. Expose SOAP functions through an API gateway with REST, rewriting services only where change justifies it. Move ESB workflows toward events or lightweight orchestration one flow at a time. Add observability and automated delivery (CI/CD or GitOps) first, because they make every later change safer. Don't swap in a vector store or agents unless a requirement calls for them."
+   "a": {
+    "items": [
+     "**Keep** the **relational database** for **transactional data**",
+     "**Keep cookies**, but move **sessions** to a **shared store** or **tokens** → **replicas are replaceable**",
+     "**SOAP** → expose its functions through an **API gateway** with **REST**; **rewrite** services only where **change justifies** it",
+     "**ESB workflows** → move toward **events** or **lightweight orchestration**, **one flow at a time**",
+     "**First**: add **observability** and **automated delivery** (**CI/CD** or **GitOps**) → they make every later change **safer**"
+    ],
+    "foot": "Don't swap in a **vector store** or **agents** unless a **requirement** calls for them."
+   }
   },
   {
    "q": "Explain how Kubernetes provides high availability for both the control plane and the applications, and say why a large replica count alone doesn't guarantee availability to users.",
-   "a": "Control plane: replicate API servers behind a load balancer, run controllers and schedulers with leader election, and keep etcd with quorum across failure domains. Applications: run ready replicas spread across zones, with health probes so kubelet restarts failed containers and controllers replace lost Pods, and persistent data with its own replication and recovery. Replica count alone doesn't help if replicas share one zone, lack capacity headroom, depend on a single database, or fail readiness together, so availability must be designed end to end."
+   "a": {
+    "items": [
+     {
+      "t": "**Control plane**",
+      "sub": [
+       "**Replicate API servers** behind a **load balancer**",
+       "Run **controllers** and **schedulers** with **leader election**",
+       "Keep **etcd** with **quorum** across **failure domains**"
+      ]
+     },
+     {
+      "t": "**Applications**",
+      "sub": [
+       "Run **ready replicas** spread across **zones**",
+       "**Health probes** → **kubelet restarts** failed containers and **controllers replace lost Pods**",
+       "**Persistent data** with its own **replication and recovery**"
+      ]
+     },
+     {
+      "t": "**Why replica count alone doesn't help**: replicas may",
+      "sub": [
+       "**Share one zone**",
+       "**Lack capacity headroom**",
+       "**Depend on a single database**",
+       "**Fail readiness together**"
+      ]
+     }
+    ],
+    "foot": "Availability must be **designed end to end**."
+   }
   },
   {
    "q": "A new product will start with one team and modest load but expects to grow. Choose between a singular and a distributed architecture, and explain how you would leave room to evolve.",
-   "a": "Choose a singular, modular architecture: simplicity and low latency outweigh independent scaling at this size. Keep clear internal boundaries by business capability, make it stateless and containerised so replication works from day one, and keep data ownership per module so the parts can later be split into microliths or microservices. Real systems end up hybrid, so plan the first split around the module most likely to need independent scaling."
+   "a": {
+    "lead": "Choose a **singular, modular architecture**: **simplicity** and **low latency** outweigh **independent scaling** at this size.",
+    "items": [
+     "Keep **clear internal boundaries** by **business capability**",
+     "Make it **stateless** and **containerised** → **replication** works from day one",
+     "Keep **data ownership per module** → the parts can later be split into **microliths** or **microservices**"
+    ],
+    "foot": "Real systems end up **hybrid**, so plan the **first split** around the module most likely to need **independent scaling**."
+   }
   }
  ]
 }

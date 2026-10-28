@@ -90,15 +90,35 @@
    "check": [
     {
      "q": "A team split its monolith into 6 separately deployed apps, but they still share one relational database, and every release still needs a joint change window. Why?",
-     "a": "Shared tables mean a schema change for one app can break the others, so releases must be coordinated, and independent deployment is lost. Give each service private ownership of its data, with others reaching it through the service's API or events. The cost is that cross-service queries and consistency now need design."
+     "a": {
+      "items": [
+       "**Shared tables** → a **schema change** for one app can **break the others**",
+       "→ releases must be **coordinated** → **independent deployment is lost**",
+       "**Fix**: give each service **private ownership of its data**; others reach it through the service's **API or events**"
+      ],
+      "foot": "**Cost**: **cross-service queries** and **consistency** now need design."
+     }
     },
     {
      "q": "In a monolith, ticket creation needs 10 times more capacity at peak, and the reporting module needs a newer library version that conflicts with the rest. Which monolith shortcomings are these, and how would microservices address them?",
-     "a": "All-or-nothing scaling (the whole app must be cloned to scale one hot function) and library or technology lock-in (one dependency set for everything). As separate services, ticketing scales on its own and reporting picks its own stack. The price is network calls, separate deployments and more to monitor."
+     "a": {
+      "items": [
+       "**All-or-nothing scaling**: the whole app must be **cloned** to scale **one hot function** → as a service, **ticketing scales on its own**",
+       "**Library or technology lock-in**: **one dependency set** for everything → as a service, **reporting picks its own stack**"
+      ],
+      "foot": "**Price**: **network calls**, **separate deployments** and **more to monitor**."
+     }
     },
     {
      "q": "A new microservice keeps its config in a file inside the image and holds user sessions in memory. Which service principles does it break, and why do they matter for independence?",
-     "a": "External configuration and stateless instances. Baked-in config means rebuilding to change environments. In-memory sessions mean instances can't be added or replaced freely. Move config outside the image and sessions to a shared store, while the service still owns its durable domain data in its own store."
+     "a": {
+      "lead": "Breaks **external configuration** and **stateless instances**.",
+      "items": [
+       "**Baked-in config** → **rebuilding** to change environments → move **config outside the image**",
+       "**In-memory sessions** → instances **can't be added or replaced freely** → move **sessions to a shared store**"
+      ],
+      "foot": "The service still **owns its durable domain data** in **its own store**."
+     }
     }
    ],
    "visuals": [
@@ -229,19 +249,50 @@
    "check": [
     {
      "q": "A startup with 3 developers and a simple CRUD app asks whether to start with microservices. What is your advice?",
-     "a": "Start with a monolith. For low-complexity systems the microservice premium (operations, monitoring, versioning, network calls) lowers productivity. Keep the code modular and split later when complexity, team size or scaling needs justify it."
+     "a": {
+      "lead": "**Start with a monolith.**",
+      "items": [
+       "**Low-complexity systems**: the **microservice premium** (**operations**, **monitoring**, **versioning**, **network calls**) → **lowers productivity**",
+       "Keep the code **modular**",
+       "**Split later** when **complexity**, **team size** or **scaling needs** justify it"
+      ]
+     }
     },
     {
      "q": "The most-called function in a monolith is 'get customer', which nearly every module uses. A teammate wants to extract it first because it is the busiest. Do you agree?",
-     "a": "Not on usage alone. A function that every module calls is tightly coupled, so extracting it first turns in-process calls into many chatty network calls and adds latency everywhere. Extract first a coherent business capability with a measurable scaling or change problem and dependencies you can separate. Heavy use is one signal, not the deciding one."
+     "a": {
+      "lead": "**Not on usage alone.**",
+      "items": [
+       "Called by **every module** → **tightly coupled**",
+       "Extracting it first → **in-process calls** become many **chatty network calls** → **latency everywhere**",
+       "**Extract first**: a **coherent business capability** with a **measurable scaling or change problem** and **dependencies you can separate**"
+      ],
+      "foot": "**Heavy use** is **one signal**, not the deciding one."
+     }
     },
     {
      "q": "A company adopts microservices but keeps separate UI, DBA, test and server teams, and every feature now needs four teams. What is missing?",
-     "a": "The organisational shift. Microservices assume small cross-functional teams that own a service end to end. With layer-based teams, every change crosses team boundaries and independence is lost. Reorganise around services, or the system takes on microservice overhead without the delivery benefit."
+     "a": {
+      "lead": "Missing: the **organisational shift**.",
+      "items": [
+       "Microservices assume **small cross-functional teams** that own a service **end to end**",
+       "**Layer-based teams** → every change **crosses team boundaries** → **independence is lost**",
+       "**Reorganise around services**"
+      ],
+      "foot": "Otherwise the system takes on **microservice overhead** without the **delivery benefit**."
+     }
     },
     {
      "q": "Using the four AKF pressures, should a company split out its payment capability, which changes rarely but must stay available during catalogue outages?",
-     "a": "Probably yes, driven by availability and fault tolerance: payment is business-critical and should not fail when the catalogue does. Developer throughput gives little reason, since it changes rarely. Weigh this against cost, because a separate service adds operations, and against the scalability of its data and dependencies."
+     "a": {
+      "lead": "**Probably yes**, driven by **availability and fault tolerance**.",
+      "items": [
+       "**Availability / fault tolerance**: payment is **business-critical** → should not fail when the **catalogue** does",
+       "**Developer throughput**: little reason, since it **changes rarely**",
+       "**Cost**: a separate service **adds operations**",
+       "**Scalability** of its **data and dependencies**: weigh this too"
+      ]
+     }
     }
    ]
   },
@@ -328,19 +379,53 @@
    "check": [
     {
      "q": "Only ticket creation is busy during a concert sale; search and catalogue are quiet. Compare how a monolith and microservices scale, and what each costs.",
-     "a": "The monolith clones the whole application behind a load balancer, paying for idle search and catalogue copies. Microservices scale only Ticketing, for example to 3 instances, while Search and Catalog stay at 1. The microservices approach costs separate deployments, discovery and monitoring, which pays off when load differs this much."
+     "a": {
+      "items": [
+       "**Monolith**: **clones the whole application** behind a **load balancer** → pays for **idle search and catalogue copies**",
+       "**Microservices**: scale **only Ticketing**, e.g. to **3 instances**, while **Search** and **Catalog** stay at **1**"
+      ],
+      "foot": "**Microservices cost**: **separate deployments**, **discovery** and **monitoring**, which pays off when **load differs this much**."
+     }
     },
     {
      "q": "A product team wants to try a hotel-recommendation feature in the booking flow and drop it if it fails. Why is this easier with microservices, and what still needs care?",
-     "a": "Experimentation and substitution: a new, self-contained service plugs into the existing flow and can be removed without touching the rest, so the team can fail fast. Care is still needed with the API contract, timeouts and fallbacks, so the booking flow keeps working if the experiment is slow or removed."
+     "a": {
+      "lead": "**Experimentation and substitution.**",
+      "items": [
+       "A **new, self-contained service** **plugs into** the existing flow",
+       "Can be **removed without touching the rest** → the team can **fail fast**"
+      ],
+      "foot": "**Still needs care**: the **API contract**, **timeouts** and **fallbacks**, so the booking flow keeps working if the experiment is **slow or removed**."
+     }
     },
     {
      "q": "An analytics team wants to subscribe to the existing order-events topic for a new dashboard, and says 'no impact analysis is needed because the publisher doesn't change'. Do you agree?",
-     "a": "Partly. The publisher's code doesn't change, which is the benefit of event-driven design. But the new consumer must understand the event contract, retention and authorisation, and handle duplicates, and a future change to the event schema now has one more consumer to consider. Register the consumer and its contract assumptions."
+     "a": {
+      "lead": "**Partly.**",
+      "items": [
+       "**True**: the **publisher's code doesn't change**, which is the benefit of **event-driven design**",
+       {
+        "t": "**But** the new consumer must",
+        "sub": [
+         "Understand the **event contract**, **retention** and **authorisation**",
+         "**Handle duplicates**"
+        ]
+       },
+       "A future change to the **event schema** now has **one more consumer** to consider"
+      ],
+      "foot": "**Register the consumer** and its **contract assumptions**."
+     }
     },
     {
      "q": "A pricing service needs a breaking change, but 3 partner integrations can't upgrade for 6 months. How can microservices handle this?",
-     "a": "Each service packages its own runtime, so V1 and V2 can run side by side. A gateway rule routes the partners to V1 and other clients, or one region, to V2. Retire V1 once the partners migrate. The cost is running and supporting two versions, including any data both must read."
+     "a": {
+      "items": [
+       "Each service **packages its own runtime** → **V1 and V2** can run **side by side**",
+       "A **gateway rule** routes the **partners to V1**, and other clients, or **one region**, to **V2**",
+       "**Retire V1** once the partners migrate"
+      ],
+      "foot": "**Cost**: running and supporting **two versions**, including any **data both must read**."
+     }
     }
    ]
   },
@@ -457,19 +542,51 @@
    "check": [
     {
      "q": "Decompose a food-delivery app (place order, assign rider, track delivery, pay, rate restaurant) using the three-step method. Where would you put 'assign rider'?",
-     "a": "Step 1 lists the system operations above. Step 2 identifies services by business capability: Order, Dispatch, Tracking, Payment, Ratings. Step 3 assigns each operation and defines APIs. 'Assign rider' belongs to Dispatch, which owns rider availability, and it collaborates with Order through an event or API. Putting it in Order would make Order own rider data it shouldn't."
+     "a": {
+      "items": [
+       "**Step 1**: list the **system operations**",
+       "**Step 2**: identify services by **business capability**: **Order**, **Dispatch**, **Tracking**, **Payment**, **Ratings**",
+       "**Step 3**: **assign each operation** and **define APIs**",
+       "**'Assign rider' → Dispatch**: it owns **rider availability**; collaborates with **Order** through an **event or API**"
+      ],
+      "foot": "Putting it in Order would make Order **own rider data it shouldn't**."
+     }
     },
     {
      "q": "Two services need to update an order and an inventory record together, and a teammate proposes a distributed transaction across both databases. What does the lecture's decentralised-data characteristic suggest?",
-     "a": "Avoid distributed transactions: each service owns its database, and the services coordinate through their APIs or events, with compensating actions if a step fails. This keeps services independently deployable. The cost is eventual consistency and designing for failed or repeated steps."
+     "a": {
+      "lead": "**Avoid distributed transactions.**",
+      "items": [
+       "Each service **owns its database**",
+       "Services **coordinate through their APIs or events**",
+       "**Compensating actions** if a step fails",
+       "→ services stay **independently deployable**"
+      ],
+      "foot": "**Cost**: **eventual consistency** + designing for **failed or repeated steps**."
+     }
     },
     {
      "q": "An architect says 'our SOA already has services, so we have microservices'. The SOA routes everything through a central enterprise bus and several services share a database. What is the difference?",
-     "a": "Microservices emphasise independent deployment, lightweight communication and private data ownership. A central bus that holds integration logic, plus a shared database, couples services in deployment and data. SOA doesn't require a central bus, but this one has one. To move toward microservices, move logic out of the bus and give each service its own data."
+     "a": {
+      "items": [
+       "**Microservices** emphasise **independent deployment**, **lightweight communication** and **private data ownership**",
+       "This SOA: a **central bus** holding **integration logic** + a **shared database** → couples services in **deployment and data**",
+       "**SOA doesn't require a central bus**, but this one has one"
+      ],
+      "foot": "**To move toward microservices**: move **logic out of the bus** and give each service **its own data**."
+     }
     },
     {
      "q": "A team has deployed 8 services, but ops can't tell which one failed in an incident, and each service has its own way of reading config. Which platform building blocks are missing?",
-     "a": "Diagnosability and monitoring (central logs, metrics, tracing) and configuration management. A microservice chassis for cross-cutting concerns would standardise both. Service discovery and an API gateway are also needed for finding services and outside access. These capabilities are what make many small services operable."
+     "a": {
+      "items": [
+       "**Diagnosability and monitoring**: **central logs**, **metrics**, **tracing**",
+       "**Configuration management**",
+       "A **microservice chassis** for **cross-cutting concerns** would standardise both",
+       "Also needed: **service discovery** (finding services) and an **API gateway** (outside access)"
+      ],
+      "foot": "These capabilities are what make **many small services operable**."
+     }
     }
    ],
    "visuals": [
@@ -564,15 +681,49 @@
    "check": [
     {
      "q": "An exam answer lists a dozen product names for a microservices platform. What should replace the list to score well?",
-     "a": "The capability each tool provides and why the design needs it: an API gateway for external access, a service registry or platform DNS for discovery, monitoring and tracing for diagnosability, a CI/CD pipeline and registry for delivery. Name a product only as an example of a category. The marks are for matching capabilities to requirements, not for recalling products."
+     "a": {
+      "lead": "Replace it with the **capability** each tool provides and **why the design needs it**:",
+      "items": [
+       "**API gateway** → **external access**",
+       "**Service registry** or **platform DNS** → **discovery**",
+       "**Monitoring and tracing** → **diagnosability**",
+       "**CI/CD pipeline** and **registry** → **delivery**"
+      ],
+      "foot": "Name a product only as an **example of a category**: the marks are for **matching capabilities to requirements**, not for **recalling products**."
+     }
     },
     {
      "q": "A team releases a risky change to a payment service. Should they use a canary release or blue-green, and what does each give up?",
-     "a": "A canary sends a small slice of traffic to the new version first, which limits exposure and gives real-traffic evidence, but both versions run at once, so they must be compatible. Blue-green switches all traffic between two environments in one step, which gives a fast, clean rollback but needs double capacity and exposes everyone at once. For a risky payment change, a canary is usually safer."
+     "a": {
+      "lead": "**Canary**: usually safer for a **risky payment change**.",
+      "items": [
+       {
+        "t": "**Canary**: a **small slice of traffic** to the new version first",
+        "sub": [
+         "**Limits exposure**, gives **real-traffic evidence**",
+         "Gives up: **both versions run at once** → they must be **compatible**"
+        ]
+       },
+       {
+        "t": "**Blue-green**: switches **all traffic** between **two environments** in **one step**",
+        "sub": [
+         "**Fast, clean rollback**",
+         "Gives up: needs **double capacity**, **exposes everyone at once**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A team on Kubernetes plans to install a separate service registry. What would you ask before approving it?",
-     "a": "Whether the platform already provides discovery: Kubernetes DNS and Services already resolve and load-balance service names. A separate registry adds another component that must stay highly available. It is justified when services span environments outside the cluster or need registry features the platform lacks."
+     "a": {
+      "lead": "Ask: does the **platform already provide discovery**?",
+      "items": [
+       "**Kubernetes DNS and Services** already **resolve and load-balance** service names",
+       "A separate registry adds **another component** that must stay **highly available**",
+       "**Justified** when services span **environments outside the cluster** or need **registry features the platform lacks**"
+      ]
+     }
     }
    ]
   },
@@ -661,19 +812,48 @@
    "check": [
     {
      "q": "When an order is placed, the Order service calls Payment, Inventory and Notification synchronously, and an outage in Notification makes orders fail. Redesign the communication.",
-     "a": "Keep a synchronous, time-bounded call only where the order needs an immediate result, such as payment authorisation. Publish an 'order placed' event to a durable topic for notification and other deferred work, so a Notification outage delays emails instead of failing orders. The cost is eventual consistency and handling retries, ordering and duplicate events."
+     "a": {
+      "items": [
+       "**Synchronous, time-bounded call** only where the order needs an **immediate result**, such as **payment authorisation**",
+       "**Publish an 'order placed' event** to a **durable topic** for **notification** and other **deferred work**",
+       "→ a **Notification outage** **delays emails** instead of **failing orders**"
+      ],
+      "foot": "**Cost**: **eventual consistency** + handling **retries**, **ordering** and **duplicate events**."
+     }
     },
     {
      "q": "Internal services exchange large volumes of small messages, and JSON parsing is a measurable cost. A public partner API also exists. Would you use gRPC, REST/JSON or both?",
-     "a": "Both. gRPC fits the internal calls: schema-defined binary messages over HTTP/2 are compact and fast to parse across languages, and they support streaming. REST/JSON fits the partner API: self-describing and widely supported by web clients and tooling. Check proxy and browser support before using gRPC beyond internal traffic."
+     "a": {
+      "lead": "**Both.**",
+      "items": [
+       "**gRPC for internal calls**: **schema-defined binary messages** over **HTTP/2** → **compact** and **fast to parse** across languages; supports **streaming**",
+       "**REST/JSON for the partner API**: **self-describing**, widely supported by **web clients and tooling**"
+      ],
+      "foot": "Check **proxy and browser support** before using gRPC **beyond internal traffic**."
+     }
     },
     {
      "q": "An API uses POST /api for every action, with the action name in the request body, and the team wonders why responses can't be cached. Which REST maturity level is this, and what would you change?",
-     "a": "Level 0: one URL with everything POSTed. Move to resources (Level 1) and proper HTTP verbs (Level 2), so reads become GET requests that web infrastructure can cache, and writes use POST, PUT or DELETE. Level 3 would add links to next actions (HATEOAS), which helps discoverability but is optional for most internal APIs."
+     "a": {
+      "lead": "**Level 0**: **one URL**, everything **POSTed**.",
+      "items": [
+       "→ **Level 1**: **resources**",
+       "→ **Level 2**: proper **HTTP verbs** → reads become **GET** requests that **web infrastructure can cache**; writes use **POST, PUT or DELETE**",
+       "**Level 3**: **links to next actions** (**HATEOAS**) → helps **discoverability**, but **optional** for most **internal APIs**"
+      ],
+      "ordered": true
+     }
     },
     {
      "q": "A team switched to reactive, non-blocking code and says 'our services are now decoupled from their dependencies'. Is that right?",
-     "a": "No. Reactive code changes how a process waits, so threads aren't blocked, but the service still depends on its downstream calls succeeding and has no delivery guarantee. Decoupling comes from asynchronous messaging through a durable queue or topic, together with timeouts and fallbacks."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Reactive code** changes **how a process waits** → **threads aren't blocked**",
+       "The service still **depends on its downstream calls succeeding** and has **no delivery guarantee**",
+       "**Decoupling** comes from **asynchronous messaging** through a **durable queue or topic**, together with **timeouts and fallbacks**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -796,15 +976,37 @@
    "check": [
     {
      "q": "A mobile app's home screen makes 9 calls to different services and is slow on poor networks. What would you change?",
-     "a": "Add an API gateway (or a backend for the mobile client) that calls the services and composes one response tailored to the screen, cutting round trips and payload size for limited mobile bandwidth. The gateway becomes a critical component that must be highly available and must not accumulate business logic."
+     "a": {
+      "lead": "Add an **API gateway** (or a **backend for the mobile client**).",
+      "items": [
+       "It calls the services and **composes one response** tailored to the screen",
+       "→ cuts **round trips** and **payload size** for **limited mobile bandwidth**"
+      ],
+      "foot": "The gateway becomes a **critical component**: it must be **highly available** and must **not accumulate business logic**."
+     }
     },
     {
      "q": "A polyglot estate (Java, Go, Python) uses client-side discovery with a registry library, and the Python library is unmaintained. What are the options?",
-     "a": "Switch to server-side discovery: clients call a load balancer or platform service name that queries the registry, so no discovery code is needed per language. The cost is another component that must be highly available, unless the platform, such as Kubernetes, already provides it. Client-side discovery saves a hop but needs library support in every language."
+     "a": {
+      "lead": "Switch to **server-side discovery**.",
+      "items": [
+       "Clients call a **load balancer** or **platform service name** that **queries the registry**",
+       "→ **no discovery code** needed **per language**",
+       "**Cost**: another component that must be **highly available**, unless the platform, such as **Kubernetes**, already provides it"
+      ],
+      "foot": "**Client-side discovery** saves a **hop** but needs **library support in every language**."
+     }
     },
     {
      "q": "A team adds an optional request field and a new response attribute and calls it version 2.0.0. Is MAJOR right?",
-     "a": "Usually not: this is MINOR if omitting the field keeps the old meaning and existing consumers ignore unknown response fields. A MAJOR bump wrongly signals a breaking change and can trigger unnecessary migrations. Test those consumer assumptions, because a new required field or a changed meaning would be MAJOR."
+     "a": {
+      "lead": "**Usually not**: this is **MINOR**.",
+      "items": [
+       "**MINOR** if omitting the field **keeps the old meaning** and existing consumers **ignore unknown response fields**",
+       "A **MAJOR bump** wrongly signals a **breaking change** → can trigger **unnecessary migrations**",
+       "**Test those consumer assumptions**: a **new required field** or a **changed meaning** would be **MAJOR**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -914,15 +1116,49 @@
    "check": [
     {
      "q": "A downstream inventory service is often unavailable for minutes at a time, and the order service's threads pile up waiting. Give the cause, a countermeasure and the countermeasure's drawback.",
-     "a": "The cause is synchronous calls with no timeout, so failures propagate as blocked threads. Set client timeouts with clear errors, and where delayed processing is acceptable send work through a durable queue with acknowledgements and bounded retries, with idempotent handlers. The drawback is that orders are confirmed before stock is checked, so the business needs a path for orders that later fail."
+     "a": {
+      "items": [
+       "**Cause**: **synchronous calls with no timeout** → failures propagate as **blocked threads**",
+       {
+        "t": "**Countermeasure**",
+        "sub": [
+         "**Client timeouts** with **clear errors**",
+         "Where **delayed processing is acceptable**: send work through a **durable queue** with **acknowledgements** and **bounded retries**",
+         "**Idempotent handlers**"
+        ]
+       },
+       "**Drawback**: orders are **confirmed before stock is checked** → the business needs a path for **orders that later fail**"
+      ],
+      "ordered": true
+     }
     },
     {
      "q": "A company with waterfall releases, physical servers and monitoring of infrastructure only wants to move to 50 microservices this year. What does the maturity model suggest?",
-     "a": "It is at a low level on the process, infrastructure and monitoring dimensions, which is a warning sign. With 50 services, missing DevOps, containers and APM with central logs would make troubleshooting and releases unmanageable. Raise maturity first: automate delivery, containerise, centralise logs and tracing, then grow the service count."
+     "a": {
+      "lead": "**Warning sign**: a **low level** on the **process**, **infrastructure** and **monitoring** dimensions.",
+      "items": [
+       "With **50 services**, missing **DevOps**, **containers** and **APM with central logs** → **troubleshooting and releases unmanageable**",
+       {
+        "t": "**Raise maturity first**",
+        "sub": [
+         "**Automate delivery**",
+         "**Containerise**",
+         "**Centralise logs and tracing**",
+         "**Then grow the service count**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A discount rule applies only within the cart service, while a loyalty rule spans cart, orders and partners. Where should each rule live?",
-     "a": "The simple, local discount rule fits an embedded rule engine inside the cart service. The cross-domain loyalty rule belongs in a central rule repository that the services consult, so it is defined once. An end-to-end process that also involves people would be composed with BPM or a dashboard."
+     "a": {
+      "items": [
+       "**Simple, local discount rule** → **embedded rule engine** inside the **cart service**",
+       "**Cross-domain loyalty rule** → **central rule repository** that the services consult → **defined once**",
+       "**End-to-end process that also involves people** → composed with **BPM** or a **dashboard**"
+      ]
+     }
     }
    ]
   }
@@ -930,23 +1166,120 @@
  "exam_angles": [
   {
    "q": "A retailer's monolithic e-commerce app slows down at sale peaks (search traffic rises 10 times, checkout 3 times), and releases take 6 weeks because 5 teams share one deployable. Propose a microservices design and an incremental migration plan, and name the main risk at each stage.",
-   "a": "Decompose by business capability: Catalog/Search, Cart, Order, Inventory, Payment. Assign operations and define APIs, giving each service its own data, behind an API gateway with service discovery. Extract Search first: it has the biggest load difference, it is read-heavy and its data can be copied. Then extract Cart and Order. Risks: at first, data synchronisation between the new Search store and the monolith; later, consistency between Order, Inventory and Payment without distributed transactions. Independent deployment through CI/CD addresses the 6-week release cycle, but only if teams are reorganised around services."
+   "a": {
+    "items": [
+     {
+      "t": "**Design**: decompose by **business capability**",
+      "sub": [
+       "**Catalog/Search**, **Cart**, **Order**, **Inventory**, **Payment**",
+       "**Assign operations** and **define APIs**; each service has **its own data**",
+       "Behind an **API gateway** with **service discovery**"
+      ]
+     },
+     {
+      "t": "**Incremental migration**",
+      "sub": [
+       "**Extract Search first**: **biggest load difference**, **read-heavy**, and its **data can be copied**",
+       "**Then extract Cart and Order**"
+      ]
+     },
+     {
+      "t": "**Main risk per stage**",
+      "sub": [
+       "**At first**: **data synchronisation** between the new **Search store** and the **monolith**",
+       "**Later**: **consistency** between **Order, Inventory and Payment** **without distributed transactions**"
+      ]
+     }
+    ],
+    "ordered": true,
+    "foot": "**Independent deployment through CI/CD** addresses the **6-week release cycle**, but only if **teams are reorganised around services**."
+   }
   },
   {
    "q": "A 6-person team with manual deployments, infrastructure-only monitoring and a moderately complex internal app is told to 'go microservices'. Argue whether they should, using the microservice premium and the maturity model, and say what would change your answer.",
-   "a": "They shouldn't yet. The microservice premium (operations, monitoring, versioning, network latency, troubleshooting) pays off only when a system is too complex to manage as a monolith, and a moderately complex app for 6 people is unlikely to qualify. Low maturity on process and monitoring makes it worse, because they couldn't diagnose distributed failures. Build a modular monolith and raise DevOps maturity. Reconsider if the team grows, parts need very different scaling or availability, or release coordination becomes the bottleneck."
+   "a": {
+    "lead": "**They shouldn't yet.**",
+    "items": [
+     "**Microservice premium** (**operations**, **monitoring**, **versioning**, **network latency**, **troubleshooting**) pays off only when a system is **too complex to manage as a monolith**",
+     "A **moderately complex** app for **6 people** is **unlikely to qualify**",
+     "**Maturity model**: **low maturity on process and monitoring** makes it worse → they **couldn't diagnose distributed failures**",
+     "**Instead**: build a **modular monolith** and **raise DevOps maturity**"
+    ],
+    "foot": "**Reconsider** if the **team grows**, parts need **very different scaling or availability**, or **release coordination** becomes the bottleneck."
+   }
   },
   {
    "q": "Design the communication between Order, Payment, Inventory and Notification services for a shop that must confirm payment to the user within 3 seconds and must never charge twice. Justify each synchronous or asynchronous choice.",
-   "a": "Order calls Payment synchronously with a time limit under the 3-second budget, because the user needs the outcome, and passes an idempotency key so a retry never charges twice. After payment, Order publishes an 'order paid' event to a durable topic: Inventory reserves stock and Notification sends email asynchronously, so their outages don't fail checkout. Persist order and payment state and handle duplicate events in consumers. If inventory later fails, compensate by refunding or back-ordering instead of using a distributed transaction. gRPC can carry the internal calls."
+   "a": {
+    "items": [
+     {
+      "t": "**Order → Payment: synchronous**",
+      "sub": [
+       "**Time limit under the 3-second budget**, because the **user needs the outcome**",
+       "Passes an **idempotency key** → a **retry never charges twice**"
+      ]
+     },
+     {
+      "t": "**Order → Inventory, Notification: asynchronous**",
+      "sub": [
+       "After payment, Order publishes an **'order paid' event** to a **durable topic**",
+       "**Inventory reserves stock**; **Notification sends email**",
+       "→ their **outages don't fail checkout**"
+      ]
+     },
+     "**Persist order and payment state**; consumers **handle duplicate events**",
+     "**If inventory later fails** → **compensate** by **refunding** or **back-ordering**, not a **distributed transaction**",
+     "**gRPC** can carry the **internal calls**"
+    ]
+   }
   },
   {
    "q": "A system has 40 services, a mobile app and a web app. Explain the roles of an API gateway, a service registry and a service mesh, say which traffic each handles, and say which you could do without if the platform is Kubernetes.",
-   "a": "The gateway handles north-south traffic from the mobile and web apps: routing, composition, security, throttling, protocol translation and monitoring. It can be tailored per client type. The registry records where service instances live, for client-side or server-side discovery. The mesh manages east-west traffic between the 40 services: retries, encryption and telemetry. On Kubernetes, the platform's Services and DNS already provide discovery, so a separate registry is often unnecessary. The mesh is justified at 40 services if uniform policy is needed, at the cost of extra hops and a control plane."
+   "a": {
+    "items": [
+     {
+      "t": "**API gateway**: **north-south** traffic from the **mobile and web apps**",
+      "sub": [
+       "**Routing**, **composition**, **security**, **throttling**, **protocol translation**, **monitoring**",
+       "Can be **tailored per client type**"
+      ]
+     },
+     "**Service registry**: records **where service instances live** → for **client-side or server-side discovery**",
+     {
+      "t": "**Service mesh**: **east-west** traffic between the **40 services**",
+      "sub": [
+       "**Retries**, **encryption**, **telemetry**"
+      ]
+     },
+     {
+      "t": "**On Kubernetes**",
+      "sub": [
+       "The platform's **Services and DNS** already provide **discovery** → a separate **registry is often unnecessary**",
+       "The **mesh is justified at 40 services** if **uniform policy** is needed, at the cost of **extra hops** and a **control plane**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A public pricing API is used by 200 external clients. The team must rename a field, add an optional discount field and fix a rounding bug. Plan the version numbers and the rollout so no client breaks.",
-   "a": "Rounding fix: PATCH. Optional discount field: MINOR, provided omitting it keeps the old meaning and clients ignore unknown response fields, which should be tested with consumer contracts. Renaming a field is incompatible: MAJOR. Run V1 and V2 side by side, route by version at the gateway, document both contracts with OpenAPI, and retire V1 only after the 200 clients have migrated, tracked through gateway metrics. The cost is supporting two versions for the migration period."
+   "a": {
+    "items": [
+     "**Rounding fix** → **PATCH**",
+     "**Optional discount field** → **MINOR**, provided omitting it **keeps the old meaning** and clients **ignore unknown response fields** (test with **consumer contracts**)",
+     "**Renaming a field** → **incompatible** → **MAJOR**",
+     {
+      "t": "**Rollout**",
+      "sub": [
+       "Run **V1 and V2 side by side**",
+       "**Route by version at the gateway**",
+       "Document both contracts with **OpenAPI**",
+       "**Retire V1** only after the **200 clients** have migrated, tracked through **gateway metrics**"
+      ]
+     }
+    ],
+    "foot": "**Cost**: supporting **two versions** for the **migration period**."
+   }
   }
  ]
 }

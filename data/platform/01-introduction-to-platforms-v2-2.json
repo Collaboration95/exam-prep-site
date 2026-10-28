@@ -78,11 +78,26 @@
    "check": [
     {
      "q": "A bank's account and payment services are used only by its own mobile app; no outside party can build on them. A colleague calls this a platform. Do you agree?",
-     "a": "Only partly. It fits the engineering definition, a set of services that applications are built and run on, but not the business one: no outside parties build complementary products through its interfaces, so it has no ecosystem yet. The lecture expects both internal consumption and external complements. To get there the bank would need published, extensible interfaces that partners can build against."
+     "a": {
+      "lead": "**Only partly.**",
+      "items": [
+       "**Engineering definition: fits** → a set of services that applications are built and run on",
+       "**Business definition: doesn't fit** → no outside parties build complementary products through its interfaces → **no ecosystem** yet",
+       "**Lecture expects both**: internal consumption **and** external complements"
+      ],
+      "foot": "To get there the bank would need **published, extensible interfaces** that partners can build against."
+     }
     },
     {
      "q": "A company hosts its reusable services on a shared cluster but leaves service discovery, resource coordination and usage reporting to each application team. What is missing compared with the lecture's definition of a modern platform, and why does it matter?",
-     "a": "A modern platform is both an application architecture and the infrastructure that hosts it, so it must solve discovery, resource coordination, orchestration and usage reporting itself. Left to each team, these concerns get solved differently and repeatedly, and the company is sharing components rather than offering a platform. Taking them on makes the platform team responsible for infrastructure, which is the work platform engineering exists to do."
+     "a": {
+      "items": [
+       "**Modern platform** = both an **application architecture** and the **infrastructure** that hosts it",
+       "**Must solve itself**: discovery, resource coordination, orchestration and usage reporting",
+       "**Left to each team** → solved differently and repeatedly → the company is **sharing components**, not offering a platform"
+      ],
+      "foot": "Taking them on makes the **platform team responsible for infrastructure**, which is the work **platform engineering** exists to do."
+     }
     }
    ]
   },
@@ -166,15 +181,36 @@
    "check": [
     {
      "q": "A payments API is PCI-compliant and encrypts every transaction, but partners need three weeks of contracts and manual key exchange before their first test call, and there is no sandbox. Which platform characteristic is weakest, and what would you change?",
-     "a": "**Quick to start using** is weakest: the on-ramp is slow and costly, which discourages producers and consumers from joining. Add quick-start guides, code samples, self-service test credentials and a test card suite, as Google Pay does. Security and compliance should stay the default, so the sandbox must not expose real card data."
+     "a": {
+      "lead": "**Quick to start using** is weakest.",
+      "items": [
+       "**Why**: the on-ramp is slow and costly → discourages **producers and consumers** from joining",
+       "**Fix**: add **quick-start guides**, **code samples**, **self-service test credentials** and a **test card suite**, as **Google Pay** does"
+      ],
+      "foot": "**Security and compliance** should stay the default, so the **sandbox must not expose real card data**."
+     }
     },
     {
      "q": "A platform team wants to replace its internal database and messaging stack. Dozens of partner apps call its published APIs. Which platform benefit lets the team do this without a partner release, and what would break it?",
-     "a": "The separation of intra-platform from inter-platform change: stable interfaces let the inside evolve at its own pace without overly impacting the outside. It breaks if the change leaks through the interface, for example by altering response fields or meanings. Then the team needs a new API version and a migration period for partners."
+     "a": {
+      "lead": "**Separation of intra-platform from inter-platform change.**",
+      "items": [
+       "**Stable interfaces** → the inside evolves at its own pace without overly impacting the outside",
+       "**Breaks if** the change **leaks through the interface**, e.g. altering response fields or meanings"
+      ],
+      "foot": "Then the team needs a **new API version** and a **migration period** for partners."
+     }
     },
     {
      "q": "A platform logs every transaction, but nobody analyses the logs and its service catalogue has not changed in two years. Which characteristic is it failing, and why is collecting data not enough?",
-     "a": "It is failing **stays relevant and data-driven**. That characteristic needs a feedback loop, data collected and then analysed to improve the services, as with Google Pay's analysis of spending or ML fraud detection. Logs nobody reads support no decisions, so the platform drifts away from what its users need."
+     "a": {
+      "lead": "It is failing **stays relevant and data-driven**.",
+      "items": [
+       "**Needs a feedback loop**: data **collected and then analysed** to improve the services",
+       "**Examples**: Google Pay's **analysis of spending**, **ML fraud detection**",
+       "**Logs nobody reads** support no decisions → the platform **drifts away** from what its users need"
+      ]
+     }
     }
    ]
   },
@@ -242,11 +278,32 @@
    "check": [
     {
      "q": "Your team adopts a toolkit that supplies abstract classes, dictates how the application is structured and calls your code at points it defines. A teammate calls it a library. Do you agree?",
-     "a": "No, it is a framework: a predefined skeleton that imposes a way of architecting the application and supports certain design patterns. A library is code you call from your own application at points you choose. The distinction matters because a framework shapes the whole design, so replacing it later costs far more than swapping a library."
+     "a": {
+      "lead": "**No, it is a framework.**",
+      "items": [
+       "**Framework** = a **predefined skeleton** that **imposes a way of architecting** the application and supports certain **design patterns**",
+       "**Library** = code **you call** from your own application at points **you choose**"
+      ],
+      "foot": "A framework **shapes the whole design** → replacing it later costs **far more** than swapping a library."
+     }
     },
     {
      "q": "An internal team announces 'we are building a platform', but its deliverable is a downloadable code skeleton that each app team installs and runs on its own servers. Is that a platform?",
-     "a": "No, it is a framework, which can be part of a platform but is not one. A platform is the environment software runs in: it provides hosted services and reusable components accessed by APIs, lets applications extend features by consuming and exposing services, and collects data for analytics. To become a platform the team would need to host and operate shared services, not just distribute code."
+     "a": {
+      "lead": "**No, it is a framework.**",
+      "items": [
+       "**Framework** can be **part of** a platform but is not one",
+       {
+        "t": "**Platform** = the **environment software runs in**:",
+        "sub": [
+         "provides **hosted services** and **reusable components accessed by APIs**",
+         "lets applications **extend features** by **consuming and exposing services**",
+         "**collects data for analytics**"
+        ]
+       }
+      ],
+      "foot": "To become a platform the team would need to **host and operate shared services**, not just distribute code."
+     }
     }
    ],
    "visuals": [
@@ -377,15 +434,43 @@
    "check": [
     {
      "q": "A company's developers wait several days for an ops ticket to be approved before they get a test database. Which pain point is this, and what is the platform engineering answer?",
-     "a": "It is ticket ops: no self-service, so developers queue on operations for routine provisioning. Platform engineering replaces the ticket with a self-service capability, a portal, CLI or workload spec that provisions the database through an automated, standardised workflow. The platform team must then own and maintain that automation as a product."
+     "a": {
+      "lead": "It is **ticket ops**.",
+      "items": [
+       "**Pain point**: no **self-service** → developers **queue on operations** for routine provisioning",
+       "**Platform engineering answer**: replace the ticket with a **self-service capability** (a **portal**, **CLI** or **workload spec**) that provisions the database through an **automated, standardised workflow**"
+      ],
+      "foot": "The platform team must then **own and maintain that automation as a product**."
+     }
     },
     {
      "q": "A CTO says: 'We already have a DevOps culture and an SRE team, so a platform team would be redundant.' Do you agree?",
-     "a": "No. The lecture presents them as complementary: DevOps is culture and CI/CD with shared responsibility, and SRE applies software engineering to reliability through SLOs, error budgets and toil reduction. Neither builds an internal developer platform that treats developers as customers and offers self-service golden paths. If the organisation has only a few teams and services, though, the scale problem a platform team solves may not exist yet."
+     "a": {
+      "lead": "**No.** The lecture presents them as **complementary**.",
+      "items": [
+       "**DevOps**: **culture** and **CI/CD** with **shared responsibility**",
+       "**SRE**: applies software engineering to **reliability** through **SLOs**, **error budgets** and **toil reduction**",
+       "**Neither** builds an **internal developer platform** that treats **developers as customers** and offers **self-service golden paths**"
+      ],
+      "foot": "If the organisation has only **a few teams and services**, though, the **scale problem** a platform team solves may not exist yet."
+     }
     },
     {
      "q": "Thirty application teams each maintain their own copied-and-edited pipeline scripts and infrastructure code. Which pain points does this show, and what would a platform offer?",
-     "a": "It shows no standardisation, lack of automation through repeated manual work, and developer cognitive overload, three of the top drivers in the survey. A platform would provide a golden path: a supported, opinionated pipeline and provisioning route that every team can reuse. The cost is less freedom for teams with unusual needs, so the platform team has to gather feedback and evolve the path."
+     "a": {
+      "items": [
+       {
+        "t": "**Pain points** (three of the top drivers in the survey):",
+        "sub": [
+         "**no standardisation**",
+         "**lack of automation** through repeated manual work",
+         "**developer cognitive overload**"
+        ]
+       },
+       "**Platform offers** a **golden path**: a supported, opinionated **pipeline and provisioning route** that every team can reuse"
+      ],
+      "foot": "**Cost**: less freedom for teams with unusual needs → the platform team has to **gather feedback** and **evolve the path**."
+     }
     }
    ],
    "visuals": [
@@ -505,15 +590,43 @@
    "check": [
     {
      "q": "Six months after launch, a platform team wants to prove ROI and proposes reporting the number of portal logins per week. Does that metric show the platform's value?",
-     "a": "No. Logins measure activity, not delivery performance, and they can rise simply because teams are forced onto the portal. Compare the DORA metrics (deployment frequency, lead time, MTTR, change failure rate) against the baseline measured before launch, together with developer NPS. Logins are useful only as a secondary adoption signal."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Logins measure activity**, not **delivery performance** → can rise simply because teams are **forced onto the portal**",
+       {
+        "t": "**Use instead** → compare against the **baseline measured before launch**:",
+        "sub": [
+         "**DORA metrics**: deployment frequency, lead time, MTTR, change failure rate",
+         "together with **developer NPS**"
+        ]
+       }
+      ],
+      "foot": "Logins are useful only as a **secondary adoption signal**."
+     }
     },
     {
      "q": "After a platform launch, deployment frequency rises but change failure rate also rises. Has the platform clearly improved delivery?",
-     "a": "No. Delivery is faster but less reliable, so the evidence is mixed. Check lead time and MTTR as well, and look at whether the golden path is missing tests or guardrails that teams used to apply by hand. Developer feedback shows whether the automation reduces or just moves the effort."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Delivery is faster but less reliable** → the evidence is **mixed**",
+       "**Check** **lead time** and **MTTR** as well",
+       "**Look at** whether the **golden path** is missing **tests or guardrails** that teams used to apply by hand",
+       "**Developer feedback** shows whether the automation **reduces or just moves** the effort"
+      ]
+     }
     },
     {
      "q": "In a GitOps setup, an engineer fixes a production configuration by editing the cluster directly. What happens next, and what should they have done?",
-     "a": "Git is the single source of truth, so the CD tool keeps syncing the cluster to Git and will overwrite the manual change, or leave it as unrecorded drift. The change should go through a pull request, so it is reviewed, versioned and reproducible. GitOps trades the speed of a direct edit for auditability and repeatability."
+     "a": {
+      "items": [
+       "**Git is the single source of truth** → the **CD tool** keeps **syncing the cluster to Git**",
+       "**Result** → overwrites the manual change, or leaves it as **unrecorded drift**",
+       "**Should have**: made the change through a **pull request** → **reviewed, versioned and reproducible**"
+      ],
+      "foot": "**GitOps trades** the speed of a direct edit for **auditability and repeatability**."
+     }
     }
    ]
   },
@@ -640,19 +753,53 @@
    "check": [
     {
      "q": "Developers on your platform currently write raw cluster manifests and infrastructure code for every service. A teammate proposes a workload spec in the developer control plane with an orchestrator behind it. What does this buy, and what does it cost?",
-     "a": "Developers would declare **what** a workload needs, such as a database or a port, without infrastructure knowledge, and the orchestrator would decide **how** by generating app and infrastructure configs as a resource graph on each deployment. That lowers cognitive load and keeps standards and security consistent across teams. The cost is that the platform team must build and maintain the orchestrator rules, and developers lose direct control of details."
+     "a": {
+      "items": [
+       "**Developers declare WHAT** a workload needs (e.g. a database or a port) **without infrastructure knowledge**",
+       "**Orchestrator decides HOW** → generates **app and infrastructure configs** as a **resource graph** on each deployment",
+       "**Buys**: lower **cognitive load**; **standards and security** consistent across teams"
+      ],
+      "foot": "**Cost**: the platform team must **build and maintain the orchestrator rules**, and developers **lose direct control** of details."
+     }
     },
     {
      "q": "A security lead proposes one security scan as the final stage before production. Where does the reference architecture put security, and why does that matter?",
-     "a": "Security is a cross-cutting plane, embedded everywhere: secrets management, identity, access control, policies and compliance apply to every plane, not just the last step. A single final gate finds problems late and leaves secrets and access in earlier stages unmanaged. Embedding it costs more platform work up front but makes the secure path the default."
+     "a": {
+      "items": [
+       "**Security is a cross-cutting plane**, **embedded everywhere**",
+       "**Secrets management**, **identity**, **access control**, **policies** and **compliance** apply to **every plane**, not just the last step",
+       "**A single final gate** → finds problems **late** and leaves **secrets and access** in earlier stages **unmanaged**"
+      ],
+      "foot": "Embedding it costs more **platform work up front** but makes **the secure path the default**."
+     }
     },
     {
      "q": "A developer's workload spec is accepted, but the service fails in staging because no database exists there. Using the planes, where would you look first?",
-     "a": "The orchestrator in the integration and delivery plane turns the spec into a resource graph for each environment, and the resource plane provisions what that graph asks for. So check whether the staging resource graph includes the database and whether provisioning ran. The observability plane should give logs from every plane, which shows why cross-cutting monitoring matters."
+     "a": {
+      "items": [
+       "**Orchestrator** (in the **integration and delivery plane**) → turns the spec into a **resource graph for each environment**",
+       "**Resource plane** → **provisions** what that graph asks for",
+       "**Check first**: does the **staging resource graph** include the database, and did **provisioning run**?",
+       "**Observability plane** → should give **logs from every plane**"
+      ],
+      "foot": "This shows why **cross-cutting monitoring** matters."
+     }
     },
     {
      "q": "A data science team wants to train and deploy models through the existing IDP. What does the reference model add for them, and why is the resource plane alone not enough?",
-     "a": "It adds the data and model management plane: feature engineering, experiment tracking, metadata, lineage and a model registry, covering the ML lifecycle up to production governance. The resource plane can supply GPU nodes, but it does not track which data and experiment produced which model. Without that plane the platform can run ML workloads but cannot govern them."
+     "a": {
+      "items": [
+       {
+        "t": "**Adds the data and model management plane**:",
+        "sub": [
+         "**feature engineering**, **experiment tracking**, **metadata**, **lineage** and a **model registry**",
+         "covers the **ML lifecycle** up to **production governance**"
+        ]
+       },
+       "**Resource plane alone** → can supply **GPU nodes**, but doesn't track which **data and experiment** produced which **model**"
+      ],
+      "foot": "Without that plane the platform can **run** ML workloads but cannot **govern** them."
+     }
     }
    ],
    "visuals": [
@@ -795,19 +942,49 @@
    "check": [
     {
      "q": "A platform team's first deliverable is a polished developer portal, while provisioning behind it is still done by ticket. Do you support the plan?",
-     "a": "No. The lecture's principle is backend before portal: a portal is only an interface, and with ticket-driven provisioning behind it nothing self-service happens. Build the automation for the top pain first, typically CI/CD and IaC, golden paths and an orchestrator, then put a portal or CLI on top. A portal can come early only as a thin front for automation that already works."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Backend before portal** (the lecture's principle): a portal is **only an interface**",
+       "**Ticket-driven provisioning behind it** → nothing **self-service** happens",
+       "**Build first** the automation for the **top pain**: typically **CI/CD and IaC**, **golden paths** and an **orchestrator**",
+       "**Then** put a **portal or CLI** on top"
+      ],
+      "foot": "A portal can come early only as a **thin front** for automation that **already works**."
+     }
     },
     {
      "q": "A security lead wants every developer to run three extra scanning tools by hand before each merge. Is this shifting left or shifting down, and what would you suggest?",
-     "a": "It is shifting left: it moves checks earlier but dumps the toil on developers. Shifting down would embed the scans in the platform as automated guardrails and secure defaults on the golden path, so the safe route is also the easiest. The checks can still run early; what changes is who does the work."
+     "a": {
+      "lead": "It is **shifting left**; suggest **shifting down**.",
+      "items": [
+       "**Shifting left**: moves checks **earlier** but **dumps the toil on developers**",
+       "**Shifting down**: embed the scans in the platform as **automated guardrails** and **secure defaults** on the **golden path** → the **safe route is also the easiest**"
+      ],
+      "foot": "The checks can still run early; what changes is **who does the work**."
+     }
     },
     {
      "q": "A platform team plans an 18-month build covering every plane before any application team uses it. What would you change?",
-     "a": "Start with a minimum viable platform that solves the most costly pain, then expand. A long build with no users delays value and gets no feedback, so the team may build the wrong things, against the 'treat it as a product' principle. Measure from day one so each step's impact is visible."
+     "a": {
+      "lead": "Start with a **minimum viable platform** that solves the **most costly pain**, then expand.",
+      "items": [
+       "**Long build with no users** → **delays value** and gets **no feedback** → the team may **build the wrong things**",
+       "Goes against the **'treat it as a product'** principle",
+       "**Measure from day one** → each step's impact is visible"
+      ]
+     }
     },
     {
      "q": "A maturity survey shows most organisations stuck at 'Operational', with measurement the weakest dimension. Your new platform team has no baseline numbers. What do you do first, and why?",
-     "a": "Document the current cost of the pain, such as ticket wait times, lead time and failure rates, before building anything. A platform is a product that must prove ROI, and without a baseline no later DORA or NPS figure can show improvement. It is cheap to do at the start and almost impossible to reconstruct later."
+     "a": {
+      "items": [
+       "**Do first**: document the **current cost of the pain** (e.g. **ticket wait times**, **lead time**, **failure rates**) **before building anything**",
+       "**Why**: a platform is a **product that must prove ROI**",
+       "**No baseline** → no later **DORA** or **NPS** figure can show improvement"
+      ],
+      "foot": "Cheap to do **at the start**; almost **impossible to reconstruct later**."
+     }
     }
    ],
    "visuals": [
@@ -961,19 +1138,55 @@
    "check": [
     {
      "q": "A video site runs separate marketing budgets for creators and for viewers, treating them as two markets. What does 'think roles not markets' suggest instead?",
-     "a": "Users can play both roles, and viewers can become creators. The magnet strategy converts consumers into producers over time, which saves marketing spend and scales production of seeds. So invest in lowering the barrier to producing, such as simple upload tools, rather than buying two separate audiences."
+     "a": {
+      "items": [
+       "**Users can play both roles** → viewers can become creators",
+       "**Magnet strategy** → converts **consumers into producers** over time",
+       "**Benefit** → saves **marketing spend** and **scales production of seeds**"
+      ],
+      "foot": "So invest in **lowering the barrier to producing** (e.g. **simple upload tools**) rather than buying **two separate audiences**."
+     }
     },
     {
      "q": "A tutoring marketplace has plenty of registered tutors, but students complain that matches are poor and some tutors are low quality. Which platform component is weak, and what would you build?",
-     "a": "The matchmaker, not the magnet: supply exists, but matching and curation fail. Improve matching accuracy to cut false positives, curate tutors using ratings and reviews, add trust mechanisms, and apply ML to matching. In engineering terms that means curation components and matching algorithms."
+     "a": {
+      "lead": "The **matchmaker**, not the magnet: supply exists, but **matching and curation** fail.",
+      "items": [
+       "**Matching accuracy** → improve it to cut **false positives**",
+       "**Curate** tutors using **ratings and reviews**",
+       "**Trust mechanisms**",
+       "**ML** applied to matching"
+      ],
+      "foot": "In engineering terms: **curation components** and **matching algorithms**."
+     }
     },
     {
      "q": "A furniture maker sells only its own products through its web shop and calls itself a platform because the shop has a public API. Is this a linear or a network business?",
-     "a": "Linear: its focus is the process of production, assembly and distribution of its own goods. A network business focuses on enabling interactions between independent producers and consumers, and the lecture stresses that technology is only an enabler, so an API alone does not make a platform. It would move towards a network model if other makers could list and sell through it."
+     "a": {
+      "lead": "**Linear.**",
+      "items": [
+       "**Linear** → focus is the **process of production, assembly and distribution** of its **own goods**",
+       "**Network business** → focuses on **enabling interactions** between **independent producers and consumers**",
+       "**Technology is only an enabler** (lecture) → an **API alone does not make a platform**"
+      ],
+      "foot": "It would move towards a **network model** if **other makers** could list and sell through it."
+     }
     },
     {
      "q": "A start-up wants to launch professional networking, messaging, job listings and content publishing all at once. What does the LinkedIn example advise?",
-     "a": "Build one interaction at a time. LinkedIn started with professional-to-professional connections, then added discussions, recruiters and job seekers, and later thought-leader content, each one building adoption before monetisation. Launching everything at once spreads the magnet thin, with too few producers for any single interaction."
+     "a": {
+      "lead": "**Build one interaction at a time.**",
+      "items": [
+       {
+        "t": "**LinkedIn** started with **professional-to-professional connections**, each step **building adoption before monetisation**:",
+        "sub": [
+         "then **discussions**, **recruiters** and **job seekers**",
+         "later **thought-leader content**"
+        ]
+       },
+       "**Launching everything at once** → spreads the **magnet** thin → **too few producers** for any single interaction"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -1077,15 +1290,36 @@
    "check": [
     {
      "q": "Partners praise a platform's matching algorithm but say its SDK is confusing and integration takes weeks. Which platform aspect is weak, and which engineering concerns does it map to?",
-     "a": "The toolbox: the tools producers and consumers use to interact. In engineering terms that is service usability design, SDK and API design, and integration with other services. A strong matchmaker cannot make up for a toolbox that keeps partners from joining."
+     "a": {
+      "lead": "The **toolbox** is weak.",
+      "items": [
+       "**Toolbox** = the **tools producers and consumers use to interact**",
+       "**Engineering concerns**: **service usability design**, **SDK and API design**, **integration with other services**"
+      ],
+      "foot": "A strong **matchmaker** cannot make up for a toolbox that **keeps partners from joining**."
+     }
     },
     {
      "q": "Hundreds of third-party apps now depend on a platform's interfaces. A product manager proposes putting all of this quarter's effort into new features and deferring availability and security work. Do you agree?",
-     "a": "Mostly no. Architecting for the ecosystem means availability, security and scalability, because an outage or breach now hits every complement built on the platform, not just one app. Features still matter for growth, so the answer depends on whether current availability and security already meet partners' needs."
+     "a": {
+      "lead": "**Mostly no.**",
+      "items": [
+       "**Architecting for the ecosystem** = **availability**, **security** and **scalability**",
+       "**Why** → an **outage or breach** now hits **every complement** built on the platform, not just one app",
+       "**Features still matter** for **growth**"
+      ],
+      "foot": "So the answer depends on whether **current availability and security** already meet **partners' needs**."
+     }
     },
     {
      "q": "A platform plans to add a new kind of interaction every quarter, as the sample paper's ecosystem-growth question describes. Which engineering aspect must the design support, and what goes wrong without it?",
-     "a": "Scaling the platform business needs modular, extensible components and an agile architecture. Each new interaction should plug in as new services that reuse existing domain entities and interfaces. Without that, every addition means changing the core, so each release slows down and risks breaking existing interactions."
+     "a": {
+      "items": [
+       "**Needs** → **modular, extensible components** and an **agile architecture** for **scaling the platform business**",
+       "**Each new interaction** → plugs in as **new services** that **reuse existing domain entities and interfaces**",
+       "**Without it** → every addition means **changing the core** → each release **slows down** and risks **breaking existing interactions**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -1137,27 +1371,149 @@
  "exam_angles": [
   {
    "q": "A food-delivery company wants to open its ordering, delivery-tracking and payment capabilities to independent restaurants and couriers. (a) Identify the seed, producers, consumers and core interaction. (b) The CEO wants to launch restaurant booking, grocery delivery and a courier marketplace in the same release. Advise. (c) Give two engineering concerns that follow from opening the APIs to outside parties.",
-   "a": "(a) Seed: a menu item or order; producers: restaurants and couriers; consumers: diners; interaction: browse, order, match a courier, deliver, pay. (b) Build one interaction at a time, as LinkedIn did: get food ordering adopted and growing producers through the magnet before adding new interactions, and design modular, extensible components so later ones plug in. (c) The toolbox needs usable APIs and SDKs, and because many outside parties now depend on the platform it must be architected for availability, security and scalability. The trade-off is slower initial scope in exchange for a stable core."
+   "a": {
+    "items": [
+     {
+      "t": "**(a) Roles**",
+      "sub": [
+       "**Seed**: a **menu item** or **order**",
+       "**Producers**: **restaurants** and **couriers**",
+       "**Consumers**: **diners**",
+       "**Interaction**: browse, order, match a courier, deliver, pay"
+      ]
+     },
+     {
+      "t": "**(b) Build one interaction at a time**, as **LinkedIn** did",
+      "sub": [
+       "Get **food ordering** adopted and **growing producers** through the **magnet** before adding new interactions",
+       "Design **modular, extensible components** so later ones **plug in**"
+      ]
+     },
+     {
+      "t": "**(c) Engineering concerns**",
+      "sub": [
+       "**Toolbox** → needs **usable APIs and SDKs**",
+       "**Many outside parties** now depend on the platform → architect for **availability**, **security** and **scalability**"
+      ]
+     }
+    ],
+    "ordered": true,
+    "foot": "**Trade-off**: slower initial scope in exchange for a **stable core**."
+   }
   },
   {
    "q": "A company with 40 application teams has a five-day ticket wait for databases, each team maintains its own pipeline scripts, and leadership wants evidence of value within six months. Propose the first steps of an IDP, the measures you would use, and one thing you would deliberately not build first.",
-   "a": "First document the cost of the pain (ticket wait, lead time, failure rates) as a baseline. Define a minimum viable platform aimed at the top pain: automated database provisioning through IaC and a shared CI/CD golden path, with an orchestrator or pipeline behind it. Measure DORA metrics and developer NPS against the baseline, and expand scope only where they improve. Do not start with a full developer portal: backend comes before portal, and a portal over ticket-driven provisioning would show nothing in six months."
+   "a": {
+    "items": [
+     {
+      "t": "**Baseline first**: document the **cost of the pain**",
+      "sub": [
+       "**ticket wait**, **lead time**, **failure rates**"
+      ]
+     },
+     {
+      "t": "**Minimum viable platform** aimed at the **top pain**",
+      "sub": [
+       "**automated database provisioning** through **IaC**",
+       "a shared **CI/CD golden path**",
+       "an **orchestrator** or **pipeline** behind it"
+      ]
+     },
+     {
+      "t": "**Measures**: **DORA metrics** and **developer NPS** against the baseline",
+      "sub": [
+       "**expand scope** only where they improve"
+      ]
+     },
+     {
+      "t": "**Don't build first**: a full **developer portal**",
+      "sub": [
+       "**backend comes before portal**",
+       "a portal over **ticket-driven provisioning** would show nothing in **six months**"
+      ]
+     }
+    ],
+    "ordered": true
+   }
   },
   {
    "q": "On an IDP, developers submit workload specs. Staging deployments work, but production sometimes gets a different database size and nobody can explain why. Using the reference architecture and GitOps, diagnose where to look and what to change.",
-   "a": "The orchestrator in the integration and delivery plane generates environment-specific configuration as a resource graph, so compare the production and staging graphs and the rules that produce them. Check whether production state was changed outside Git: with GitOps, Git should be the single source of truth and every infra change should go through a reviewed PR. Fix by moving environment differences into versioned config and letting CD sync from Git. The observability plane should record what was deployed, so the next difference is visible without detective work."
+   "a": {
+    "items": [
+     {
+      "t": "**Look at the orchestrator** (**integration and delivery plane**)",
+      "sub": [
+       "it generates **environment-specific configuration** as a **resource graph**",
+       "→ compare the **production and staging graphs** and the **rules** that produce them"
+      ]
+     },
+     {
+      "t": "**Check GitOps**: was production state **changed outside Git**?",
+      "sub": [
+       "**Git** should be the **single source of truth**",
+       "every **infra change** should go through a **reviewed PR**"
+      ]
+     },
+     "**Fix**: move **environment differences** into **versioned config** and let **CD sync from Git**",
+     "**Observability plane** → should **record what was deployed**, so the next difference is visible without detective work"
+    ],
+    "ordered": true
+   }
   },
   {
    "q": "An organisation with 300 developers has a DevOps culture and an SRE team that owns SLOs and error budgets, but onboarding a new service still takes three weeks. The CIO asks whether to grow the SRE team or create a platform team. Advise, and say what would change your answer.",
-   "a": "Create a platform team. The symptom is slow onboarding and missing self-service, which are platform engineering's concerns: golden paths, standardised provisioning and lower cognitive load, with developers treated as customers. SRE keeps owning reliability, and the platform can make SLO monitoring a default for every new service. If the main problem were frequent outages or missed SLOs instead of slow onboarding, growing SRE would be the better answer."
+   "a": {
+    "lead": "**Create a platform team.**",
+    "items": [
+     "**Symptom** = **slow onboarding** and **missing self-service** → these are **platform engineering's** concerns",
+     "**Platform team offers**: **golden paths**, **standardised provisioning**, **lower cognitive load**, with **developers treated as customers**",
+     "**SRE keeps owning reliability**; the platform can make **SLO monitoring a default** for every new service"
+    ],
+    "foot": "**What would change it**: if the main problem were **frequent outages** or **missed SLOs** instead of slow onboarding → **growing SRE** would be the better answer."
+   }
   },
   {
    "q": "A regulated firm requires secret scanning, dependency checks and policy checks for every service. Option A gives each team a checklist to run before release. Option B builds the checks into the platform's golden path. Choose one and give the trade-off.",
-   "a": "Choose B, shifting down. Embedding the checks as automated guardrails and secure defaults removes repeated manual toil, applies the rules consistently, and makes the compliant path the easiest one, which fits the security plane being cross-cutting. Option A is shifting left: checks happen early, but every team carries the work and compliance depends on each team's discipline. B costs platform investment up front, and teams that leave the golden path still need a way to show compliance."
+   "a": {
+    "lead": "**Choose B**, shifting down.",
+    "items": [
+     {
+      "t": "**Option B = shifting down**: checks embedded as **automated guardrails** and **secure defaults**",
+      "sub": [
+       "removes **repeated manual toil**",
+       "applies the rules **consistently**",
+       "makes the **compliant path the easiest** one",
+       "fits the **security plane** being **cross-cutting**"
+      ]
+     },
+     {
+      "t": "**Option A = shifting left**: checks happen **early**, but",
+      "sub": [
+       "**every team carries the work**",
+       "compliance depends on **each team's discipline**"
+      ]
+     }
+    ],
+    "foot": "**Trade-off**: B costs **platform investment up front**, and teams that **leave the golden path** still need a way to **show compliance**."
+   }
   },
   {
    "q": "A bank's architecture group plans to give its teams (a) a shared code skeleton with abstract classes, (b) a utility code package for date and currency handling, and (c) a hosted environment exposing identity and payment services through APIs, which partners may also use. Classify each, and explain which one creates an ecosystem and what that obliges the bank to do.",
-   "a": "(a) is a framework: teams use it and it dictates structure. (b) is a library: teams call it where they choose. (c) is a platform: hosted, accessed by APIs, and extensible by outside parties. Only (c) creates an ecosystem, because partners can build complementary products through its interfaces. That obliges the bank to keep those interfaces stable so internal change does not break partners, and to architect for availability, security and scalability."
+   "a": {
+    "items": [
+     "**(a) Framework**: teams use it and it **dictates structure**",
+     "**(b) Library**: teams **call it where they choose**",
+     "**(c) Platform**: **hosted**, **accessed by APIs**, and **extensible by outside parties**",
+     {
+      "t": "**Ecosystem: only (c)** → partners can build **complementary products** through its interfaces",
+      "sub": [
+       "**Obliges the bank** to keep those **interfaces stable** so **internal change does not break partners**",
+       "**Obliges the bank** to architect for **availability**, **security** and **scalability**"
+      ]
+     }
+    ],
+    "ordered": true
+   }
   }
  ]
 }

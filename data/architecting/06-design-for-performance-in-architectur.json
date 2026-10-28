@@ -104,19 +104,50 @@
    "check": [
     {
      "q": "A vendor offers a server with a 30% faster CPU clock. Your application spends 70% of each request waiting on the database. Will throughput rise by 30%?",
-     "a": "No. Throughput reflects the whole system, and here the database dominates, so a faster CPU speeds up only the small CPU share of the work. Measure throughput under your own workload before paying for clock speed. Upgrading the bottleneck resource (the database, or how it is used) is what raises throughput."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Throughput reflects the whole system** → here the **database dominates**",
+       "A faster CPU speeds up only the small **CPU share** of the work",
+       "**Measure throughput** under your own workload before paying for **clock speed**"
+      ],
+      "foot": "Upgrading the **bottleneck resource** (the database, or how it is used) is what raises throughput."
+     }
     },
     {
      "q": "A dashboard shows CPU at 20%, and the team concludes performance is fine. Users report 8-second responses. What is wrong with the conclusion?",
-     "a": "Low utilisation is not proof of good performance. The time may be spent waiting on another resource (database locks, disk, a slow dependency, the network), or the CPU may be idle because work is stuck elsewhere. Look at response time, throughput and the utilisation of each resource together to find where the time goes."
+     "a": {
+      "lead": "**Low utilisation is not proof of good performance.**",
+      "items": [
+       "**Time spent waiting on another resource**: database locks, disk, a slow dependency, the network",
+       "Or the **CPU may be idle** because work is **stuck elsewhere**",
+       "**Look together** at response time, throughput and the **utilisation of each resource** → find where the time goes"
+      ]
+     }
     },
     {
      "q": "A load test fires requests back-to-back from 500 virtual users with zero think time. Real users pause about 10 s between actions, and responses take about 1 s. What does the test misrepresent?",
-     "a": "The load. With no think time, 500 users generate about 500 requests/s; with a 10 s pause they generate about 500 / (10 + 1), roughly 45 requests/s. The test therefore models a far heavier load than 500 real users. Set realistic think times and arrival rates, or the results won't map to the requirement."
+     "a": {
+      "lead": "**The load.**",
+      "ordered": true,
+      "items": [
+       "**No think time**: 500 users generate about **500 requests/s**",
+       "**10 s pause**: 500 / (10 + 1) → roughly **45 requests/s**",
+       "→ the test therefore models a **far heavier load** than 500 real users"
+      ],
+      "foot": "Set realistic **think times** and **arrival rates**, or the results won't map to the requirement."
+     }
     },
     {
      "q": "Average response time rose from 300 ms to 2 s while service time stayed at 250 ms. Where did the extra time go, and how would you confirm it?",
-     "a": "Response time is service time plus waiting time plus transmission time. With service unchanged, the growth is almost certainly waiting in queues caused by higher utilisation, or possibly transmission. Confirm by checking queue lengths, utilisation and network timings at each tier."
+     "a": {
+      "lead": "**Response time = service time + waiting time + transmission time.**",
+      "items": [
+       "**Service unchanged** → the growth is almost certainly **waiting in queues** caused by **higher utilisation**",
+       "Or possibly **transmission**",
+       "**Confirm**: check **queue lengths**, **utilisation** and **network timings** at each tier"
+      ]
+     }
     }
    ]
   },
@@ -219,7 +250,13 @@
    "check": [
     {
      "q": "Three tiers in series take 50, 100 and 600 ms per request and have capacities of 40, 12 and 25 requests/s. Which tier do you work on to cut response time, and which to raise throughput?",
-     "a": "For response time, the 600 ms tier, which is the largest share of the 750 ms total. For throughput, the 12 requests/s tier, which caps the pipeline. They are different tiers: the biggest contributor to response time is not necessarily the capacity bottleneck, so measure both."
+     "a": {
+      "items": [
+       "**Response time** → the **600 ms tier**, which is the largest share of the 750 ms total",
+       "**Throughput** → the **12 requests/s tier**, which caps the pipeline"
+      ],
+      "foot": "They are different tiers: the biggest contributor to response time is not necessarily the **capacity bottleneck**, so measure both."
+     }
     },
     {
      "q": "Four tiers have throughputs 10, 16, 6 and 20 tps in series. What is system throughput, and what happens if you double the DB?",
@@ -227,11 +264,26 @@
     },
     {
      "q": "A system can complete at most 20 requests/s and receives 22/s for an hour. What happens to throughput and response time?",
-     "a": "Throughput stays at 20/s, its capacity. The excess 2 requests/s either queue or are rejected. With an unbounded queue, about 7,200 requests are waiting after an hour, and response time keeps climbing with no steady state. Add capacity or shed or throttle load; waiting it out does not help."
+     "a": {
+      "lead": "**Throughput stays at 20/s**, its capacity.",
+      "items": [
+       "**Excess 2 requests/s** → either **queue** or are **rejected**",
+       "**Unbounded queue** → about **7,200 requests** waiting after an hour",
+       "**Response time keeps climbing** → no steady state"
+      ],
+      "foot": "**Add capacity** or **shed or throttle load**; waiting it out does not help."
+     }
     },
     {
      "q": "A page calls three services in parallel, taking 120, 300 and 80 ms, and needs all three results. A teammate estimates 500 ms for the page. Do you agree?",
-     "a": "No. Branches that run concurrently contribute their maximum, so the page takes about 300 ms plus coordination overhead. The 300 ms service is the one to speed up; improving the other two changes nothing. If the calls were sequential, the teammate's sum would be right."
+     "a": {
+      "lead": "**No**: the page takes about **300 ms** plus coordination overhead.",
+      "items": [
+       "**Branches that run concurrently contribute their maximum**",
+       "**Speed up the 300 ms service**; improving the other two changes nothing"
+      ],
+      "foot": "If the calls were **sequential**, the teammate's sum would be right."
+     }
     }
    ],
    "visuals": [
@@ -376,7 +428,16 @@
    "check": [
     {
      "q": "Each request uses 40 ms of application CPU and makes 3 database calls of 20 ms each. At 15 requests/s, which resource saturates first, and at what request rate?",
-     "a": "Service demand: CPU 40 ms, database 3 x 20 = 60 ms. At 15 requests/s, the database is 15 x 0.06 = 90% busy and the CPU 60%. The database saturates first, at 1 / 0.06, about 16.7 requests/s. Cutting database visits per request (for example by batching or caching) raises that limit more than a faster CPU would."
+     "a": {
+      "lead": "**The database saturates first**, at about **16.7 requests/s**.",
+      "ordered": true,
+      "items": [
+       "**Service demand**: CPU 40 ms; database 3 x 20 = 60 ms",
+       "**At 15 requests/s**: database 15 x 0.06 = **90% busy**; CPU 60%",
+       "**Saturation**: database at 1 / 0.06 → about 16.7 requests/s"
+      ],
+      "foot": "Cutting **database visits per request** (for example by **batching** or **caching**) raises that limit more than a faster CPU would."
+     }
     },
     {
      "q": "A gateway forwards 125 packets/s, taking 2 ms each. What is its utilisation, and at what rate does it saturate?",
@@ -384,7 +445,14 @@
     },
     {
      "q": "A colleague says you cannot apply the Utilization Law because the arrivals are bursty, not Poisson. Do you agree?",
-     "a": "No. The operational laws are identities over measured quantities: U = XS holds for the observed interval, whatever the arrival distribution. What does need distribution assumptions is predicting queueing delay, as in M/M/1. Keep the units, interval and system boundary consistent."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Operational laws are identities** over measured quantities → **U = XS** holds for the observed interval, whatever the **arrival distribution**",
+       "What does need **distribution assumptions** is predicting **queueing delay**, as in **M/M/1**",
+       "Keep the **units**, **interval** and **system boundary** consistent"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -496,11 +564,34 @@
    "check": [
     {
      "q": "A server has a pool of 40 threads. Requests arrive at 100/s and spend 0.3 s each in the server. Is the pool big enough, and what if a slow dependency raises the time to 0.6 s?",
-     "a": "By Little's Law, n = 100 x 0.3 = 30 requests in the server, which fits within 40 threads. At 0.6 s, n = 60, more than the pool: requests queue for threads, response time climbs further, and the failure can cascade upstream. A timeout on the dependency, or a larger pool, protects against this."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**At 0.3 s**: by **Little's Law**, n = 100 x 0.3 = **30 requests** in the server → fits within 40 threads",
+       {
+        "t": "**At 0.6 s**: n = **60** → more than the pool",
+        "sub": [
+         "Requests **queue for threads** → response time climbs further",
+         "The failure can **cascade upstream**"
+        ]
+       }
+      ],
+      "foot": "**Protects against this**: a **timeout** on the dependency, or a **larger pool**."
+     }
     },
     {
      "q": "Measured per-visit response times: CPU 0.25 s over 181 visits, storage A 0.203 s over 80 visits, storage B 0.071 s over 100 visits. Which contributes most to the 68.6 s job time, and what does that suggest?",
-     "a": "By the General Response Time Law: CPU 0.25 x 181, about 45.3 s; A 0.203 x 80, about 16.2 s; B 0.071 x 100, about 7.1 s. The CPU dominates, mostly because of its visit count. Reduce the CPU's visits or its per-visit time before tuning storage."
+     "a": {
+      "lead": "By the **General Response Time Law**:",
+      "ordered": true,
+      "items": [
+       "**CPU**: 0.25 x 181 → about **45.3 s**",
+       "**Storage A**: 0.203 x 80 → about **16.2 s**",
+       "**Storage B**: 0.071 x 100 → about **7.1 s**",
+       "→ the **CPU dominates**, mostly because of its **visit count**"
+      ],
+      "foot": "Reduce the CPU's **visits** or its **per-visit time** before tuning storage."
+     }
     },
     {
      "q": "A shop serves 15 customers an hour, and you observe an average of 3 customers inside. How long does a customer spend in the shop?",
@@ -611,7 +702,15 @@
    "check": [
     {
      "q": "Orders arrive at 20 an hour, and one server completes 30 an hour, giving a 6-minute average time in system. The target is under 3 minutes. Would a server that completes 45 an hour meet it?",
-     "a": "Yes. Under M/M/1, R = 1 / (µ - λ) = 1 / (45 - 20) hours = 2.4 minutes. Utilisation falls from 67% to 44%, which is where the waiting time goes. This assumes random (Poisson) arrivals and exponential service, so validate with measured data."
+     "a": {
+      "lead": "**Yes**: 2.4 minutes.",
+      "ordered": true,
+      "items": [
+       "**M/M/1**: R = 1 / (µ - λ) = 1 / (45 - 20) hours = **2.4 minutes**",
+       "**Utilisation** falls from 67% to 44% → that is where the **waiting time** goes"
+      ],
+      "foot": "This assumes random (**Poisson**) arrivals and **exponential service**, so validate with measured data."
+     }
     },
     {
      "q": "Average utilization is 75%, so why is there still a queue?",
@@ -619,7 +718,15 @@
     },
     {
      "q": "To save money, a team plans to run its application servers at 90% CPU. Service time is 1 s, and the response target is 3 s. Under M/M/1, is the plan safe?",
-     "a": "No. R = S / (1 - U) gives 10 s at 90%, far over target. Meeting 3 s needs U of 2/3 or less (1 / (1 - 0.67) = 3). Size the headroom from the response target and measured workload; there is no universally safe percentage."
+     "a": {
+      "lead": "**No.**",
+      "ordered": true,
+      "items": [
+       "**M/M/1**: R = S / (1 - U) gives **10 s at 90%**, far over target",
+       "**Meeting 3 s** needs **U of 2/3 or less**: 1 / (1 - 0.67) = 3"
+      ],
+      "foot": "Size the **headroom** from the response target and measured workload; there is **no universally safe percentage**."
+     }
     },
     {
      "q": "Arrivals and service capacity are both 30 requests/hour. Can M/M/1 predict a finite mean response time?",
@@ -738,11 +845,24 @@
    "check": [
     {
      "q": "A bank branch has 4 tellers. Should each teller have their own line, or should one shared line feed all four?",
-     "a": "One shared line. With identical tellers, a free teller always takes the next customer, whereas separate lines can leave one teller idle while another line waits. This assumes every teller can serve every customer; specialised counters change the comparison."
+     "a": {
+      "lead": "**One shared line.**",
+      "items": [
+       "**Identical tellers** → a free teller always takes the next customer",
+       "**Separate lines** can leave one teller idle while another line waits"
+      ],
+      "foot": "This assumes every teller can serve every customer; **specialised counters** change the comparison."
+     }
     },
     {
      "q": "You need to triple capacity: one server three times faster, or three servers? Give the performance answer and the availability answer.",
-     "a": "For response time, the lecture's ideal model favours one fast server, then three servers sharing a queue, then three separate queues. For availability, the single fast server is a single point of failure, while three servers survive one loss. Most production systems accept slightly higher response time for that redundancy."
+     "a": {
+      "items": [
+       "**Response time**: the lecture's ideal model favours **one fast server**, then **three servers sharing a queue**, then **three separate queues**",
+       "**Availability**: the single fast server is a **single point of failure**, while three servers survive one loss"
+      ],
+      "foot": "Most production systems accept slightly higher response time for that **redundancy**."
+     }
     },
     {
      "q": "A sizing target says 'queueing below 3 minutes', and service takes 1.5 minutes. What response-time limit should you test?",
@@ -750,7 +870,21 @@
     },
     {
      "q": "Server A costs $10,000 and delivers 500 tps. Server B costs $3,000 and delivers 120 tps. Which has better price/performance, and what else would you check?",
-     "a": "A: $20 per tps; B: $25 per tps, so A is better on capital cost. Also check operating costs and expected lifetime (Google counted both when choosing commodity servers), the impact of losing one large server versus one small one, and whether the load comes in steps that suit smaller units."
+     "a": {
+      "lead": "**A is better** on capital cost.",
+      "items": [
+       "**A**: $20 per tps",
+       "**B**: $25 per tps",
+       {
+        "t": "**Also check**",
+        "sub": [
+         "**Operating costs** and **expected lifetime** (Google counted both when choosing **commodity servers**)",
+         "The impact of **losing one large server** versus one small one",
+         "Whether the load comes in **steps** that suit smaller units"
+        ]
+       }
+      ]
+     }
     }
    ],
    "visuals": [
@@ -895,19 +1029,43 @@
    "check": [
     {
      "q": "Adding a second server behind a load balancer halved average response time, although each request's processing time did not change. Why?",
-     "a": "Each server's utilisation roughly halved, so requests spend far less time waiting in queues; response time is waiting plus service. The service time is unchanged. To cut it, you would need faster processing or parallel work within the request itself."
+     "a": {
+      "items": [
+       "**Each server's utilisation roughly halved** → requests spend far less time **waiting in queues**",
+       "**Response time = waiting + service**; the **service time is unchanged**"
+      ],
+      "foot": "To cut service time, you would need **faster processing** or **parallel work** within the request itself."
+     }
     },
     {
      "q": "A load balancer uses least-connections with sticky sessions. After a campaign, one server holds 60% of active users and is overloaded. Diagnose it and fix it.",
-     "a": "Stickiness overrides the balancing policy: users stay pinned to the server that first held their session. Move session state out of the servers into a shared store so any server can take any request. The cost is a network hop to the state store."
+     "a": {
+      "items": [
+       "**Diagnosis**: **stickiness overrides the balancing policy** → users stay pinned to the server that first held their **session**",
+       "**Fix**: move **session state** out of the servers into a **shared store** → any server can take any request"
+      ],
+      "foot": "The cost is a **network hop** to the state store."
+     }
     },
     {
      "q": "A partner's month-end batch job floods the system with requests, and interactive users time out. Which tactic family applies, and what would you do?",
-     "a": "Control resource demand: manage the arrival rate (throttle the partner) and prioritise input, so interactive requests go ahead of batch. The batch job takes longer as a result. Adding resources would also work, but costs more for a predictable monthly peak."
+     "a": {
+      "lead": "**Control resource demand.**",
+      "items": [
+       "**Manage the arrival rate** → throttle the partner",
+       "**Prioritise input** → interactive requests go ahead of batch"
+      ],
+      "foot": "The batch job takes longer as a result. **Adding resources** would also work, but costs more for a **predictable monthly peak**."
+     }
     },
     {
      "q": "Servers of different sizes (8 and 32 cores) sit behind a round-robin load balancer, and the small ones are overloaded. What would you change?",
-     "a": "Round robin ignores capability, so the 8-core servers get the same share as the 32-core ones. Use a capability-weighted or server-load policy, or least response time, so work follows actual capacity."
+     "a": {
+      "items": [
+       "**Round robin ignores capability** → the 8-core servers get the same share as the 32-core ones",
+       "**Fix**: use a **capability-weighted** or **server-load** policy, or **least response time** → work follows actual capacity"
+      ]
+     }
     }
    ]
   },
@@ -1009,19 +1167,48 @@
    "check": [
     {
      "q": "Cache access takes 8 ms, the source takes 50 ms, and the hit ratio is 20%. Is the cache worth it? If cache access were 15 ms, what hit ratio would you need?",
-     "a": "At 8 ms: 0.2 x 8 + 0.8 x (8 + 50) = 48 ms against 50 ms without the cache, a small gain. At 15 ms, the expected time is 15 + (1 - h) x 50, which must be under 50, so h must exceed 30%. Below that, the cache adds cost and latency."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**At 8 ms**: 0.2 x 8 + 0.8 x (8 + 50) = **48 ms** against 50 ms without the cache → a **small gain**",
+       "**At 15 ms**: expected time = 15 + (1 - h) x 50, which must be under 50",
+       "→ **h must exceed 30%**"
+      ],
+      "foot": "Below that, the cache adds **cost and latency**."
+     }
     },
     {
      "q": "A social app's feed reads outnumber posts 50 to 1, and one account has 20 million followers. Fan-out on write, fan-out on read, or a hybrid?",
-     "a": "A hybrid. Fan-out on write precomputes timelines, so the dominant reads are cheap. For the 20-million-follower account, writing to every follower's timeline on each post is too costly, so merge its posts in at read time. The trade-off is extra read-time work for followers of such accounts, as in the lecture's Twitter example."
+     "a": {
+      "lead": "**A hybrid.**",
+      "items": [
+       "**Fan-out on write** precomputes timelines → the dominant **reads are cheap**",
+       "**20-million-follower account**: writing to every follower's timeline on each post is **too costly** → **merge its posts in at read time**"
+      ],
+      "foot": "Trade-off: extra **read-time work** for followers of such accounts, as in the lecture's **Twitter** example."
+     }
     },
     {
      "q": "With 15 GB of cache and data types A (10 GB, 10 ms), B (20 GB, 30 ms), C (30 GB, 10 ms), what do you cache?",
-     "a": "The full-cache average benefit/GB ranks B, A, C, but B needs 20 GB for its measured 30 ms gain. With only 15 GB, measure partial hit ratios and marginal benefits, then allocate the available space. The full-cache ratios alone do not prove the best split."
+     "a": {
+      "items": [
+       "**Full-cache average benefit/GB** ranks **B, A, C**",
+       "But **B needs 20 GB** for its measured 30 ms gain, and there is only **15 GB**",
+       "→ measure **partial hit ratios** and **marginal benefits**, then allocate the available space"
+      ],
+      "foot": "The full-cache ratios alone do not prove the best split."
+     }
     },
     {
      "q": "A product catalogue has 1 million items. In shop X, access is spread evenly across them; in shop Y, it follows a power law. A cache holds 1% of the items. Where does it help?",
-     "a": "In shop Y: under a power law, a small set of popular items gets most of the requests, so 1% of items can yield a high hit ratio. In shop X, access is uniform, so a 1% cache gives roughly a 1% hit ratio, which is not worth it. Measure the access distribution before sizing a cache."
+     "a": {
+      "lead": "**In shop Y.**",
+      "items": [
+       "**Shop Y, power law**: a small set of **popular items** gets most of the requests → 1% of items can yield a **high hit ratio**",
+       "**Shop X, uniform access**: a 1% cache gives roughly a **1% hit ratio** → not worth it"
+      ],
+      "foot": "Measure the **access distribution** before sizing a cache."
+     }
     }
    ],
    "visuals": [
@@ -1131,19 +1318,50 @@
    "check": [
     {
      "q": "A matching job takes 2 s for 10,000 candidates using an O(n^2) algorithm. Data will grow to 100,000. Would you buy 10x hardware or change the algorithm?",
-     "a": "O(n^2) means 100 times the work, about 200 s. Even with 10x hardware that scales perfectly, it still takes about 20 s, and every further growth repeats the problem. An O(n log n) algorithm grows only about 12.5 times for 10 times the data. Change the algorithm, and verify with measurements at the expected size, because constants and I/O also matter."
+     "a": {
+      "lead": "**Change the algorithm.**",
+      "ordered": true,
+      "items": [
+       "**O(n^2)** means **100 times** the work → about **200 s**",
+       "Even with **10x hardware** that scales perfectly → still takes about **20 s**, and every further growth repeats the problem",
+       "**O(n log n)** → grows only about **12.5 times** for 10 times the data"
+      ],
+      "foot": "Verify with **measurements at the expected size**, because **constants and I/O** also matter."
+     }
     },
     {
      "q": "Scoring every candidate-job pair currently happens in the application server, which pulls all the rows over the network to return the top 1,000. When should the scoring move into the database server?",
-     "a": "When the data volume is large and the result small, as here: running it in the database transfers only 1,000 results instead of every row. The trade-off is load on the database server, which is usually harder to scale, so check its spare capacity first."
+     "a": {
+      "lead": "**When the data volume is large and the result small**, as here.",
+      "items": [
+       "**Running it in the database** → transfers only **1,000 results** instead of every row",
+       "**Trade-off**: load on the **database server**, which is usually **harder to scale** → check its **spare capacity** first"
+      ]
+     }
     },
     {
      "q": "A 'friends of friends within 3 hops' query on a relational store takes 9 seconds. What would you investigate?",
-     "a": "The data store, which is often the bottleneck: first the indexes on the relationship tables, then whether the storage technology fits. Relationship-heavy traversals like this suit a graph database. Switching stores is costly, so prove the gain with a prototype first."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**The data store**, which is often the bottleneck",
+       "First the **indexes** on the relationship tables",
+       "Then whether the **storage technology fits** → relationship-heavy traversals like this suit a **graph database**"
+      ],
+      "foot": "Switching stores is costly → **prove the gain with a prototype** first."
+     }
     },
     {
      "q": "One API customer sends 25 large requests at once, and everyone else's requests wait behind them. What would you add?",
-     "a": "Flow control: per-client rate limits, plus fair queueing or separate lanes, so one demanding client or burst cannot starve the others. That customer's batch then takes longer, which you can offer as a paid higher limit if it matters."
+     "a": {
+      "lead": "**Flow control.**",
+      "items": [
+       "**Per-client rate limits**",
+       "Plus **fair queueing** or **separate lanes**",
+       "→ one demanding client or burst cannot **starve** the others"
+      ],
+      "foot": "That customer's batch then takes longer, which you can offer as a **paid higher limit** if it matters."
+     }
     }
    ]
   },
@@ -1224,15 +1442,51 @@
    "check": [
     {
      "q": "A team will adopt a message broker none of them has used, with a target of 2,000 messages/s at peak. What would you do before the full build?",
-     "a": "Prototype and benchmark it: set the goal (2,000 messages/s at the required latency), decide how much to build, instrument it, run it at the target load, and repeat until the risk is contained. Unknown technology is exactly where you should fail early. The trade-off is confidence against prototyping effort."
+     "a": {
+      "lead": "**Prototype and benchmark it.**",
+      "ordered": true,
+      "items": [
+       "**Set the goal**: 2,000 messages/s at the required latency",
+       "**Decide how much to build**",
+       "**Instrument** it",
+       "**Run it at the target load**",
+       "**Repeat** until the risk is contained"
+      ],
+      "foot": "**Unknown technology** is exactly where you should **fail early**. Trade-off: confidence against prototyping effort."
+     }
     },
     {
      "q": "Two developers time the search API from home with a browser tool and get 0.8 s and 4 s. Why are the results unreliable, and how would you test properly?",
-     "a": "The client, network and load are uncontrolled, and each person sends a handful of requests, so the numbers reflect their connections, not the system under its required load. Use a scripted load test from a controlled environment, with a defined arrival rate, think time and request mix, and report percentiles against the target. A queueing model or simulation can complement it."
+     "a": {
+      "items": [
+       {
+        "t": "**Why unreliable**",
+        "sub": [
+         "The **client, network and load are uncontrolled**",
+         "Each person sends a **handful of requests** → the numbers reflect their connections, not the system under its **required load**"
+        ]
+       },
+       {
+        "t": "**Proper test**: a **scripted load test** from a **controlled environment**",
+        "sub": [
+         "Defined **arrival rate**, **think time** and **request mix**",
+         "Report **percentiles** against the target"
+        ]
+       }
+      ],
+      "foot": "A **queueing model** or **simulation** can complement it."
+     }
     },
     {
      "q": "A performance document shows only one box diagram: front end, service layer, back ends. What is missing?",
-     "a": "The performance-relevant detail: a sequence diagram showing call order and loops, such as repeated back-end calls per request, and a data flow showing large messages, calls that carry many records, and high-frequency interactions. Aim for the level of detail where these become visible, without drawing every class."
+     "a": {
+      "lead": "Missing: the **performance-relevant detail**.",
+      "items": [
+       "**Sequence diagram**: call order and **loops**, such as **repeated back-end calls** per request",
+       "**Data flow**: **large messages**, calls that carry **many records**, and **high-frequency interactions**"
+      ],
+      "foot": "Aim for the level of detail where these become visible, without drawing every class."
+     }
     }
    ],
    "visuals": [
@@ -1267,27 +1521,133 @@
  "exam_angles": [
   {
    "q": "A request passes a firewall (5 ms wait, 45 ms service, 10 tps capacity), a reverse proxy (10, 90, 16 tps), an app server (50, 550, 6 tps) and a database (30, 300, 20 tps), with 200 ms of network latency. (a) Find the response time and throughput. (b) You add a second app server. What is the new throughput, and what is the next bottleneck?",
-   "a": "(a) Response time = 50 + 100 + 600 + 330 = 1080 ms, plus 200 ms latency, giving 1280 ms. Throughput = min(10, 16, 6, 20) = 6 tps, limited by the app server. (b) Two app servers give about 12 tps, so throughput becomes min(10, 16, 12, 20) = 10 tps, and the firewall is now the bottleneck. Each request's service time is unchanged, so response time improves only through less queueing at the app tier. To go beyond 10 tps, scale the firewall as well."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**(a) Response time and throughput**",
+      "sub": [
+       "Response time = 50 + 100 + 600 + 330 = 1080 ms",
+       "Plus 200 ms latency → **1280 ms**",
+       "Throughput = min(10, 16, 6, 20) = **6 tps**, limited by the **app server**"
+      ]
+     },
+     {
+      "t": "**(b) Second app server**",
+      "sub": [
+       "Two app servers give about 12 tps",
+       "Throughput = min(10, 16, 12, 20) = **10 tps** → the **firewall** is now the **bottleneck**",
+       "Each request's **service time is unchanged** → response time improves only through **less queueing** at the app tier"
+      ]
+     }
+    ],
+    "foot": "To go beyond 10 tps, **scale the firewall** as well."
+   }
   },
   {
    "q": "Each job needs 5 s of CPU, 80 I/Os on storage A (50 ms each) and 100 I/Os on storage B (30 ms each). Storage A is observed at 15.70 I/Os per second. Find the system throughput, the utilisations and the bottleneck. What would it take to double throughput?",
-   "a": "Forced Flow: λ_0 = 15.70 / 80 = 0.196 jobs/s. Demands: CPU 5 s, A 4 s, B 3 s. U = λ_0 x D gives CPU 98%, A 78.4%, B 58.8%; the CPU is the bottleneck, and maximum throughput is 1 / 5 = 0.2 jobs/s. To double to about 0.39 jobs/s, every demand must fall below about 2.56 s. Halving CPU demand alone leaves A as the limit at 1 / 4 = 0.25 jobs/s, so storage A, and storage B (3 s), also need faster devices, fewer visits or more parallel units. Bottlenecks move as you fix them."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**Forced Flow**: λ_0 = 15.70 / 80 = **0.196 jobs/s**",
+     "**Demands**: CPU 5 s, A 4 s, B 3 s",
+     "**U = λ_0 x D**: CPU 98%, A 78.4%, B 58.8%",
+     "**Bottleneck**: the **CPU**; maximum throughput = 1 / 5 = **0.2 jobs/s**",
+     {
+      "t": "**To double** to about 0.39 jobs/s: every demand must fall below about **2.56 s**",
+      "sub": [
+       "Halving CPU demand alone leaves **A** as the limit at 1 / 4 = 0.25 jobs/s",
+       "So **storage A**, and **storage B** (3 s), also need **faster devices**, **fewer visits** or **more parallel units**"
+      ]
+     }
+    ],
+    "foot": "**Bottlenecks move** as you fix them."
+   }
   },
   {
    "q": "A shop receives 20 requests an hour, and one server handles 30 an hour. Compute the utilisation and average time in system. Then, at 2 requests per minute with a 1.5-minute service time and a target of queueing under 3 minutes, a faster server is not possible: how many servers do you need with separate queues, and with one shared queue?",
-   "a": "For 20/hour arrivals and 30/hour capacity, U = 2/3 and R = 6 minutes including service. For λ = 2/min and S = 1.5 minutes, the offered load is 3, so ρ = 3/c. Waiting under 3 minutes means R < 4.5. Separate queues need c = 5; the lecture's approximate shared-queue model gives c = 4. Both need ρ < 1. Validate the chosen model with measured data and add headroom for a server failure."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**Part 1**: 20/hour arrivals, 30/hour capacity",
+      "sub": [
+       "**U = 2/3**",
+       "**R = 6 minutes** including service"
+      ]
+     },
+     {
+      "t": "**Part 2**: λ = 2/min, S = 1.5 minutes",
+      "sub": [
+       "**Offered load** is 3 → **ρ = 3/c**",
+       "Waiting under 3 minutes → **R < 4.5**",
+       "**Separate queues** need **c = 5**",
+       "The lecture's approximate **shared-queue** model gives **c = 4**",
+       "Both need **ρ < 1**"
+      ]
+     }
+    ],
+    "foot": "Validate the chosen model with **measured data** and add **headroom for a server failure**."
+   }
   },
   {
    "q": "1000 players each trigger an event every 3 s (think time). Server time is 50 ms and the round trip is 200 ms. What load must the server handle, and how many requests are in flight?",
-   "a": "Assuming one outstanding request per player and no queueing, the rate is 1000 / (3 + 0.05 + 0.2) = 307.7/s. Work in the server averages 307.7 x 0.05 = 15.4 requests. Including network time, 307.7 x 0.25 = 76.9 requests are in flight. State the boundary you are counting; the remaining players are thinking."
+   "a": {
+    "lead": "Assuming **one outstanding request per player** and **no queueing**:",
+    "ordered": true,
+    "items": [
+     "**Rate** = 1000 / (3 + 0.05 + 0.2) = **307.7/s**",
+     "**Work in the server** averages 307.7 x 0.05 = **15.4 requests**",
+     "**In flight**, including network time: 307.7 x 0.25 = **76.9 requests**"
+    ],
+    "foot": "State the **boundary** you are counting; the remaining players are **thinking**."
+   }
   },
   {
    "q": "A product-detail lookup takes 50 ms from the database. A cache would take 5 ms. Measured access is uniform across the catalogue, and a cache the size you can afford gives a 20% hit ratio. A teammate says to add the cache. Argue for or against, and say what would change your mind.",
-   "a": "Expected time = 0.2 x 5 + 0.8 x 55 = 45 ms against 50 ms: a 10% gain for the cost of the cache memory and an extra component, which is weak. It stops paying at all if cache access reaches 10 ms or the hit ratio falls. With uniform access, a larger cache raises hits only in proportion to its size. What would change the decision: a power-law access pattern, where a small cache catches most requests; precomputing the expensive part of the page; or a source that is much slower than 50 ms. Measure before buying."
+   "a": {
+    "lead": "**Against**: the gain is weak.",
+    "items": [
+     "**Expected time** = 0.2 x 5 + 0.8 x 55 = **45 ms** against 50 ms → a **10% gain**",
+     "**Cost**: the **cache memory** and an **extra component**",
+     "**Stops paying** at all if cache access reaches 10 ms or the hit ratio falls",
+     "**Uniform access** → a larger cache raises hits only **in proportion to its size**",
+     {
+      "t": "**What would change the decision**",
+      "sub": [
+       "A **power-law access pattern**, where a small cache catches most requests",
+       "**Precomputing** the expensive part of the page",
+       "A source that is **much slower than 50 ms**"
+      ]
+     }
+    ],
+    "foot": "**Measure before buying.**"
+   }
   },
   {
    "q": "A web tier runs at 85% utilisation with 4 s average response time against a 2 s target, and 40% of requests fetch the same home-page data. Which tactics would you apply, in what order, and how would you verify them before building?",
-   "a": "First reduce demand: cache or precompute the home-page data, removing up to 40% of the work and lowering utilisation and queueing. Then manage resources: add servers behind a load balancer (shared queue) so per-server utilisation falls well below 85%, and fix any algorithmic or database bottleneck the measurements show. If needed, throttle or deprioritise non-interactive load. Verify with a queueing model or simulation (for example JMT) and an instrumented prototype benchmark under the real request mix, repeating until the 2 s target holds with headroom."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**First reduce demand**: **cache or precompute** the home-page data → removes up to **40%** of the work, lowering utilisation and queueing",
+     {
+      "t": "**Then manage resources**",
+      "sub": [
+       "Add servers behind a **load balancer** (**shared queue**) → per-server utilisation falls well below 85%",
+       "Fix any **algorithmic** or **database bottleneck** the measurements show"
+      ]
+     },
+     "**If needed**, **throttle or deprioritise** non-interactive load",
+     {
+      "t": "**Verify** before building",
+      "sub": [
+       "A **queueing model** or **simulation** (for example **JMT**)",
+       "An **instrumented prototype benchmark** under the **real request mix**",
+       "Repeat until the **2 s target** holds with **headroom**"
+      ]
+     }
+    ]
+   }
   }
  ]
 }

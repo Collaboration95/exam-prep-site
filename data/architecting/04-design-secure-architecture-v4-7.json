@@ -96,15 +96,38 @@
    "check": [
     {
      "q": "In a hospital lab system: (a) a nurse views results for a patient not in her care; (b) a script changes a stored potassium value; (c) ransomware locks the system for 6 hours. Classify each against CIA and say which you would protect hardest.",
-     "a": "(a) Confidentiality, (b) integrity, (c) availability. Integrity is arguably the most dangerous here, because a silently wrong value leads to wrong treatment, while availability matters for emergencies. Rank them per asset through risk assessment, rather than assuming confidentiality always comes first."
+     "a": {
+      "lead": "**(a) Confidentiality, (b) integrity, (c) availability**; integrity is arguably the most dangerous here.",
+      "items": [
+       "**(a) Nurse views another patient's results** → confidentiality",
+       "**(b) Script changes potassium value** → integrity: a silently wrong value leads to wrong treatment",
+       "**(c) Ransomware locks system 6 hours** → availability, which matters for emergencies"
+      ],
+      "foot": "Rank them **per asset** through **risk assessment**, rather than assuming confidentiality always comes first."
+     }
     },
     {
      "q": "A team says: 'We passed a penetration test at launch, so the system is secure.' Do you agree?",
-     "a": "No. Security means **preserving** confidentiality, integrity and availability over time, while threats, vulnerabilities and the system itself keep changing. A test at launch is one snapshot. Keep assessing and treating risk as an ongoing loop, and repeat testing after significant changes."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Security = preserving** confidentiality, integrity and availability **over time**",
+       "**Threats, vulnerabilities and the system itself keep changing**",
+       "**A test at launch is one snapshot**",
+       "**Ongoing loop**: keep assessing and treating risk; repeat testing after significant changes"
+      ]
+     }
     },
     {
      "q": "Security is added after the architecture is built, by placing a firewall in front of the system. What problems does this cause?",
-     "a": "The firewall protects only the network path it sits on. Data at rest, insider access and every other path to the data stay unprotected, and logging in alone does not secure all of them. Controls such as zoning, encryption and access control shape the architecture, so retrofitting them costs more than capturing security requirements and reviewing the design from the start."
+     "a": {
+      "items": [
+       "**Firewall protects only the network path it sits on**",
+       "**Unprotected**: data at rest, insider access and every other path to the data; logging in alone does not secure all of them",
+       "**Controls shape the architecture** (zoning, encryption, access control) → retrofitting them costs more"
+      ],
+      "foot": "Instead, **capture security requirements** and **review the design from the start**."
+     }
     }
    ]
   },
@@ -174,15 +197,38 @@
    "check": [
     {
      "q": "A team buys a web application firewall before identifying any assets or threats, then asks 'Are we safe now?' What did they skip, and what is the consequence?",
-     "a": "They skipped scoping and risk assessment (identification, analysis, evaluation) and went straight to treatment. They cannot tell whether the control addresses their highest risks, or what residual risk remains. Go back, assess, and then judge whether the firewall was the right treatment, as part of an ongoing process."
+     "a": {
+      "lead": "**Skipped scoping and risk assessment** (identification, analysis, evaluation) and went straight to **treatment**.",
+      "items": [
+       "**Consequence**: cannot tell whether the control addresses their **highest risks**",
+       "Nor what **residual risk** remains",
+       "**Fix**: go back, assess, then judge whether the firewall was the right treatment, as part of an **ongoing process**"
+      ]
+     }
     },
     {
      "q": "A threat report says ransomware gangs are targeting the logistics sector. Your warehouse system is isolated, fully patched and has offline backups. Is your risk high?",
-     "a": "Not necessarily. Risk needs a threat, an exploitable vulnerability, an asset and a harmful consequence. Patching and isolation reduce the vulnerability, and offline backups reduce the consequence, so the threat alone does not make the risk high. Some residual risk remains (unknown flaws, insiders), and the assessment must be repeated as conditions change."
+     "a": {
+      "lead": "**Not necessarily.**",
+      "items": [
+       "**Risk needs** a threat, an exploitable vulnerability, an asset and a harmful consequence",
+       "**Patching and isolation** → reduce the vulnerability",
+       "**Offline backups** → reduce the consequence",
+       "So **the threat alone** does not make the risk high"
+      ],
+      "foot": "Some **residual risk** remains (unknown flaws, insiders); **repeat the assessment** as conditions change."
+     }
     },
     {
      "q": "To protect a plant's control network, an engineer installs a data diode so data can only flow out to the corporate network. Has the risk been eliminated?",
-     "a": "No, it has been reduced. The diode removes the inbound network path, but other paths still need evaluating: maintenance laptops, removable media and vendor access. Controls reduce risk; they need not remove it, so record the residual risk."
+     "a": {
+      "lead": "**No, it has been reduced.**",
+      "items": [
+       "**Diode removes the inbound network path**",
+       "**Other paths still need evaluating**: maintenance laptops, removable media, vendor access",
+       "**Controls reduce risk**; they need not remove it → record the **residual risk**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -320,19 +366,55 @@
    "check": [
     {
      "q": "Attackers compromise a clinic receptionist's PC, which holds no patient data. Why should the incident team treat this seriously?",
-     "a": "The PC is a stepping stone: attackers use footholds like this to pivot across network segments to the crown jewels, here the patient records (the SingHealth pattern). Contain it as if the records were at risk, and reduce the number of reachable paths from workstations through segmentation and least privilege."
+     "a": {
+      "lead": "The PC is a **stepping stone**.",
+      "items": [
+       "**Pivot**: attackers use footholds like this to pivot across network segments to the **crown jewels**, here the patient records (the **SingHealth** pattern)",
+       "**Contain it** as if the records were at risk",
+       "**Reduce the number of reachable paths** from workstations through **segmentation** and **least privilege**"
+      ]
+     }
     },
     {
      "q": "A mobile banking API returns full account details for any account number once the caller is logged in. Write the risk scenario and name the STRIDE category.",
-     "a": "An authenticated attacker (threat) exploits the missing per-account authorisation check (vulnerability) to read other customers' account data (asset), causing disclosure of confidential financial data (consequence). STRIDE: information disclosure, which breaks confidentiality; reaching data beyond one's rights is also elevation of privilege. The fix is to authorise every request against the specific account."
+     "a": {
+      "lead": "**STRIDE: information disclosure** (breaks **confidentiality**); also **elevation of privilege**.",
+      "items": [
+       {
+        "t": "**Risk scenario**",
+        "sub": [
+         "**Threat**: an authenticated attacker",
+         "**Vulnerability**: exploits the missing **per-account authorisation check**",
+         "**Asset**: reads other customers' account data",
+         "**Consequence**: disclosure of confidential financial data"
+        ]
+       },
+       "**Elevation of privilege**: reaching data beyond one's rights",
+       "**Fix**: authorise every request against the specific account"
+      ]
+     }
     },
     {
      "q": "Customers claim they never placed certain large orders, and the logs cannot show otherwise. Which STRIDE threat is this, which objective is broken, and what would you add?",
-     "a": "Repudiation, which breaks non-repudiation. Add evidence that ties each action to an authenticated identity, such as digitally signed transactions or protected audit logs. Non-repudiation provides proof to challenge a denial; it does not make denial impossible."
+     "a": {
+      "lead": "**Repudiation**, which breaks **non-repudiation**.",
+      "items": [
+       "**Add evidence** that ties each action to an **authenticated identity**",
+       "e.g. **digitally signed transactions** or **protected audit logs**"
+      ],
+      "foot": "Non-repudiation provides **proof to challenge a denial**; it does not make denial impossible."
+     }
     },
     {
      "q": "A company holds 400 data sets and has a small security budget. How should it focus its protection?",
-     "a": "Identify the small set of most critical data (the crown jewels) and give each one a custodian responsible for it. Protect those, and the stepping stones that lead to them, first. Spreading the budget evenly across all 400 would leave the data that matters most under-protected."
+     "a": {
+      "items": [
+       "**Identify the crown jewels**: the small set of most critical data",
+       "**Custodian**: give each one a custodian responsible for it",
+       "**Protect first** those, and the **stepping stones** that lead to them"
+      ],
+      "foot": "Spreading the budget **evenly across all 400** would leave the data that matters most under-protected."
+     }
     }
    ],
    "visuals": [
@@ -466,15 +548,50 @@
    "check": [
     {
      "q": "Flaw A has a public exploit, needs only a browser and no login, and exposes one user's profile. Flaw B needs an insider administrator and custom tools, but can destroy the whole database. Score them roughly with DREAD and say which you would fix first.",
-     "a": "A: discoverability, reproducibility and exploitability near 10, affected users and damage low to medium, so high likelihood and moderate impact. B: discoverability, reproducibility and exploitability low, affected users and damage 10, so low likelihood and catastrophic impact. DREAD totals may put A first, and it is cheap to fix. B's catastrophic impact still needs an explicit decision against the organisation's tolerance, because DREAD scores rank concerns but are not probabilities."
+     "a": {
+      "items": [
+       {
+        "t": "**Flaw A**: high likelihood, moderate impact",
+        "sub": [
+         "Discoverability, reproducibility, exploitability **near 10**",
+         "Affected users and damage **low to medium**"
+        ]
+       },
+       {
+        "t": "**Flaw B**: low likelihood, catastrophic impact",
+        "sub": [
+         "Discoverability, reproducibility, exploitability **low**",
+         "Affected users and damage **10**"
+        ]
+       },
+       "**Fix first**: DREAD totals may put **A first**, and it is **cheap to fix**",
+       "**B** still needs an **explicit decision** against the **organisation's tolerance**"
+      ],
+      "foot": "**DREAD scores rank concerns but are not probabilities.**"
+     }
     },
     {
      "q": "A manager wants every risk reported to the board as a single DREAD number. A colleague prefers a 3-by-3 likelihood and impact matrix. Which would you use, and why?",
-     "a": "Use both, for different audiences. DREAD's factor scores help the technical team rank and compare flaws. The matrix gives a quick low, medium or high rating that is easier to communicate. Neither is a measured probability, so state the scoring criteria behind them."
+     "a": {
+      "lead": "**Use both**, for different audiences.",
+      "items": [
+       "**DREAD**: factor scores help the **technical team** rank and compare flaws",
+       "**3-by-3 matrix**: quick low, medium or high rating, **easier to communicate**"
+      ],
+      "foot": "Neither is a **measured probability** → state the **scoring criteria** behind them."
+     }
     },
     {
      "q": "A rare event could destroy all patient records. Does a Low matrix cell settle the treatment decision?",
-     "a": "No. The matrix uses chosen scoring criteria. Review the severe consequence and organisational tolerance, then decide treatment and record residual risk rather than treating the colour as automatic acceptance."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Matrix uses chosen scoring criteria**",
+       "**Review** the severe consequence and **organisational tolerance**",
+       "**Then decide treatment** and record **residual risk**"
+      ],
+      "foot": "Don't treat the colour as **automatic acceptance**."
+     }
     }
    ],
    "visuals": [
@@ -575,15 +692,37 @@
    "check": [
     {
      "q": "A retailer buys cyber insurance, outsources card processing, and then declares card-data risk 'handled'. Do you agree?",
-     "a": "Only partly. Insurance transfers part of the financial impact, and outsourcing reduces the card data the retailer holds. Neither removes operational disruption, reputational harm or the retailer's accountability, and some residual risk stays in-house. Record that residual risk and decide whether it is within tolerance."
+     "a": {
+      "lead": "**Only partly.**",
+      "items": [
+       "**Insurance** → **transfers** part of the financial impact",
+       "**Outsourcing** → reduces the card data the retailer holds",
+       "**Neither removes** operational disruption, reputational harm or the retailer's **accountability**",
+       "Some **residual risk** stays in-house"
+      ],
+      "foot": "Record that residual risk and decide whether it is **within tolerance**."
+     }
     },
     {
      "q": "An internal wiki with little traffic has an unpatched minor flaw. The fix needs a $50,000 platform upgrade. When could you accept the risk, and what must you record?",
-     "a": "Accept it if assessment shows the risk falls within the organisation's tolerance, for example low impact and no access from outside. Record the decision, its owner and the conditions that would trigger a review, such as the wiki starting to hold sensitive data. A cheap compensating control, such as restricting access, may reduce the risk further."
+     "a": {
+      "items": [
+       "**Accept when** assessment shows the risk falls **within the organisation's tolerance**, e.g. low impact and no access from outside",
+       "**Record**: the decision, its **owner** and the **conditions that trigger a review** (e.g. the wiki starting to hold sensitive data)",
+       "**Compensating control**: a cheap one, such as restricting access, may reduce the risk further"
+      ]
+     }
     },
     {
      "q": "A bank's 'save card for later' feature on a niche product creates serious exposure and earns little revenue. Mitigate or avoid?",
-     "a": "Avoid: dropping the feature removes the activity that creates the risk, at little business cost. Mitigation with encryption and access control would add ongoing cost and still leave residual risk. If the feature mattered commercially, mitigation would be the better choice."
+     "a": {
+      "lead": "**Avoid.**",
+      "items": [
+       "**Dropping the feature** removes the activity that creates the risk, at little business cost",
+       "**Mitigation** (encryption, access control) → adds ongoing cost and still leaves **residual risk**"
+      ],
+      "foot": "If the feature **mattered commercially**, mitigation would be the better choice."
+     }
     }
    ],
    "visuals": [
@@ -696,15 +835,46 @@
    "check": [
     {
      "q": "A consultant hands a start-up the full catalogue of about 1,000 security controls and says to implement them all. How do you respond?",
-     "a": "No. Controls have costs and limits on where they apply. Start with mandatory obligations and any required baseline, then use risk assessment to select and justify additional controls. A catalogue offers choices, not a checklist to complete."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Controls have costs** and limits on where they apply",
+       "**Start with** mandatory obligations and any **required baseline**",
+       "**Then risk assessment** to select and justify additional controls"
+      ],
+      "foot": "A catalogue offers **choices, not a checklist** to complete."
+     }
     },
     {
      "q": "A 20-person firm with no security staff asks where to start. Risk assessment or a hygiene list?",
-     "a": "Start with cyber hygiene, such as the CSA Essentials (asset inventory, authorised software, patching, restricted admin rights, breach detection, access control including MFA). It builds a foundation without a full assessment of each risk. Add risk assessment for the systems holding its crown jewels. Hygiene complements risk assessment; it does not prove the firm is safe."
+     "a": {
+      "lead": "**Start with cyber hygiene**, such as the **CSA Essentials**.",
+      "items": [
+       {
+        "t": "**CSA Essentials**",
+        "sub": [
+         "Asset inventory, authorised software, patching",
+         "Restricted admin rights, breach detection",
+         "Access control including **MFA**"
+        ]
+       },
+       "**Why**: builds a foundation **without a full assessment** of each risk",
+       "**Then add risk assessment** for the systems holding its **crown jewels**"
+      ],
+      "foot": "Hygiene **complements** risk assessment; it does not prove the firm is safe."
+     }
     },
     {
      "q": "The baseline mandates MFA for all administrator access on a comply-or-explain basis. A legacy controller cannot support MFA. What do you do?",
-     "a": "Explain: document why the control cannot be applied and what alternative reduces the risk, such as reaching the controller only through an MFA-protected jump host on a segregated admin network. Get the exception approved and set a review date. Simply ignoring the control is not an option under comply-or-explain."
+     "a": {
+      "lead": "**Explain.**",
+      "items": [
+       "**Document** why the control cannot be applied",
+       "**Alternative that reduces the risk**: reach the controller only through an **MFA-protected jump host** on a **segregated admin network**",
+       "**Get the exception approved** and set a **review date**"
+      ],
+      "foot": "Simply ignoring the control is not an option under **comply-or-explain**."
+     }
     }
    ]
   },
@@ -777,11 +947,27 @@
    "check": [
     {
      "q": "For a card-payment kiosk, classify each control by type and category: tamper-evident seals, a quarterly log review, an IDS, and restoring from backup.",
-     "a": "Tamper-evident seals: physical, detective (and deterrent). Quarterly log review: administrative, detective. IDS: technical, detective. Restore from backup: technical, corrective. Three of the four are detective, so check that preventive controls also exist."
+     "a": {
+      "items": [
+       "**Tamper-evident seals**: physical, detective (and deterrent)",
+       "**Quarterly log review**: administrative, detective",
+       "**IDS**: technical, detective",
+       "**Restore from backup**: technical, corrective"
+      ],
+      "foot": "Three of the four are **detective** → check that **preventive** controls also exist."
+     }
     },
     {
      "q": "A design's control list is firewall, encryption, MFA and a security policy. What is wrong with this mix?",
-     "a": "Every control is preventive. If prevention fails, nothing detects the breach or recovers from it. Add detective controls (IDS, log review) and corrective ones (tested backups, incident response). Checking both the type and the category of each control exposes this kind of gap."
+     "a": {
+      "lead": "**Every control is preventive.**",
+      "items": [
+       "**Gap**: if prevention fails, nothing **detects** the breach or **recovers** from it",
+       "**Add detective**: IDS, log review",
+       "**Add corrective**: tested backups, incident response"
+      ],
+      "foot": "Checking both the **type** and the **category** of each control exposes this kind of gap."
+     }
     },
     {
      "q": "A legacy system cannot be patched, so the team isolates it on its own segment. Which category?",
@@ -946,15 +1132,52 @@
    "check": [
     {
      "q": "A team encrypts a 2 GB nightly backup directly with the recipient's RSA public key. Critique it and propose a better scheme.",
-     "a": "Public-key operations are relatively costly and suit key establishment, not bulk data. Encrypt the backup with a random symmetric key, then protect that key with the recipient's public key, so only the private-key holder can recover it. Protect the private key well, because it now unlocks every backup."
+     "a": {
+      "lead": "Use **hybrid encryption**, not RSA on bulk data.",
+      "items": [
+       "**Critique**: public-key operations are relatively costly; they suit **key establishment, not bulk data**",
+       "**Encrypt the backup** with a random **symmetric key**",
+       "**Protect that key** with the recipient's **public key** → only the **private-key holder** can recover it"
+      ],
+      "foot": "Protect the **private key** well, because it now unlocks every backup."
+     }
     },
     {
      "q": "Choose a mechanism for each: (a) internal services that share a secret must detect tampered messages; (b) a bank must later prove that a customer authorised a transfer; (c) users download an installer and compare it with a digest published on the same website, which may be compromised.",
-     "a": "(a) HMAC: shared-secret integrity and authentication of a key holder. (b) A digital signature with the customer's private key, because HMAC cannot provide non-repudiation when both sides hold the secret. (c) A digest from the same compromised site is worthless, since the attacker can replace both files. Use a signature verified with a trusted public key, or a digest from a trusted channel."
+     "a": {
+      "ordered": true,
+      "items": [
+       {
+        "t": "**(a) HMAC**",
+        "sub": [
+         "Shared-secret **integrity** and **authentication of a key holder**"
+        ]
+       },
+       {
+        "t": "**(b) Digital signature** with the customer's **private key**",
+        "sub": [
+         "**HMAC cannot provide non-repudiation** when both sides hold the secret"
+        ]
+       },
+       {
+        "t": "**(c) Signature verified with a trusted public key**, or a digest from a **trusted channel**",
+        "sub": [
+         "A digest from the same compromised site is **worthless**: the attacker can replace both files"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A client accepts any certificate whose subject matches the server's name, without checking who issued it. What attack does this allow?",
-     "a": "An attacker can present their own certificate with the same subject name and impersonate the server (spoofing, then reading or altering traffic). A certificate binds a key to a subject only through the issuer's signature. Verify that signature up to a trusted CA before trusting the identity."
+     "a": {
+      "lead": "**Spoofing**: the attacker impersonates the server.",
+      "items": [
+       "**Attack**: present their own certificate with the **same subject name** → impersonate the server, then read or alter traffic",
+       "**Why**: a certificate binds a key to a subject **only through the issuer's signature**",
+       "**Fix**: verify that signature up to a **trusted CA** before trusting the identity"
+      ]
+     }
     },
     {
      "q": "An attacker can rewrite a file and its stored SHA-256 digest. Has the digest protected integrity?",
@@ -1100,19 +1323,59 @@
    "check": [
     {
      "q": "An attacker has recorded two years of a server's TLS traffic and now steals the server's long-term private key. Under which key exchange can the past traffic be decrypted?",
-     "a": "With RSA key transport, yes: the session keys were sent encrypted with that key, so all the recorded traffic opens. With authenticated ephemeral Diffie-Hellman whose session secrets were erased, no: that is forward secrecy. Prefer ephemeral key agreement, and protect long-term keys in an HSM."
+     "a": {
+      "items": [
+       "**RSA key transport → yes**: session keys were sent encrypted with that key, so all the recorded traffic opens",
+       "**Authenticated ephemeral Diffie-Hellman** with session secrets erased **→ no**: that is **forward secrecy**"
+      ],
+      "foot": "Prefer **ephemeral key agreement**, and protect long-term keys in an **HSM**."
+     }
     },
     {
      "q": "TLS terminates at a load balancer in the DMZ, and traffic to the application server is re-encrypted with a second TLS hop. A teammate says passwords are protected end to end. Do you agree?",
-     "a": "No. Each TLS connection protects only between its own endpoints, so the password is plaintext inside the load balancer in the DMZ. If that exposure is unacceptable, encrypt the password field for the final consumer (with a nonce against replay), or terminate TLS at the application server. Otherwise, treat the load balancer as part of the trust boundary and harden it."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Each TLS connection** protects only between its own endpoints",
+       "→ the password is **plaintext inside the load balancer** in the DMZ",
+       {
+        "t": "**If that exposure is unacceptable**",
+        "sub": [
+         "**Encrypt the password field** for the final consumer (with a **nonce** against replay)",
+         "Or **terminate TLS at the application server**"
+        ]
+       },
+       "**Otherwise**: treat the load balancer as part of the **trust boundary** and **harden** it"
+      ]
+     }
     },
     {
      "q": "A vendor needs remote access to maintain one internal server. Where would you terminate their SSL VPN, and what else must you control?",
-     "a": "Terminating in the DMZ keeps the exposed endpoint outside the inner boundary, and the inner firewall then allows only that one server. Terminating internally keeps keys deeper inside but bypasses DMZ inspection. Either way, the VPN gives only a tunnel: you still need strong vendor authentication, authorisation limited to that server, and logging of the session."
+     "a": {
+      "items": [
+       "**Terminate in the DMZ** → exposed endpoint stays outside the inner boundary; inner firewall allows **only that one server**",
+       "**Terminate internally** → keys deeper inside, but **bypasses DMZ inspection**",
+       {
+        "t": "**Either way, the VPN gives only a tunnel**; still control:",
+        "sub": [
+         "**Strong vendor authentication**",
+         "**Authorisation limited to that server**",
+         "**Logging** of the session"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A developer generates session keys with the language's standard random function, seeded with the current time. What is the problem?",
-     "a": "The sequence is deterministic: the same seed repeats the same output, and an attacker who can guess the time can reproduce the keys. Use a cryptographic random generator with enough entropy, or authenticated key agreement, for session keys."
+     "a": {
+      "lead": "**The sequence is deterministic.**",
+      "items": [
+       "**Same seed** → same output",
+       "**Attacker who can guess the time** → can reproduce the keys",
+       "**Fix**: a **cryptographic random generator** with enough **entropy**, or **authenticated key agreement**, for session keys"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -1229,15 +1492,38 @@
    "check": [
     {
      "q": "A bank offers three login options: (a) password plus a one-time code from a hardware token; (b) fingerprint plus a key bound to the phone; (c) password plus a security question. Which are true multi-factor?",
-     "a": "(a) is multi-factor: something you know plus something you have. (b) is multi-factor: something you are plus something you have. (c) is a single factor, because both are knowledge. MFA needs independent factor types, not just more secrets."
+     "a": {
+      "items": [
+       "**(a) Multi-factor**: something you **know** + something you **have**",
+       "**(b) Multi-factor**: something you **are** + something you **have**",
+       "**(c) Single factor**: both are **knowledge**"
+      ],
+      "foot": "MFA needs **independent factor types**, not just more secrets."
+     }
     },
     {
      "q": "Ransomware on one office PC reached the database servers within an hour. What design flaw does this suggest, and what is the fix?",
-     "a": "A flat network: once inside, any host could reach the others. Segregate it into zones (user, DMZ, internal, development) with controlled connections, so a compromised PC has few reachable targets, and move administration to an out-of-band network. Permitted paths still need authentication and authorisation."
+     "a": {
+      "lead": "**Flat network**: once inside, any host could reach the others.",
+      "items": [
+       "**Segregate into zones** (user, DMZ, internal, development) with **controlled connections**",
+       "→ a compromised PC has **few reachable targets**",
+       "**Out-of-band network** for administration"
+      ],
+      "foot": "Permitted paths still need **authentication and authorisation**."
+     }
     },
     {
      "q": "A vendor installs an outbound remote-desktop tool on a server so they can support it. The firewall blocks all inbound traffic. Is the server safe from outside access?",
-     "a": "No. The tool opens a connection from the inside, which the inbound rules don't stop, and the vendor's service becomes a path into the network. Route vendor access through a controlled, authenticated and logged path, such as a VPN or jump host on the admin network, and block unapproved outbound remote tools."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Outbound connection from the inside** → the inbound rules don't stop it",
+       "**Vendor's service** becomes a path into the network",
+       "**Fix**: route vendor access through a **controlled, authenticated and logged path**, such as a **VPN** or **jump host** on the admin network",
+       "**Block unapproved outbound remote tools**"
+      ]
+     }
     },
     {
      "q": "Does requiring both a password and a PIN give two-factor authentication?",
@@ -1363,19 +1649,49 @@
    "check": [
     {
      "q": "A patient-records API sits behind an inline IPS that could block attacks, but false positives would also block clinicians. Would you run it in blocking mode or as an alerting IDS?",
-     "a": "It depends on the cost of a false block. Here, blocking legitimate clinicians hurts availability for patient care, so start in alerting (IDS) mode, tune the rules, and enable blocking only for well-understood signatures. On a public edge where a false block costs little, inline blocking is easier to justify."
+     "a": {
+      "lead": "**Start in alerting (IDS) mode**: it depends on the **cost of a false block**.",
+      "items": [
+       "**Here**: blocking legitimate clinicians hurts **availability** for patient care",
+       "**Tune the rules**, then enable blocking only for **well-understood signatures**"
+      ],
+      "foot": "On a **public edge** where a false block costs little, **inline blocking** is easier to justify."
+     }
     },
     {
      "q": "Traffic to an application server is end-to-end encrypted, and you suspect an attacker is modifying files on it. HIDS or NIDS?",
-     "a": "A HIDS: it runs on the host and watches system calls, file-system changes and host activity, which encrypted network traffic hides from a network sensor. The cost is an agent to deploy and maintain on each protected host."
+     "a": {
+      "lead": "**A HIDS.**",
+      "items": [
+       "**Runs on the host**: watches system calls, file-system changes and host activity",
+       "**Encrypted network traffic** hides these from a network sensor (NIDS)"
+      ],
+      "foot": "**Cost**: an agent to deploy and maintain on each protected host."
+     }
     },
     {
      "q": "Ransomware encrypted both production and the online backups mounted on the same network. What should the backup design have included?",
-     "a": "Offline copies, access controls on the backup system, WORM retention where appropriate, regularly tested restores, and golden images to rebuild systems. WORM stops rewriting but not theft, and it doesn't prove the copy was clean, so test restores as well."
+     "a": {
+      "items": [
+       "**Offline copies**",
+       "**Access controls** on the backup system",
+       "**WORM retention** where appropriate",
+       "**Regularly tested restores**",
+       "**Golden images** to rebuild systems"
+      ],
+      "foot": "**WORM** stops rewriting but not theft, and doesn't prove the copy was clean → **test restores** as well."
+     }
     },
     {
      "q": "An IDS alerts that a staff account is uploading large volumes of data to an unknown external host at 3 am. Which reacting controls apply, and what is the risk of using them?",
-     "a": "Revoke or suspend the account's access, block the destination with an IPS or firewall rule, and stop the exfiltration. The risk is a false positive, such as a legitimate overnight transfer, disrupting work. Confirm quickly and keep the response proportionate."
+     "a": {
+      "items": [
+       "**Revoke or suspend** the account's access",
+       "**Block the destination** with an IPS or firewall rule",
+       "**Stop the exfiltration**"
+      ],
+      "foot": "**Risk: a false positive**, such as a legitimate overnight transfer, disrupting work → confirm quickly and keep the response **proportionate**."
+     }
     }
    ],
    "visuals": [
@@ -1503,7 +1819,14 @@
    "check": [
     {
      "q": "A web app checks the user's role at login and stores 'isAdmin = true' in the session for 8 hours. An administrator is dismissed at 10 am. Which principle is broken, and what is the risk?",
-     "a": "Complete mediation. The cached decision keeps the revoked rights working for up to 8 hours. Check every access against current permissions. The cost is a permission lookup per request, which is the price of revocation taking effect immediately."
+     "a": {
+      "lead": "**Complete mediation.**",
+      "items": [
+       "**Risk**: the cached decision keeps the revoked rights working for **up to 8 hours**",
+       "**Fix**: check every access against **current permissions**"
+      ],
+      "foot": "**Cost**: a permission lookup per request, the price of revocation taking effect **immediately**."
+     }
     },
     {
      "q": "A service account has superuser rights 'for convenience'. Which principle and what harm?",
@@ -1511,11 +1834,30 @@
     },
     {
      "q": "A public API faces DDoS risk, and its only protection is a perimeter firewall. Propose a defence-in-depth arrangement.",
-     "a": "Layer the controls: DNS and a content delivery edge to absorb volume, a web application firewall, an API gateway that throttles requests, load balancing with auto-scaling, and application servers in private subnets. Protect the data behind them with access control and encryption. Each layer catches some of what passes the one before. The cost is more components to configure and pay for."
+     "a": {
+      "lead": "**Layer the controls** (defence in depth):",
+      "ordered": true,
+      "items": [
+       "**DNS and a content delivery edge** → absorb volume",
+       "**Web application firewall**",
+       "**API gateway** → throttles requests",
+       "**Load balancing with auto-scaling**",
+       "**Application servers in private subnets**",
+       "**Data behind them**: access control and encryption"
+      ],
+      "foot": "Each layer catches some of what passes the one before. **Cost**: more components to configure and pay for."
+     }
     },
     {
      "q": "Production and test share one encryption key and one admin jump host 'to keep things simple'. Which principle is broken, and what is the risk?",
-     "a": "Least common mechanism: shared mechanisms become channels between environments. Compromising the weaker test environment exposes the production key and the production admin path. Use separate keys per purpose and environment, and a dedicated admin path for production."
+     "a": {
+      "lead": "**Least common mechanism.**",
+      "items": [
+       "**Shared mechanisms** become channels between environments",
+       "**Risk**: compromising the **weaker test environment** exposes the **production key** and the **production admin path**",
+       "**Fix**: separate keys **per purpose and environment**, and a **dedicated admin path** for production"
+      ]
+     }
     }
    ]
   }
@@ -1523,27 +1865,154 @@
  "exam_angles": [
   {
    "q": "A pharmacy chain's online prescription portal serves 200,000 patients. The web tier in the DMZ reads a records database, a vendor has remote support access, and the budget covers three new controls this year. (a) Identify a crown jewel and a stepping stone. (b) Write two risk scenarios and rate them. (c) Choose a treatment for each and three controls, justifying the mix of types and categories. (d) State the residual risk.",
-   "a": "(a) Crown jewel: patient prescription records. Stepping stones: the DMZ web server and the vendor's remote access path. (b) 'An attacker exploits the vendor's remote access to reach the records database and disclose prescriptions': medium likelihood, high impact. 'An attacker exploits a web-tier flaw and pivots to the database': medium likelihood, high impact. (c) Mitigate both. Controls: MFA-protected, logged vendor access through a jump host (technical, preventive and detective); segmentation with an inner firewall that allows only required web-to-database traffic (technical, preventive); centralised log review with alerting (administrative and technical, detective). (d) Residual: unknown application flaws and insider misuse. Record them, accept them within tolerance, and revisit next year."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**(a) Crown jewel and stepping stones**",
+      "sub": [
+       "**Crown jewel**: patient prescription records",
+       "**Stepping stones**: the DMZ web server and the vendor's remote access path"
+      ]
+     },
+     {
+      "t": "**(b) Risk scenarios**",
+      "sub": [
+       "'An attacker exploits the **vendor's remote access** to reach the records database and disclose prescriptions': **medium likelihood, high impact**",
+       "'An attacker exploits a **web-tier flaw** and **pivots** to the database': **medium likelihood, high impact**"
+      ]
+     },
+     {
+      "t": "**(c) Treatment: mitigate both.** Controls:",
+      "sub": [
+       "**MFA-protected, logged vendor access through a jump host**: technical, preventive and detective",
+       "**Segmentation with an inner firewall** allowing only required web-to-database traffic: technical, preventive",
+       "**Centralised log review with alerting**: administrative and technical, detective"
+      ]
+     },
+     {
+      "t": "**(d) Residual risk**: unknown application flaws and insider misuse",
+      "sub": [
+       "Record them, **accept within tolerance**, and revisit next year"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "Threat-model a mobile banking transfer: phone app, then API gateway, then transfer service, then core banking system. For each of three trust boundaries, give the most likely STRIDE threat, the objective it breaks and a control.",
-   "a": "Phone to gateway: spoofing (authenticity), using stolen credentials. Control: MFA and device binding. Gateway to transfer service: tampering (integrity), by altering the amount or payee in transit. Control: TLS on each hop plus signed transfer requests, which also give non-repudiation. Transfer service to core banking: elevation of privilege (authorisation), through an over-privileged service account. Control: least privilege and authorising each operation. Across all three, protected audit logs counter repudiation."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**Phone → gateway: spoofing** (authenticity)",
+      "sub": [
+       "Using **stolen credentials**",
+       "**Control**: MFA and **device binding**"
+      ]
+     },
+     {
+      "t": "**Gateway → transfer service: tampering** (integrity)",
+      "sub": [
+       "Altering the **amount or payee** in transit",
+       "**Control**: **TLS on each hop** plus **signed transfer requests**, which also give **non-repudiation**"
+      ]
+     },
+     {
+      "t": "**Transfer service → core banking: elevation of privilege** (authorisation)",
+      "sub": [
+       "Through an **over-privileged service account**",
+       "**Control**: **least privilege** and authorising each operation"
+      ]
+     }
+    ],
+    "foot": "Across all three, **protected audit logs** counter **repudiation**."
+   }
   },
   {
    "q": "A bank's control list for online banking is: TLS, a web application firewall, MFA, a password policy and data-centre locks. An auditor calls it unbalanced. Classify the controls, find the gaps and fill them.",
-   "a": "TLS, the web application firewall and MFA are technical and preventive. The password policy is administrative and preventive. The locks are physical and preventive. Everything prevents; nothing detects or corrects. Add detective controls (an IDS, log review, CCTV in the data centre) and corrective ones (tested backups, incident response, access revocation). Check every major risk against a grid of type (technical, administrative, physical) by category (preventive, detective, corrective)."
+   "a": {
+    "lead": "**Everything prevents; nothing detects or corrects.**",
+    "items": [
+     {
+      "t": "**Classify**",
+      "sub": [
+       "**TLS, web application firewall, MFA**: technical, preventive",
+       "**Password policy**: administrative, preventive",
+       "**Data-centre locks**: physical, preventive"
+      ]
+     },
+     "**Add detective**: an IDS, log review, CCTV in the data centre",
+     "**Add corrective**: tested backups, incident response, access revocation"
+    ],
+    "foot": "Check every major risk against a grid of **type** (technical, administrative, physical) by **category** (preventive, detective, corrective)."
+   }
   },
   {
    "q": "Design how a web login protects a password from browser to the final consumer, when TLS terminates at a DMZ proxy. Discuss the limits of TLS.",
-   "a": "TLS protects each connection between its own endpoints, so if it ends at the DMZ proxy, the password is plaintext there even if the next hop also uses TLS. To protect it through that intermediary, encrypt the password field for the final consumer with its public key, plus a nonce that is checked against replay. Protect that private key. Use authenticated ephemeral key agreement for forward secrecy on each connection. Any inspection proxy that decrypts traffic sees plaintext, so include it in the trust boundary."
+   "a": {
+    "items": [
+     "**TLS limit**: protects each connection only **between its own endpoints** → if it ends at the DMZ proxy, the password is **plaintext there**, even if the next hop also uses TLS",
+     "**Field-level encryption**: encrypt the password field for the **final consumer** with its **public key**, plus a **nonce** checked against **replay**",
+     "**Protect that private key**",
+     "**Forward secrecy**: authenticated **ephemeral key agreement** on each connection",
+     "**Inspection proxies**: any proxy that decrypts traffic sees plaintext → include it in the **trust boundary**"
+    ]
+   }
   },
   {
    "q": "A small company runs its app server and database on one flat network. The app server's account is a database superuser, admins use their everyday laptops to manage servers, and permissions are cached at login for a day. Apply the four secure design principles.",
-   "a": "Defence in depth: add zones (DMZ, internal) with firewalls between them, encryption of sensitive data, and an IDS, so one breach doesn't expose everything. Least common mechanism: give administration and logging their own out-of-band network and dedicated admin devices, and use separate keys per purpose. Least privilege: the app server account gets only the table reads and writes it needs, never superuser. Complete mediation: check authorisation on every request instead of caching it for a day, so revocations take effect immediately. Each fix adds cost or latency, so prioritise them by the risks they reduce."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**Defence in depth**",
+      "sub": [
+       "**Zones** (DMZ, internal) with **firewalls** between them, **encryption** of sensitive data, and an **IDS**",
+       "→ one breach doesn't expose everything"
+      ]
+     },
+     {
+      "t": "**Least common mechanism**",
+      "sub": [
+       "Administration and logging get their own **out-of-band network** and **dedicated admin devices**",
+       "**Separate keys per purpose**"
+      ]
+     },
+     {
+      "t": "**Least privilege**",
+      "sub": [
+       "App server account gets only the **table reads and writes** it needs, **never superuser**"
+      ]
+     },
+     {
+      "t": "**Complete mediation**",
+      "sub": [
+       "Check authorisation **on every request** instead of caching it for a day → **revocations take effect immediately**"
+      ]
+     }
+    ],
+    "foot": "Each fix adds **cost or latency** → prioritise them by the **risks they reduce**."
+   }
   },
   {
    "q": "In a DMZ-based architecture, decide where you would use an IDS and where an IPS, and how you would handle false positives.",
-   "a": "Put an inline IPS at the internet edge, where blocking obvious attacks is worth the occasional false block. Place NIDS sensors at internal zone boundaries, such as between the DMZ and the internal network, so they alert without blocking business traffic, and HIDS on critical hosts like the database, which encrypted traffic would otherwise hide. Tune signatures, start new rules in alert-only mode, and review alerts. A passive IDS sees copied traffic and cannot stop an attack, so pair it with a response process."
+   "a": {
+    "items": [
+     "**Inline IPS at the internet edge**: blocking obvious attacks is worth the occasional false block",
+     "**NIDS sensors at internal zone boundaries** (e.g. between the DMZ and the internal network) → alert without blocking business traffic",
+     "**HIDS on critical hosts** like the database, which **encrypted traffic** would otherwise hide",
+     {
+      "t": "**False positives**",
+      "sub": [
+       "**Tune signatures**",
+       "Start new rules in **alert-only mode**",
+       "**Review alerts**"
+      ]
+     }
+    ],
+    "foot": "A **passive IDS** sees copied traffic and **cannot stop an attack** → pair it with a **response process**."
+   }
   }
  ]
 }

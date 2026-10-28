@@ -87,15 +87,35 @@
    "check": [
     {
      "q": "A CIO launches a 'move everything to cloud' modernisation programme because competitors are doing it. Eighteen months later, costs are up and the business sees no benefit. What did Gartner's note warn about?",
-     "a": "Choosing an approach from fashion without first diagnosing why each application obstructs the business. The chosen approach then misses the root cause, which leads to overruns, late delivery, little benefit or a cancelled programme. The fix is a cause-effect analysis per application using the six drivers before picking an approach."
+     "a": {
+      "items": [
+       "**Warning**: choosing an approach from **fashion** without first **diagnosing** why each application **obstructs the business**",
+       "→ the chosen approach **misses the root cause** → **overruns**, **late delivery**, **little benefit** or a **cancelled programme**",
+       "**Fix**: a **cause-effect analysis per application** using the **six drivers** before picking an approach"
+      ]
+     }
     },
     {
      "q": "A bank's COBOL system must be modernised, but the mainframe contract runs for 8 more years. A teammate says modernisation is impossible until they can move to cloud. Do you agree?",
-     "a": "No. Modernisation is not always cloud migration: the COBOL code can be rearchitected to Java and stay on the mainframe, or the app can be replaced by an on-premises COTS package. Pick the approach from the drivers, and treat the hosting location as a separate decision."
+     "a": {
+      "lead": "**No.** Modernisation is **not always cloud migration**.",
+      "items": [
+       "**Rearchitect** the **COBOL** code to **Java** and stay on the **mainframe**",
+       "Or **replace** the app with an **on-premises COTS package**"
+      ],
+      "foot": "Pick the approach from the **drivers**, and treat the **hosting location** as a **separate decision**."
+     }
     },
     {
      "q": "A board member cites a survey showing CIOs plan more spending on modernisation and cloud and less on legacy infrastructure, and asks to fund all applications equally. What is the flaw?",
-     "a": "The trend explains why portfolios need attention, because apps lose fit and agility while growing costlier and riskier, but it doesn't say which apps need what. There is no one-size-fits-all fix, so fund by application after diagnosis. Some will need rebuilding, some only replatforming, and some should be retained or retired."
+     "a": {
+      "items": [
+       "**The trend explains why** portfolios need attention: apps **lose fit and agility** while growing **costlier and riskier**",
+       "**But** it doesn't say **which apps need what**",
+       "**No one-size-fits-all** fix → **fund by application** after **diagnosis**",
+       "Some will need **rebuilding**, some only **replatforming**, and some should be **retained** or **retired**"
+      ]
+     }
     }
    ]
   },
@@ -169,15 +189,36 @@
    "check": [
     {
      "q": "An app's code and features are fine, but it runs on middleware that is going out of support. Which approach fits, and why not rebuild?",
-     "a": "Replatform: the problem is in the technology layer, which replatforming changes with minimal code edits. Rebuilding would also change architecture and functionality that don't need fixing, adding cost, time and risk for no extra benefit."
+     "a": {
+      "lead": "**Replatform.**",
+      "items": [
+       "The problem is in the **technology layer** → replatforming changes it with **minimal code edits**",
+       "**Rebuilding** would also change **architecture** and **functionality** that don't need fixing → adds **cost**, **time** and **risk** for **no extra benefit**"
+      ]
+     }
     },
     {
      "q": "A legacy claims engine is valuable and stable, but changing it is very risky, and a new mobile app needs its data. Modernise or one of the alternatives?",
-     "a": "Encapsulate: expose its data and functions as services through an API, so the mobile app can use them while the implementation stays hidden and untouched. It extends the app's value cheaply. The engine's limits remain, so revisit it later if business fit or agility becomes the driver."
+     "a": {
+      "lead": "**Encapsulate.**",
+      "items": [
+       "Expose its **data and functions** as **services** through an **API** → the mobile app can use them",
+       "The implementation stays **hidden and untouched**",
+       "**Extends the app's value cheaply**"
+      ],
+      "foot": "The **engine's limits remain**, so revisit it later if **business fit** or **agility** becomes the driver."
+     }
     },
     {
      "q": "A team proposes rearchitecting an app into microservices because 'users say it is missing features'. Will rearchitecting fix that?",
-     "a": "Probably not. Rearchitecting changes technology and architecture while preserving behaviour, so it has limited value for functional problems. Missing features point to functionality, which rebuild or replace can change. Rearchitect only if the real complaint turns out to be the speed or risk of adding features, which is an agility problem."
+     "a": {
+      "lead": "**Probably not.**",
+      "items": [
+       "**Rearchitecting** changes **technology and architecture** while **preserving behaviour** → limited value for **functional problems**",
+       "**Missing features** point to **functionality** → **rebuild** or **replace** can change it",
+       "Rearchitect only if the real complaint is the **speed or risk of adding features**, which is an **agility** problem"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -298,19 +339,47 @@
    "check": [
     {
      "q": "A system can't support a new digital sales channel. What must you diagnose before choosing an approach?",
-     "a": "Whether the missing piece is business functionality or access to existing functions. If functionality is missing, rebuild or replace the component that needs it. If the functions exist but can't be reached by the new channel, encapsulating them behind APIs or integrating at the architecture level may be enough. Rehosting alone won't add the capability."
+     "a": {
+      "lead": "Diagnose: missing **business functionality**, or missing **access to existing functions**?",
+      "items": [
+       "**Functionality missing** → **rebuild** or **replace** the component that needs it",
+       "**Functions exist but can't be reached** by the new channel → **encapsulating** them behind **APIs** or **integrating at the architecture level** may be enough"
+      ],
+      "foot": "**Rehosting alone** won't add the capability."
+     }
     },
     {
      "q": "Releases of a core app take months and often break unrelated features. Rearchitect or rebuild?",
-     "a": "Rearchitect is the likely fit. Slow, risky change points to agility and complexity, which usually come from the architecture, and rearchitecting fixes architecture and technology at lower cost, risk and disruption than a rebuild. Rebuild is justified only if the functionality must also change or the code can't be restructured."
+     "a": {
+      "lead": "**Rearchitect** is the likely fit.",
+      "items": [
+       "**Slow, risky change** points to **agility** and **complexity** → usually from the **architecture**",
+       "**Rearchitecting** fixes **architecture and technology** at lower **cost**, **risk** and **disruption** than a **rebuild**"
+      ],
+      "foot": "**Rebuild** is justified only if the **functionality must also change** or the code **can't be restructured**."
+     }
     },
     {
      "q": "Running costs of an app are too high for its value, but users are happy with it. Which drivers and layer does this point to, and which approaches would you shortlist?",
-     "a": "The IT cost driver, most likely rooted in technology, such as expensive licences or over-provisioned infrastructure. Shortlist rehost or replatform, which are low on cost, risk and disruption. Rebuild or replace would add disruption and risk to fix functionality that already works. Check the evidence, because drivers suggest a cause but don't diagnose it one-to-one."
+     "a": {
+      "items": [
+       "**Driver**: **IT cost**",
+       "**Layer**: most likely **technology**, such as **expensive licences** or **over-provisioned infrastructure**",
+       "**Shortlist**: **rehost** or **replatform** → low on **cost**, **risk** and **disruption**",
+       "**Not** rebuild or replace: would add **disruption** and **risk** to fix **functionality that already works**"
+      ],
+      "foot": "**Check the evidence**: drivers **suggest a cause** but don't diagnose it **one-to-one**."
+     }
     },
     {
      "q": "A sponsor prefers replacing an in-house HR system with SaaS because it has 'the highest value'. What does the framework add to that view?",
-     "a": "Replace can change all layers and offers high value, but it causes the greatest business disruption: processes are redesigned and users retrained. Rehost would be low on value, cost, risk and disruption but would change little. Choose replace only if business fit or innovation is the driver and the business accepts the disruption."
+     "a": {
+      "items": [
+       "**Replace**: can change **all layers** and offers **high value**, but causes the **greatest business disruption** → **processes redesigned**, **users retrained**",
+       "**Rehost**: low on **value**, **cost**, **risk** and **disruption**, but **changes little**"
+      ],
+      "foot": "Choose replace only if **business fit** or **innovation** is the driver **and** the business **accepts the disruption**."
+     }
     }
    ],
    "visuals": [
@@ -393,15 +462,36 @@
    "check": [
     {
      "q": "A large app needs a new customer workflow, but its stable reporting module only needs a supported runtime. Must the whole app be rebuilt?",
-     "a": "No. Gartner recommends modernising component by component. Rebuild or replace the workflow component, where functionality must change, and replatform the reporting module, where only the runtime is the problem. Confirm dependencies and sequence the work so each change delivers its benefit and risk stays contained."
+     "a": {
+      "lead": "**No.** Gartner recommends modernising **component by component**.",
+      "items": [
+       "**Workflow component** → **rebuild** or **replace**, where functionality must change",
+       "**Reporting module** → **replatform**, where only the **runtime** is the problem",
+       "**Confirm dependencies** and **sequence the work** → each change delivers its benefit and **risk stays contained**"
+      ]
+     }
     },
     {
      "q": "A sponsor expects replatforming the ERP to make it fit the business better. How do you respond?",
-     "a": "Replatforming changes only the technology layer, so it won't improve business fit, which is a functionality problem. Gartner notes that potential value is often overestimated in this way. Set expectations: if business fit is the driver, rebuild or replace is needed, with their higher cost, risk and disruption."
+     "a": {
+      "items": [
+       "**Replatforming** changes only the **technology layer** → won't improve **business fit**, which is a **functionality** problem",
+       "Gartner: **potential value is often overestimated** in this way",
+       "**Set expectations**: if business fit is the driver, **rebuild** or **replace** is needed, with their **higher cost, risk and disruption**"
+      ]
+     }
     },
     {
      "q": "Two approaches both fix an app's diagnosed problem: replatform (3 months) and rebuild (14 months, more flexibility). The business wants value this year. Which, and why?",
-     "a": "Replatform: it fixes the actual problem with shorter time to value, lower cost of change and less execution risk. Choose a proportionate change, not the most extensive one. Rebuild's extra flexibility is worth it only if a near-term need for functional change is expected."
+     "a": {
+      "lead": "**Replatform.**",
+      "items": [
+       "Fixes the **actual problem** with **shorter time to value**",
+       "**Lower cost of change** and less **execution risk**",
+       "Choose a **proportionate change**, not the most extensive one"
+      ],
+      "foot": "**Rebuild's extra flexibility** is worth it only if a **near-term need for functional change** is expected."
+     }
     }
    ]
   }
@@ -409,19 +499,71 @@
  "exam_angles": [
   {
    "q": "A government agency's 20-year-old COBOL benefits system costs too much to run, is hard to change, and its COBOL staff retire within 3 years. The benefit rules themselves still meet policy. Recommend a modernisation approach using the drivers and root-cause layers.",
-   "a": "The drivers are cost, complexity, agility and risk (a skills shortage on an old platform), all pointing to technology and architecture rather than functionality, since the rules still fit. Rearchitecting, for example to Java, preserves behaviour while addressing these problems, possibly staying on the current platform. Rebuild is justified only if restructuring isn't viable. Modernise component by component, encapsulate stable parts behind APIs where new channels need them, and compare time to value, cost, risk and disruption before committing. The skills deadline sets the order of the work."
+   "a": {
+    "lead": "**Rearchitect**, for example to **Java**, possibly staying on the current platform.",
+    "items": [
+     "**Drivers**: **cost**, **complexity**, **agility** and **risk** (a **skills shortage** on an **old platform**)",
+     "**Root-cause layers**: **technology** and **architecture**, not **functionality**, since the **rules still fit**",
+     "**Rearchitecting** **preserves behaviour** while addressing these problems",
+     "**Rebuild** only if **restructuring isn't viable**",
+     "**Execution**: modernise **component by component**; **encapsulate stable parts** behind **APIs** where **new channels** need them",
+     "**Before committing**: compare **time to value**, **cost**, **risk** and **disruption**"
+    ],
+    "foot": "The **skills deadline** sets the **order of the work**."
+   }
   },
   {
    "q": "An on-premises web application has three complaints: hardware is ageing, the database needs constant hand-tuning, and features take months to ship. Compare rehost, replatform and rearchitect for moving it to cloud, and say which complaint each one fixes.",
-   "a": "Rehost (lift and shift onto cloud VMs) fixes the ageing hardware quickly, cheaply and with the least risk, but changes nothing else. Replatform, for example moving to a managed database or managed runtime with minimal code changes, also fixes database operations and gains some managed-service benefits. Rearchitect, for example refactoring into services, is the only one that addresses slow feature delivery, which is an architecture and agility problem, at higher cost, time and risk. A sensible plan is to replatform now and rearchitect the slowest-changing components later."
+   "a": {
+    "items": [
+     {
+      "t": "**Rehost** (**lift and shift** onto **cloud VMs**) → fixes **ageing hardware**",
+      "sub": [
+       "Quickly, cheaply and with the **least risk**",
+       "Changes **nothing else**"
+      ]
+     },
+     {
+      "t": "**Replatform** (e.g. a **managed database** or **managed runtime**, **minimal code changes**) → also fixes **database operations**",
+      "sub": [
+       "Gains some **managed-service benefits**"
+      ]
+     },
+     {
+      "t": "**Rearchitect** (e.g. **refactoring into services**) → the only one that fixes **slow feature delivery**",
+      "sub": [
+       "An **architecture and agility** problem",
+       "At higher **cost**, **time** and **risk**"
+      ]
+     }
+    ],
+    "foot": "**Sensible plan**: **replatform now** and **rearchitect** the **slowest-changing components later**."
+   }
   },
   {
    "q": "A company wants to replace its 12-year-old custom CRM with a SaaS product. The sales team is attached to custom workflows. Using Gartner's framework, what should it consider before deciding?",
-   "a": "Check that the drivers are business fit or innovation, because replace is justified for functional gaps, not for technology problems that replatforming could fix more cheaply. Replace offers high value but the greatest business disruption: sales processes must be redesigned and users retrained, and custom workflows may be lost. Weigh time to value, cost and execution risk with stakeholders. Plan data migration and the retirement of the old CRM."
+   "a": {
+    "items": [
+     "**Check the drivers** are **business fit** or **innovation**: replace is justified for **functional gaps**, not for **technology problems** that **replatforming** could fix more cheaply",
+     "**Replace**: **high value** but the **greatest business disruption** → **sales processes redesigned**, **users retrained**, **custom workflows may be lost**",
+     "**Weigh** **time to value**, **cost** and **execution risk** with **stakeholders**",
+     "**Plan** **data migration** and the **retirement** of the old CRM"
+    ]
+   }
   },
   {
    "q": "Describe a structured method for selecting modernisation approaches across a 150-application portfolio, and show how it would avoid the failures Gartner describes.",
-   "a": "First run a portfolio assessment to decide whether each app is retained, retired, encapsulated or modernised. For candidates, define the issues with the six drivers and trace each to its likely root-cause layer (technology, architecture or functionality), checking the evidence. Shortlist approaches that can change that layer, then weigh value, time to value, disruption, cost and risk with stakeholders. Execute incrementally per component. This avoids fashion-driven choices that miss the root cause, which cause overruns and little benefit, and it avoids big-bang rewrites."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**Portfolio assessment**: decide whether each app is **retained**, **retired**, **encapsulated** or **modernised**",
+     "**For candidates**: define the issues with the **six drivers**; trace each to its likely **root-cause layer** (**technology**, **architecture** or **functionality**), **checking the evidence**",
+     "**Shortlist** approaches that can **change that layer**",
+     "**Weigh** **value**, **time to value**, **disruption**, **cost** and **risk** with **stakeholders**",
+     "**Execute incrementally** per **component**"
+    ],
+    "foot": "Avoids **fashion-driven choices** that **miss the root cause** (→ **overruns** and **little benefit**), and avoids **big-bang rewrites**."
+   }
   }
  ]
 }

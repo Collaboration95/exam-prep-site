@@ -92,15 +92,38 @@
    "check": [
     {
      "q": "A manager says 'we went serverless, so we no longer need to think about failures or state'. Correct this.",
-     "a": "Serverless means the provider operates the servers, OS and scaling, not that servers or failures vanish. The team still designs durable state in external stores, retries, timeouts and protection for downstream dependencies, and configures each function's access and limits. Built-in availability covers the platform, not the application's own logic or the services it calls."
+     "a": {
+      "lead": "**Serverless** = the provider operates the **servers, OS and scaling**; servers and failures **don't vanish**.",
+      "items": [
+       "Team still designs **durable state** in **external stores**",
+       "Team still designs **retries**, **timeouts** and **protection for downstream dependencies**",
+       "Team still **configures each function's access and limits**"
+      ],
+      "foot": "**Built-in availability** covers the **platform**, not the **application's own logic** or the **services it calls**."
+     }
     },
     {
      "q": "A team plans to turn its 8 microservices into 120 single-action functions 'because FaaS is the next maturity stage'. Do you agree?",
-     "a": "No. Decomposition (one app, domain services, individual actions) and hosting (servers, containers, functions) are separate choices, and moving to FaaS is not a required next stage. A microservice can be implemented with one or a few functions behind its API. 120 functions add deployment, monitoring and coordination overhead. Split further only where an action has different scaling, timing or ownership needs."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Decomposition** (one app, domain services, individual actions) and **hosting** (servers, containers, functions) are **separate choices**",
+       "Moving to **FaaS** is **not a required next stage**",
+       "A **microservice** can be implemented with **one or a few functions** behind its **API**",
+       "**120 functions** → **deployment**, **monitoring** and **coordination overhead**"
+      ],
+      "foot": "**Split further only** where an action has **different scaling, timing or ownership needs**."
+     }
     },
     {
      "q": "A function processes a stream of account events and must apply each account's events in order. What should the team check, and what doesn't the platform guarantee?",
-     "a": "Check the stream's ordering scope: streams usually keep order within a partition or shard, so events must be partitioned by account ID. Check retry behaviour too, because a failing batch can block or reorder processing. The platform doesn't automatically protect downstream dependencies, so configure retries, timeouts and failure handling as needed."
+     "a": {
+      "items": [
+       "**Ordering scope**: streams usually keep order **within a partition or shard** → events must be **partitioned by account ID**",
+       "**Retry behaviour**: a **failing batch** can **block or reorder** processing",
+       "**Not guaranteed**: the platform doesn't automatically **protect downstream dependencies** → configure **retries**, **timeouts** and **failure handling** as needed"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -207,19 +230,49 @@
    "check": [
     {
      "q": "A single function validates an order, charges the card, updates stock and sends an email. What principle does this break, and what would you change?",
-     "a": "Single-purpose functions: one function doing four things is harder to test, fails as a unit, and its side effects (a charge without an email) are hard to reason about. Split it into a push-based pipeline in which each step triggers the next through events. The cost is coordinating the steps and handling a failure part-way through."
+     "a": {
+      "lead": "Breaks **single-purpose functions**.",
+      "items": [
+       "One function doing **four things** → **harder to test**, **fails as a unit**",
+       "Its **side effects** are hard to reason about (a **charge without an email**)",
+       "**Fix**: split into a **push-based pipeline** in which each step **triggers the next through events**"
+      ],
+      "foot": "**Cost**: **coordinating the steps** and handling a **failure part-way through**."
+     }
     },
     {
      "q": "A video platform transcodes uploads that arrive in bursts of hundreds after events, with nothing in between. Is serverless a good fit, and why?",
-     "a": "Yes. Data processing and transcoding is a typical use case: work is triggered by events, can run in parallel on stateless compute, and you pay only during bursts. Check the platform's execution time and memory limits against the longest video. Very long transcodes may need a container or batch service instead."
+     "a": {
+      "lead": "**Yes**: **data processing and transcoding** is a **typical use case**.",
+      "items": [
+       "Work is **triggered by events**",
+       "Can run **in parallel** on **stateless compute**",
+       "**Pay only during bursts**"
+      ],
+      "foot": "Check the platform's **execution time and memory limits** against the **longest video**; very long transcodes may need a **container or batch service** instead."
+     }
     },
     {
      "q": "An order workflow can take hours while waiting for warehouse confirmation. Must one function stay running throughout?",
-     "a": "No. Persist workflow state in a durable store and use events or scheduled steps to invoke short functions as each piece of work becomes ready. A long-running service is justified only if the work truly needs continuous execution or the orchestration overhead outweighs its benefit."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Persist workflow state** in a **durable store**",
+       "Use **events or scheduled steps** to invoke **short functions** as each piece of work becomes ready"
+      ],
+      "foot": "A **long-running service** is justified only if the work truly needs **continuous execution** or the **orchestration overhead** outweighs its benefit."
+     }
     },
     {
      "q": "A latency-critical API runs at a steady 3,000 requests a second all day. A teammate argues serverless will be cheaper and faster. Evaluate this.",
-     "a": "Doubtful on both counts. With steady high load, the pay-per-invocation advantage shrinks, so compare sustained-use cost against always-on containers. Cold starts and runtime restrictions can also threaten tight latency budgets. Serverless still fits the sporadic parts around this API, such as scheduled reports or file processing."
+     "a": {
+      "lead": "**Doubtful on both counts.**",
+      "items": [
+       "**Cheaper?** **Steady high load** → the **pay-per-invocation advantage shrinks** → compare **sustained-use cost** against **always-on containers**",
+       "**Faster?** **Cold starts** and **runtime restrictions** can threaten **tight latency budgets**"
+      ],
+      "foot": "Serverless still fits the **sporadic parts** around this API, such as **scheduled reports** or **file processing**."
+     }
     }
    ]
   },
@@ -290,15 +343,36 @@
    "check": [
     {
      "q": "When an order is placed, three components must react (email, analytics, loyalty), and one invoice job must be handed to exactly one worker reliably. Which serverless compute services fit each?",
-     "a": "Events for the order notification, because they broadcast information to one or more interested components. Tasks for the invoice job, because they reliably deliver a message to a single component. Using events for the invoice risks several workers processing it, and using tasks for the notification would mean sending one task per consumer."
+     "a": {
+      "items": [
+       "**Events** → the **order notification**: they **broadcast** information to **one or more** interested components",
+       "**Tasks** → the **invoice job**: they **reliably deliver** a message to a **single component**"
+      ],
+      "foot": "Swapped: **events for the invoice** risk **several workers** processing it; **tasks for the notification** mean sending **one task per consumer**."
+     }
     },
     {
      "q": "A team needs a containerised HTTP service with a library that won't run in the function runtime, but it doesn't want to manage servers. What serverless compute option fits?",
-     "a": "Serverless services: like functions, but containerised and reachable over HTTP, so the team controls the runtime in the image while the platform handles servers and scaling. The trade-off is a larger deployable and possibly slower starts than a function."
+     "a": {
+      "lead": "**Serverless services.**",
+      "items": [
+       "Like functions, but **containerised** and **reachable over HTTP**",
+       "Team **controls the runtime in the image**; the platform handles **servers and scaling**"
+      ],
+      "foot": "**Trade-off**: a **larger deployable** and possibly **slower starts** than a function."
+     }
     },
     {
      "q": "A small analytics team wants to run SQL over files in object storage once a week without running any servers. How do serverless data services help, and what should they check?",
-     "a": "Use blob storage for the files and a serverless big-data query engine to run SQL over them, so nothing runs between queries and billing follows usage. Check the cost model and file formats, and compare providers by category and semantics, not by one-to-one product names."
+     "a": {
+      "items": [
+       "**Blob storage** for the files",
+       "A **serverless big-data query engine** runs **SQL** over them",
+       "→ **nothing runs between queries**; **billing follows usage**",
+       "**Check**: the **cost model** and **file formats**",
+       "Compare providers by **category and semantics**, not by **one-to-one product names**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -416,19 +490,54 @@
    "check": [
     {
      "q": "A mobile app must use a legacy SOAP service that can't be changed. How would you expose it with serverless components, and what remains a risk?",
-     "a": "Put an API gateway in front to present a REST interface, with a function per route that converts the request to SOAP/XML, calls the legacy service and converts the response. The legacy system stays unchanged. Its capacity and latency now limit the mobile app, because functions scale far faster than it can, so add throttling or caching at the gateway."
+     "a": {
+      "items": [
+       "**API gateway** in front → presents a **REST interface**",
+       "**A function per route**: converts the request to **SOAP/XML**, calls the legacy service, **converts the response**",
+       "The **legacy system stays unchanged**"
+      ],
+      "foot": "**Risk**: its **capacity and latency** now limit the mobile app, because functions **scale far faster** than it can → add **throttling or caching** at the gateway."
+     }
     },
     {
      "q": "Clickstream events arrive at 20,000 a second for real-time dashboards. Sketch a serverless pipeline and name one thing to monitor.",
-     "a": "Events go into a stream service; functions pull batches, transform them and write to storage or a database that the dashboards query. It scales with event volume without servers. Monitor consumer lag and the write capacity of the target store, because fast-scaling functions can overwhelm a database downstream."
+     "a": {
+      "lead": "Pipeline (it **scales with event volume** without servers):",
+      "items": [
+       "Events go into a **stream service**",
+       "**Functions pull batches**, **transform** them and **write** to **storage or a database**",
+       "The **dashboards query** that store"
+      ],
+      "ordered": true,
+      "foot": "**Monitor**: **consumer lag** and the **write capacity of the target store**, because **fast-scaling functions** can **overwhelm a database downstream**."
+     }
     },
     {
      "q": "An architect insists the whole system must be serverless, including a steady, stateful matching engine. What would you propose instead?",
-     "a": "A hybrid: fan out events through notification topics into queues consumed by functions for spiky, event-driven work and by server-based instances for the steady, stateful matching engine, with a shared database behind. Serverless doesn't have to be all or nothing. Put each part where it is cheapest and fits best."
+     "a": {
+      "lead": "**A hybrid**: serverless doesn't have to be **all or nothing**.",
+      "items": [
+       "**Fan out events** through **notification topics** into **queues**",
+       "Queues consumed by **functions** for **spiky, event-driven work**",
+       "... and by **server-based instances** for the **steady, stateful matching engine**",
+       "A **shared database** behind"
+      ],
+      "foot": "Put each part where it is **cheapest** and **fits best**."
+     }
     },
     {
      "q": "A business case claims moving an upload workflow to functions will 'cut costs by 60%' based only on compute prices. What is missing from the assessment?",
-     "a": "The whole path: downstream capacity (can the database absorb the scaled-out writes?), retry behaviour and duplicate processing, added latency, data durability, and integration cost. Operational savings can be real, but compute price alone can't establish them. Model the full request path at expected and peak load."
+     "a": {
+      "lead": "Missing: **the whole path**.",
+      "items": [
+       "**Downstream capacity**: can the **database** absorb the **scaled-out writes**?",
+       "**Retry behaviour** and **duplicate processing**",
+       "**Added latency**",
+       "**Data durability**",
+       "**Integration cost**"
+      ],
+      "foot": "**Operational savings** can be real, but **compute price alone** can't establish them → **model the full request path** at **expected and peak load**."
+     }
     }
    ],
    "visuals": [
@@ -547,19 +656,47 @@
    "check": [
     {
      "q": "A function that resizes images runs at 128 MB memory and takes 8 seconds, often timing out. A teammate says raising memory will only raise cost. Do you agree?",
-     "a": "Not necessarily. On function platforms memory also sets the CPU share, so more memory can make the function finish much faster. Billing combines invocations and duration weighted by memory, so a shorter run at higher memory may cost about the same or less. Test a few memory sizes, and set the timeout from the measured duration."
+     "a": {
+      "lead": "**Not necessarily.**",
+      "items": [
+       "On **function platforms**, **memory also sets the CPU share** → more memory can make the function **finish much faster**",
+       "**Billing** = **invocations** + **duration weighted by memory** → a shorter run at higher memory may **cost about the same or less**",
+       "**Test a few memory sizes**; set the **timeout from the measured duration**"
+      ]
+     }
     },
     {
      "q": "A function's execution role has full access to every storage bucket and database 'to avoid permission errors'. What is the risk, and what should the role grant?",
-     "a": "If the function's code or a dependency is compromised, the attacker gets all of that access. The execution role should grant only the resources and actions the function needs, for example read from one bucket and write to one table. The role and the timeout are the main controls on what a function can touch and how long it can run."
+     "a": {
+      "items": [
+       "**Risk**: if the function's code or a **dependency is compromised**, the attacker gets **all of that access**",
+       "**Grant only** the **resources and actions** the function needs, e.g. **read from one bucket** and **write to one table**"
+      ],
+      "foot": "The **execution role** and the **timeout** are the main controls on **what a function can touch** and **how long it can run**."
+     }
     },
     {
      "q": "A function is triggered by messages from a queue, and a teammate calls it 'asynchronous, so the caller never waits'. Is that the right way to classify it?",
-     "a": "Not quite. With a queue, the platform often polls the source and invokes the function in batches, which is a different contract from both a synchronous call (the caller waits for the result) and an asynchronous call (an event is accepted for later execution). Classify the invocation by its actual delivery and retry contract, because that decides error handling and duplicate processing."
+     "a": {
+      "lead": "**Not quite**: classify the invocation by its actual **delivery and retry contract**.",
+      "items": [
+       "**Queue**: the platform often **polls the source** and invokes the function **in batches** → a **different contract**",
+       "**Synchronous call**: the **caller waits** for the result",
+       "**Asynchronous call**: an **event is accepted** for **later execution**"
+      ],
+      "foot": "That contract decides **error handling** and **duplicate processing**."
+     }
     },
     {
      "q": "A function exposed through an API gateway logs a successful run, but clients still get an error response. Using the request flow, where would you look?",
-     "a": "The flow runs: method request, integration request, function execution, integration response, method response. The function ran, so the likely fault is in the integration response or method response: the function's output wasn't mapped to a valid HTTP response, for example a missing status code or wrong body format. Check the function's logs and output format, and test the stage endpoint directly."
+     "a": {
+      "lead": "Flow: **method request** → **integration request** → **function execution** → **integration response** → **method response**.",
+      "items": [
+       "The function ran → likely fault in the **integration response** or **method response**",
+       "The function's **output wasn't mapped** to a **valid HTTP response**, e.g. a **missing status code** or **wrong body format**",
+       "**Check** the function's **logs** and **output format**; **test the stage endpoint** directly"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -606,23 +743,117 @@
  "exam_angles": [
   {
    "q": "A startup's image-upload service is idle at night and gets bursts of 5,000 uploads a minute during campaigns. Should it use serverless? Design it and name two limits or side effects to plan for.",
-   "a": "Yes. An upload to object storage triggers a stateless function that resizes the image and writes results back to object storage, with metadata in a key-value database. It scales with bursts, bills per invocation and has no idle servers at night. Plan for execution time and memory limits for large images, and for the burst of concurrent writes to the metadata store. Also plan for retries producing duplicate work, so make writes idempotent."
+   "a": {
+    "lead": "**Yes.**",
+    "items": [
+     {
+      "t": "**Design**",
+      "sub": [
+       "An upload to **object storage** **triggers** a **stateless function**",
+       "It **resizes the image** and writes results back to **object storage**",
+       "**Metadata** in a **key-value database**"
+      ]
+     },
+     "**Why it fits**: **scales with bursts**, **bills per invocation**, **no idle servers at night**",
+     {
+      "t": "**Limits and side effects to plan for**",
+      "sub": [
+       "**Execution time and memory limits** for **large images**",
+       "The **burst of concurrent writes** to the **metadata store**",
+       "**Retries** producing **duplicate work** → make writes **idempotent**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "An order system is being designed. A teammate argues for 'pure FaaS, one function per operation'; another wants microservices on containers. Compare the options, recommend one, and explain how they could combine.",
-   "a": "Microservices choose deployment boundaries (Order, Payment, Inventory as independently deployed capabilities). FaaS chooses how handlers execute. One function per operation maximises granularity but adds deployment, monitoring and coordination overhead, and cold starts on latency-sensitive paths. Recommend capability-sized services, implemented as a few functions where load is spiky and event-driven (notifications, receipts) and as containers where load is steady or latency-critical (checkout). Assess state, latency, limits and coordination cost, not function count."
+   "a": {
+    "items": [
+     "**Microservices** choose **deployment boundaries** (**Order**, **Payment**, **Inventory** as **independently deployed capabilities**)",
+     "**FaaS** chooses **how handlers execute**",
+     "**One function per operation** → **maximises granularity**, but adds **deployment, monitoring and coordination overhead** and **cold starts** on **latency-sensitive paths**",
+     {
+      "t": "**Recommend capability-sized services**, combining both",
+      "sub": [
+       "**A few functions** where load is **spiky and event-driven** (**notifications**, **receipts**)",
+       "**Containers** where load is **steady or latency-critical** (**checkout**)"
+      ]
+     }
+    ],
+    "foot": "Assess **state**, **latency**, **limits** and **coordination cost**, not **function count**."
+   }
   },
   {
    "q": "Design a serverless back end that lets a mobile app use a legacy SOAP order system that handles at most 50 requests a second. Explain how you would protect the legacy system and secure the functions.",
-   "a": "Put an API gateway in front of the mobile app with REST routes, each invoking a function that translates to SOAP/XML and back. Handle authentication at the gateway or through a managed identity service. To protect the legacy system, throttle at the gateway, cache read responses, and send non-urgent writes through a queue that a function drains at a controlled rate. Give each function an execution role limited to what it calls. The trade-off is that queued writes are confirmed later, not immediately."
+   "a": {
+    "items": [
+     "**API gateway** in front of the mobile app with **REST routes**, each invoking a **function** that translates to **SOAP/XML** and back",
+     "**Authentication** at the gateway or through a **managed identity service**",
+     {
+      "t": "**Protect the legacy system**",
+      "sub": [
+       "**Throttle at the gateway**",
+       "**Cache read responses**",
+       "Send **non-urgent writes** through a **queue** that a function **drains at a controlled rate**"
+      ]
+     },
+     "**Secure the functions**: give each an **execution role** limited to **what it calls**"
+    ],
+    "foot": "**Trade-off**: **queued writes** are **confirmed later**, not immediately."
+   }
   },
   {
    "q": "A team asks when serverless is the wrong choice. Give three workload characteristics that argue against it, and for each say whether a redesign could still make functions work.",
-   "a": "Continuous long-running processing beyond execution limits: functions still work if the work can be split into short steps with state persisted between them, otherwise use containers. Tight latency budgets that cold starts would break: a long-running service is usually the simpler answer. Steady high load where sustained-use cost exceeds always-on compute: compare costs, and the honest answer is often containers. Stateful work that depends on one instance's memory can be redesigned with external durable state."
+   "a": {
+    "items": [
+     {
+      "t": "**Continuous long-running processing** beyond **execution limits**",
+      "sub": [
+       "**Redesign**: functions still work if the work can be **split into short steps** with **state persisted** between them",
+       "Otherwise use **containers**"
+      ]
+     },
+     {
+      "t": "**Tight latency budgets** that **cold starts** would break",
+      "sub": [
+       "A **long-running service** is usually the **simpler answer**"
+      ]
+     },
+     {
+      "t": "**Steady high load** where **sustained-use cost** exceeds **always-on compute**",
+      "sub": [
+       "**Compare costs**; the honest answer is often **containers**"
+      ]
+     },
+     "**Stateful work** that depends on **one instance's memory** → can be redesigned with **external durable state**"
+    ],
+    "ordered": true
+   }
   },
   {
    "q": "Design a serverless real-time analytics pipeline for 20,000 click events a second with dashboards updated within 10 seconds, and say what happens when a downstream database slows down.",
-   "a": "Events enter a stream service partitioned for throughput. Functions consume batches, transform and aggregate them, and write to a database or storage that the dashboards query, while raw events also go to object storage for later reprocessing. It scales with volume without servers. If the database slows, function retries and consumer lag grow and the dashboards fall behind. Cap function concurrency, batch writes, and monitor lag, accepting that the dashboards may briefly exceed 10 seconds rather than overloading the database."
+   "a": {
+    "items": [
+     {
+      "t": "**Pipeline**",
+      "sub": [
+       "Events enter a **stream service** **partitioned for throughput**",
+       "**Functions consume batches**, **transform and aggregate** them, and write to a **database or storage** that the **dashboards query**",
+       "**Raw events** also go to **object storage** for **later reprocessing**",
+       "**Scales with volume** without servers"
+      ]
+     },
+     {
+      "t": "**When the database slows down**",
+      "sub": [
+       "**Function retries** and **consumer lag** grow → the **dashboards fall behind**",
+       "**Cap function concurrency**, **batch writes**, **monitor lag**"
+      ]
+     }
+    ],
+    "foot": "Accept that the dashboards may **briefly exceed 10 seconds** rather than **overloading the database**."
+   }
   }
  ]
 }

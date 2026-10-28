@@ -116,15 +116,42 @@
    "check": [
     {
      "q": "A team's security budget goes entirely to preventive controls (firewalls, WAF, hardening), with no log retention or alerting. Using the lecture's figures on time to identify and contain breaches, critique this.",
-     "a": "The cited historical averages, about 206 days to identify and 314 days from breach to containment (which includes the 206), show intrusions often stay active for months. Prevention alone leaves no way to notice or investigate one. Move some budget to retained, protected logs and audit trails, alerting, and an incident response process to shorten that window."
+     "a": {
+      "items": [
+       "**Cited figures**: historical averages of about **206 days to identify** and **314 days** from breach to **containment** (which includes the 206)",
+       "→ intrusions often stay active **for months**",
+       "**Prevention alone**: leaves no way to **notice** or **investigate** one",
+       "**Fix**: move some budget to **retained, protected logs** and **audit trails**, **alerting**, and an **incident response process** → shorten that window"
+      ]
+     }
     },
     {
      "q": "An online store suffers two incidents: a flood of requests that makes checkout unavailable for an hour, and an attacker on public Wi-Fi intercepting and altering customers' sessions. Which property does each break, and which control addresses each?",
-     "a": "The flood is denial of service, an attack on availability, addressed by DDoS protection, rate limiting and autoscaling headroom. The interception is man-in-the-middle, which breaks confidentiality and integrity, addressed by enforcing TLS end to end, with secure cookies and certificate validation. Naming the property first points to the right control."
+     "a": {
+      "items": [
+       "**Flood** = **denial of service** → an attack on **availability** → **DDoS protection**, **rate limiting**, **autoscaling headroom**",
+       "**Interception** = **man-in-the-middle** → breaks **confidentiality** and **integrity** → enforce **TLS end to end**, with **secure cookies** and **certificate validation**"
+      ],
+      "foot": "**Naming the property first** points to the right control."
+     }
     },
     {
      "q": "The lecture's figures say most breaches are financially motivated. A startup concludes it should spend its whole security budget on encrypting its database. Is that the right inference?",
-     "a": "Not by itself. Financial motive suggests protecting valuable data and the privileged credentials that reach it, but encryption at rest doesn't stop an attacker who steals an application or admin credential that can decrypt. Prioritise from the system's actual assets and risks: least-privilege access, credential protection, then encryption and tokenisation where they cut exposure."
+     "a": {
+      "lead": "**Not by itself.**",
+      "items": [
+       "**Financial motive** → protect **valuable data** and the **privileged credentials** that reach it",
+       "**Encryption at rest** doesn't stop an attacker who steals an **application or admin credential** that can **decrypt**",
+       {
+        "t": "**Prioritise** from the system's actual **assets and risks**",
+        "sub": [
+         "**Least-privilege access**",
+         "**Credential protection**",
+         "Then **encryption** and **tokenisation** where they cut exposure"
+        ]
+       }
+      ]
+     }
     }
    ],
    "visuals": [
@@ -242,15 +269,37 @@
    "check": [
     {
      "q": "A company moves from IaaS VMs to a SaaS CRM. Which security duties does it stop doing, and which does it keep?",
-     "a": "It stops patching and operating the OS, middleware and application, which the SaaS provider now runs. It keeps data classification, decisions about who gets access, account management and accountability for its data, and endpoint and identity duties become shared. Moving to SaaS shifts operations, not accountability."
+     "a": {
+      "items": [
+       "**Stops**: **patching and operating** the **OS**, **middleware** and **application**, which the **SaaS provider** now runs",
+       "**Keeps**: **data classification**, decisions about **who gets access**, **account management**, **accountability** for its data",
+       "**Shared**: **endpoint** and **identity** duties"
+      ],
+      "foot": "Moving to SaaS shifts **operations, not accountability**."
+     }
     },
     {
      "q": "A provider's firewall service worked as designed, but a rule allowing all inbound traffic exposed a database. Who is responsible, and what does this example show?",
-     "a": "The customer: the provider is responsible for the firewall service working, and the customer is responsible for configuring its rules. It is a joint control, where each side owns a different part. Audit and review rules as code to catch this kind of misconfiguration."
+     "a": {
+      "lead": "**The customer.**",
+      "items": [
+       "**Provider**: responsible for the **firewall service working**",
+       "**Customer**: responsible for **configuring its rules**",
+       "→ a **joint control**, where each side owns a different part"
+      ],
+      "foot": "**Audit and review rules as code** to catch this kind of **misconfiguration**."
+     }
     },
     {
      "q": "A provider passes every security audit, but a government agency still hesitates to move. Give two concerns that the provider's security can't resolve, and what would address each.",
-     "a": "Regulation and legislation about where data may live and who can access it, which needs in-country regions or a hybrid placement, with contract terms. And ownership, control and trust, which needs key control, exit terms and audit rights in the contract. Lack of in-house cloud skills is another concern, addressed by training or a partner."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Regulation and legislation** about where data may live and who can access it → **in-country regions** or a **hybrid placement**, with **contract terms**",
+       "**Ownership, control and trust** → **key control**, **exit terms** and **audit rights** in the contract"
+      ],
+      "foot": "Another concern: lack of **in-house cloud skills** → **training** or a **partner**."
+     }
     }
    ],
    "visuals": [
@@ -404,23 +453,71 @@
    "check": [
     {
      "q": "A developer commits a cloud access key to a public repository, and it is misused within 36 hours. Using STRIDE, what could happen, and what limits the damage?",
-     "a": "Depending on the key's permissions: spoofing (acting as that identity), tampering with or disclosing data, denial of service by deleting or exhausting resources, and elevation of privilege if the role can grant more access. Least privilege limits what the key can do, short-lived credentials and rotation limit how long, and audit trails support investigation. Secret scanning in the pipeline prevents the commit in the first place."
+     "a": {
+      "items": [
+       {
+        "t": "**STRIDE**, depending on the **key's permissions**",
+        "sub": [
+         "**Spoofing**: acting as that identity",
+         "**Tampering** with or **disclosing** data",
+         "**Denial of service** by **deleting** or **exhausting** resources",
+         "**Elevation of privilege** if the role can **grant more access**"
+        ]
+       },
+       "**Least privilege** → limits **what** the key can do",
+       "**Short-lived credentials** and **rotation** → limit **how long**",
+       "**Audit trails** → support **investigation**",
+       "**Secret scanning** in the **pipeline** → prevents the commit in the first place"
+      ]
+     }
     },
     {
      "q": "A public API that returns tax records was abused to pull hundreds of thousands of records, as in the IRS 'Get Transcript' case. Which controls would have reduced the risk?",
-     "a": "Treat the API as an attack surface: strong authentication and per-record authorisation, input validation and application security testing, rate limiting and monitoring for abnormal access patterns, and a WAF. Incident response must be able to detect bulk extraction quickly. Any single control alone would have left gaps."
+     "a": {
+      "lead": "Treat the **API as an attack surface**:",
+      "items": [
+       "**Strong authentication** and **per-record authorisation**",
+       "**Input validation** and **application security testing**",
+       "**Rate limiting** and **monitoring** for **abnormal access patterns**",
+       "A **WAF**",
+       "**Incident response** able to **detect bulk extraction** quickly"
+      ],
+      "foot": "Any **single control alone** would have left gaps."
+     }
     },
     {
      "q": "A company chooses a private virtualised cloud 'so we are safe from shared-technology vulnerabilities like VENOM'. Is that reasoning sound?",
-     "a": "Only partly. Multi-tenancy in public cloud amplifies the risk, because a guest escape to the hypervisor can reach other customers' workloads. Private virtualised environments share the same class of risk across their own workloads. Patching hypervisors and separating high-sensitivity workloads still matter."
+     "a": {
+      "lead": "**Only partly.**",
+      "items": [
+       "**Multi-tenancy** in **public cloud** amplifies the risk: a **guest escape** to the **hypervisor** can reach **other customers' workloads**",
+       "**Private virtualised** environments share the **same class of risk** across their own workloads",
+       "Still matter: **patching hypervisors** and **separating high-sensitivity workloads**"
+      ]
+     }
     },
     {
      "q": "A small storage provider your firm depends on announces it is closing and gives customers two weeks to move their data. What should you have done beforehand?",
-     "a": "Due diligence on the provider's financial and operational stability, exit and data-return terms in the contract and SLA, backups held independently of the provider, and a tested portability plan that avoids deep lock-in. This is the insufficient due diligence threat, and the Nirvanix case shows how short the notice can be."
+     "a": {
+      "lead": "This is the **insufficient due diligence** threat.",
+      "items": [
+       "**Due diligence** on the provider's **financial and operational stability**",
+       "**Exit and data-return terms** in the **contract and SLA**",
+       "**Backups** held **independently** of the provider",
+       "A **tested portability plan** that avoids **deep lock-in**"
+      ],
+      "foot": "The **Nirvanix** case shows how **short the notice** can be."
+     }
     },
     {
      "q": "One incident: an outsider steals an admin's password through a phishing page and logs in. Another: a database administrator copies customer records before resigning. Classify each and give the most relevant control.",
-     "a": "The first is account hijacking: an outsider takes over a legitimate account. Strong multi-factor authentication and anomaly detection help most. The second is a malicious insider, who already has legitimate access. Least privilege, no shared admin accounts, activity monitoring and prompt deprovisioning help most. Both are breaches (disclosure), not data loss."
+     "a": {
+      "items": [
+       "**Phishing then login** = **account hijacking**: an **outsider** takes over a **legitimate account** → **strong multi-factor authentication** and **anomaly detection**",
+       "**DBA copying records** = **malicious insider**, who already has **legitimate access** → **least privilege**, **no shared admin accounts**, **activity monitoring**, **prompt deprovisioning**"
+      ],
+      "foot": "Both are **breaches** (**disclosure**), not **data loss**."
+     }
     }
    ],
    "visuals": [
@@ -600,19 +697,47 @@
    "check": [
     {
      "q": "Customer support staff need to verify the last 4 digits of a card, and a payments service needs to process refunds. Masking or tokenisation for each?",
-     "a": "Masking for support: the screen shows only the last 4 digits, hiding the rest from viewers. Tokenisation for the payments flow: systems store and pass a token, and only the protected vault that holds the mapping can recover the real number. Both reduce exposure but still need access controls, and their compliance effect depends on the design."
+     "a": {
+      "items": [
+       "**Support → masking**: the screen shows only the **last 4 digits**, hiding the rest from viewers",
+       "**Payments → tokenisation**: systems store and pass a **token**; only the **protected vault** that holds the **mapping** can recover the **real number**"
+      ],
+      "foot": "Both **reduce exposure** but still need **access controls**, and their **compliance effect** depends on the design."
+     }
     },
     {
      "q": "A team says its data is safe 'because we use BYOK'. What should you check?",
-     "a": "Who can actually use the key to decrypt. With BYOK the customer supplies the key, but the provider's service may still use it to process data, so it doesn't prove the provider can't decrypt. Check key-use permissions, recovery and revocation, and whether customer-held keys are needed. Customer-held keys mean the provider may be unable to process the encrypted data."
+     "a": {
+      "lead": "Check **who can actually use the key to decrypt**.",
+      "items": [
+       "**BYOK**: the **customer supplies the key**, but the **provider's service** may still use it to **process data** → doesn't prove the provider **can't decrypt**",
+       "Check **key-use permissions**, **recovery** and **revocation**",
+       "Check whether **customer-held keys** are needed"
+      ],
+      "foot": "**Customer-held keys** mean the provider may be **unable to process** the encrypted data."
+     }
     },
     {
      "q": "Encrypted-at-rest customer data leaks through an application endpoint that returned other users' records. Why didn't encryption help, and what would have?",
-     "a": "The running application is authorised to decrypt and read the data, so encryption at rest protects stored media, not misuse by an authorised process. Authorisation checks on each record, least-privilege data and key permissions, and access monitoring were needed. Encryption complements access control; it doesn't replace it."
+     "a": {
+      "items": [
+       "**Why encryption didn't help**: the running **application is authorised to decrypt** and read the data → **encryption at rest** protects **stored media**, not **misuse by an authorised process**",
+       "**Needed**: **authorisation checks on each record**, **least-privilege data and key permissions**, **access monitoring**"
+      ],
+      "foot": "Encryption **complements** access control; it doesn't **replace** it."
+     }
     },
     {
      "q": "A company relies on crypto-shredding to destroy a closed customer's data. What could make it fail?",
-     "a": "Crypto-shredding works only if no usable decryption keys or plaintext copies remain. Plaintext in backups, logs, caches, analytics exports or a key that was replicated elsewhere would leave the data readable. Apply the retention policy and key destruction across every copy, which is why classification at creation matters."
+     "a": {
+      "lead": "**Crypto-shredding** works only if **no usable decryption keys or plaintext copies** remain.",
+      "items": [
+       "**Plaintext** in **backups**, **logs**, **caches** or **analytics exports** → data still readable",
+       "A key that was **replicated elsewhere** → data still readable",
+       "**Fix**: apply the **retention policy** and **key destruction** across **every copy**"
+      ],
+      "foot": "This is why **classification at creation** matters."
+     }
     }
    ],
    "visuals": [
@@ -732,19 +857,48 @@
    "check": [
     {
      "q": "An employee tries to download the full customer database at 3 a.m. from a personal laptop in another country. Which access-control attributes should influence the decision, and what is a sensible outcome?",
-     "a": "Actor (is this employee allowed this data?), function (bulk download, not just viewing), location (a personal rather than company machine, and a country that may break data-export rules) and time of day. Together they suggest denying the request, or requiring step-up verification and limiting it to viewing. Enforce this through IAM and federated identity, not ad-hoc checks."
+     "a": {
+      "items": [
+       "**Actor**: is this employee allowed this data?",
+       "**Function**: **bulk download**, not just viewing",
+       "**Location**: a **personal** rather than **company machine**, and a **country** that may break **data-export rules**",
+       "**Time of day**"
+      ],
+      "foot": "**Outcome**: **deny** the request, or require **step-up verification** and limit it to **viewing**; enforce through **IAM** and **federated identity**, not ad-hoc checks."
+     }
     },
     {
      "q": "A team protects its app with security groups only and asks why it would also need a WAF. What do you tell them?",
-     "a": "Security groups filter network connections by address and port, so they allow any request that arrives on an allowed port, including malicious HTTP payloads such as SQL injection. A WAF inspects HTTP content. Layer them with host firewalls and provider DDoS protection, because each covers a different boundary."
+     "a": {
+      "items": [
+       "**Security groups**: filter **network connections** by **address and port** → allow any request on an allowed port, including **malicious HTTP payloads** such as **SQL injection**",
+       "**WAF**: inspects **HTTP content**"
+      ],
+      "foot": "**Layer** them with **host firewalls** and **provider DDoS protection**, because each covers a **different boundary**."
+     }
     },
     {
      "q": "Security reviews happen only before release, and last quarter a vulnerable base image reached production. What would you change?",
-     "a": "Adopt DevSecOps: scan application code and container images in the pipeline on every build, and fail builds on serious findings, so security is built into delivery rather than checked at the end. Mission-critical apps get stricter gates. The cost is slower pipelines and time spent triaging false positives."
+     "a": {
+      "lead": "Adopt **DevSecOps**.",
+      "items": [
+       "**Scan** **application code** and **container images** in the **pipeline** on **every build**",
+       "**Fail builds** on serious findings → security **built into delivery** rather than checked at the end",
+       "**Mission-critical apps** get **stricter gates**"
+      ],
+      "foot": "**Cost**: **slower pipelines** and time spent **triaging false positives**."
+     }
     },
     {
      "q": "A payments team must protect signing keys so that even a compromised admin can't copy them. Would an HSM meet the requirement, and what does it not guarantee?",
-     "a": "Yes for the copying concern: an HSM keeps keys and cryptographic operations inside a tamper-resistant hardware boundary, so keys can be used but not extracted. It doesn't stop a compromised identity from asking the HSM to sign, so access policy, key handling and monitoring of HSM use still matter."
+     "a": {
+      "lead": "**Yes**, for the copying concern.",
+      "items": [
+       "**HSM**: keeps keys and **cryptographic operations** inside a **tamper-resistant hardware boundary** → keys can be **used but not extracted**",
+       "**Not guaranteed**: it doesn't stop a **compromised identity** from **asking the HSM to sign**"
+      ],
+      "foot": "**Access policy**, **key handling** and **monitoring of HSM use** still matter."
+     }
     }
    ]
   },
@@ -822,15 +976,38 @@
    "check": [
     {
      "q": "A production database was deleted overnight. Would you look in monitoring metrics or in audit events to find who did it, and what can't the record tell you?",
-     "a": "Audit events, which record identity and resource actions such as a delete call and the role or user that made it. Monitoring metrics and logs show the symptoms and timing. The audit record identifies the identity, not necessarily the person, because the credential may have been compromised, so audit logs must be retained and protected from tampering."
+     "a": {
+      "lead": "**Audit events**.",
+      "items": [
+       "**Audit events**: record **identity and resource actions**, such as a **delete call** and the **role or user** that made it",
+       "**Monitoring metrics and logs**: show the **symptoms** and **timing**",
+       "**Limit**: the record identifies the **identity, not necessarily the person**, because the **credential may have been compromised**"
+      ],
+      "foot": "Audit logs must be **retained** and **protected from tampering**."
+     }
     },
     {
      "q": "A contractor left 6 months ago, and their account was used last week to read sensitive files. Which IAM function failed, and what process would prevent it?",
-     "a": "Deprovisioning: access wasn't removed when the person left. Tie account removal to the HR offboarding process, review access regularly, and prefer federated identity or single sign-on so disabling one identity removes access everywhere. Leftover accounts are an easy path for insiders and hijackers."
+     "a": {
+      "lead": "**Deprovisioning**: access wasn't removed when the person left.",
+      "items": [
+       "Tie **account removal** to the **HR offboarding** process",
+       "**Review access** regularly",
+       "Prefer **federated identity** or **single sign-on** → disabling one identity removes access **everywhere**"
+      ],
+      "foot": "**Leftover accounts** are an easy path for **insiders** and **hijackers**."
+     }
     },
     {
      "q": "A CIO says: 'We moved to the cloud, so the provider handles security now.' Using the deck's conclusions, correct this.",
-     "a": "The provider secures the infrastructure and supplies network, device, identity and encryption services, but under shared responsibility the customer always owns its data and how it is accessed. The focus shifts to data security: classify data, protect it in transit, at rest and in use, and control access throughout its lifecycle. The SLA defines what the provider actually commits to."
+     "a": {
+      "items": [
+       "**Provider**: secures the **infrastructure** and supplies **network**, **device**, **identity** and **encryption services**",
+       "**Shared responsibility**: the **customer always owns its data** and **how it is accessed**",
+       "**Focus shifts to data security**: **classify** data, protect it **in transit, at rest and in use**, and control access throughout its **lifecycle**",
+       "The **SLA** defines what the provider **actually commits to**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -862,27 +1039,108 @@
  "exam_angles": [
   {
    "q": "A healthcare provider plans to move its patient records system to a public cloud PaaS. Patient data must stay in the country, and the regulator wants proof of who accessed which record. Propose the security architecture and say which duties remain the provider's.",
-   "a": "Classify patient data, use an in-country region, and confirm the PaaS responsibility split. Encrypt in transit with TLS and at rest, and decide who holds and can use the keys, since BYOK and customer-held keys differ. Enforce least-privilege identities for users and services, mask or tokenise identifiers in non-clinical views, and put a WAF and provider DDoS protection in front. For the regulator, retain protected audit events and database activity monitoring per record. The provider keeps physical, host and platform runtime security, while classification, access decisions and accountability stay with the healthcare provider."
+   "a": {
+    "items": [
+     "**Placement**: **classify patient data**, use an **in-country region**, confirm the **PaaS responsibility split**",
+     "**Encryption**: **TLS** in transit and encrypt **at rest**; decide **who holds and can use the keys**, since **BYOK** and **customer-held keys** differ",
+     "**Access**: **least-privilege identities** for **users and services**; **mask or tokenise identifiers** in **non-clinical views**",
+     "**Edge**: a **WAF** and **provider DDoS protection** in front",
+     "**For the regulator**: retain **protected audit events** and **database activity monitoring per record**",
+     {
+      "t": "**Responsibility split**",
+      "sub": [
+       "**Provider** keeps **physical**, **host** and **platform runtime** security",
+       "**Classification**, **access decisions** and **accountability** stay with the **healthcare provider**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A misconfigured storage bucket leaked customer data. The provider's service worked as documented. Using the shared responsibility model, explain who is accountable, then give a cause, a countermeasure and its drawback.",
-   "a": "The customer is accountable: the provider secures the storage service itself, and the customer secures what is in it, including configuration, access control and data classification, just as with the firewall example. The cause is a public-access setting applied by hand. The countermeasure is to define bucket policies in reviewed IaC, block public access by default, and alert on policy changes. The drawback is slower changes and friction for teams that legitimately publish public content."
+   "a": {
+    "lead": "**The customer** is accountable.",
+    "items": [
+     "**Provider** secures the **storage service** itself; the **customer** secures **what is in it**, including **configuration**, **access control** and **data classification**, just as with the **firewall example**",
+     "**Cause**: a **public-access setting** applied **by hand**",
+     "**Countermeasure**: define **bucket policies** in **reviewed IaC**, **block public access by default**, and **alert on policy changes**",
+     "**Drawback**: **slower changes** and **friction** for teams that legitimately **publish public content**"
+    ]
+   }
   },
   {
    "q": "A microservices application exposes 30 public APIs, and its developers keep cloud keys in config files. Pick three Treacherous Twelve threats most relevant here, explain each through STRIDE, and give mitigations.",
-   "a": "Insecure interfaces and APIs (information disclosure, tampering): authenticate and authorise every call, validate input, rate-limit, and add a WAF. Insufficient identity, credential and access management (spoofing, elevation of privilege): move keys to a secrets manager, rotate them, use least-privilege roles, and scan repositories for secrets. Denial of service (availability): provider DDoS protection, rate limits, autoscaling headroom and alarms. Run DevSecOps scanning of code and images throughout, and keep audit trails to address repudiation."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**Insecure interfaces and APIs** (**information disclosure**, **tampering**)",
+      "sub": [
+       "**Authenticate and authorise every call**, **validate input**, **rate-limit**, add a **WAF**"
+      ]
+     },
+     {
+      "t": "**Insufficient identity, credential and access management** (**spoofing**, **elevation of privilege**)",
+      "sub": [
+       "Move keys to a **secrets manager** and **rotate** them",
+       "Use **least-privilege roles** and **scan repositories** for secrets"
+      ]
+     },
+     {
+      "t": "**Denial of service** (**availability**)",
+      "sub": [
+       "**Provider DDoS protection**, **rate limits**, **autoscaling headroom** and **alarms**"
+      ]
+     }
+    ],
+    "foot": "Throughout: run **DevSecOps scanning** of **code and images**, and keep **audit trails** to address **repudiation**."
+   }
   },
   {
    "q": "Design data protection across the full lifecycle for a fintech's customer documents (ID scans, statements), including how deletion requests are honoured.",
-   "a": "Create: classify ID scans as sensitive. Store: encrypt with controlled key use, restrict access, back up and monitor. Use: DLP, database activity monitoring, and masking in support tools. Share: TLS, VPN or SSH channels and DLP or rights controls for external parties. Archive: a retention policy with encryption and retrievability. Destroy: secure disposal or crypto-shredding with per-customer keys, which only works if backups, logs and analytics copies hold no plaintext and the keys are truly destroyed. Access follows classification at every stage."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**Create**: **classify** ID scans as **sensitive**",
+     "**Store**: **encrypt** with **controlled key use**, **restrict access**, **back up** and **monitor**",
+     "**Use**: **DLP**, **database activity monitoring**, and **masking** in **support tools**",
+     "**Share**: **TLS**, **VPN** or **SSH** channels, and **DLP** or **rights controls** for **external parties**",
+     "**Archive**: a **retention policy** with **encryption** and **retrievability**",
+     {
+      "t": "**Destroy**",
+      "sub": [
+       "**Secure disposal** or **crypto-shredding** with **per-customer keys**",
+       "Only works if **backups**, **logs** and **analytics copies** hold **no plaintext** and the **keys are truly destroyed**"
+      ]
+     }
+    ],
+    "foot": "**Access follows classification** at every stage."
+   }
   },
   {
    "q": "A bank's board asks whether to use public, private or hybrid cloud 'for security'. Argue that the deployment model alone doesn't decide this, and recommend an approach.",
-   "a": "Security depends on data location, access control, key management, provider duties and recovery, not on the label: public cloud can meet sensitive requirements, and private cloud still needs all of these controls. Recommend hybrid if specific data must legally stay on premises, with controlled, encrypted connectivity and tokenisation so public-cloud services handle tokens rather than raw data. Otherwise use public cloud with in-region placement and customer-controlled keys. Either way, the bank keeps responsibility for data classification and access."
+   "a": {
+    "lead": "The **deployment model alone** doesn't decide security.",
+    "items": [
+     "**Security depends on** **data location**, **access control**, **key management**, **provider duties** and **recovery**, not on the **label**",
+     "**Public cloud** can meet **sensitive requirements**; **private cloud** still needs all of these controls",
+     "**Hybrid** if specific data must **legally stay on premises**: **controlled, encrypted connectivity** and **tokenisation** so public-cloud services handle **tokens rather than raw data**",
+     "**Otherwise**: **public cloud** with **in-region placement** and **customer-controlled keys**"
+    ],
+    "foot": "Either way, the **bank keeps responsibility** for **data classification** and **access**."
+   }
   },
   {
    "q": "Your organisation detected a breach only after 200 days, through a customer complaint. Diagnose the gaps and propose the monitoring, visibility and access capabilities you would add, with the main cost.",
-   "a": "The gaps were no meaningful alerting, little audit coverage, and probably stale or over-broad access. Add continuous monitoring with alerts on unusual data movement and database access, audit events for identity and resource actions with protected, long retention, and an incident response process. Review privileges and deprovision stale accounts. The main cost is ongoing: storing logs and triaging alerts needs staff, and noisy alerts get ignored, so tune them to the valuable data first."
+   "a": {
+    "items": [
+     "**Gaps**: no meaningful **alerting**, little **audit coverage**, and probably **stale or over-broad access**",
+     "**Monitoring**: **continuous monitoring** with alerts on **unusual data movement** and **database access**",
+     "**Visibility**: **audit events** for **identity and resource actions** with **protected, long retention**, and an **incident response process**",
+     "**Access**: **review privileges** and **deprovision stale accounts**"
+    ],
+    "foot": "**Main cost** is **ongoing**: **storing logs** and **triaging alerts** needs **staff**, and **noisy alerts get ignored**, so tune them to the **valuable data first**."
+   }
   }
  ]
 }

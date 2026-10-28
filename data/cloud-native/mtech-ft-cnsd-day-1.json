@@ -98,15 +98,36 @@
    "check": [
     {
      "q": "A team hands in an architecture made of polished diagrams only. Infrastructure is still set up by hand from a wiki page. Using the instructor's framing, what is missing?",
-     "a": "Architecture has two audiences: people, through diagrams and views, and machines, through IaC, YAML and properties files. In cloud native work, the provisioning code is part of the architecture, so without it the design can't be reproduced or checked against what is running. Add versioned IaC and config alongside the diagrams."
+     "a": {
+      "lead": "Architecture has **two audiences**.",
+      "items": [
+       "**People**: **diagrams** and **views**",
+       "**Machines**: **IaC**, **YAML** and **properties files**",
+       "**Cloud native**: the **provisioning code is part of the architecture** → without it the design can't be **reproduced** or **checked against what is running**"
+      ],
+      "foot": "**Add** **versioned IaC and config** alongside the diagrams."
+     }
     },
     {
      "q": "A messaging app and a video-streaming service are both being designed by the same team, and a manager wants one standard architecture and stack for both. Is that sensible?",
-     "a": "Probably not. Different problem types lead to different architectures and stacks: messaging needs many long-lived connections and low-latency delivery, while streaming needs large content delivery and catalogue and recommendation workloads. Share platform tooling where it helps, but let each domain's constraints drive its design decisions."
+     "a": {
+      "lead": "**Probably not.** Different **problem types** lead to different **architectures and stacks**.",
+      "items": [
+       "**Messaging**: many **long-lived connections** and **low-latency delivery**",
+       "**Streaming**: **large content delivery**, plus **catalogue** and **recommendation** workloads"
+      ],
+      "foot": "**Share platform tooling** where it helps, but let each **domain's constraints** drive its design decisions."
+     }
     },
     {
      "q": "To hit an MVP date, a team skips automated tests and hardcodes config, and records none of it. Six months later, every change breaks something. What went wrong, and what should they have done?",
-     "a": "The shortcuts became hidden technical debt, which the instructor calls the 'secret list': future costs that stakeholders can't see or prioritise. Shortcuts can be a valid trade-off for an MVP, but each one should be recorded in the backlog with its consequence and a remediation item, next to the functional and non-functional requirements."
+     "a": {
+      "items": [
+       "**What went wrong**: the shortcuts became **hidden technical debt**, the instructor's **'secret list'**: **future costs** that **stakeholders can't see or prioritise**",
+       "Shortcuts can be a **valid trade-off** for an **MVP**",
+       "**Should have**: recorded each one in the **backlog** with its **consequence** and a **remediation item**, next to the **functional** and **non-functional requirements**"
+      ]
+     }
     }
    ]
   },
@@ -206,15 +227,47 @@
    "check": [
     {
      "q": "An on-premises three-tier app is moved one-to-one to cloud equivalents (managed DNS, CDN, load balancer, VMs or containers, managed database). What does this gain, and what doesn't it change?",
-     "a": "It gains managed components, possibly with autoscaling and automatic replacement of failed instances, while keeping the broad tier structure. It doesn't create independently deployable business services, so release coordination and whole-app scaling stay the same. Redesign further only where a specific delivery or scaling problem justifies it."
+     "a": {
+      "items": [
+       "**Gains**: **managed components**, possibly with **autoscaling** and **automatic replacement of failed instances**, while keeping the broad **tier structure**",
+       "**Doesn't change**: no **independently deployable business services** → **release coordination** and **whole-app scaling** stay the same"
+      ],
+      "foot": "**Redesign further** only where a specific **delivery or scaling problem** justifies it."
+     }
     },
     {
      "q": "The on-premises database pair must survive a server failure. Active-active or active-passive?",
-     "a": "Active-passive if the goal is simple failover: a standby takes over when the primary fails, with straightforward consistency, but the standby's capacity is idle. Active-active if both nodes must serve load: better use of capacity and no failover delay, but concurrent writes need conflict handling or partitioning. Choose by write pattern and acceptable complexity."
+     "a": {
+      "items": [
+       {
+        "t": "**Active-passive** if the goal is **simple failover**",
+        "sub": [
+         "A **standby** takes over when the **primary** fails",
+         "**Straightforward consistency**",
+         "But the standby's **capacity is idle**"
+        ]
+       },
+       {
+        "t": "**Active-active** if **both nodes must serve load**",
+        "sub": [
+         "**Better use of capacity** and **no failover delay**",
+         "But **concurrent writes** need **conflict handling** or **partitioning**"
+        ]
+       }
+      ],
+      "foot": "Choose by **write pattern** and **acceptable complexity**."
+     }
     },
     {
      "q": "In the cloud-native version, internal calls go through a service mesh using gRPC, and external traffic comes through an API gateway. Why split it this way rather than routing everything through the gateway?",
-     "a": "The gateway handles north-south concerns at the edge: firewalling, throttling, identity and monitoring for public endpoints. The mesh handles east-west service-to-service traffic with consistent routing, encryption and telemetry, and gRPC is efficient for internal calls. Sending internal traffic through the gateway would add a hop and make it a bottleneck and single point of failure."
+     "a": {
+      "items": [
+       "**Gateway**: **north-south** concerns at the **edge**: **firewalling**, **throttling**, **identity** and **monitoring** for **public endpoints**",
+       "**Mesh**: **east-west** service-to-service traffic with consistent **routing**, **encryption** and **telemetry**",
+       "**gRPC**: efficient for **internal calls**",
+       "**Internal traffic through the gateway** → adds a **hop** and makes it a **bottleneck** and **single point of failure**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -299,11 +352,36 @@
    "check": [
     {
      "q": "A component generates invoices once a night for 10 minutes, and another serves a 24/7 API. Function, container or VM for each?",
-     "a": "The nightly job could be a function if it fits within execution limits, or a scheduled container job if it needs more time or runtime control, since containers can also run short jobs. The 24/7 API fits containers, or VMs if it needs OS-level control, because always-on load removes the pay-per-invocation advantage. Check startup, state and cost rather than assuming the packaging decides them."
+     "a": {
+      "items": [
+       {
+        "t": "**Nightly job**",
+        "sub": [
+         "A **function** if it fits within **execution limits**",
+         "Or a **scheduled container job** if it needs **more time** or **runtime control**, since containers can also run **short jobs**"
+        ]
+       },
+       {
+        "t": "**24/7 API**",
+        "sub": [
+         "**Containers**, or **VMs** if it needs **OS-level control**",
+         "**Always-on load** removes the **pay-per-invocation** advantage"
+        ]
+       }
+      ],
+      "foot": "Check **startup**, **state** and **cost** rather than assuming the **packaging** decides them."
+     }
     },
     {
      "q": "A team runs 60 containers by hand on 8 machines with Docker. Failed containers stay down until someone notices. What does this show about why Kubernetes emerged?",
-     "a": "Docker made it easy to build and run single containers, but running many across many machines needs scheduling, scaling and self-healing. Kubernetes, drawing on Google's Borg and Omega experience, provides that orchestration, with pluggable runtime, storage and networking. The cost is learning and operating the cluster."
+     "a": {
+      "items": [
+       "**Docker**: made it easy to **build and run single containers**",
+       "**Many containers across many machines** → need **scheduling**, **scaling** and **self-healing**",
+       "**Kubernetes**: drawing on **Google's Borg and Omega** experience, provides that **orchestration**, with **pluggable runtime, storage and networking**"
+      ],
+      "foot": "**Cost**: **learning and operating the cluster**."
+     }
     }
    ],
    "visuals": [
@@ -337,15 +415,66 @@
  "exam_angles": [
   {
    "q": "Plan how to evolve a three-tier on-premises web application (DNS, firewall, load-balanced web and app tiers, active-passive database) to a cloud-native architecture in stages. For each stage, say what it gains and what triggers the next one.",
-   "a": "Stage 1, one-to-one mapping: managed DNS, CDN at the edge, cloud load balancers, VMs or containers for the tiers and a managed database. This gains managed operations and possibly autoscaling, with little application change. Stage 2, containerise the tiers and run replicas behind Kubernetes Services with images in a registry and IaC for everything. The trigger is a need for faster, repeatable deployments. Stage 3, extract business capabilities as services behind an API gateway, with a mesh for internal traffic, only where independent delivery or scaling is a real problem. Functions are added for event-driven parts. Each stage adds operational complexity, so take the next one only when its trigger appears."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**Stage 1: one-to-one mapping**",
+      "sub": [
+       "**Managed DNS**, **CDN** at the edge, **cloud load balancers**, **VMs or containers** for the tiers and a **managed database**",
+       "**Gains**: **managed operations** and possibly **autoscaling**, with little application change"
+      ]
+     },
+     {
+      "t": "**Stage 2: containerise the tiers**",
+      "sub": [
+       "Run **replicas** behind **Kubernetes Services**, with images in a **registry** and **IaC** for everything",
+       "**Trigger**: a need for **faster, repeatable deployments**"
+      ]
+     },
+     {
+      "t": "**Stage 3: extract business capabilities as services**",
+      "sub": [
+       "Behind an **API gateway**, with a **mesh** for **internal traffic**",
+       "Only where **independent delivery or scaling** is a real problem",
+       "**Functions** are added for **event-driven parts**"
+      ]
+     }
+    ],
+    "foot": "Each stage adds **operational complexity**, so take the next one only when its **trigger** appears."
+   }
   },
   {
    "q": "For a new system with a 24/7 order API, a nightly reconciliation job and an image-thumbnail task triggered by uploads, compare VMs, containers and functions, and choose one for each component.",
-   "a": "VMs include a guest OS and give OS control, containers share a kernel and package dependencies lightly, and functions run on demand with a managed runtime. Order API: containers for always-on load and portability. Nightly reconciliation: a scheduled container job, or a function if it fits execution limits. Thumbnails: functions, for short, sporadic, event-triggered work billed per invocation. Choose by duration, startup latency, state, runtime control and cost, not by packaging fashion."
+   "a": {
+    "items": [
+     {
+      "t": "**Compare**",
+      "sub": [
+       "**VMs**: include a **guest OS** and give **OS control**",
+       "**Containers**: **share a kernel** and package dependencies **lightly**",
+       "**Functions**: run **on demand** with a **managed runtime**"
+      ]
+     },
+     "**Order API** → **containers**: **always-on load** and **portability**",
+     "**Nightly reconciliation** → a **scheduled container job**, or a **function** if it fits **execution limits**",
+     "**Thumbnails** → **functions**: short, **sporadic**, **event-triggered** work **billed per invocation**"
+    ],
+    "foot": "Choose by **duration**, **startup latency**, **state**, **runtime control** and **cost**, not by **packaging fashion**."
+   }
   },
   {
    "q": "You are asked to produce the architecture for a new cloud-native platform. Using the Day 1 framing (what, how, where, and two audiences), outline what the deliverable must contain and how you would keep it from going stale.",
-   "a": "What: a reference architecture with layers, components and how they interact. How: decisions with the constraints, requirements and objectives behind each. Where: data, infrastructure, application, platform, security and enterprise viewpoints. Deliver diagrams for people and IaC, YAML and config for machines, so the running system is generated from the architecture. Keep functional and non-functional requirements and recorded technical debt in the backlog. Because the IaC is part of the architecture, changes to it go through review, which keeps the design and the system aligned."
+   "a": {
+    "items": [
+     "**What**: a **reference architecture** with **layers**, **components** and how they **interact**",
+     "**How**: **decisions** with the **constraints**, **requirements** and **objectives** behind each",
+     "**Where**: **data**, **infrastructure**, **application**, **platform**, **security** and **enterprise viewpoints**",
+     "**Two audiences**: **diagrams** for **people**; **IaC**, **YAML** and **config** for **machines** → the running system is **generated from the architecture**",
+     "**Backlog**: **functional** and **non-functional requirements** and **recorded technical debt**"
+    ],
+    "foot": "**Keep it from going stale**: the IaC is part of the architecture, so **changes to it go through review** → design and system stay **aligned**."
+   }
   }
  ]
 }

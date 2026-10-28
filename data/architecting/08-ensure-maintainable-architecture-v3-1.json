@@ -64,11 +64,27 @@
    "check": [
     {
      "q": "Two designs for a loyalty system: A ships in 2 months with the reward rules hard-coded; B takes 3 months with the rules isolated behind an interface and held in configuration. Marketing expects to change the rules monthly for 5 years. Which do you choose?",
-     "a": "B. With about 60 rule changes expected, the extra month is repaid by cheaper, safer changes, and most lifecycle cost falls in maintenance (the lecture cites 80-90%). A would need a code change, test and release for every rule tweak. If the system were a short-lived campaign, A would be the better choice."
+     "a": {
+      "lead": "**Choose B.**",
+      "items": [
+       "**About 60 rule changes** expected → the extra month is repaid by **cheaper, safer changes**",
+       "**Most lifecycle cost falls in maintenance** (the lecture cites **80-90%**)",
+       "**A** would need a **code change, test and release** for every rule tweak"
+      ],
+      "foot": "If the system were a **short-lived campaign**, A would be the better choice."
+     }
     },
     {
      "q": "A team says it will 'make the code maintainable later, once we have users'. Do you agree?",
-     "a": "Only partly. Detailed refactoring can wait, but boundaries, interfaces and variation points are architectural and cost far more to add once code depends on their absence. Put them where change is likely now, and defer the rest. How much to invest depends on the expected changes and the system's lifetime."
+     "a": {
+      "lead": "**Only partly.**",
+      "items": [
+       "**Detailed refactoring can wait**",
+       "**Boundaries, interfaces and variation points** are **architectural** → cost far more to add once code depends on their absence",
+       "Put them **where change is likely** now, and defer the rest"
+      ],
+      "foot": "How much to invest depends on the **expected changes** and the **system's lifetime**."
+     }
     }
    ]
   },
@@ -172,15 +188,35 @@
    "check": [
     {
      "q": "For an insurance product, actuaries change pricing factors monthly, and the screen layout changes about once a year. Which way of incorporating change suits each?",
-     "a": "Pricing factors: configuration, or end-user customisation by the actuaries, because the change is frequent and each code change would be expensive. Layout: a code change is fine, because it is rare and the development cost of making it customisable would not pay back. Invest in cheap change where change is likely."
+     "a": {
+      "items": [
+       "**Pricing factors** → **configuration**, or **end-user customisation** by the actuaries: the change is **frequent** and each code change would be expensive",
+       "**Layout** → a **code change** is fine: it is **rare**, and the development cost of making it customisable would not pay back"
+      ],
+      "foot": "Invest in **cheap change where change is likely**."
+     }
     },
     {
      "q": "A requirements document says 'the system shall support other payment methods in future' and 'reporting: to be decided in phase 2'. What does this tell the architect?",
-     "a": "These are open-ended and deferred requirements, which signal a high likelihood of change. Put variation points there: a payment-method interface, and reporting fed from well-defined data. Spending the same effort on areas with stable requirements would be wasted."
+     "a": {
+      "lead": "**Open-ended and deferred requirements** signal a **high likelihood of change** → put **variation points** there:",
+      "items": [
+       "A **payment-method interface**",
+       "**Reporting** fed from **well-defined data**"
+      ],
+      "foot": "Spending the same effort on areas with **stable requirements** would be wasted."
+     }
     },
     {
      "q": "A B2B SaaS product has five enterprise clients, each with a dedicated implementation team, and each wants its own approval rules. Which change mechanism fits?",
-     "a": "Customisable by the implementation team: build configurable rules or workflows that each client's team sets up. Development cost is high, but each change is medium-cost and needs no core code change. Full end-user customisation would cost even more to build and isn't needed when trained implementers do the changes."
+     "a": {
+      "lead": "**Customisable by the implementation team.**",
+      "items": [
+       "Build **configurable rules or workflows** that each client's team sets up",
+       "**Development cost is high**, but each change is **medium-cost** and needs **no core code change**",
+       "**Full end-user customisation** would cost even more to build → isn't needed when **trained implementers** do the changes"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -314,19 +350,53 @@
    "check": [
     {
      "q": "A team wants to add a fraud-analytics consumer to the existing OrderPlaced events, but the event does not carry the customer's IP address, which the model needs. Is this still a change-free extension?",
-     "a": "No. A new consumer avoids producer changes only when the existing payload already meets its needs. Here the producer must add the field, ideally as an optional addition registered as a compatible new schema version, so existing consumers keep working. Events still couple consumers to the payload's content and meaning."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "A **new consumer** avoids **producer changes** only when the **existing payload** already meets its needs",
+       "Here the **producer must add the field**, ideally as an **optional addition** registered as a **compatible new schema version** → existing consumers keep working"
+      ],
+      "foot": "Events still **couple consumers** to the payload's **content and meaning**."
+     }
     },
     {
      "q": "Five microservices read and write one shared customer table, and renaming a column needs a coordinated release of all five. What has gone wrong?",
-     "a": "Shared data has coupled the services, defeating independent deployment. Give the customer data a single owning service and have the others use its API or events. If that split is not worth it, a modular monolith may contain changes just as well at lower operational cost."
+     "a": {
+      "lead": "**Shared data has coupled the services**, defeating **independent deployment**.",
+      "items": [
+       "**Fix**: give the customer data a **single owning service**, and have the others use its **API or events**",
+       "**Alternative**: if that split is not worth it, a **modular monolith** may contain changes just as well at **lower operational cost**"
+      ]
+     }
     },
     {
      "q": "A producer renames the field 'amount' to 'total' and registers the change as version 2 in the schema registry. Are consumers safe?",
-     "a": "No. The registry stores versioned schemas and lets consumers find the one a message uses, but an incompatible change still breaks consumers that expect 'amount'. Add 'total' alongside 'amount', migrate the consumers, and only then remove the old field, following compatibility rules."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "The **registry** stores **versioned schemas** and lets consumers find the one a message uses",
+       "But an **incompatible change** still breaks consumers that expect 'amount'",
+       {
+        "t": "**Safe path**, following **compatibility rules**",
+        "sub": [
+         "Add 'total' **alongside** 'amount'",
+         "**Migrate** the consumers",
+         "Only then **remove** the old field"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "In a layered monolith, adding a 'gift card' feature touches the presentation, business and persistence layers. Would a modular monolith help?",
-     "a": "Yes, for this kind of change. A modular monolith groups code by business module, so a gift-card module contains its own UI, logic and data access, and the change stays inside it. It still deploys as one unit, so you don't get independent deployment; that would need services."
+     "a": {
+      "lead": "**Yes**, for this kind of change.",
+      "items": [
+       "A **modular monolith** groups code by **business module**",
+       "→ a **gift-card module** contains its own UI, logic and data access, and the change stays inside it"
+      ],
+      "foot": "It still **deploys as one unit**, so you don't get **independent deployment**; that would need **services**."
+     }
     }
    ],
    "visuals": [
@@ -434,15 +504,42 @@
    "check": [
     {
      "q": "A public API method has 7 parameters, and clients keep breaking whenever a parameter is added. What would you change?",
-     "a": "Pass a single request object, so new optional fields can be added without changing the method signature. Old clients must still be served correctly: keep existing fields and meanings, give new fields defaults, and test existing consumers. Version the API for changes that cannot be compatible."
+     "a": {
+      "items": [
+       "**Pass a single request object** → new **optional fields** can be added without changing the **method signature**",
+       {
+        "t": "**Old clients must still be served correctly**",
+        "sub": [
+         "Keep existing **fields and meanings**",
+         "Give new fields **defaults**",
+         "**Test existing consumers**"
+        ]
+       },
+       "**Version the API** for changes that cannot be compatible"
+      ]
+     }
     },
     {
      "q": "A bank receives statements from 12 partners in CSV, XML and fixed-width formats, and parsing logic is spread across the system. What would you change?",
-     "a": "Separate physical from logical processing: convert each physical format into one standard logical structure at the edge, and use only that structure in the rest of the system. A new partner format then changes only a converter. The cost is one more mapping layer to maintain."
+     "a": {
+      "lead": "**Separate physical from logical processing.**",
+      "items": [
+       "**Convert at the edge**: each physical format → one **standard logical structure**",
+       "Use **only that structure** in the rest of the system",
+       "→ a **new partner format** then changes only a **converter**"
+      ],
+      "foot": "The cost is one more **mapping layer** to maintain."
+     }
     },
     {
      "q": "A discount rate of 0.15 is hard-coded in 9 places, and the last change missed one. Which tactic would have prevented this?",
-     "a": "Single point of definition: define the rate once, in configuration or a constant used everywhere, so a change never has to be synchronised across copies. Parameterising it in configuration also lets you change it without a code release."
+     "a": {
+      "lead": "**Single point of definition.**",
+      "items": [
+       "**Define the rate once**, in configuration or a constant used everywhere → a change never has to be **synchronised across copies**",
+       "**Parameterising it in configuration** also lets you change it **without a code release**"
+      ]
+     }
     },
     {
      "q": "A JSON API adds a mandatory field to every request. Is it backward compatible because the method signature is unchanged?",
@@ -524,11 +621,28 @@
    "check": [
     {
      "q": "Each of 30 corporate clients wants a different expense-approval chain, and the chains change a few times a year. How would you design it?",
-     "a": "Defer binding with a workflow engine: an implementer designs each client's workflow, it is stored per tenant, and at run time the engine loads and executes it, calling shared domain logic. Changes need no recompiling or redeployment. The cost is building or adopting the engine and limiting workflows to the steps it supports."
+     "a": {
+      "lead": "**Defer binding** with a **workflow engine**.",
+      "ordered": true,
+      "items": [
+       "An **implementer designs** each client's workflow",
+       "It is **stored per tenant**",
+       "**At run time** the engine loads and executes it, calling **shared domain logic**",
+       "→ changes need **no recompiling or redeployment**"
+      ],
+      "foot": "The cost is **building or adopting the engine**, and limiting workflows to the steps it supports."
+     }
     },
     {
      "q": "For a 3-month MVP, a team proposes fully end-user-customisable reports. Do you agree?",
-     "a": "Probably not. End-user customisation has the lowest change cost when done well, but the highest development cost, and it needs strong UX and domain understanding that an MVP rarely has. Ship a few fixed reports, learn which variations users actually want, and add customisation where that demand is clear."
+     "a": {
+      "lead": "**Probably not.**",
+      "items": [
+       "**End-user customisation** has the **lowest change cost** when done well, but the **highest development cost**",
+       "It needs **strong UX** and **domain understanding** that an MVP rarely has",
+       "**Instead**: ship a few **fixed reports** → learn which variations users actually want → add customisation where that demand is clear"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -636,15 +750,39 @@
    "check": [
     {
      "q": "A checkout error appears in the logs of four services, but nothing links the entries. What would you add?",
-     "a": "A correlation id created at the entry point and passed with every call and event, and written in each service's log entries. Then the entries for one request can be pulled together for root-cause analysis. Central log storage alone does not show which records belong together."
+     "a": {
+      "lead": "**A correlation id.**",
+      "items": [
+       "**Created at the entry point** and passed with **every call and event**",
+       "**Written in each service's log entries**",
+       "→ the entries for one request can be pulled together for **root-cause analysis**"
+      ],
+      "foot": "**Central log storage alone** does not show which records belong together."
+     }
     },
     {
      "q": "Container logs disappear when pods restart, and engineers SSH into nodes to grep for errors. What would you change?",
-     "a": "Add the three logging components: an agent on each node that ships logs, central log storage, and a dashboard with search (EFK is the lecture's example stack). Logs then survive restarts and can be searched across services. The cost is running and sizing the logging infrastructure itself."
+     "a": {
+      "lead": "**Add the three logging components** (**EFK** is the lecture's example stack):",
+      "items": [
+       "An **agent** on each node that ships logs",
+       "**Central log storage**",
+       "A **dashboard with search**",
+       "→ logs **survive restarts** and can be **searched across services**"
+      ],
+      "foot": "The cost is running and **sizing the logging infrastructure** itself."
+     }
     },
     {
      "q": "A legacy application crashes every night and leaves nothing useful behind. Which analyzability tactics apply?",
-     "a": "Automated error detection and reporting (core dumps, log file monitoring that raises alerts), logging with enough context to investigate, and monitoring through standard protocols such as JMX or SNMP. Together these turn 'it crashed' into a diagnosable fault."
+     "a": {
+      "items": [
+       "**Automated error detection and reporting**: **core dumps**, **log file monitoring** that raises **alerts**",
+       "**Logging** with enough **context** to investigate",
+       "**Monitoring through standard protocols** such as **JMX** or **SNMP**"
+      ],
+      "foot": "Together these turn 'it crashed' into a **diagnosable fault**."
+     }
     }
    ],
    "visuals": [
@@ -737,15 +875,36 @@
    "check": [
     {
      "q": "The architecture rule says the web layer must not call the persistence layer directly. Code reviews keep missing violations. What would you add?",
-     "a": "A fitness function: an automated test using a dependency-analysis tool that fails the build when web code depends on persistence packages. It checks the rule on every build, which review cannot do reliably. It guards only the rules you actually encode, so add checks for other key characteristics as well."
+     "a": {
+      "lead": "**A fitness function.**",
+      "items": [
+       "An **automated test** using a **dependency-analysis tool** → **fails the build** when web code depends on persistence packages",
+       "It checks the rule on **every build**, which **review cannot do reliably**"
+      ],
+      "foot": "It guards **only the rules you actually encode**, so add checks for other key characteristics as well."
+     }
     },
     {
      "q": "A release breaks checkout, and reverting takes 3 hours because the database migrations cannot be undone. What should the release process have included?",
-     "a": "Rollback designed in: reversible or backward-compatible migrations, and the ability to redeploy the previous version quickly. Even tested changes fail in production, and fast reversal limits the damage. Version control, automated tests and environment configuration as code make that reversal reliable."
+     "a": {
+      "lead": "**Rollback designed in.**",
+      "items": [
+       "**Reversible or backward-compatible migrations**",
+       "The ability to **redeploy the previous version quickly**",
+       "**Why**: even tested changes fail in production → **fast reversal limits the damage**"
+      ],
+      "foot": "**Version control**, **automated tests** and **environment configuration as code** make that reversal reliable."
+     }
     },
     {
      "q": "A release works in staging but fails in production, because the two environments were configured by hand and differ. A developer suggests committing the production passwords into the repository so everything is in one place. Respond.",
-     "a": "Manage environment configuration as code, so staging and production are built from the same versioned definitions. Do not commit secret values: integrate a secrets-management tool, and reference secrets from the configuration. Reproducible environments without leaked credentials make change reliable."
+     "a": {
+      "items": [
+       "**Manage environment configuration as code** → staging and production are built from the **same versioned definitions**",
+       "**Do not commit secret values** → integrate a **secrets-management tool**, and **reference secrets** from the configuration"
+      ],
+      "foot": "**Reproducible environments** without **leaked credentials** make change reliable."
+     }
     }
    ],
    "visuals": [
@@ -826,11 +985,26 @@
    "check": [
     {
      "q": "A quality dashboard improves after a release. Does that prove the architecture is easier to maintain?",
-     "a": "No. Check what changed in the metrics and whether they reflect relevant change or diagnostic effort. Combine trends with actual change scenarios and fitness checks; a score is evidence for its measured properties, not all maintainability."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Check what changed** in the metrics, and whether they reflect **relevant change** or **diagnostic effort**",
+       "**Combine trends** with actual **change scenarios** and **fitness checks**"
+      ],
+      "foot": "A score is evidence for its **measured properties**, not all maintainability."
+     }
     },
     {
      "q": "A manager wants to rank three teams' systems by their static-analysis scores to decide bonuses. Do you agree?",
-     "a": "No. These metrics are useful for tracking one code base's relative progress over time, not for comparing different systems in absolute terms, since size, language and domain differ. Using them for bonuses also invites gaming. Compare each team against its own trend, alongside real change effort."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "These metrics are useful for **tracking one code base's relative progress over time**, not for **comparing different systems** in absolute terms",
+       "**Size, language and domain differ** between systems",
+       "Using them for **bonuses** also **invites gaming**"
+      ],
+      "foot": "Compare each team against its **own trend**, alongside **real change effort**."
+     }
     }
    ]
   }
@@ -838,23 +1012,91 @@
  "exam_angles": [
   {
    "q": "A product's discount and eligibility rules change every quarter, and three of its 20 enterprise clients need their own approval flow. The business wants changes shipped without redeployment. Recommend a design and its costs.",
-   "a": "Defer binding for the kinds of change that recur: hold rule parameters in configuration, which business users edit through an admin screen, behind a single point of definition. Use a workflow engine to run per-tenant approval flows designed by the implementation team. Encapsulate the domain actions the workflows call, and define the supported variation points. This lowers the cost of each change but raises development cost, and needs UX and domain work. Behaviour outside the variation points still needs a code change, so choose the variation points from the expected changes."
+   "a": {
+    "lead": "**Defer binding** for the kinds of change that recur.",
+    "items": [
+     "**Rule parameters in configuration**, which business users edit through an **admin screen**, behind a **single point of definition**",
+     "A **workflow engine** runs **per-tenant approval flows** designed by the **implementation team**",
+     "**Encapsulate the domain actions** the workflows call, and define the **supported variation points**",
+     "**Costs**: this lowers the cost of each change but **raises development cost**, and needs **UX and domain work**"
+    ],
+    "foot": "Behaviour **outside the variation points** still needs a **code change**, so choose the variation points from the **expected changes**."
+   }
   },
   {
    "q": "An online learning platform has a layered monolith, five teams and frequent collisions between releases. It plans to add analytics, recommendations and partner integrations over two years. Compare a modular monolith, microservices and an event-driven approach for modifiability, and recommend one.",
-   "a": "Modular monolith: business modules contain changes and avoid distributed costs, but everything still deploys as one unit, so release collisions remain. Microservices: independent deployment per capability if each owns its data and APIs evolve compatibly, but they add operational cost, and shared tables or call chains can still spread change. Event-driven: analytics and recommendations can subscribe to existing events (CourseCompleted, LessonViewed) without producer changes if the payloads carry what they need, with a schema registry and compatibility rules. Recommend modularising first, then extracting services where team collisions are worst, and publishing events for the new consumers."
+   "a": {
+    "lead": "**Recommend modularising first**, then extracting services where **team collisions** are worst, and publishing events for the new consumers.",
+    "items": [
+     {
+      "t": "**Modular monolith**",
+      "sub": [
+       "**Business modules contain changes** and avoid **distributed costs**",
+       "But everything still **deploys as one unit** → **release collisions remain**"
+      ]
+     },
+     {
+      "t": "**Microservices**",
+      "sub": [
+       "**Independent deployment** per capability, if each **owns its data** and APIs **evolve compatibly**",
+       "But they add **operational cost**, and **shared tables** or **call chains** can still spread change"
+      ]
+     },
+     {
+      "t": "**Event-driven**",
+      "sub": [
+       "Analytics and recommendations can **subscribe to existing events** (CourseCompleted, LessonViewed) without **producer changes**",
+       "Only if the **payloads carry what they need**, with a **schema registry** and **compatibility rules**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A public REST API has about 200 external consumers you do not control. Over the next year you must add fields, rename one concept and change one response structure. Which code-level tactics keep the API evolvable?",
-   "a": "Use request and response objects with optional fields, so additions don't break signatures. Add the renamed concept alongside the old one and deprecate the old name with a support period. Put the structural change in a new API version, keeping the old one running during migration. Encapsulate the implementation behind the API, define the shared data types once, and use standard formats. Test existing consumer contracts, because flexible JSON syntax alone does not guarantee compatibility."
+   "a": {
+    "items": [
+     "**Request and response objects** with **optional fields** → additions don't break signatures",
+     "**Renamed concept**: add it alongside the old one, and **deprecate** the old name with a **support period**",
+     "**Structural change**: put it in a **new API version**, keeping the old one running during migration",
+     "**Encapsulate the implementation** behind the API, define the **shared data types once**, and use **standard formats**",
+     "**Test existing consumer contracts**"
+    ],
+    "foot": "Flexible **JSON syntax** alone does not guarantee **compatibility**."
+   }
   },
   {
    "q": "During an incident, a payment fails somewhere across six microservices. It takes four hours to find the cause because logs are local to each container and have no common identifier. Redesign for analyzability.",
-   "a": "Add automated error detection and alerting, so the failure is noticed rather than reported by users. Centralise logs with an agent, storage and searchable dashboard (for example EFK), so they survive container restarts. Propagate a correlation id from the entry point through every call and event, so one request's entries can be retrieved together. Log enough context, such as inputs, the dependency called and the error, and expose metrics through standard monitoring. The fix itself is then deployed like any other change, through the reliable-change pipeline."
+   "a": {
+    "items": [
+     "**Automated error detection and alerting** → the failure is noticed rather than reported by users",
+     "**Centralise logs** with an agent, storage and searchable dashboard (for example **EFK**) → they survive container restarts",
+     "**Propagate a correlation id** from the entry point through every call and event → one request's entries can be retrieved together",
+     "**Log enough context**, such as inputs, the dependency called and the error",
+     "**Expose metrics** through **standard monitoring**"
+    ],
+    "foot": "The fix itself is then deployed like any other change, through the **reliable-change pipeline**."
+   }
   },
   {
    "q": "A layered system's dependency rules are eroding, releases often break production, and rollbacks are manual. Design a pipeline that makes change reliable and stops further erosion.",
-   "a": "Keep everything in version control, including environment configuration as code, with secrets in a secrets manager. Run automated unit, integration and end-to-end tests on each change. Add fitness functions before promotion: a dependency test that fails on layer violations, plus performance, security, resiliency and observability checks. Automate deployment with a tested rollback path and reversible migrations, and use hypothesis-driven testing for risky changes. Fitness functions guard only what they encode, so add rules as the architecture evolves."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**Keep everything in version control**, including **environment configuration as code**, with secrets in a **secrets manager**",
+     "**Automated tests** on each change: unit, integration and end-to-end",
+     {
+      "t": "**Fitness functions** before promotion",
+      "sub": [
+       "A **dependency test** that fails on **layer violations**",
+       "Plus **performance, security, resiliency and observability** checks"
+      ]
+     },
+     "**Automate deployment** with a **tested rollback path** and **reversible migrations**",
+     "**Hypothesis-driven testing** for risky changes"
+    ],
+    "foot": "Fitness functions **guard only what they encode**, so add rules as the architecture evolves."
+   }
   }
  ]
 }

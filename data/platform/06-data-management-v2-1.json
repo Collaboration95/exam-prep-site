@@ -91,15 +91,38 @@
    "check": [
     {
      "q": "A platform's domain model changes almost weekly, and every change needs a table migration and an update to the object-relational mapping. Which datastore requirement is the relational database weakest on here, and what would you consider?",
-     "a": "Evolvability: a strict schema has to be migrated, and domain entities must be translated to tables through an ORM. A schema-free document store gives smoother schema evolution, because the schema travels with the data. You would give up joins, constraints and complex transactions in most document stores, so switch only if those matter less than the pace of change."
+     "a": {
+      "lead": "**Weakest on evolvability.**",
+      "items": [
+       "**Strict schema** → has to be **migrated**",
+       "Domain entities must be translated to tables through an **ORM**",
+       "**Consider a schema-free document store** → smoother **schema evolution**, because the schema travels with the data"
+      ],
+      "foot": "**Trade-off**: most document stores give up **joins, constraints and complex transactions** → switch only if those matter less than the **pace of change**."
+     }
     },
     {
      "q": "A teammate says: 'Relational databases don't scale, so our 2,000-user internal app needs NoSQL.' Do you agree?",
-     "a": "No. The lecture says an RDBMS is great for most scenarios: flexible SQL on any column, strong ACID guarantees and good read and write performance. What is hard is scaling horizontally while staying consistent, and replication and sharding exist for that, but 2,000 users rarely need it. Reach for another model when a specific need appears, such as graph-like relationships, very high write volume or constant schema change."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "The lecture says an **RDBMS is great for most scenarios**: flexible **SQL on any column**, strong **ACID** guarantees, good **read and write performance**",
+       "**What is hard**: **scaling horizontally while staying consistent** → **replication and sharding** exist for that",
+       "**2,000 users** rarely need it"
+      ],
+      "foot": "Reach for another model when a **specific need** appears, such as **graph-like relationships**, very **high write volume** or constant **schema change**."
+     }
     },
     {
      "q": "A platform stores invoices as rows, partner webhook payloads as JSON, and scanned receipts as images. Classify each kind of data and say what it implies for storage.",
-     "a": "Invoices are structured data with a strict schema, which suits relational tables. Webhook payloads are semi-structured, with the schema attached to the data, which suits a document store or a JSON column. Scanned receipts are unstructured, so store them as files or objects and keep their metadata in a queryable store. One platform therefore often needs more than one kind of store."
+     "a": {
+      "items": [
+       "**Invoices** → **structured** data with a strict schema → **relational tables**",
+       "**Webhook payloads** → **semi-structured**, schema attached to the data → **document store** or a **JSON column**",
+       "**Scanned receipts** → **unstructured** → store as **files or objects**, keep their metadata in a **queryable store**"
+      ],
+      "foot": "One platform therefore often needs **more than one kind of store**."
+     }
     }
    ]
   },
@@ -170,19 +193,59 @@
    "check": [
     {
      "q": "Writes saturate the primary database at peak, so the team adds three more read replicas. What effect will this have?",
-     "a": "Almost none on the bottleneck: replicas are read-only copies, and every write still goes to the single master. To spread writes, shard the data so each shard has its own master, which improves both write and read throughput. Sharding costs routing, either a locator service or a client-side algorithm, and makes queries across shards harder."
+     "a": {
+      "lead": "**Almost no effect on the bottleneck.**",
+      "items": [
+       "**Replicas** are **read-only copies**; every write still goes to the **single master**",
+       "**To spread writes, shard** the data → each shard has its **own master** → improves both **write and read** throughput"
+      ],
+      "foot": "**Sharding costs** routing, either a **locator service** or a **client-side algorithm**, and makes **queries across shards** harder."
+     }
     },
     {
      "q": "Orders are sharded by country, and 70% of orders come from one country. What happens, and what would you change?",
-     "a": "That shard's master becomes a hot spot while the others sit idle, because a fixed sharding key does not distribute data evenly. Hash-based partitioning on a high-cardinality key such as order ID spreads load more evenly, and with algorithmic sharding the client computes the shard without a locator. You lose locality, since one country's orders are now spread across shards, and shard changes must be announced to clients."
+     "a": {
+      "lead": "**That shard's master becomes a hot spot** while the others sit idle.",
+      "items": [
+       "**Cause**: a **fixed sharding key** does not distribute data evenly",
+       "**Change**: **hash-based partitioning** on a **high-cardinality key** such as order ID → spreads load more evenly",
+       "With **algorithmic sharding**, the client computes the shard **without a locator**"
+      ],
+      "foot": "**Cost**: you lose **locality**, since one country's orders are now spread across shards, and **shard changes must be announced** to clients."
+     }
     },
     {
      "q": "A cache in front of the database acknowledges writes from memory and flushes them to disk every 30 seconds. Is that acceptable for payments? For page-view counters?",
-     "a": "Not for payments: if the cache fails before flushing, acknowledged payments are lost. Use write-through, which acknowledges only after the backing store has the write, and accept slower writes for durability. For page-view counters, losing a few seconds of counts is usually acceptable, so delayed persistence can buy the speed of in-memory writes."
+     "a": {
+      "items": [
+       {
+        "t": "**Payments: not acceptable**",
+        "sub": [
+         "If the cache fails before flushing → **acknowledged payments are lost**",
+         "Use **write-through**: acknowledges only after the **backing store** has the write",
+         "Accept **slower writes** for **durability**"
+        ]
+       },
+       {
+        "t": "**Page-view counters: acceptable**",
+        "sub": [
+         "Losing a few seconds of counts is usually acceptable",
+         "**Delayed persistence** can buy the speed of **in-memory writes**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "Reads are routed to replicas. After updating their profile, some users see the old version on the next page load. Diagnose the problem and suggest fixes.",
-     "a": "This is replication lag: the write reached the master, but the replica serving the next read has not caught up. Route a user's reads to the master for a short time after they write, or read critical views from the master. Either way the master takes more read load, so accept lag wherever stale data is harmless."
+     "a": {
+      "lead": "**Replication lag**: the write reached the master, but the replica serving the next read has not caught up.",
+      "items": [
+       "**Fix**: route a user's reads to the **master** for a short time **after they write**",
+       "**Fix**: read **critical views** from the master"
+      ],
+      "foot": "Either way the **master takes more read load**, so accept lag wherever stale data is harmless."
+     }
     }
    ],
    "visuals": [
@@ -279,19 +342,52 @@
    "check": [
     {
      "q": "A shopping cart is replicated across two regions, and the network between them fails. Should the cart stay available or refuse changes?",
-     "a": "Stay available (AP): a slightly stale or diverging cart is better than no cart, and the lecture's point is that this is a business decision more than a technical one. The cost is reconciling the diverged copies when the partition heals, and the risk that a user briefly sees an old cart. Checkout, which takes money, may still need a stricter rule."
+     "a": {
+      "lead": "**Stay available (AP).**",
+      "items": [
+       "A slightly **stale or diverging cart** is better than **no cart**",
+       "The lecture's point: this is a **business decision** more than a technical one",
+       "**Cost**: **reconciling** the diverged copies when the partition heals",
+       "**Risk**: a user briefly sees an **old cart**"
+      ],
+      "foot": "**Checkout**, which takes money, may still need a stricter rule."
+     }
     },
     {
      "q": "A payments ledger is replicated across two data centres, and the link between them fails. What should the system do?",
-     "a": "Favour consistency (CP): refuse or delay the operations that cannot be applied consistently, such as debits on the side that cannot reach the authoritative copy, rather than risk double-spending. Some customers get errors during the partition, which the business accepts as the lesser harm for money. Reads of the balance may also be refused or marked as possibly stale."
+     "a": {
+      "lead": "**Favour consistency (CP).**",
+      "items": [
+       "**Refuse or delay** the operations that cannot be applied consistently, such as **debits** on the side that cannot reach the **authoritative copy**",
+       "→ Rather than risk **double-spending**",
+       "Some customers get **errors** during the partition, which the business accepts as the **lesser harm** for money",
+       "**Reads of the balance** may also be refused or marked as **possibly stale**"
+      ]
+     }
     },
     {
      "q": "The lecture's shortcut says that if reads go to the master only, the system is CP. What must you check before relying on that?",
-     "a": "Check what happens during a partition: whether an isolated old master can still accept writes, how failover chooses a new master, and when writes are acknowledged relative to replication. If failover can promote a replica that missed acknowledged writes, the system is not as consistent as the shortcut suggests. Master-only reads are the lecture's simplified illustration, not a full guarantee."
+     "a": {
+      "lead": "**Check what happens during a partition:**",
+      "items": [
+       "Can an **isolated old master** still **accept writes**?",
+       "How does **failover** choose a new master?",
+       "When are writes **acknowledged** relative to **replication**?"
+      ],
+      "foot": "If failover can **promote a replica that missed acknowledged writes**, the system is not as consistent as the shortcut suggests: **master-only reads** are the lecture's simplified illustration, not a full guarantee."
+     }
     },
     {
      "q": "A teammate says their single-node database avoids the CAP trade-off entirely. How do you respond?",
-     "a": "True but beside the point: a single instance is not a distributed system, so CAP does not apply, but it is also a single point of failure. The lecture says distributed datastores must tolerate partitions, so once you add a replica for availability or scale, you must choose consistency or availability for partition time. The single node has avoided the choice by giving up availability whenever it fails."
+     "a": {
+      "lead": "**True but beside the point.**",
+      "items": [
+       "A **single instance** is not a distributed system → **CAP does not apply**",
+       "But it is also a **single point of failure**",
+       "The lecture says **distributed datastores must tolerate partitions** → once you add a **replica** for availability or scale, you must choose **consistency or availability** for partition time"
+      ],
+      "foot": "The single node has avoided the choice by **giving up availability** whenever it fails."
+     }
     }
    ],
    "visuals": [
@@ -394,15 +490,41 @@
    "check": [
     {
      "q": "In the lecture's CQRS design, a command succeeds but the next query still shows the old value. Is that necessarily a failed write?",
-     "a": "No. The command commits to the write store, and the read database is updated asynchronously from published events, so the query can run before the projection catches up. Check event delivery and projection progress before suspecting the write. This lag is the price of scaling reads and writes independently."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "The command commits to the **write store**",
+       "The **read database** is updated **asynchronously** from **published events** → the query can run before the **projection** catches up",
+       "Check **event delivery** and **projection progress** before suspecting the write"
+      ],
+      "foot": "This **lag** is the price of **scaling reads and writes independently**."
+     }
     },
     {
      "q": "To reduce operational cost, an architect wants one database technology for the whole platform. The platform has a write-heavy telemetry feed, a product catalogue whose attributes change often, and a social graph. How do you respond?",
-     "a": "One model rarely fits all three: telemetry is write-heavy and sparse, the catalogue needs schema flexibility and rich queries, and the social graph is about traversing relationships. The lecture notes that most modern platforms use multiple databases for exactly this reason. The architect's concern is real, since every extra store adds operations work, so add a store only where the workload clearly needs it."
+     "a": {
+      "lead": "**One model rarely fits all three.**",
+      "items": [
+       "**Telemetry**: **write-heavy** and **sparse**",
+       "**Catalogue**: needs **schema flexibility** and **rich queries**",
+       "**Social graph**: about **traversing relationships**",
+       "The lecture notes that **most modern platforms use multiple databases** for exactly this reason"
+      ],
+      "foot": "The architect's concern is real, since **every extra store adds operations work** → add a store only where the workload clearly needs it."
+     }
     },
     {
      "q": "Order history is read about 100 times for every write, while writes need strict validation. Would CQRS help, and what would it cost?",
-     "a": "Yes. Commands go through a write API with full validation into the write store, events are projected into a read model shaped for the history screens, and read APIs scale independently of writes. The cost is the lag between a write and its appearance in the read model, plus the work of running the event flow and projections. If users must see their own change immediately, serve that view from the write side."
+     "a": {
+      "lead": "**Yes.**",
+      "items": [
+       "**Commands** → a **write API** with full **validation** → the **write store**",
+       "**Events** are projected into a **read model** shaped for the history screens",
+       "**Read APIs** scale **independently** of writes",
+       "**Cost**: the **lag** between a write and its appearance in the read model, plus the work of running the **event flow and projections**"
+      ],
+      "foot": "If users must see their **own change immediately**, serve that view from the **write side**."
+     }
     }
    ],
    "visuals": [
@@ -490,15 +612,34 @@
    "check": [
     {
      "q": "Shopping carts are kept in a key-value store for fast lookup by cart ID. A product team now wants 'all carts updated in the last hour' from the same store. Advise.",
-     "a": "Key-value stores are built for point queries by key; range queries are expensive by design, so this would mean scanning everything. Publish cart updates to a store or index built for that query, or maintain a separate time-ordered index. Keep the key-value store for what it does best."
+     "a": {
+      "items": [
+       "**Key-value stores** are built for **point queries by key**; **range queries** are expensive by design → this would mean **scanning everything**",
+       "**Instead**: publish cart updates to a **store or index** built for that query, or maintain a separate **time-ordered index**",
+       "Keep the key-value store for what it does best"
+      ]
+     }
     },
     {
      "q": "A team plans to keep two terabytes of rarely read historical records in an in-memory key-value store because lookups are fast. What would you point out?",
-     "a": "Most key-value stores keep everything in memory and flush to disk occasionally, so they need large amounts of memory, and persistence affects performance. Paying for memory to hold cold data wastes the store's strength. Keep hot data such as carts, sessions and rate-limit counters there, and move historical records to a cheaper store suited to infrequent reads."
+     "a": {
+      "items": [
+       "Most key-value stores keep **everything in memory** and **flush to disk** occasionally → need **large amounts of memory**, and **persistence affects performance**",
+       "Paying for memory to hold **cold data** wastes the store's strength",
+       "**Keep hot data** there, such as **carts, sessions and rate-limit counters**",
+       "Move **historical records** to a **cheaper store** suited to infrequent reads"
+      ]
+     }
     },
     {
      "q": "The lecture's key-value architecture sends all reads and writes for a key through its shard's master and labels it CP. What does that mean during a partition, and what should you still verify?",
-     "a": "If a shard's master is unreachable, its keys are unavailable until failover, rather than being served stale from a replica. Verify how failover works and when writes are acknowledged, because promoting a replica that missed recent writes can lose acknowledged data. The CP label describes the illustrated design, not every configuration of every product."
+     "a": {
+      "items": [
+       "**During a partition**: if a shard's **master is unreachable**, its keys are **unavailable until failover**, rather than being served stale from a replica",
+       "**Verify** how **failover** works and when writes are **acknowledged**: promoting a replica that missed recent writes can **lose acknowledged data**"
+      ],
+      "foot": "The **CP label** describes the illustrated design, not every configuration of every product."
+     }
     }
    ]
   },
@@ -572,11 +713,27 @@
    "check": [
     {
      "q": "An order, its line items and its shipping address are always read and written together, and the attributes vary by product type. Document or relational store?",
-     "a": "A document store: embedding the line items and address in the order document means one id-based fetch returns everything, and the schema-free model handles varying attributes. That works because the order is the natural unit of reading and writing. If line items were updated independently by many processes, or reporting needed joins across orders and products, the relational model would fit better."
+     "a": {
+      "lead": "**A document store.**",
+      "items": [
+       "**Embed** the line items and address in the order document → one **id-based fetch** returns everything",
+       "The **schema-free** model handles **varying attributes**",
+       "Works because the order is the **natural unit of reading and writing**"
+      ],
+      "foot": "The **relational model** would fit better if line items were **updated independently** by many processes, or reporting needed **joins** across orders and products."
+     }
     },
     {
      "q": "A team wants to move its accounting system, which depends on joins, constraints and triggers, to a document store for schema flexibility. Advise.",
-     "a": "Keep it relational. The lecture warns that most document stores lack joins, complex transactions, SQL, constraints and triggers, and accounting relies on exactly those to protect integrity. Schema flexibility does not justify losing those guarantees. A document store could still serve a derived, read-only view if some screens need flexible documents."
+     "a": {
+      "lead": "**Keep it relational.**",
+      "items": [
+       "The lecture warns most document stores lack **joins, complex transactions, SQL, constraints and triggers**",
+       "Accounting relies on exactly those to protect **integrity**",
+       "**Schema flexibility** does not justify losing those guarantees"
+      ],
+      "foot": "A document store could still serve a **derived, read-only view** if some screens need flexible documents."
+     }
     }
    ]
   },
@@ -646,11 +803,25 @@
    "check": [
     {
      "q": "A fleet of sensors sends 50,000 readings a second, each sensor reporting a different, sparse set of fields. The main query is 'all readings for sensor X over a time range'. Which data model fits, and how would you design the key?",
-     "a": "A wide-column store: it is linearly scalable, handles very high write volumes, and lets each row have a different set of columns. Design the row key around the query, for example sensor ID plus time, so one sensor's range is read contiguously. The key must spread writes across shards, so avoid keys where all current writes land on one region."
+     "a": {
+      "lead": "**A wide-column store.**",
+      "items": [
+       "**Linearly scalable**, handles **very high write volumes**",
+       "Lets each row have a **different set of columns**",
+       "Design the **row key** around the query, e.g. **sensor ID plus time** → one sensor's range is read **contiguously**",
+       "The key must **spread writes across shards** → avoid keys where all current writes land on **one region**"
+      ]
+     }
     },
     {
      "q": "Later, analysts want 'every sensor whose temperature ever exceeded 80' across the whole fleet. What happens with the wide-column design, and what would you do?",
-     "a": "Nothing in the row key supports that query, so it needs a full scan or a secondary index, which the lecture says is significantly slower and expensive. A wide-column store is not a general-purpose database, and there are no joins. Copy the data into an analytics engine, such as SQL over files, or a store designed for that query."
+     "a": {
+      "items": [
+       "Nothing in the **row key** supports that query → it needs a **full scan** or a **secondary index**, which the lecture says is **significantly slower and expensive**",
+       "A wide-column store is **not a general-purpose database**, and there are **no joins**",
+       "**Do**: copy the data into an **analytics engine**, such as **SQL over files**, or a store designed for that query"
+      ]
+     }
     }
    ]
   },
@@ -715,11 +886,27 @@
    "check": [
     {
      "q": "A team proposes writing orders only to the search engine, since it already powers order search and returns results quickly. Do you agree?",
-     "a": "No. The lecture says search engines are not recommended as a primary datastore: insertions are slow because of tokenisation and analysis, and they have no joins or transactions. Keep orders in a transactional system of record and derive the search index from it, accepting a short delay before new orders become searchable. The index can then be rebuilt from the source if it is lost or corrupted."
+     "a": {
+      "lead": "**No.** The lecture says search engines are **not recommended as a primary datastore**.",
+      "items": [
+       "**Insertions are slow** because of **tokenisation and analysis**",
+       "**No joins or transactions**",
+       "Keep orders in a **transactional system of record** and **derive the search index** from it",
+       "Accept a **short delay** before new orders become searchable"
+      ],
+      "foot": "The index can then be **rebuilt from the source** if it is lost or corrupted."
+     }
     },
     {
      "q": "Product search needs ranking, wildcards, filters and aggregations over ten million products, whose source of truth is a document store. Design the data flow, and say where search results must not be trusted.",
-     "a": "Publish product changes from the system of record and have an indexer update the search engine, so ranking, wildcard, range and filter queries run there. The lecture's search architecture is AP, so results can be briefly stale or inconsistent. That is fine for browsing, but stock levels and prices at checkout must be read from the system of record."
+     "a": {
+      "items": [
+       "**Data flow**: publish product changes from the **system of record** → an **indexer** updates the **search engine**",
+       "**Ranking, wildcard, range and filter** queries run there",
+       "The lecture's search architecture is **AP** → results can be **briefly stale or inconsistent**"
+      ],
+      "foot": "Fine for **browsing**, but **stock levels and prices at checkout** must be read from the system of record."
+     }
     }
    ]
   },
@@ -798,11 +985,26 @@
    "check": [
     {
      "q": "A venture-capital firm wants to find investors who co-invest with investors who co-invested with investor X, three hops out. Which data model fits, and what are its limits?",
-     "a": "A graph store: the question is about relationships between things, and traversing a few hops is natural there, whereas relational joins three levels deep get expensive. Its limits are that horizontal scaling is hard, because splitting a graph across machines needs costly coordination, and aggregations require traversing the entire database. Keep it for relationship queries and do the totals elsewhere."
+     "a": {
+      "lead": "**A graph store.**",
+      "items": [
+       "The question is about **relationships between things** → **traversing a few hops** is natural there, whereas **relational joins three levels deep** get expensive",
+       "**Limit**: **horizontal scaling is hard**, because splitting a graph across machines needs costly **coordination**",
+       "**Limit**: **aggregations** require traversing the **entire database**"
+      ],
+      "foot": "Keep it for **relationship queries** and do the totals elsewhere."
+     }
     },
     {
      "q": "Analysts want ad hoc SQL over five years of log files already sitting in file or object storage, a few times a week. Would you load them into a relational database or use a SQL-over-files engine?",
-     "a": "Use a SQL-over-files engine: it is not a database but a SQL parser, job generator and metadata manager over the existing files, so nothing has to be loaded or managed in tables. It suits occasional analytical queries over large data. Individual queries are slower than on an indexed transactional database, and it does not manage transactional records, so it is not a replacement for the application's store."
+     "a": {
+      "lead": "**Use a SQL-over-files engine.**",
+      "items": [
+       "Not a database but a **SQL parser, job generator and metadata manager** over the existing files → nothing has to be loaded or managed in tables",
+       "Suits **occasional analytical queries** over **large data**"
+      ],
+      "foot": "**Trade-off**: individual queries are **slower** than on an indexed transactional database, and it does not manage **transactional records**, so it is not a replacement for the application's store."
+     }
     }
    ],
    "visuals": [
@@ -855,27 +1057,107 @@
  "exam_angles": [
   {
    "q": "A global shopping app needs a cart, a product catalogue with varied attributes, order history with financial integrity, product search, and 'customers also bought' recommendations. Choose a data model for each, justify it, and name the main cost of the overall design.",
-   "a": "Cart: a key-value store for fast lookup by cart ID, replicated and kept available during partitions, since a stale cart beats no cart. Catalogue: a document store, because nested, varying product attributes fit schema-free documents. Orders: a relational store for ACID transactions and constraints. Search: a search engine index derived from the catalogue, never the primary store. Recommendations: a graph store to traverse customer-product relationships. The main cost is operational: five stores to run, plus the event flows that keep the derived ones in step, so drop any store whose workload does not justify it."
+   "a": {
+    "items": [
+     "**Cart → key-value store**: fast lookup by **cart ID**, replicated and kept **available during partitions**, since a stale cart beats no cart",
+     "**Catalogue → document store**: nested, **varying product attributes** fit **schema-free** documents",
+     "**Orders → relational store**: **ACID transactions** and **constraints**",
+     "**Search → search engine index** derived from the catalogue, **never the primary store**",
+     "**Recommendations → graph store**: traverse **customer-product relationships**"
+    ],
+    "foot": "**Main cost: operational**: five stores to run, plus the **event flows** that keep the derived ones in step → drop any store whose workload does not justify it."
+   }
   },
   {
    "q": "Using CAP, decide how (a) a social media timeline and (b) a payments ledger should behave during a network partition between data centres, and explain why the decision is a business one.",
-   "a": "During a partition a distributed store must choose: keep answering and risk stale or divergent data (AP), or refuse some operations to stay consistent (CP). (a) The timeline should stay available: some posts are better than none, and stale feeds are a minor annoyance. (b) The ledger should prefer consistency and reject debits it cannot apply safely, because a wrong balance costs far more than a temporary error. It is a business decision because the question is which harm users and the company can tolerate, not which technology is better."
+   "a": {
+    "lead": "During a partition a distributed store must choose: keep answering and risk stale or divergent data (**AP**), or refuse some operations to stay consistent (**CP**).",
+    "ordered": true,
+    "items": [
+     "**(a) Timeline → stay available**: some posts are better than none, and **stale feeds** are a minor annoyance",
+     "**(b) Ledger → prefer consistency**: reject **debits** it cannot apply safely, because a **wrong balance** costs far more than a **temporary error**",
+     "**Business decision**: the question is **which harm** users and the company can tolerate, not which technology is better"
+    ]
+   }
   },
   {
    "q": "A ticketing platform must accept 60,000 seat purchases in the first two minutes of a sale. The database has one primary and one read replica, and performance tests show write throughput is the bottleneck. Propose a plan to scale writes, including the changes to software, and identify two side effects to monitor.",
-   "a": "Replicas cannot help, because all writes go to the one primary. Shard the seat inventory, for example by hash of event and seat block, so each shard has its own master. The services then need shard-aware routing, through a client-side algorithm or a locator service. Serve the heavy seat-map reads from a cache or a CQRS read model, so the shards spend their capacity on purchases, and use write-through for anything that must not be lost. Monitor (1) hot shards, since one popular event can concentrate writes on one master, and (2) the staleness of cached or projected seat maps, which can show seats as free after they are sold. Cross-shard queries such as sales reports also get harder."
+   "a": {
+    "lead": "**Replicas cannot help**, because all writes go to the one primary.",
+    "ordered": true,
+    "items": [
+     "**Shard the seat inventory**, e.g. by **hash of event and seat block** → each shard has its **own master**",
+     "**Software change**: services need **shard-aware routing**, through a **client-side algorithm** or a **locator service**",
+     "Serve the heavy **seat-map reads** from a **cache** or a **CQRS read model** → the shards spend their capacity on purchases",
+     "Use **write-through** for anything that must not be lost",
+     {
+      "t": "**Monitor**",
+      "sub": [
+       "**(1) Hot shards**: one popular event can concentrate writes on one master",
+       "**(2) Staleness** of cached or projected seat maps → can show seats as free after they are sold"
+      ]
+     }
+    ],
+    "foot": "**Cross-shard queries** such as sales reports also get harder."
+   }
   },
   {
    "q": "When would you avoid a document store for a new service, and what would you use instead? Give two concrete cases.",
-   "a": "Avoid it when the service relies on joins across many entities, multi-record transactions, or enforced constraints and triggers, which most document stores lack; an accounting or ledger service should use a relational store. Also avoid it when the data is a write-heavy stream of sparse, timestamped records read by key and time range, where a wide-column store fits better, or when the core queries traverse relationships, where a graph fits. A document store remains a good choice when an entity and its children are read and written as one unit and the schema keeps changing."
+   "a": {
+    "items": [
+     {
+      "t": "**Case 1: joins, multi-record transactions, constraints** → **relational store**",
+      "sub": [
+       "Avoid it when the service relies on **joins across many entities**, **multi-record transactions**, or enforced **constraints and triggers**, which most document stores lack",
+       "e.g. an **accounting or ledger** service should use a relational store"
+      ]
+     },
+     {
+      "t": "**Case 2: write-heavy stream** → **wide-column store**",
+      "sub": [
+       "Avoid it when the data is a **write-heavy stream** of **sparse, timestamped records** read by **key and time range**, where a wide-column store fits better"
+      ]
+     },
+     "**Also**: when the core queries **traverse relationships** → a **graph** fits"
+    ],
+    "foot": "A document store **remains a good choice** when an entity and its children are read and written **as one unit** and the **schema keeps changing**."
+   }
   },
   {
    "q": "Compare a key-value store and a wide-column store for an IoT platform that writes 50,000 readings a second and reads 'last value for device X' and 'device X over the past week'. Which would you choose, or would you use both?",
-   "a": "A key-value store answers 'last value for device X' fastest, as an in-memory point lookup, but it handles range queries poorly and needs a lot of memory for history. A wide-column store absorbs heavy writes, scales linearly, and serves 'device X over the past week' well if the row key is device ID plus time. A defensible design uses both: wide-column for the history and a key-value cache for the latest value, at the cost of writing each reading twice and running two stores. If the last-value query is rare, the wide-column store alone is enough."
+   "a": {
+    "items": [
+     {
+      "t": "**Key-value store**",
+      "sub": [
+       "Answers **'last value for device X'** fastest, as an **in-memory point lookup**",
+       "Handles **range queries poorly** and needs a lot of **memory for history**"
+      ]
+     },
+     {
+      "t": "**Wide-column store**",
+      "sub": [
+       "Absorbs **heavy writes**, **scales linearly**",
+       "Serves **'device X over the past week'** well if the **row key** is **device ID plus time**"
+      ]
+     },
+     "**Defensible design: use both**: **wide-column** for the history + a **key-value cache** for the latest value",
+     "**Cost**: writing each reading **twice** and running **two stores**"
+    ],
+    "foot": "If the last-value query is **rare**, the wide-column store **alone** is enough."
+   }
   },
   {
    "q": "Order history is read far more often than it is written, writes go through strict business validation, and the history screens need a different shape from the write model. Design a CQRS solution, and say what users might notice and how you would limit it.",
-   "a": "Commands go through a write API with full validation into a relational write store, and each committed change publishes an event. A projector builds a read model shaped for the history screens, for example documents or an in-memory read store, served by read APIs that scale independently. Users may not see a change they just made, because projection is asynchronous, so serve 'my latest order' from the write side or show it as pending until the projection catches up. Monitor projection lag and make the projector idempotent so replays do not duplicate history."
+   "a": {
+    "items": [
+     "**Write side**: commands → a **write API** with full **validation** → a **relational write store**; each committed change **publishes an event**",
+     "**Read side**: a **projector** builds a **read model** shaped for the history screens, e.g. **documents** or an **in-memory read store**, served by **read APIs** that **scale independently**",
+     "**Users may notice**: not seeing a change they just made, because **projection is asynchronous**",
+     "**Limit it**: serve **'my latest order'** from the **write side**, or show it as **pending** until the projection catches up",
+     "**Monitor projection lag** and make the projector **idempotent** so replays do not duplicate history"
+    ]
+   }
   }
  ]
 }

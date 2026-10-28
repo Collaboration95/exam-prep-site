@@ -97,15 +97,38 @@
    "check": [
     {
      "q": "A team's process document lists tasks such as 'design the database' and 'write tests', but not who does them, what each produces or when they happen. What is missing, and why does it matter?",
-     "a": "It has the 'how' (activities and tasks) but not the 'who' (roles), the 'what' (work products) or the 'when' (phases and iterations). Without roles nobody owns the outputs, and without work products nobody can tell when a task is done or what the next task takes as input. Adding them turns a to-do list into a method that can be planned and reviewed."
+     "a": {
+      "lead": "It has the **'how'** (activities and tasks) but not the rest of a method:",
+      "items": [
+       "**'Who'**: **roles** → without them nobody **owns the outputs**",
+       "**'What'**: **work products** → without them nobody can tell when a task is **done** or what the next task takes as **input**",
+       "**'When'**: **phases and iterations**"
+      ],
+      "foot": "Adding them turns a **to-do list** into a **method** that can be planned and reviewed."
+     }
     },
     {
      "q": "A project manager plans to start architecture work in Construction, 'once there is some code to look at'. Critique the plan.",
-     "a": "In the Unified Process, architecture effort peaks in Elaboration, because the key structural decisions and risks must be settled before heavy construction. Starting late means building on unvalidated assumptions and paying for rework. Architecture does continue into Construction, as detailing and refinement, but it should not start there."
+     "a": {
+      "items": [
+       "**Unified Process**: architecture effort **peaks in Elaboration** → the key **structural decisions and risks** must be settled before heavy construction",
+       "**Starting late** → building on **unvalidated assumptions** and paying for **rework**",
+       "**Construction**: architecture does continue, as **detailing and refinement**, but it should not start there"
+      ]
+     }
     },
     {
      "q": "While detailing the physical architecture, the team learns that the payment provider accepts only batch files. Does the method require starting again from requirements?",
-     "a": "No full restart: architecting is iterative. Record the new constraint in the requirements and revisit the affected logical elements (the payment boundary and its control flow). Then update the physical design and record the decision. Only the parts the constraint touches need to change."
+     "a": {
+      "lead": "**No full restart**: architecting is **iterative**.",
+      "ordered": true,
+      "items": [
+       "**Record the new constraint** in the requirements",
+       "**Revisit the affected logical elements** (the payment boundary and its control flow)",
+       "**Update the physical design** and **record the decision**"
+      ],
+      "foot": "Only the parts the constraint touches need to change."
+     }
     }
    ]
   },
@@ -197,15 +220,36 @@
    "check": [
     {
      "q": "Stakeholder workshops for a hospital booking system included doctors, patients and the operations director only. What is missing, and what is likely to go wrong?",
-     "a": "The technical stakeholders are missing: system administrators and the owners of external systems such as the patient-record and payment systems. Business stakeholders rarely state availability, operability and integration constraints, so those will surface late and force rework. The architect should make sure qualities and constraints are collected, not just features."
+     "a": {
+      "items": [
+       "**Missing: technical stakeholders** → **system administrators** and the **owners of external systems** such as the patient-record and payment systems",
+       "**Risk**: business stakeholders rarely state **availability, operability and integration constraints** → they surface late and force **rework**",
+       "**Architect's job**: make sure **qualities and constraints** are collected, not just features"
+      ]
+     }
     },
     {
      "q": "In a resort system, reservation agents work both at the central office and at each hotel's front desk, with different network access. How do you show them in the system context, and why?",
-     "a": "Introduce a separate actor for each location, such as Central Office Reservation Agent and Hotel Reservation Agent. Each can then be placed, given its own data flows and reasoned about for connectivity and deployment. The cost is a slightly larger context diagram, in exchange for not hiding location-specific requirements."
+     "a": {
+      "lead": "Introduce a **separate actor for each location**, such as **Central Office Reservation Agent** and **Hotel Reservation Agent**. Each can then be:",
+      "items": [
+       "**Placed**",
+       "Given its own **data flows**",
+       "Reasoned about for **connectivity and deployment**"
+      ],
+      "foot": "Cost: a slightly larger **context diagram**, in exchange for not hiding **location-specific requirements**."
+     }
     },
     {
      "q": "Sales uses 'booking' to mean a confirmed, paid reservation, while operations uses it for any held slot. Why does the architect care?",
-     "a": "Inconsistent terms lead to inconsistent requirements and data models: capacity counts, reports and integration messages would disagree about what a booking is. Capture a common vocabulary early and define each term once, because fixing it after the data model is built is far more expensive."
+     "a": {
+      "items": [
+       "**Inconsistent terms** → inconsistent **requirements and data models**",
+       "**Effect**: **capacity counts**, **reports** and **integration messages** would disagree about what a booking is",
+       "**Fix**: capture a **common vocabulary** early and define each term **once**"
+      ],
+      "foot": "Fixing it **after the data model is built** is far more expensive."
+     }
     }
    ]
   },
@@ -262,7 +306,17 @@
    "check": [
     {
      "q": "An NFR reads: 'Search shall respond in under 3 seconds.' What would you add before using it for sizing or testing?",
-     "a": "The conditions: the workload (concurrent users, request mix, think time), the measurement boundary (server only or end to end), whether 3 s is an average or a percentile such as 90% of requests, the test environment, and the measurement period. Without them, two teams can test the same system and both claim compliance with different results."
+     "a": {
+      "lead": "Add the **conditions**:",
+      "items": [
+       "**Workload**: concurrent users, **request mix**, **think time**",
+       "**Measurement boundary**: server only or **end to end**",
+       "**Average or percentile**: e.g. 3 s for 90% of requests",
+       "**Test environment**",
+       "**Measurement period**"
+      ],
+      "foot": "Without them, two teams can test the same system and both claim **compliance** with different results."
+     }
     },
     {
      "q": "Is 'supports 1000 concurrent users' enough to size the servers?",
@@ -270,11 +324,23 @@
     },
     {
      "q": "The functional outline for a reservation system lists only customer use cases. Later, operations asks how to cancel a stuck reservation. What went wrong?",
-     "a": "Functional requirements should be outlined per actor in the system context, including technical users such as administrators and operators. Missing 'Administer Reservations' means the function and its data access are added late, causing rework. The outline should also confirm explicitly what is out of scope."
+     "a": {
+      "items": [
+       "**Per actor**: functional requirements should be outlined per actor in the **system context**, including **technical users** such as administrators and operators",
+       "**Missing 'Administer Reservations'** → the function and its **data access** are added late → **rework**",
+       "**Scope**: the outline should also confirm explicitly what is **out of scope**"
+      ]
+     }
     },
     {
      "q": "Search must be 99.9% available, and every other function 99%. What does this split let the architect do?",
-     "a": "Give search extra redundancy and isolate it from the less critical functions, instead of paying for 99.9% across the whole system. The cost is a more complex deployment with separately scaled parts, which is worth it only if search can actually run independently of the 99% components."
+     "a": {
+      "items": [
+       "**Search (99.9%)**: give it extra **redundancy** and **isolate** it from the less critical functions",
+       "**Instead of** paying for 99.9% across the whole system"
+      ],
+      "foot": "Cost: a more complex **deployment** with **separately scaled** parts → worth it only if search can actually **run independently** of the 99% components."
+     }
     }
    ]
   },
@@ -390,15 +456,40 @@
    "check": [
     {
      "q": "For a ticketing system, which of these are architecturally significant, and why: (a) the colour of the 'print receipt' button; (b) handling 30,000 buyers in the first 5 minutes of a sale; (c) integration with a national ID service's fixed API; (d) a streaming library nobody on the team has used?",
-     "a": "(b) is a critical quality (performance and scalability), (c) is a critical constraint, and (d) carries technical risk, so all three are significant and shape the structure. (a) is a detail with no architectural impact. Significant requirements are worth detailing first because they are costly to change later."
+     "a": {
+      "items": [
+       "**(b) Significant**: a **critical quality** (performance and scalability)",
+       "**(c) Significant**: a **critical constraint**",
+       "**(d) Significant**: carries **technical risk**",
+       "**(a) Not significant**: a **detail** with no architectural impact"
+      ],
+      "foot": "Significant requirements **shape the structure** and are worth **detailing first**, because they are **costly to change later**."
+     }
     },
     {
      "q": "Rewrite 'the system shall be available' as a six-part availability scenario for a payment-gateway outage.",
-     "a": "Source: the external payment gateway. Stimulus: it stops responding. Artifact: the checkout service. Environment: normal operation at peak load. Response: detect the failure, hold orders and tell customers that payment is pending. Response measure: detection within 30 s, no confirmed order lost, and checkout degraded for no more than 10 minutes. Each part now gives the architect something to design and test against."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Source**: the external payment gateway",
+       "**Stimulus**: it stops responding",
+       "**Artifact**: the checkout service",
+       "**Environment**: normal operation at peak load",
+       "**Response**: detect the failure, hold orders and tell customers that payment is pending",
+       "**Response measure**: detection within 30 s, no confirmed order lost, and checkout degraded for no more than 10 minutes"
+      ],
+      "foot": "Each part now gives the architect something to **design and test** against."
+     }
     },
     {
      "q": "Late in the project, a stakeholder asks to drop the 'check hotel availability' requirement. How does the Solution Architecture Document help?",
-     "a": "Its traceability section links the requirement to the components, interfaces and decisions that satisfy it, so you can see what would be removed or simplified and estimate the impact. Handle the change through a change request and the review process, and record the outcome. Without traceability, the impact is guesswork."
+     "a": {
+      "items": [
+       "**Traceability section**: links the requirement to the **components, interfaces and decisions** that satisfy it → see what would be removed or simplified and **estimate the impact**",
+       "**Process**: handle the change through a **change request** and the **review process**, and **record the outcome**"
+      ],
+      "foot": "Without traceability, the impact is **guesswork**."
+     }
     }
    ],
    "visuals": [
@@ -542,15 +633,36 @@
    "check": [
     {
      "q": "IROne built a custom rules engine on the assumption of about 30 to 40 rules. A year later, marketing wants 400 rules editable by business users. What does the decision record tell you to do?",
-     "a": "The recorded assumption no longer holds, so the decision must be reviewed. The recorded alternatives, such as buying a commercial rules engine that was overkill at 30 rules, may now be justified. Reassess against the new needs rather than switching automatically; this is why decisions record assumptions and alternatives as well as the choice."
+     "a": {
+      "lead": "The recorded **assumption** no longer holds → the decision must be **reviewed**.",
+      "items": [
+       "**Recorded alternatives** may now be justified, such as buying a **commercial rules engine** that was overkill at 30 rules",
+       "**Reassess** against the new needs rather than **switching automatically**"
+      ],
+      "foot": "This is why decisions record **assumptions and alternatives** as well as the choice."
+     }
     },
     {
      "q": "A client buys a packaged reservation product that covers 70% of the required functions. How does this change where architecture effort goes?",
-     "a": "Less effort goes into logical structure, because the package supplies much of it. More goes into the physical architecture: fitting and configuring the package, and integrating the remaining 30%. The risk shifts too: the package's constraints now limit the design, so record them as decisions."
+     "a": {
+      "items": [
+       "**Less effort on logical structure**: the package supplies much of it",
+       "**More effort on physical architecture**: fitting and **configuring the package**, and **integrating** the remaining 30%",
+       "**Risk shifts**: the package's **constraints** now limit the design → record them as **decisions**"
+      ]
+     }
     },
     {
      "q": "A decision log entry reads only 'Decision: use a message queue for hotel integration.' What is wrong with it?",
-     "a": "It lacks the issue, assumptions, alternatives and justification. Later teams cannot tell why the queue was chosen, what was rejected, or what change (in volume or latency needs, for instance) should trigger a review. Record the full Issue, Decision, Assumptions, Alternatives, Justification template."
+     "a": {
+      "lead": "It lacks the **issue, assumptions, alternatives and justification**. Later teams cannot tell:",
+      "items": [
+       "**Why** the queue was chosen",
+       "**What was rejected**",
+       "**What change** (in **volume or latency** needs, for instance) should **trigger a review**"
+      ],
+      "foot": "Record the full template: **Issue, Decision, Assumptions, Alternatives, Justification**."
+     }
     }
    ],
    "visuals": [
@@ -665,15 +777,42 @@
    "check": [
     {
      "q": "For a 'Cancel Booking' use case: the customer's web page, the logic that coordinates the cancellation and refund rules, the link to the payment gateway, and the Booking record. Classify each and say how many controllers you would start with.",
-     "a": "The web page is a boundary (to the primary actor). The payment gateway link is a boundary (to an external system). The coordinating logic is a control component, and the Booking record is an entity. Start with one controller for the use case, and split it into sub-controllers only if it becomes too complex."
+     "a": {
+      "items": [
+       "**Web page → boundary** (to the **primary actor**)",
+       "**Payment gateway link → boundary** (to an **external system**)",
+       "**Coordinating logic → control** component",
+       "**Booking record → entity**"
+      ],
+      "foot": "Start with **one controller for the use case**; split it into **sub-controllers** only if it becomes too complex."
+     }
     },
     {
      "q": "A design has one 'ReservationManager' component that renders screens, applies rules, calls the hotel system and stores the data. What is wrong, in robustness-analysis terms?",
-     "a": "It mixes boundary, control and entity responsibilities, so a change to a screen, a rule or the hotel interface affects one large component. Split it into a reservation UI and hotel-system interface (boundaries), a reserve-slot control, and the reservation entity. The cost is more components and interfaces, and in return changes stay local."
+     "a": {
+      "items": [
+       "**Problem**: it mixes **boundary, control and entity** responsibilities → a change to a screen, a rule or the hotel interface affects one large component",
+       {
+        "t": "**Split it**",
+        "sub": [
+         "**Boundaries**: a reservation UI and a hotel-system interface",
+         "**Control**: a reserve-slot control",
+         "**Entity**: the reservation entity"
+        ]
+       }
+      ],
+      "foot": "Cost: more components and interfaces → in return **changes stay local**."
+     }
     },
     {
      "q": "The architecture overview leaves out the payment system that appears in the system context. How should this be caught?",
-     "a": "Trace every actor, external system and data flow from the system context into the overview: the payment system needs a boundary or integration-layer element. Starting the overview from the context makes such omissions visible, but only if someone checks it item by item."
+     "a": {
+      "items": [
+       "**Trace** every **actor, external system and data flow** from the **system context** into the **overview**",
+       "The **payment system** needs a **boundary** or **integration-layer** element"
+      ],
+      "foot": "Starting the overview from the context makes such omissions visible, but only if someone **checks it item by item**."
+     }
     }
    ],
    "visuals": [
@@ -812,15 +951,41 @@
    "check": [
     {
      "q": "The team doubts whether the rules engine can evaluate 40 rules within the 3-second search target. Is a verification meeting enough?",
-     "a": "No. Verification reviews the outlined architecture for consistency and cross-cutting concerns; it cannot measure performance. This is a risk that calls for validation: build an architectural proof of concept, measure it against the 3 s target with a realistic load, and document the findings and recommendations."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Verification** reviews the outlined architecture for **consistency** and **cross-cutting concerns** → it cannot measure performance",
+       {
+        "t": "**Validation**: this risk calls for it",
+        "sub": [
+         "Build an **architectural proof of concept**",
+         "**Measure** it against the 3 s target with a **realistic load**",
+         "**Document** the findings and recommendations"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A logical deployment model labels the application node '2 x 16-core, 64 GB'. A reviewer objects. Why?",
-     "a": "Hardware and sizing are physical decisions. At the logical stage, nodes only say which kinds of node exist, in which locations, and what runs on them. Fixing hardware before the technology is chosen and the NFRs are sized commits the design early and without evidence."
+     "a": {
+      "items": [
+       "**Hardware and sizing** are **physical** decisions",
+       "**Logical nodes** only say which **kinds of node** exist, in which **locations**, and what runs on them"
+      ],
+      "foot": "Fixing hardware before the **technology is chosen** and the **NFRs are sized** commits the design early and **without evidence**."
+     }
     },
     {
      "q": "Two teams will build components that call each other, and so far they have agreed only on component names. What must the detailed functional model add before they code?",
-     "a": "Interfaces with operations and signatures, contracts (preconditions and postconditions) and the logical data model they exchange. Without these, each team will assume different behaviour and the mismatch appears at integration."
+     "a": {
+      "items": [
+       "**Interfaces** with **operations and signatures**",
+       "**Contracts**: **preconditions and postconditions**",
+       "The **logical data model** they exchange"
+      ],
+      "foot": "Without these, each team will assume different behaviour and the **mismatch appears at integration**."
+     }
     }
    ]
   },
@@ -889,15 +1054,46 @@
    "check": [
     {
      "q": "Logical 'Reservation Control' must meet 99.9% availability. Logical 'Reporting', 'Billing' and 'CRM' are all covered by one packaged product. Which logical-to-physical mapping applies to each, and what does each cost?",
-     "a": "Reservation Control maps one to many: several physical instances, so one failure does not stop the service. That needs load balancing and state handling. The packaged product is many to one: one physical element realises several logical ones, which ties them to that product's release cycle and limits."
+     "a": {
+      "items": [
+       {
+        "t": "**Reservation Control → one to many**",
+        "sub": [
+         "Several **physical instances**, so one failure does not stop the service",
+         "**Cost**: needs **load balancing** and **state handling**"
+        ]
+       },
+       {
+        "t": "**Packaged product → many to one**",
+        "sub": [
+         "One physical element realises several logical ones (Reporting, Billing, CRM)",
+         "**Cost**: ties them to that product's **release cycle and limits**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A team maps every logical component, including the hotel-system interfaces, to synchronous REST controllers. The hotel systems are reachable only through message queues. Critique the mapping.",
-     "a": "Each logical element must be mapped to technology that meets its specification and constraints. A system-facing boundary to queue-only hotel systems should map to messaging (IROne used JMS), while person-facing boundaries map to the web tier. Record the mapping choice per element as a decision, rather than applying one technology everywhere."
+     "a": {
+      "items": [
+       "**Rule**: each logical element must be mapped to technology that meets its **specification and constraints**",
+       "**System-facing boundary** to queue-only hotel systems → **messaging** (IROne used **JMS**)",
+       "**Person-facing boundaries** → the **web tier**"
+      ],
+      "foot": "**Record the mapping choice per element** as a decision, rather than applying one technology everywhere."
+     }
     },
     {
      "q": "IROne chose an application server product because the team already had skills in it. A new CTO says to always choose the cheapest licence. How do you respond?",
-     "a": "Existing skills reduce delivery and operating risk, which is part of the solution's viability, so the cheapest licence may not be the cheapest solution once training, mistakes and slower delivery are counted. The decision record holds this justification. If the team's skills change or licence cost becomes dominant, revisit the decision."
+     "a": {
+      "items": [
+       "**Existing skills** reduce **delivery and operating risk**, which is part of the solution's **viability**",
+       "**Cheapest licence** may not be the **cheapest solution** once **training, mistakes and slower delivery** are counted",
+       "The **decision record** holds this **justification**"
+      ],
+      "foot": "If the team's **skills change** or **licence cost** becomes dominant, **revisit the decision**."
+     }
     }
    ],
    "visuals": [
@@ -1005,7 +1201,14 @@
    "check": [
     {
      "q": "Requirements: 1000 concurrent users and 99.9% search availability. A physical design has one web server and one application server, each sized for 1,200 users. Does it meet the NFRs?",
-     "a": "Capacity may be enough, but availability is not met: each tier is a single point of failure. Use at least two nodes per tier, sized so that the survivors still handle 1000 users when one fails. Then confirm availability and capacity with the real workload."
+     "a": {
+      "lead": "**Capacity** may be enough, but **availability is not met**.",
+      "items": [
+       "**Single point of failure**: each tier",
+       "**Fix**: at least **two nodes per tier**, sized so that the **survivors still handle 1000 users** when one fails",
+       "**Confirm** availability and capacity with the **real workload**"
+      ]
+     }
     },
     {
      "q": "The requirements specify web-service integration, but the physical example uses JMS. What should the architect do?",
@@ -1013,11 +1216,29 @@
     },
     {
      "q": "The integration endpoint table shows client to web over HTTPS/HTML, and application to hotel systems over messaging with XML, marked 'transformation: yes'. What work does that flag create?",
-     "a": "An adapter that maps the application's structures to the hotel systems' formats and meanings, which must be specified and tested. The flag says mapping is needed; it does not define it. Use of XML or messaging alone does not prove a transformation is needed."
+     "a": {
+      "lead": "It flags an **adapter** that maps the application's **structures** to the hotel systems' **formats and meanings**, which must be **specified and tested**.",
+      "items": [
+       "The flag says mapping is **needed**; it does not **define** it",
+       "Use of **XML or messaging** alone does not prove a transformation is needed"
+      ]
+     }
     },
     {
      "q": "The same logical design must be redeployed as containerised microservices. What changes and what stays?",
-     "a": "The logical functional model (components, interfaces, contracts) largely stays. The physical deployment changes: nodes become containers grouped into services, such as a reservation service with its own database and a separate integration service. Endpoints, sizing and the deployment mapping must be redone and validated against the NFRs."
+     "a": {
+      "items": [
+       "**Largely stays**: the **logical functional model** (components, interfaces, contracts)",
+       {
+        "t": "**Changes**: the **physical deployment** → nodes become **containers** grouped into **services**",
+        "sub": [
+         "Such as a **reservation service** with its **own database**",
+         "And a separate **integration service**"
+        ]
+       },
+       "**Redo**: **endpoints**, **sizing** and the **deployment mapping**, **validated against the NFRs**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -1054,23 +1275,117 @@
  "exam_angles": [
   {
    "q": "A clinic chain wants online booking within 6 months: 40 clinics, about 2,000 concurrent users at 8 am, and integration with a patient-record system that only accepts batch files overnight. (a) Pick three architecturally significant requirements and justify each. (b) Write one as a six-part scenario. (c) What decision would you record about the patient-record integration?",
-   "a": "(a) The 8 am peak of 2,000 concurrent users is a critical quality, because it drives capacity and scaling. The overnight-only patient-record interface is a critical constraint. Booking itself is critical functionality, without which there is no viable system. (b) Source: 2,000 patients; stimulus: book an appointment; artifact: booking service; environment: the 8 am peak; response: the slot is confirmed; measure: 90% of confirmations within 3 s. (c) Issue: bookings must reach patient records, but only overnight batch is possible. Decision: store bookings in the booking system and export them nightly. Assumptions: clinics can tolerate next-day sync. Alternatives: real-time integration, which is not offered. Justification: it meets the constraint. Revisit if same-day record access becomes a requirement."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**(a) Three architecturally significant requirements**",
+      "sub": [
+       "**8 am peak of 2,000 concurrent users** → **critical quality**: drives capacity and scaling",
+       "**Overnight-only patient-record interface** → **critical constraint**",
+       "**Booking itself** → **critical functionality**: without it there is no viable system"
+      ]
+     },
+     {
+      "t": "**(b) Six-part scenario**",
+      "sub": [
+       "**Source**: 2,000 patients",
+       "**Stimulus**: book an appointment",
+       "**Artifact**: booking service",
+       "**Environment**: the 8 am peak",
+       "**Response**: the slot is confirmed",
+       "**Measure**: 90% of confirmations within 3 s"
+      ]
+     },
+     {
+      "t": "**(c) Decision record** for the patient-record integration",
+      "sub": [
+       "**Issue**: bookings must reach patient records, but only overnight batch is possible",
+       "**Decision**: store bookings in the booking system and export them nightly",
+       "**Assumptions**: clinics can tolerate next-day sync",
+       "**Alternatives**: real-time integration, which is not offered",
+       "**Justification**: it meets the constraint",
+       "**Revisit** if same-day record access becomes a requirement"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A requirements document says: 'The system must be fast, secure and user-friendly and support 1000 users.' It lists only customer use cases. As architect, critique it and say what you would do in Define Requirements.",
-   "a": "None of the qualities are measurable, the user count gives no request mix or think time, and technical users and external systems are missing. Collect requests from technical stakeholders too (administrators, owners of external systems). Build a glossary and a system context with actors per location. Outline functional requirements per actor, including administration, and NFRs with targets and conditions. Prioritise the architecturally significant ones and detail them as use cases and six-part scenarios. Record them in the SAD with traceability, and review with stakeholders."
+   "a": {
+    "items": [
+     {
+      "t": "**Critique**",
+      "sub": [
+       "None of the qualities are **measurable**",
+       "The user count gives no **request mix** or **think time**",
+       "**Technical users** and **external systems** are missing"
+      ]
+     },
+     {
+      "t": "**In Define Requirements**",
+      "sub": [
+       "Collect requests from **technical stakeholders** too (administrators, owners of external systems)",
+       "Build a **glossary** and a **system context** with **actors per location**",
+       "Outline **functional requirements per actor**, including **administration**, and **NFRs with targets and conditions**",
+       "**Prioritise** the **architecturally significant** ones and detail them as **use cases** and **six-part scenarios**",
+       "Record them in the **SAD** with **traceability**, and **review** with stakeholders"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "For a 'Transfer Ticket' use case (an owner transfers a ticket to a friend, the system checks transfer rules and notifies an external venue system), derive the boundary, control and entity components, then propose a physical mapping that supports high availability.",
-   "a": "Boundaries: the transfer UI (owner) and the venue-system interface (external). Control: Transfer Ticket control, which coordinates the rules check, possibly using a rules component. Entities: Ticket and Transfer record. Physical mapping: the UI to the web tier; the control to a stateless application component deployed one to many across several instances; the venue interface to messaging, so venue outages don't block transfers; the entities to a persistent store with redundancy. Record each choice as a decision and check it against the availability target."
+   "a": {
+    "items": [
+     "**Boundaries**: the transfer UI (owner) and the venue-system interface (external)",
+     "**Control**: **Transfer Ticket control**, which coordinates the rules check, possibly using a **rules component**",
+     "**Entities**: **Ticket** and **Transfer record**",
+     {
+      "t": "**Physical mapping**",
+      "sub": [
+       "**UI → web tier**",
+       "**Control → stateless application component**, deployed **one to many** across several instances",
+       "**Venue interface → messaging**, so venue outages don't block transfers",
+       "**Entities → persistent store** with **redundancy**"
+      ]
+     }
+    ],
+    "foot": "**Record each choice as a decision** and check it against the **availability target**."
+   }
   },
   {
    "q": "Logical model: web, application, rules and integration nodes at the central office. NFRs: 1000 concurrent users with 99.9% availability. A benchmark shows one application node handles 400 users at the response target. Size the physical application tier and explain your mapping.",
-   "a": "Capacity alone needs 1000 / 400 = 2.5, so 3 nodes. To survive one node failure, the survivors must still carry 1000 users, so 4 nodes (3 survivors x 400 = 1,200). That is a one-to-many mapping of the logical application node, which requires stateless components or shared session state, and a load balancer. Confirm the 400-user figure with the production request mix, since benchmarks do not scale perfectly. Then specify the hardware, deployment units and endpoints."
+   "a": {
+    "ordered": true,
+    "items": [
+     "**Capacity alone**: 1000 / 400 = 2.5 → **3 nodes**",
+     "**Survive one node failure**: the survivors must still carry 1000 users → **4 nodes** (3 survivors x 400 = 1,200)",
+     "**Mapping**: a **one-to-many** mapping of the logical application node → requires **stateless components** or **shared session state**, and a **load balancer**",
+     "**Confirm** the 400-user figure with the **production request mix**, since benchmarks do not scale perfectly",
+     "**Then specify** the hardware, **deployment units** and **endpoints**"
+    ]
+   }
   },
   {
    "q": "A validation proof of concept shows the integration server handles 50 messages/s, but the peak need is 120 messages/s. How does this finding flow through the method, and what options would you weigh?",
-   "a": "Validation documents the finding, its risk and recommendations, traced to the NFR it threatens. Options: deploy the integration node one to many (three instances give about 150 messages/s if it scales, which must be measured), batch or queue messages to smooth the peak if a short delay is acceptable, or reduce the work per message. Record the chosen option as a decision with its assumptions, update the SAD and review it with stakeholders. Repeat validation until the risk is acceptable."
+   "a": {
+    "items": [
+     "**Validation** documents the finding, its **risk** and **recommendations**, **traced to the NFR** it threatens",
+     {
+      "t": "**Options**",
+      "sub": [
+       "**Deploy the integration node one to many**: three instances give about **150 messages/s** if it scales, which **must be measured**",
+       "**Batch or queue** messages to **smooth the peak**, if a short delay is acceptable",
+       "**Reduce the work per message**"
+      ]
+     },
+     "**Record** the chosen option as a **decision** with its **assumptions**, **update the SAD** and **review** it with stakeholders",
+     "**Repeat validation** until the risk is acceptable"
+    ]
+   }
   }
  ]
 }

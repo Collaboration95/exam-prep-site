@@ -85,15 +85,39 @@
    "check": [
     {
      "q": "System A fails twice a year for 4 hours each time. System B fails every day for 3 seconds. Which is more available, which is more reliable, and which would you rather run a payment service on?",
-     "a": "B is more available: about 18 minutes down per year (99.997%) against A's 8 hours (99.91%). A is more reliable: it runs much longer between failures. For payments, B's daily failures could break transactions in progress, so choose by which failure the service tolerates. High availability does not imply high reliability."
+     "a": {
+      "items": [
+       "**B is more available**: about **18 minutes** down per year (**99.997%**) against A's **8 hours** (**99.91%**)",
+       "**A is more reliable**: it runs much longer **between failures**",
+       "**For payments**: B's daily failures could break **transactions in progress** → choose by which failure the service tolerates"
+      ],
+      "foot": "**High availability does not imply high reliability.**"
+     }
     },
     {
      "q": "A service is agreed to run 7 am to 7 pm on 22 working days a month. This month it was down for 2 hours at 3 am and 1 hour at noon. What is its availability?",
-     "a": "AST = 12 x 22 = 264 hours. Only the noon outage falls inside the agreed service time, so DT = 1 hour, and availability = (264 - 1) / 264 = 99.62%. The 3 am outage does not count against this measure, which is why the agreed service time must be stated with any availability figure."
+     "a": {
+      "lead": "**Availability = 99.62%**",
+      "ordered": true,
+      "items": [
+       "**AST** = 12 x 22 = **264 hours**",
+       "Only the **noon outage** falls inside the agreed service time → **DT = 1 hour**",
+       "**Availability** = (264 - 1) / 264 = **99.62%**"
+      ],
+      "foot": "The **3 am outage** does not count against this measure, which is why the **agreed service time** must be stated with any availability figure."
+     }
     },
     {
      "q": "A service has MTTF of 999 hours and MTTR of 1 hour. You can either halve how often it fails or halve its recovery time. Which raises availability more?",
-     "a": "Both give about the same result: 1998 / 1999 and 999 / 999.5 are both about 99.95%, up from 99.9%, because each halves the share of time spent recovering. Choose by cost and side effects: fewer failures also improves reliability, while faster recovery (monitoring, automated failover) is often cheaper to achieve."
+     "a": {
+      "lead": "**Both give about the same result.**",
+      "items": [
+       "**Halve failures**: 1998 / 1999 about **99.95%**",
+       "**Halve recovery**: 999 / 999.5 about **99.95%**",
+       "Up from **99.9%**, because each halves the **share of time spent recovering**"
+      ],
+      "foot": "Choose by **cost and side effects**: fewer failures also improves **reliability**, while faster recovery (**monitoring, automated failover**) is often cheaper to achieve."
+     }
     }
    ],
    "visuals": [
@@ -247,11 +271,28 @@
    "check": [
     {
      "q": "A chain has a CDN at 99.99%, a web server pair at 99.99%, a single application server at 99% and a database pair at 99.99%. The budget covers one improvement: upgrade the CDN to 99.999%, or add a second application server. Which?",
-     "a": "Add the application server. Now the chain is 0.9999^3 x 0.99, about 98.97%. A second application server makes that tier 99.99%, giving about 99.96%. The CDN upgrade gives only about 98.98%. In series the weakest component dominates. This assumes independent failures and enough capacity in the surviving server."
+     "a": {
+      "lead": "**Add the application server.**",
+      "items": [
+       "**Now**: 0.9999^3 x 0.99 about **98.97%**",
+       "**Second application server**: that tier → **99.99%**, chain about **99.96%**",
+       "**CDN upgrade**: only about **98.98%**",
+       "**In series the weakest component dominates**"
+      ],
+      "foot": "**Assumes** independent failures and enough **capacity in the surviving server**."
+     }
     },
     {
      "q": "A teammate says two 99% servers in parallel give 99.99%, so the service now meets four nines. What must be true for that claim to hold?",
-     "a": "Failures must be independent, failover must work and be fast, and either server must be able to carry the full load alone. The rest of the request path must also reach four nines, because everything in series multiplies. Shared power, storage or a common software bug break the independence assumption and make 99.99% optimistic."
+     "a": {
+      "items": [
+       "**Independent failures**",
+       "**Failover must work and be fast**",
+       "**Either server can carry the full load alone**",
+       "**Rest of the request path** must also reach four nines, because everything **in series multiplies**"
+      ],
+      "foot": "**Shared power, storage or a common software bug** break the independence assumption and make 99.99% optimistic."
+     }
     },
     {
      "q": "Two replicas share one power supply. Can you apply the independent parallel formula to the whole service?",
@@ -259,7 +300,15 @@
     },
     {
      "q": "An SLA promises 99.99% availability per year, and planned downtime counts. A database upgrade needs 2 hours offline. Can you do it without breaching the SLA?",
-     "a": "No. 99.99% allows (1 - 0.9999) x 525,600 = 52.56 minutes of downtime a year, and 2 hours alone exceeds that. Either do the upgrade without downtime (a rolling upgrade across redundant nodes) or agree a maintenance window outside the agreed service time. At 99.9% (8.76 hours a year), the 2-hour upgrade would fit."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**99.99% allows** (1 - 0.9999) x 525,600 = **52.56 minutes** of downtime a year → **2 hours** alone exceeds it",
+       "**Option 1**: upgrade without downtime (a **rolling upgrade** across redundant nodes)",
+       "**Option 2**: agree a **maintenance window** outside the **agreed service time**"
+      ],
+      "foot": "At **99.9%** (**8.76 hours** a year), the 2-hour upgrade would fit."
+     }
     }
    ],
    "visuals": [
@@ -425,19 +474,46 @@
    "check": [
     {
      "q": "Leadership wants every system in the company engineered for 99.99% availability. Critique the directive.",
-     "a": "Each extra nine and each redundant component costs more, so apply it by criticality. Classify functions as critical or non-critical, give the critical ones redundancy and the higher target, and accept lower targets elsewhere. The architect's job is to meet the required availability at acceptable cost, not to maximise it everywhere."
+     "a": {
+      "items": [
+       "**Cost**: each extra nine and each redundant component costs more → apply it **by criticality**",
+       "**Classify** functions as **critical or non-critical**",
+       "**Critical** → redundancy and the higher target; **accept lower targets** elsewhere"
+      ],
+      "foot": "The architect's job is to meet the **required availability at acceptable cost**, not to maximise it everywhere."
+     }
     },
     {
      "q": "After load shedding is enabled at 80% CPU, incoming traffic to a service doubles within a minute. What is happening, and what is the fix?",
-     "a": "Retry spikes: rejected clients retry immediately, adding load to a service that is already overloaded. Add a retry policy (limits and backoff on clients) alongside the shedding threshold, plus per-user rate limits for greedy clients. Shedding without retry control can make overload worse."
+     "a": {
+      "lead": "**Retry spikes**: rejected clients retry immediately, adding load to an already overloaded service.",
+      "items": [
+       "**Retry policy**: limits and **backoff** on clients, alongside the **shedding threshold**",
+       "**Per-user rate limits** for greedy clients"
+      ],
+      "foot": "**Shedding without retry control** can make overload worse."
+     }
     },
     {
      "q": "Last year's 14 hours of downtime came mostly from the monthly release process. What kind of downtime is this, and what would you change?",
-     "a": "Release windows are planned downtime, which continuous delivery and deployment reduce. Failed releases cause unplanned downtime, which phased rollouts and systematic rollback reduce. Changing the release process is likely to cut more downtime than adding hardware redundancy, which does not fix bad deployments."
+     "a": {
+      "items": [
+       "**Release windows → planned downtime** → reduced by **continuous delivery and deployment**",
+       "**Failed releases → unplanned downtime** → reduced by **phased rollouts** and **systematic rollback**"
+      ],
+      "foot": "Changing the **release process** likely cuts more downtime than adding **hardware redundancy**, which does not fix bad deployments."
+     }
     },
     {
      "q": "One API client's nightly batch job floods a shared service and slows everyone else down. Which cloud-level cause is this, and how would you fix it?",
-     "a": "A noisy neighbour. Enforce rate limits per user or API key (or per IP address), sized so normal clients are unaffected. The cost is that the batch client must spread its load or negotiate a higher quota."
+     "a": {
+      "lead": "**A noisy neighbour.**",
+      "items": [
+       "**Rate limits per user or API key** (or per IP address)",
+       "**Sized** so normal clients are unaffected"
+      ],
+      "foot": "**Cost**: the batch client must spread its load or negotiate a **higher quota**."
+     }
     }
    ]
   },
@@ -520,19 +596,48 @@
    "check": [
     {
      "q": "Behind a load balancer, instance 1 crashes, then instance 2 crashes 20 minutes later, then the rest go within 10 minutes. What is the likely cause, and how would you confirm it?",
-     "a": "A chain reaction: all instances run the same logic, so a bug such as a memory leak triggered by a particular operation kills the busiest instance first. The survivors take its load and fail faster. Confirm by checking memory growth and the request mix on each instance before it crashed. Adding instances only delays the collapse; fix or isolate the triggering operation."
+     "a": {
+      "lead": "**A chain reaction.**",
+      "items": [
+       "**Same logic on all instances** → a bug such as a **memory leak** triggered by a particular operation kills the **busiest instance first**",
+       "**Survivors take its load** → fail faster",
+       "**Confirm**: check **memory growth** and the **request mix** on each instance before it crashed"
+      ],
+      "foot": "**Adding instances only delays the collapse**; fix or isolate the triggering operation."
+     }
     },
     {
      "q": "For a marketing campaign the front end scales from 6 to 75 instances (3,000 threads), while the back end stays at 6 instances with 450 threads. What fails first, and what would you change?",
-     "a": "The back end: it has many fan-ins and bounded capacity, and now receives far more concurrent calls than its 450 threads can serve. Requests queue, time out and trigger retries. Scale the back end in step or cap calls with backpressure or rate limits, and load-test with the scaled-out front end."
+     "a": {
+      "lead": "**The back end fails first.**",
+      "items": [
+       "**Many fan-ins, bounded capacity**: far more concurrent calls than its **450 threads** can serve",
+       "→ requests **queue**, **time out** and trigger **retries**",
+       "**Fix**: scale the back end **in step**, or cap calls with **backpressure** or **rate limits**",
+       "**Load-test** with the scaled-out front end"
+      ]
+     }
     },
     {
      "q": "After a full restart, the database hits 100% CPU and the system takes 40 minutes to recover, although normal load is 30% CPU. Diagnose it and suggest a fix.",
-     "a": "A dogpile: every service tries to warm its in-memory cache from the database at the same moment, just as the database is recovering. Bring services back gradually rather than all at once, and limit the rate of cache-fill queries so the database is not swamped."
+     "a": {
+      "lead": "**A dogpile.**",
+      "items": [
+       "**Cause**: every service warms its **in-memory cache** from the database at the same moment, just as the database is recovering",
+       "**Fix**: bring services back **gradually**, not all at once",
+       "**Limit the rate of cache-fill queries** so the database is not swamped"
+      ]
+     }
     },
     {
      "q": "A user with 30 million followers posts, and the notification service falls an hour behind. Which failure source is this, and what would you consider?",
-     "a": "A heavy operation from a special user: one action fans out to millions of deliveries. Handle such accounts differently, for example by fetching their posts when followers read rather than pushing to every follower, and isolate their processing so it cannot starve normal users."
+     "a": {
+      "lead": "**A heavy operation from a special user**: one action fans out to millions of deliveries.",
+      "items": [
+       "**Handle such accounts differently**: e.g. **fetch their posts when followers read** rather than pushing to every follower",
+       "**Isolate their processing** so it cannot starve normal users"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -704,19 +809,60 @@
    "check": [
     {
      "q": "A product page calls a recommendations service that sometimes hangs for 30 s. Design the protection: timeout, circuit-breaker behaviour and fallback.",
-     "a": "Set a short timeout, well below the page's response target, with at most one retry. Wrap the call in a circuit breaker that opens after repeated failures and fails fast, then tests the service with trial calls while half-open, closing again on success. The fallback is a generic list such as best-sellers. Log state changes for operators. Customers see less personalised pages while the breaker is open."
+     "a": {
+      "items": [
+       "**Timeout**: short, well below the page's response target, with **at most one retry**",
+       {
+        "t": "**Circuit breaker**",
+        "sub": [
+         "**Opens** after repeated failures and **fails fast**",
+         "**Half-open**: tests the service with **trial calls**",
+         "**Closes** again on success"
+        ]
+       },
+       "**Fallback**: a generic list such as **best-sellers**",
+       "**Log state changes** for operators"
+      ],
+      "foot": "**Trade-off**: customers see less personalised pages while the breaker is open."
+     }
     },
     {
      "q": "Payments and report generation share one database connection pool of 50. A slow report query exhausts the pool, and payments fail. What would you change?",
-     "a": "Apply a bulkhead: give payments and reports separate connection pools, or separate instances, so a report cannot exhaust the resources payments need. The cost is less efficient sharing: one pool may sit idle while the other waits."
+     "a": {
+      "lead": "**Apply a bulkhead.**",
+      "items": [
+       "**Separate connection pools** (or separate instances) for payments and reports",
+       "→ a report **cannot exhaust** the resources payments need"
+      ],
+      "foot": "**Cost**: less efficient sharing; one pool may sit idle while the other waits."
+     }
     },
     {
      "q": "A fault tree for 'checkout unavailable' has minimal cut sets {DNS failure}, {primary database fails AND replica fails} and {payment gateway down}. Where do you focus first?",
-     "a": "On the singletons, DNS and the payment gateway: each alone takes checkout down. Add redundant DNS, and a second gateway or a degraded mode such as holding orders for later payment. The database needs two failures together, so it is already protected, provided the primary and replica really fail independently."
+     "a": {
+      "lead": "**Focus on the singletons: DNS and the payment gateway.**",
+      "items": [
+       "**Single-element cut sets**: each alone takes checkout down",
+       "**DNS** → add redundant DNS",
+       "**Payment gateway** → a second gateway, or a **degraded mode** such as holding orders for later payment",
+       "**Database** needs **two failures together** → already protected"
+      ],
+      "foot": "Provided the primary and replica really **fail independently**."
+     }
     },
     {
      "q": "A team wants to start chaos engineering by randomly killing production database nodes next week. Critique the plan.",
-     "a": "Start with the prerequisites: tracing and monitoring that show the agreed service outcome, and a stated hypothesis ('losing one replica does not raise checkout errors'). Then inject a targeted, contained fault, analyse the result, and only then automate and repeat. Random destruction without monitoring and a hypothesis teaches nothing and risks real outages."
+     "a": {
+      "ordered": true,
+      "items": [
+       "**Prerequisites**: **tracing and monitoring** that show the agreed service outcome",
+       "**State a hypothesis** ('losing one replica does not raise checkout errors')",
+       "**Inject a targeted, contained fault**",
+       "**Analyse** the result",
+       "**Only then automate and repeat**"
+      ],
+      "foot": "**Random destruction** without monitoring and a hypothesis teaches nothing and risks **real outages**."
+     }
     }
    ],
    "visuals": [
@@ -851,11 +997,25 @@
    "check": [
     {
      "q": "A booking service keeps user sessions in local memory and must survive one server failure. Active/passive or active/active?",
-     "a": "Active/active spreads load across live servers and survives one loss only if sessions are moved out of local memory into a shared store. Active/passive is simpler, but sessions are lost at failover unless they are replicated, and the standby sits idle. In both, a floating IP moves the address, not the state. If you can externalise the sessions, active/active gives more capacity."
+     "a": {
+      "lead": "**Active/active, if you can externalise the sessions** → more capacity.",
+      "items": [
+       "**Active/active**: spreads load across live servers; survives one loss **only if sessions move** out of local memory into a **shared store**",
+       "**Active/passive**: simpler, but sessions are **lost at failover** unless replicated, and the **standby sits idle**",
+       "**Floating IP** (both): moves the **address, not the state**"
+      ]
+     }
     },
     {
      "q": "You have four 3 TB disks, must survive any two disk failures, and need at least 6 TB usable. Which RAID level, and why not RAID 10?",
-     "a": "RAID 6: two disks' worth of parity gives 6 TB usable and survives any two failures. RAID 10 also gives 6 TB but guarantees only one failure; two failures in the same mirror lose data. RAID 6 pays for this with parity overhead on writes."
+     "a": {
+      "lead": "**RAID 6.**",
+      "items": [
+       "**RAID 6**: two disks' worth of **parity** → **6 TB usable**, survives **any two failures**",
+       "**Not RAID 10**: also 6 TB but guarantees only **one failure**; two failures in the **same mirror** lose data"
+      ],
+      "foot": "**Cost**: RAID 6 pays with **parity overhead on writes**."
+     }
     },
     {
      "q": "Two disks fail in a four-disk RAID 10 array. Is the data necessarily lost?",
@@ -863,7 +1023,15 @@
     },
     {
      "q": "A team says: 'We have a backup server with nightly copies of all files, so we have server redundancy.' Do you agree?",
-     "a": "No. A backup server supports recovery; it does not provide live compute failover. If the main server fails, the service is down until a restore and rebuild finish, so recovery time is long and up to a day of changes is lost. Server redundancy needs a prepared standby or active peers with current state."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Backup server supports recovery**, not **live compute failover**",
+       "**If the main server fails** → service down until a **restore and rebuild** finish",
+       "→ **long recovery time**, up to **a day of changes lost**",
+       "**Server redundancy** needs a **prepared standby** or **active peers with current state**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -975,15 +1143,37 @@
    "check": [
     {
      "q": "A full backup runs Sunday night and incrementals run Monday to Friday nights. The disk fails on Saturday afternoon. What must you restore, and how would differential backups compare?",
-     "a": "With incrementals, restore Sunday's full and then all five incrementals (Monday to Friday) in order; losing any one breaks the chain. With differentials, restore Sunday's full and only Friday's differential, which is simpler and faster. Either way, Saturday's changes since Friday night are lost."
+     "a": {
+      "items": [
+       "**Incrementals**: restore **Sunday's full**, then **all five incrementals** (Monday to Friday) **in order**; losing any one **breaks the chain**",
+       "**Differentials**: restore **Sunday's full** and only **Friday's differential** → simpler and faster"
+      ],
+      "foot": "Either way, **Saturday's changes** since Friday night are lost."
+     }
     },
     {
      "q": "A full backup takes 6 hours, the nightly window is 2 hours, and a full restore must finish within 4 hours. Which backup scheme fits?",
-     "a": "A nightly full backup doesn't fit the window. Take the full backup at the weekend and differentials on weeknights: each differential is smaller than a full, and a restore needs only two sets. Check that late-week differentials still fit the 2-hour window and that full plus differential restores within 4 hours. Incrementals fit the window best but make restores slower and more fragile."
+     "a": {
+      "lead": "**Weekend full + weeknight differentials.**",
+      "items": [
+       "**Nightly full doesn't fit**: 6 hours vs the 2-hour window",
+       "**Differential** is smaller than a full; a restore needs only **two sets**",
+       "**Check**: late-week differentials still fit the **2-hour window**, and full + differential restores within **4 hours**"
+      ],
+      "foot": "**Incrementals** fit the window best but make restores **slower and more fragile**."
+     }
     },
     {
      "q": "A manager wants to remove the standby database because 'we already take hourly incremental backups'. Do you agree?",
-     "a": "No. Backups are a recovery measure that affects MTTR, not live redundancy. A restore from a full plus many incrementals takes hours and loses up to an hour of data, while a standby takes over in minutes. Keep both, or accept the much longer outage explicitly."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Backups are a recovery measure** that affects **MTTR**, not live redundancy",
+       "**Restore** from a full plus many incrementals → **hours**, and loses up to **an hour of data**",
+       "**Standby** → takes over in **minutes**"
+      ],
+      "foot": "**Keep both**, or accept the much longer outage **explicitly**."
+     }
     }
    ],
    "visuals": [
@@ -1092,15 +1282,44 @@
    "check": [
     {
      "q": "A design has two load-balanced web servers behind one load balancer, with one database and one shared file system. Where are the single points of failure?",
-     "a": "The load balancer (fix it with a hot standby), the database, the shared file system, and any single firewall or network link on the path. Redundancy at the web tier does not make the whole service redundant. Check every required dependency."
+     "a": {
+      "items": [
+       "**The load balancer** → fix with a **hot standby**",
+       "**The database**",
+       "**The shared file system**",
+       "**Any single firewall or network link** on the path"
+      ],
+      "foot": "**Redundancy at the web tier** does not make the whole service redundant → check **every required dependency**."
+     }
     },
     {
      "q": "The requirement is to survive the loss of an entire data centre and recover within 5 minutes. The current design is a high-availability topology at one site. What must change?",
-     "a": "Add wide area load balancing across a second site that has its own firewalls, load balancers, web servers, database and file system, with data replicated between the sites. This removes the single-site failure domain, at roughly double the infrastructure cost plus the complexity of cross-site data replication."
+     "a": {
+      "lead": "**Add wide area load balancing** across a **second site**.",
+      "items": [
+       "**Second site** has its own firewalls, load balancers, web servers, database and file system",
+       "**Data replicated** between the sites",
+       "→ removes the **single-site failure domain**"
+      ],
+      "foot": "**Cost**: roughly **double the infrastructure** plus the complexity of **cross-site data replication**."
+     }
     },
     {
      "q": "An internal HR tool needs 99% availability, and a payments API needs 99.99%. Which availability patterns would you pick for each?",
-     "a": "HR: a basic or load-balanced web application is likely enough, since 99% allows about 3.65 days of downtime a year. Payments: a full high-availability topology with redundant load balancers, clusters and data tier, and possibly a second site, with end-to-end availability calculated and failover tested. Each step up costs more, so match the pattern to the required nines."
+     "a": {
+      "items": [
+       "**HR tool (99%)**: a **basic or load-balanced web application** is likely enough; 99% allows about **3.65 days** of downtime a year",
+       {
+        "t": "**Payments API (99.99%)**: a **full high-availability topology**",
+        "sub": [
+         "Redundant **load balancers**, **clusters** and **data tier**",
+         "Possibly a **second site**",
+         "**End-to-end availability calculated** and **failover tested**"
+        ]
+       }
+      ],
+      "foot": "Each step up costs more → **match the pattern to the required nines**."
+     }
     }
    ],
    "visuals": [
@@ -1225,19 +1444,49 @@
    "check": [
     {
      "q": "A team says Kubernetes will make their single-instance database highly available because it restarts failed pods. Do you agree?",
-     "a": "Only partly. Restarting or rescheduling the pod shortens recovery, but the database is still down while it restarts, and a restart does not give the data a redundant copy. A node or storage failure can still lose service or data. Add replication across nodes, or a managed redundant database, and test recovery."
+     "a": {
+      "lead": "**Only partly.**",
+      "items": [
+       "**Restarting or rescheduling the pod** → shortens recovery",
+       "But the **database is still down** while it restarts",
+       "A restart gives the data **no redundant copy**",
+       "**Node or storage failure** can still lose service or data"
+      ],
+      "foot": "Add **replication across nodes**, or a **managed redundant database**, and **test recovery**."
+     }
     },
     {
      "q": "A two-node active/passive database cluster uses one shared storage array, and the array fails. What happens, and what alternative avoids it?",
-     "a": "Both nodes lose the data, because shared disk delegates redundancy to the storage and the array is a single point of failure. A shared-nothing design, where each node owns its storage and data is replicated, avoids that, at the cost of managing replication and promotion."
+     "a": {
+      "lead": "**Both nodes lose the data.**",
+      "items": [
+       "**Shared disk** delegates redundancy to the storage → the **array is a single point of failure**",
+       "**Shared-nothing**: each node owns its storage and data is **replicated** → avoids it"
+      ],
+      "foot": "**Cost**: managing **replication and promotion**."
+     }
     },
     {
      "q": "A primary/replica database loses its primary at peak time. What happens to reads and writes, and what does recovery involve?",
-     "a": "Reads can continue on the replica, but writes stop until a replica is promoted to primary, because only the primary accepts writes. Promotion takes time, and writes not yet replicated may be lost. Read replicas provide read capacity and redundancy, not independent write leaders."
+     "a": {
+      "items": [
+       "**Reads** can continue on the **replica**",
+       "**Writes stop** until a replica is **promoted** to primary, because only the primary accepts writes",
+       "**Promotion takes time**; writes **not yet replicated may be lost**"
+      ],
+      "foot": "**Read replicas** provide read capacity and redundancy, not **independent write leaders**."
+     }
     },
     {
      "q": "Application instances are spread across two availability zones, but the database runs in one zone and is protected by periodic snapshots. That zone fails. What happens?",
-     "a": "The compute survives, but the service loses its data tier. Restoring from a snapshot takes time and loses every change since the snapshot. Spreading compute alone is not enough: replicate the database across zones, or plan an explicit data recovery that meets the recovery target."
+     "a": {
+      "lead": "**Compute survives, but the service loses its data tier.**",
+      "items": [
+       "**Restoring from a snapshot** takes time and loses **every change since the snapshot**",
+       "**Spreading compute alone is not enough**",
+       "**Fix**: **replicate the database across zones**, or plan an explicit **data recovery** that meets the **recovery target**"
+      ]
+     }
     }
    ],
    "visuals": [
@@ -1289,27 +1538,119 @@
  "exam_angles": [
   {
    "q": "A web system has an active/passive load balancer pair (99% each), two web servers in parallel (99% each), one application server (99%), an active/passive database pair (99% each) and one firewall (98%). The target is 99.9%. Calculate end-to-end availability, say whether it meets the target, and recommend improvements with their assumptions.",
-   "a": "Each pair gives 1 - 0.01^2 = 0.9999. In series: 0.9999^3 x 0.99 x 0.98 = 96.99%, which misses 99.9% badly because of the single application server and firewall. Replicating both gives 0.9999^4 x (1 - 0.02^2) = 99.92%, which just meets the target. This assumes independent failures, working failover and enough capacity in the survivors. Shared power, storage or a common software fault would lower the real figure, so test failover and check for shared failure domains."
+   "a": {
+    "lead": "**96.99%: misses 99.9%**; replicating the app server and firewall gives **99.92%**.",
+    "ordered": true,
+    "items": [
+     "**Each pair**: 1 - 0.01^2 = **0.9999**",
+     "**In series**: 0.9999^3 x 0.99 x 0.98 = **96.99%** → misses **99.9%** badly because of the **single application server and firewall**",
+     "**Replicate both**: 0.9999^4 x (1 - 0.02^2) = **99.92%** → just meets the target",
+     "**Assumes**: **independent failures**, **working failover** and **enough capacity in the survivors**"
+    ],
+    "foot": "**Shared power, storage or a common software fault** would lower the real figure → **test failover** and check for **shared failure domains**."
+   }
   },
   {
    "q": "A monthly SLA promises 99.95% over a 30-day, 24-hour service month. This month had a 15-minute unplanned outage and a 20-minute planned maintenance window. Does the service meet the SLA? What changes the answer, and what would you change in the design?",
-   "a": "The month has 43,200 minutes, so 99.95% allows 21.6 minutes of downtime. The outage alone is 15 minutes (99.965%), which passes. If planned maintenance counts, the total is 35 minutes (99.919%), which fails. The answer depends on whether the agreed service time excludes the maintenance window. Design changes: rolling or blue/green deployments, so maintenance needs no downtime, and faster detection and failover to shorten unplanned outages."
+   "a": {
+    "lead": "**Passes if planned maintenance is excluded; fails if it counts.**",
+    "ordered": true,
+    "items": [
+     "**Month** = **43,200 minutes**; **99.95%** allows **21.6 minutes** of downtime",
+     "**Outage alone**: 15 minutes (**99.965%**) → **passes**",
+     "**Planned maintenance counts**: total 35 minutes (**99.919%**) → **fails**",
+     "**What changes the answer**: whether the **agreed service time excludes the maintenance window**",
+     {
+      "t": "**Design changes**",
+      "sub": [
+       "**Rolling or blue/green deployments** → maintenance needs no downtime",
+       "**Faster detection and failover** → shorter unplanned outages"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "Service A receives 100 requests/s and has 200 worker threads. Each request calls service B with a 30 s timeout. B slows from 50 ms to 10 s per call. Explain what happens to A, and design the containment.",
-   "a": "By Little's Law, A needs 100 x 10 = 1,000 requests in flight but has 200 threads, so the pool is exhausted within about 2 seconds. A stops responding and its own callers fail: a cascading failure, made worse by retries. Containment: a short timeout (1 s would keep about 100 requests in flight), a circuit breaker that fails fast with a fallback once B is unhealthy, a bulkhead so calls to B use their own limited pool and cannot take every thread, and bounded retries with backoff. Validate it by injecting latency into B in a chaos experiment."
+   "a": {
+    "items": [
+     {
+      "t": "**What happens to A**: a **cascading failure**",
+      "sub": [
+       "**Little's Law**: A needs 100 x 10 = **1,000** requests in flight but has **200 threads**",
+       "→ pool **exhausted within about 2 seconds**",
+       "→ A stops responding and **its own callers fail**, made worse by **retries**"
+      ]
+     },
+     {
+      "t": "**Containment**",
+      "sub": [
+       "**Short timeout**: 1 s would keep about **100 requests** in flight",
+       "**Circuit breaker**: fails fast with a **fallback** once B is unhealthy",
+       "**Bulkhead**: calls to B use their own limited pool, so they cannot take every thread",
+       "**Bounded retries with backoff**"
+      ]
+     },
+     "**Validate**: inject latency into B in a **chaos experiment**"
+    ]
+   }
   },
   {
    "q": "An e-commerce site needs 99.99% availability for checkout. The data tier is the weak point. Compare two database redundancy models and recommend one, stating what you would monitor.",
-   "a": "Active/passive with shared disk is simple failover, but the shared storage is a single point of failure unless the array itself is redundant. Shared-nothing replication (a primary with replicas, or multi-node replication) gives each node its own storage, avoiding that, but needs promotion rules and risks losing unreplicated writes at failover. For 99.99%, prefer shared-nothing replication across failure domains, with automated, tested promotion and enough capacity in the survivors, plus RAID and tested backups for recovery. Monitor replication lag, failover time and data loss in failover tests, and calculate end-to-end availability rather than trusting the topology label."
+   "a": {
+    "lead": "**Prefer shared-nothing replication across failure domains** for 99.99%.",
+    "items": [
+     "**Active/passive with shared disk**: simple failover, but the **shared storage is a single point of failure** unless the array itself is redundant",
+     "**Shared-nothing replication** (a primary with replicas, or multi-node replication): each node has **its own storage** → avoids that, but needs **promotion rules** and risks **losing unreplicated writes** at failover",
+     {
+      "t": "**Recommendation**",
+      "sub": [
+       "**Automated, tested promotion** and **enough capacity in the survivors**",
+       "Plus **RAID** and **tested backups** for recovery"
+      ]
+     },
+     {
+      "t": "**Monitor**",
+      "sub": [
+       "**Replication lag**",
+       "**Failover time** and **data loss** in failover tests"
+      ]
+     }
+    ],
+    "foot": "**Calculate end-to-end availability** rather than trusting the topology label."
+   }
   },
   {
    "q": "A database holds 2 TB. A full backup takes 5 hours, the nightly window is 2 hours, daily changes are about 50 GB, and the recovery-time target is 3 hours. Compare full, differential and incremental backup and recommend a scheme.",
-   "a": "A nightly full backup is impossible (5 hours against a 2-hour window). Weekly full plus nightly incrementals copies only about 50 GB a night, but a restore late in the week needs the full plus up to six incrementals in order, which is the slowest and most fragile option. Weekly full plus nightly differentials grows to about 300 GB by day six, which must still fit the window, and a restore needs only the full plus one differential. Recommend the differential scheme if day-six differentials fit the window. Then test whether a 2 TB full restore can finish within 3 hours. If it cannot, backups alone cannot meet the target, and you need a standby replica."
+   "a": {
+    "lead": "**Weekly full + nightly differentials**, if day-six differentials fit the window.",
+    "items": [
+     "**Nightly full**: **impossible** (5 hours against a 2-hour window)",
+     "**Weekly full + nightly incrementals**: copies only about **50 GB** a night, but a late-week restore needs the full plus **up to six incrementals in order** → **slowest and most fragile**",
+     "**Weekly full + nightly differentials**: grows to about **300 GB by day six**, which must still fit the window; restore needs only **the full plus one differential**",
+     "**Then test** whether a **2 TB full restore** can finish within **3 hours**"
+    ],
+    "foot": "If it cannot, **backups alone cannot meet the target** → you need a **standby replica**."
+   }
   },
   {
    "q": "Choose a RAID level for an array of four 3 TB disks that must tolerate any two simultaneous disk failures, and state its cost against the alternatives.",
-   "a": "RAID 6 guarantees any two disk failures with at least four disks. Two disks' worth of capacity holds parity, so four 3 TB disks provide 6 TB usable. Parity updates add write overhead, and actual speed depends on workload and implementation. RAID 10 gives the same 6 TB but guarantees only one failure (two only if they are in different mirrors). RAID 5 gives 9 TB with one-failure tolerance, and RAID 0 has no protection."
+   "a": {
+    "lead": "**RAID 6.**",
+    "items": [
+     "**Tolerance**: guarantees **any two disk failures**, with at least **four disks**",
+     "**Capacity**: two disks' worth holds **parity** → four 3 TB disks provide **6 TB usable**",
+     "**Cost**: **parity updates add write overhead**; actual speed depends on workload and implementation",
+     {
+      "t": "**Alternatives**",
+      "sub": [
+       "**RAID 10**: same **6 TB** but guarantees only **one failure** (two only if they are in **different mirrors**)",
+       "**RAID 5**: **9 TB** with **one-failure** tolerance",
+       "**RAID 0**: **no protection**"
+      ]
+     }
+    ]
+   }
   }
  ]
 }

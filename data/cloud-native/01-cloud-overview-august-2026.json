@@ -88,15 +88,37 @@
    "check": [
     {
      "q": "A virtualised server farm is provisioned by ticket and billed annually. What can you conclude about its NIST characteristics?",
-     "a": "Ticket approval prevents on-demand self-service. Check whether resources scale rapidly and whether usage is metered: annual billing alone does not prove that elasticity or measured service is absent."
+     "a": {
+      "lead": "**Ticket approval** → fails **on-demand self-service**.",
+      "items": [
+       "**Rapid elasticity**: check whether resources scale rapidly",
+       "**Measured service**: check whether usage is metered",
+       "**Annual billing alone** does not prove that elasticity or measured service is absent"
+      ]
+     }
     },
     {
      "q": "A CFO argues: 'Providers have economies of scale, so moving our steady 24/7 batch servers to the cloud must cut our bill.' Do you agree?",
-     "a": "Not as stated. Economies of scale (standardised workloads, bulk hardware, stripped-down software) lower the **provider's** unit cost, but a steady 24/7 load gains little from elasticity or paying only when needed. Compare total cost and operational needs for this workload; the case is stronger if load is spiky or the team wants to stop running hardware."
+     "a": {
+      "lead": "**Not as stated.**",
+      "items": [
+       "**Economies of scale** (standardised workloads, bulk hardware, stripped-down software) lower the **provider's** unit cost",
+       "**Steady 24/7 load** → gains little from **elasticity** or paying only when needed",
+       "**Compare total cost** and operational needs for this workload"
+      ],
+      "foot": "The case is stronger if load is **spiky** or the team wants to **stop running hardware**."
+     }
     },
     {
      "q": "An internal platform lets departments create VMs from a portal in minutes and sends each department a monthly usage report, but it can only be reached from managed office desktops. Which NIST characteristic is in doubt, and which ones can't you judge yet?",
-     "a": "Self-service and measured service look satisfied; **broad network access** is in doubt, because it expects access over the network through standard mechanisms from varied clients. Being internal-only is not the problem, since private clouds are valid. Resource pooling and rapid elasticity are still unknown until you know whether capacity is shared and can grow and shrink quickly."
+     "a": {
+      "items": [
+       "**Look satisfied**: **self-service** and **measured service**",
+       "**In doubt: broad network access** → it expects access over the network through **standard mechanisms** from **varied clients**",
+       "**Internal-only is not the problem** → **private clouds** are valid",
+       "**Still unknown: resource pooling and rapid elasticity** → until you know whether capacity is shared and can grow and shrink quickly"
+      ]
+     }
     }
    ]
   },
@@ -159,11 +181,35 @@
    "check": [
     {
      "q": "A hosting firm rents fixed physical servers on 12-month contracts, reachable over the internet, and markets them as 'cloud'. Using the common thread of the cloud definitions, is the label justified?",
-     "a": "No. Internet access gives only network access; the definitions share on-demand provisioning from a shared pool that is rapidly provisioned and released with minimal provider interaction. Fixed servers on long contracts are neither elastic nor on demand. The label would hold if customers could self-provision and release capacity in minutes and pay for what they use."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**Internet access** gives only **network access**",
+       "**Common thread** of the definitions: **on-demand** provisioning from a **shared pool**, **rapidly provisioned and released** with **minimal provider interaction**",
+       "**Fixed servers on long contracts** → neither **elastic** nor **on demand**"
+      ],
+      "foot": "The label would hold if customers could **self-provision and release** capacity in minutes and **pay for what they use**."
+     }
     },
     {
      "q": "A teammate says an internal private cloud is 'not real cloud' because one industry definition describes cloud as a service delivered to many external customers. How do you respond?",
-     "a": "Disagree. Gartner's wording emphasises multi-tenant delivery to external customers, but NIST, the anchor definition, is about characteristics, not who operates it. A private cloud for one organisation is cloud if it offers self-service, network access, pooled resources (shared across departments), rapid elasticity and measured service."
+     "a": {
+      "lead": "**Disagree.**",
+      "items": [
+       "**Gartner**'s wording emphasises **multi-tenant** delivery to **external customers**",
+       "**NIST**, the anchor definition, is about **characteristics**, not who operates it",
+       {
+        "t": "**A private cloud for one organisation is cloud** if it offers:",
+        "sub": [
+         "**self-service**",
+         "**network access**",
+         "**pooled resources** (shared across departments)",
+         "**rapid elasticity**",
+         "**measured service**"
+        ]
+       }
+      ]
+     }
     }
    ]
   },
@@ -235,11 +281,30 @@
    "check": [
     {
      "q": "A startup expects anywhere between 1,000 and 200,000 users in its first year. Why does pay-as-you-go matter more to it than to a firm with flat, predictable load?",
-     "a": "With uncertain demand, buying for peak means either a large upfront investment or running out of capacity; elasticity and usage-based spend let cost follow actual users and make experiments cheap. A firm with flat load can size owned capacity accurately, so its gain from converting CapEx to OpEx is smaller and has to be shown with a total-cost comparison."
+     "a": {
+      "items": [
+       "**Uncertain demand** → buying for peak means either a **large upfront investment** or **running out of capacity**",
+       "**Elasticity and usage-based spend** → cost follows actual users and makes **experiments cheap**",
+       "**Flat load** → the firm can size owned capacity accurately, so its gain from converting **CapEx to OpEx** is smaller",
+       "That gain has to be shown with a **total-cost comparison**"
+      ]
+     }
     },
     {
      "q": "A bank and a fintech startup both want to launch a new payments feature on the cloud. Why will the bank's first-year plan look different?",
-     "a": "The bank carries regulatory, governance, security and privacy obligations and legacy systems that must be migrated, integrated and co-exist with the new feature, so its plan centres on migration and integration. The startup starts cloud-first on a clean slate and can spend its effort on the product. The bank's advantage is existing customers and data, which is why integration is worth the cost."
+     "a": {
+      "items": [
+       {
+        "t": "**Bank**: plan centres on **migration and integration**",
+        "sub": [
+         "carries **regulatory, governance, security and privacy** obligations",
+         "**legacy systems** must be **migrated, integrated and co-exist** with the new feature"
+        ]
+       },
+       "**Startup**: starts **cloud-first** on a **clean slate** → spends its effort on the product",
+       "**Bank's advantage**: existing **customers and data** → why integration is worth the cost"
+      ]
+     }
     }
    ]
   },
@@ -322,15 +387,35 @@
    "check": [
     {
      "q": "A team must apply a specific OS kernel patch and install custom middleware. Which service model fits, and what extra work comes with it?",
-     "a": "IaaS, because it is the only model where the customer controls the OS and middleware. The cost is that the team now patches the OS, runs the middleware and configures scaling itself. If the kernel requirement went away, PaaS would remove that work, but in return you accept the provider's supported languages and runtimes."
+     "a": {
+      "lead": "**IaaS**: the only model where the customer controls the **OS and middleware**.",
+      "items": [
+       "**Extra work**: the team now **patches the OS**, **runs the middleware** and **configures scaling** itself",
+       "**If the kernel requirement went away** → **PaaS** would remove that work"
+      ],
+      "foot": "In return for PaaS you accept the provider's **supported languages and runtimes**."
+     }
     },
     {
      "q": "An HR department needs leave management. A standard product covers 90% of its workflow, but there is one unusual approval rule. SaaS or an app built on PaaS?",
-     "a": "SaaS if the rule can be expressed through the product's predefined settings, since it gives the least operational work. Build on PaaS only if the rule is essential and cannot be configured: you then write and own the application but avoid running servers. The deciding factor is whether the customisation is worth owning code for."
+     "a": {
+      "lead": "**SaaS** if the rule can be expressed through the product's **predefined settings**.",
+      "items": [
+       "**SaaS** → gives the **least operational work**",
+       "**Build on PaaS** only if the rule is **essential** and **cannot be configured** → you write and **own the application** but avoid running servers"
+      ],
+      "foot": "Deciding factor: whether the **customisation is worth owning code for**."
+     }
     },
     {
      "q": "Customer data leaks from a SaaS CRM because an employee shared a report with a public link. The team blames the provider. Who is accountable?",
-     "a": "The customer. Even in SaaS, where the provider operates nearly every layer, data classification, access decisions and accountability stay with the customer. The answer would differ if the leak came from a breach of the provider's own infrastructure or application, which are its layers."
+     "a": {
+      "lead": "**The customer.**",
+      "items": [
+       "Even in **SaaS**, where the provider operates nearly every layer, **data classification**, **access decisions** and **accountability** stay with the customer"
+      ],
+      "foot": "Would differ if the leak came from a **breach of the provider's own infrastructure or application**, which are its layers."
+     }
     }
    ],
    "visuals": [
@@ -462,15 +547,43 @@
    "check": [
     {
      "q": "A company runs its core system in its own data centre and its analytics on two public providers. A teammate calls this 'multi-cloud'. Is that the full description?",
-     "a": "Only half. Two public providers is multi-cloud (mixing vendors), and connecting them to the on-premises private environment is hybrid (mixing cloud types). Naming both matters because hybrid raises integration and co-existence concerns between environments, while multi-cloud raises cross-vendor skills and operations concerns."
+     "a": {
+      "lead": "**Only half.**",
+      "items": [
+       "**Multi-cloud**: two public providers (mixing **vendors**)",
+       "**Hybrid**: connecting them to the **on-premises private** environment (mixing **cloud types**)",
+       {
+        "t": "**Naming both matters**",
+        "sub": [
+         "hybrid → **integration and co-existence** concerns between environments",
+         "multi-cloud → **cross-vendor skills and operations** concerns"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A team proposes a VPC to meet the rule 'customer data must not leave our premises'. Does it?",
-     "a": "No. A VPC gives logical network isolation and controlled access inside the provider's infrastructure, so the data still sits on the provider's premises. The rule calls for a private cloud, or a hybrid design that keeps that data on premises. A VPC fits when the requirement is isolation with public-cloud scalability and pricing, not data location."
+     "a": {
+      "lead": "**No.**",
+      "items": [
+       "**VPC** = **logical network isolation** and **controlled access** inside the **provider's infrastructure** → data still sits on the **provider's premises**",
+       "**The rule calls for** a **private cloud**, or a **hybrid** design that keeps that data on premises"
+      ],
+      "foot": "A VPC fits when the requirement is **isolation with public-cloud scalability and pricing**, not **data location**."
+     }
     },
     {
      "q": "A vendor offers a pre-integrated rack of hardware and cloud software to install in your data centre. Which deployment model is this, and how does it compare with building your own private cloud?",
-     "a": "A proprietary cloud: a complete hardware plus software stack, owned by the provider or sold for on-premises use. It is faster to stand up than assembling your own private cloud from parts, but you depend on that vendor's stack for upgrades and features, so you trade build effort for lock-in."
+     "a": {
+      "lead": "**A proprietary cloud.**",
+      "items": [
+       "**What it is**: a complete **hardware plus software stack**, owned by the provider or sold for **on-premises** use",
+       "**vs your own private cloud**: **faster to stand up** than assembling one from parts",
+       "**But** you depend on that **vendor's stack** for upgrades and features"
+      ],
+      "foot": "You trade **build effort** for **lock-in**."
+     }
     }
    ],
    "visuals": []
@@ -540,11 +653,34 @@
    "check": [
     {
      "q": "An exam answer for a web app's architecture says only 'use EC2, S3, RDS and CloudFront'. Why would it lose marks, and how should it be rewritten?",
-     "a": "It lists product names without the need each one meets or why it was chosen. Rewrite it in capability terms (compute for the app tier, object storage for static assets, a managed relational database, a CDN at the edge) and justify each choice from the requirements. The major providers have overlapping categories, so the reasoning carries the marks, not the product name."
+     "a": {
+      "lead": "It lists **product names** without the **need** each one meets or **why** it was chosen.",
+      "items": [
+       {
+        "t": "**Rewrite in capability terms**:",
+        "sub": [
+         "**compute** for the app tier",
+         "**object storage** for static assets",
+         "a **managed relational database**",
+         "a **CDN** at the edge"
+        ]
+       },
+       "**Justify each choice** from the requirements",
+       "Major providers have **overlapping categories** → the **reasoning** carries the marks, not the product name"
+      ]
+     }
     },
     {
      "q": "Two providers both cover compute, storage, databases, identity, ML and management tooling. Your client wants to pick one by comparing catalogue size. What should decide it instead?",
-     "a": "Because the categories overlap, catalogue size says little. Decide from the workload's requirements and the cloud strategy, and finish the strategy before signing vendor contracts, which Gartner lists as a common mistake. Keep an exit strategy, and favour containers and open standards where switching cost matters."
+     "a": {
+      "lead": "Categories **overlap** → **catalogue size** says little.",
+      "items": [
+       "**Decide from** the workload's **requirements** and the **cloud strategy**",
+       "**Finish the strategy before signing vendor contracts** (**Gartner** lists this as a common mistake)",
+       "**Keep an exit strategy**",
+       "**Favour containers and open standards** where **switching cost** matters"
+      ]
+     }
     }
    ]
   },
@@ -632,19 +768,58 @@
    "check": [
     {
      "q": "A team has 3 months to leave a data centre whose lease is ending. The application has stable load and no planned changes. Cloud-hosted or cloud-native?",
-     "a": "Cloud-hosted: minimal change is the only way to meet the deadline, and stable load gains little from elasticity. The team gives up the resilience, autoscaling and automation gains of a redesign, but it can make selected components cloud-optimised later, once the deadline is met."
+     "a": {
+      "lead": "**Cloud-hosted.**",
+      "items": [
+       "**Minimal change** → the only way to meet the deadline",
+       "**Stable load** → gains little from **elasticity**"
+      ],
+      "foot": "Gives up the **resilience, autoscaling and automation** gains of a redesign, but selected components can be made **cloud-optimised** later, once the deadline is met."
+     }
     },
     {
      "q": "The CEO announces: 'We are cloud-first. Every system moves next year, starting with our ERP.' Critique this as a strategy.",
-     "a": "It makes several of Gartner's mistakes at once: an executive mandate treated as a strategy, cloud-first read as cloud-only, and starting with a critical, complex workload like ERP. A better plan involves the business, prioritises benefits, chooses suitable early workloads, and includes an exit strategy."
+     "a": {
+      "lead": "It makes several of **Gartner's mistakes** at once:",
+      "items": [
+       "**Executive mandate** treated as a strategy",
+       "**Cloud-first** read as **cloud-only**",
+       "**Starting with a critical, complex workload** like ERP",
+       {
+        "t": "**Better plan**:",
+        "sub": [
+         "involves the **business**",
+         "**prioritises benefits**",
+         "chooses **suitable early workloads**",
+         "includes an **exit strategy**"
+        ]
+       }
+      ]
+     }
     },
     {
      "q": "A security officer says: 'Cloud is less secure, so mission-critical systems must stay on premises.' Do you agree?",
-     "a": "Not as a blanket rule: 'less secure' and 'not for mission-critical' are both listed cloud myths. Security depends on design and on the responsibility split; the provider secures its layers, and the customer must still secure its own configuration, identities and data. A specific regulatory or data-location constraint, not the myth, is the valid reason to keep a system on premises."
+     "a": {
+      "lead": "**Not as a blanket rule.**",
+      "items": [
+       "**'Less secure'** and **'not for mission-critical'** are both listed **cloud myths**",
+       "**Security depends on design** and on the **responsibility split**",
+       "**Provider** secures its layers; the **customer** must still secure its own **configuration, identities and data**"
+      ],
+      "foot": "A specific **regulatory or data-location constraint**, not the myth, is the valid reason to keep a system on premises."
+     }
     },
     {
      "q": "A team builds heavily on one provider's proprietary queue and database APIs to go cloud-native quickly. What risk are they taking, and how could they limit it?",
-     "a": "Deep use of proprietary services raises switching cost and reduces portability. They can limit this with containers and open standards where they matter, isolate provider-specific calls behind their own interfaces, and keep an exit strategy. The trade-off is that avoiding managed proprietary services gives up some of the speed that made cloud-native attractive."
+     "a": {
+      "lead": "**Risk**: deep use of proprietary services raises **switching cost** and reduces **portability**.",
+      "items": [
+       "**Limit it**: **containers and open standards** where they matter",
+       "**Isolate provider-specific calls** behind their own interfaces",
+       "**Keep an exit strategy**"
+      ],
+      "foot": "Trade-off: avoiding **managed proprietary services** gives up some of the **speed** that made cloud-native attractive."
+     }
     }
    ],
    "visuals": [
@@ -677,23 +852,90 @@
  "exam_angles": [
   {
    "q": "A retailer runs a 6-week seasonal web shop. Evening traffic is 20 times the daytime level, the team is two developers, and there is no ops staff. Recommend a service model and a deployment model, and say what would make you choose IaaS instead.",
-   "a": "PaaS on a public cloud, with SaaS for commodity parts such as payments or email: the provider runs the OS and runtime, and elasticity absorbs the evening peaks without the retailer owning peak capacity. Spend follows the 6-week season instead of a year-round investment. Choose IaaS only if the shop needs OS-level control or middleware the platform doesn't support, and accept that the two developers would then patch and scale servers themselves."
+   "a": {
+    "lead": "**PaaS on a public cloud**, with **SaaS** for commodity parts such as **payments or email**.",
+    "items": [
+     "**PaaS** → the provider runs the **OS and runtime**",
+     "**Elasticity** → absorbs the **evening peaks** without the retailer owning peak capacity",
+     "**Spend follows the 6-week season** instead of a **year-round investment**"
+    ],
+    "foot": "**Choose IaaS** only if the shop needs **OS-level control** or **middleware** the platform doesn't support, and accept that the **two developers** would then **patch and scale servers** themselves."
+   }
   },
   {
    "q": "A regulated bank must keep customer records in its own data centre but wants elastic capacity for a new customer-facing app. Recommend a deployment model, and explain why a VPC alone is not enough.",
-   "a": "Hybrid cloud: keep customer records in the on-premises private environment and run the elastic front end on public cloud, connected through controlled integration. A VPC gives logical isolation inside the provider's infrastructure but does not keep data on the bank's premises. The costs are governance, integration and co-existence work across two environments, plus the latency of calls back to on-premises data."
+   "a": {
+    "lead": "**Hybrid cloud.**",
+    "items": [
+     "**Customer records** stay in the **on-premises private environment**",
+     "**Elastic front end** runs on **public cloud**",
+     "Connected through **controlled integration**",
+     "**VPC alone is not enough** → **logical isolation** inside the **provider's infrastructure**, but does not keep data on the **bank's premises**"
+    ],
+    "foot": "Costs: **governance, integration and co-existence** work across two environments, plus the **latency** of calls back to on-premises data."
+   }
   },
   {
    "q": "An enterprise wants its first cloud project to be moving its 15-year-old, heavily customised ERP. Advise on whether it should go first, and compare IaaS, PaaS and SaaS for it when it does move.",
-   "a": "Advise against making it first: Gartner warns against starting with critical, complex, large workloads like ERP, so build skills on simpler workloads first. When it moves, IaaS (cloud-hosted lift and shift) keeps the customisation and needs the least change but keeps all the OS and middleware work. PaaS needs re-platforming. SaaS removes most of the operations but forces the business onto predefined settings, which may mean dropping years of customisation."
+   "a": {
+    "ordered": true,
+    "items": [
+     {
+      "t": "**ERP first? Advise against.**",
+      "sub": [
+       "**Gartner** warns against starting with **critical, complex, large** workloads like ERP",
+       "build **skills** on **simpler workloads** first"
+      ]
+     },
+     {
+      "t": "**When it moves**",
+      "sub": [
+       "**IaaS** (**cloud-hosted lift and shift**): keeps the **customisation**, needs the **least change**, but keeps all the **OS and middleware** work",
+       "**PaaS**: needs **re-platforming**",
+       "**SaaS**: removes most of the **operations** but forces the business onto **predefined settings** → may mean dropping **years of customisation**"
+      ]
+     }
+    ]
+   }
   },
   {
    "q": "A proposal says: 'Move to the cloud to save money, and use two providers so disaster recovery is automatic.' Evaluate both claims and say what evidence you would want.",
-   "a": "Both are listed myths or mistakes: cloud is not always cheaper, and multi-cloud does not by itself save money or improve DR; it adds cross-provider skills and operations. Ask for a workload-by-workload cost comparison, a prioritised list of benefits, and a tested DR design with recovery targets. Multi-cloud may still be justified for specific reasons, but it should come with an exit strategy rather than an assumed benefit."
+   "a": {
+    "lead": "Both are listed **myths or mistakes**.",
+    "items": [
+     "**Cloud is not always cheaper**",
+     "**Multi-cloud** does not by itself **save money** or **improve DR** → it adds **cross-provider skills and operations**",
+     {
+      "t": "**Evidence to ask for**:",
+      "sub": [
+       "a **workload-by-workload cost comparison**",
+       "a **prioritised list of benefits**",
+       "a **tested DR design** with **recovery targets**"
+      ]
+     }
+    ],
+    "foot": "Multi-cloud may still be justified for **specific reasons**, but it should come with an **exit strategy** rather than an assumed benefit."
+   }
   },
   {
    "q": "An IT department rebrands its virtualisation cluster as 'our private cloud'. Developers can create VMs from a portal in minutes, but capacity is fixed at 200 VMs, adding hosts takes a 6-week purchase, and there is no usage reporting. Assess the claim against NIST and recommend what would close the gaps.",
-   "a": "Partly justified: the portal gives on-demand self-service, and a shared cluster suggests resource pooling. It fails rapid elasticity, because the 200-VM cap and 6-week purchase stop capacity from growing quickly, and it fails measured service, because nothing is metered. Virtualisation alone is not a private cloud. To close the gaps, add per-team usage metering and either keep spare capacity or burst to public cloud (a hybrid model) so capacity can grow on demand."
+   "a": {
+    "lead": "**Partly justified.**",
+    "items": [
+     "**On-demand self-service**: met by the **portal**",
+     "**Resource pooling**: a **shared cluster** suggests it",
+     "**Rapid elasticity**: fails → the **200-VM cap** and **6-week purchase** stop capacity from growing quickly",
+     "**Measured service**: fails → nothing is **metered**",
+     "**Virtualisation alone is not a private cloud**",
+     {
+      "t": "**Close the gaps**:",
+      "sub": [
+       "add **per-team usage metering**",
+       "either keep **spare capacity** or **burst to public cloud** (a **hybrid** model) so capacity can grow on demand"
+      ]
+     }
+    ]
+   }
   }
  ]
 }
